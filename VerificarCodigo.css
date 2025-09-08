@@ -1,0 +1,97 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background-color: #f2f2f2;
+}
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  background: white;
+  padding: 50px 40px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 420px;
+}
+
+.logo {
+  background: url('/logo1.png') no-repeat center;
+  background-size: contain;
+  width: 210px;
+  height: 110px;
+  margin: 0 auto 30px;
+}
+
+h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.mensagem {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.codigo-inputs {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 35px;
+}
+
+.codigo-inputs input {
+  width: 50px;
+  height: 55px;
+  text-align: center;
+  font-size: 22px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  outline: none;
+  transition: border 0.3s ease;
+}
+
+.codigo-inputs input:focus {
+  border-color: #1bc3ea;
+}
+
+.verificar {
+  width: 100%;
+  padding: 14px;
+  background-color: #1bc3ea;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-bottom: 30px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.verificar:hover {
+  background-color: #17a8cc;
+}
+
+.timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: red;
+  font-size: 14px;
+}
