@@ -4,128 +4,114 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href=ProfissionaisDisponiveis.css">
+    <link rel="stylesheet" href="ProfissionaisDisponiveis.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>OdontoPro | Profissionais Disponiveis </title>
 </head>
 <body>
 
-    <!-- HEADER -->
-  <header>
-    <div class="logo">
-      <img src="https://odonto-pro.com.br/assets/img/logo.png" alt="OdontoPro Logo" />
+  <header class="top-header">
+    <div class="logo-area">
+        <img src="OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
     </div>
-    <div class="search-bar">
-      <i class="fas fa-search"></i>
-      <input type="text" placeholder="Pesquise aqui" />
+
+    <div class="search-area">
+        <input type="text" placeholder="Pesquise aqui">
+        <i class="fas fa-search"></i>
     </div>
-    <div class="user-area">
-      <span><strong>Gabriel Gomes</strong></span>
-      <i class="fas fa-user-circle fa-2x"></i>
+
+    <div class="actions">
+        <i class="fas fa-bell"></i>
+        <div class="user-avatar"></div>
+        <button class="user-button">Nome de Usuário <i class="fas fa-chevron-down"></i></button>
     </div>
-  </header>
+</header>
 
   <!-- MAIN -->
-  <main>
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="filter-box">
-        <h4><i class="fas fa-stethoscope"></i> Especialidade</h4>
-        <select>
-          <option>Especialidade</option>
+  <main class="container">
+    <aside class="filtros">
+      <div class="filtro-box">
+        <h3>Filtro</h3>
+        <label for="especialidade">Especialidade</label>
+        <select id="especialidade">
+          <option value="">Especialidade</option>
         </select>
-        <button><i class="fas fa-check"></i> Aplicar</button>
+        <button class="btn-aplicar">Aplicar</button>
       </div>
-      <div class="filter-box">
-        <h4><i class="fas fa-star"></i> Avaliação</h4>
-        <div class="ratings">
-          <label><input type="checkbox"> 
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-          </label><br/>
-          <label><input type="checkbox"> 
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="far fa-star"></i>
-          </label><br/>
-          <label><input type="checkbox"> 
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="far fa-star"></i>
-            <i class="far fa-star"></i>
-          </label><br/>
-          <label><input type="checkbox"> 
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="far fa-star"></i>
-            <i class="far fa-star"></i>
-            <i class="far fa-star"></i>
-          </label><br/>
-          <label><input type="checkbox"> 
-            <i class="fas fa-star"></i>
-            <i class="far fa-star"></i>
-            <i class="far fa-star"></i>
-            <i class="far fa-star"></i>
-            <i class="far fa-star"></i>
-          </label>
-        </div>
-        <button><i class="fas fa-check"></i> Aplicar</button>
+
+      <div class="avaliacao-box">
+        <h3>Avaliação</h3>
+        <form>
+          <div class="estrelas">
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></label><br>
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></label><br>
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></label><br>
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i><i class="fas fa-star"></i></label><br>
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i></label>
+          </div>
+          <button class="btn-aplicar">Aplicar</button>
+        </form>
       </div>
     </aside>
 
-    <!-- CONTENT -->
-    <section class="content">
+    <section class="conteudo">
       <h2>Profissionais Disponíveis</h2>
       <div class="cards">
-        <div class="card">
-          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Lucas Castro" />
+        
+        <!-- Card 1 -->
+        <section class="card">
+          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Lucas Castro">
           <h4>Lucas Castro</h4>
-          <p><i class="fas fa-user-md"></i> Odontologista</p>
-          <p>123 Avaliações</p>
-          <div class="stars">
+          <p>Implantodontista</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+          </div>
+        </section>
+
+        <!-- Card 2 -->
+        <section class="card">
+          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Ana Borges">
+          <h4>Ana Borges</h4>
+          <p>Ortodontista</p>
+          <div class="avaliacao">
             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
           </div>
-        </div>
+        </section>
 
-        <div class="card">
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Ana Borges" />
-          <h4>Ana Borges</h4>
-          <p><i class="fas fa-tooth"></i> Endodontista</p>
-          <p>77 Avaliações</p>
-          <div class="stars">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
-          </div>
-        </div>
-
-        <div class="card">
-          <img src="https://randomuser.me/api/portraits/women/48.jpg" alt="Beatriz Borges" />
+        <!-- Card 3 -->
+        <section class="card">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
           <h4>Beatriz Borges</h4>
-          <p><i class="fas fa-baby"></i> Odontopediatra</p>
-          <p>51 Avaliações</p>
-          <div class="stars">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
           </div>
-        </div>
+        </section>
+
       </div>
     </section>
   </main>
 
   <!-- FOOTER -->
-  <footer>
-    <p>www.odontopro.com.br © 2025 — Agende agora sua consulta</p>
-    <div class="social-icons">
-      <i class="fab fa-facebook"></i>
-      <i class="fab fa-instagram"></i>
-      <i class="fab fa-whatsapp"></i>
-      <i class="fab fa-linkedin"></i>
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-logo">
+        <img src="OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+      </div>
+      <div class="footer-text">
+        <p>OdontoPro Brasil Serviços Online e Software Ltda</p>
+      </div>
+      <div class="footer-social">
+        <a href="#"><i class="fab fa-facebook fa-lg"></i></a>
+        <a href="#"><i class="fab fa-instagram fa-lg"></i></a>
+        <a href="#"><i class="fab fa-twitter fa-lg"></i></a>
+        <a href="#"><i class="fab fa-linkedin fa-lg"></i></a>
+      </div>
     </div>
-  </footer>
+    <div class="footer-bottom">
+      <p>© odontopro.com.br 2025 - Agende agora sua consulta</p>
+    </div>
+</footer>
     
 </body>
 </html>
