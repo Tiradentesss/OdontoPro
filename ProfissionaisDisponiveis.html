@@ -28,13 +28,13 @@
 </header>
 
   <!-- MAIN -->
-  <main>
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="filter-box">
-        <h4><i class="fas fa-stethoscope"></i> Especialidade</h4>
-        <select>
-          <option>Especialidade</option>
+  <main class="container">
+    <aside class="filtros">
+      <div class="filtro-box">
+        <h3>Filtro</h3>
+        <label for="especialidade">Especialidade</label>
+        <select id="especialidade">
+          <option value="">Especialidade</option>
         </select>
         <button class="btn-aplicar">Aplicar</button>
       </div>
@@ -57,8 +57,10 @@
     <section class="conteudo">
       <h2>Profissionais Disponíveis</h2>
       <div class="cards">
-        <div class="card">
-          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Lucas Castro" />
+        
+        <!-- Card 1 -->
+        <section class="card">
+          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Lucas Castro">
           <h4>Lucas Castro</h4>
           <p>Implantodontista</p>
           <div class="avaliacao">
@@ -66,8 +68,9 @@
           </div>
         </section>
 
-        <div class="card">
-          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Ana Borges" />
+        <!-- Card 2 -->
+        <section class="card">
+          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Ana Borges">
           <h4>Ana Borges</h4>
           <p>Ortodontista</p>
           <div class="avaliacao">
@@ -75,8 +78,9 @@
           </div>
         </section>
 
-        <div class="card">
-          <img src="https://randomuser.me/api/portraits/women/48.jpg" alt="Beatriz Borges" />
+        <!-- Card 3 -->
+        <section class="card">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
           <h4>Beatriz Borges</h4>
           <p>Clínico Geral</p>
           <div class="avaliacao">
@@ -89,13 +93,23 @@
   </main>
 
   <!-- FOOTER -->
-  <footer>
-    <p>www.odontopro.com.br © 2025 — Agende agora sua consulta</p>
-    <div class="social-icons">
-      <i class="fab fa-facebook"></i>
-      <i class="fab fa-instagram"></i>
-      <i class="fab fa-whatsapp"></i>
-      <i class="fab fa-linkedin"></i>
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-logo">
+        <img src="OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+      </div>
+      <div class="footer-text">
+        <p>OdontoPro Brasil Serviços Online e Software Ltda</p>
+      </div>
+      <div class="footer-social">
+        <a href="#"><i class="fab fa-facebook fa-lg"></i></a>
+        <a href="#"><i class="fab fa-instagram fa-lg"></i></a>
+        <a href="#"><i class="fab fa-twitter fa-lg"></i></a>
+        <a href="#"><i class="fab fa-linkedin fa-lg"></i></a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© odontopro.com.br 2025 - Agende agora sua consulta</p>
     </div>
 </footer>
     
