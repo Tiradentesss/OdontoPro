@@ -1,27 +1,23 @@
-/* =========================
-   BASE: estrutura da pÃ¡gina
-   ========================= */
    html, body {
     height: 100%;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: "Poppins", sans-serif;
   }
   
   body {
     background-color: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
   
-  /* Ocupa o espaÃ§o restante entre header e footer */
   main {
     flex: 1;
   }
   
-  /* ======================
-     HEADER (top-header)
-     ====================== */
   .top-header {
     display: flex;
     justify-content: space-between;
@@ -277,10 +273,8 @@
     cursor: pointer;
   }
   
-  /* ======================
-     FOOTER
-     ====================== */
   .footer {
+    margin-top: auto;
     background-color: #ffffff;
     padding: 2rem 1rem 1rem;
     box-shadow: 0 -1px 10px rgba(0,0,0,0.05);
@@ -323,4 +317,3 @@
     color: #aaa;
     font-size: 0.8rem;
   }
-  
