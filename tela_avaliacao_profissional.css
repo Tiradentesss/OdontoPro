@@ -8,8 +8,9 @@ body {
   display: flex;
   background-color: #f2f2f2;
   color: #333;
-  flex-direction: column;
   min-height: 100vh;
+  flex-direction: column;
+}
 }
 
 header {
@@ -119,6 +120,15 @@ main.conteudo {
   border-color: #ffffff00;
   border-radius: 5px;
 }
+
+.footer {
+  margin-top: auto;
+  background-color: #ffffff;
+  padding: 2rem 1rem 1rem;
+  box-shadow: 0 -1px 10px rgba(0,0,0,0.05);
+  font-size: 0.9rem;
+}
+
 .footer-top {
   display: flex;
   justify-content: space-between;
