@@ -1,0 +1,16 @@
+@media (max-width: 1024px) {
+  .top-section {
+    flex-direction: column;
+    align-items: center;
+  }
+  .clinic-img {
+    width: 100%;
+    max-width: 500px;
+  }
+  .dias-cards {
+    flex-direction: column;
+  }
+  .bottom-section {
+    grid-template-columns: 1fr;
+  }
+}
