@@ -18,82 +18,6 @@ main {
   flex: 1;
 }
 
-.top-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: white;
-  padding: 10px 30px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-
-.logo-area {
-  display: flex;
-  align-items: center;
-}
-
-.logo {
-  height: 60px;
-  margin-right: 10px;
-}
-
-.logo-text {
-  line-height: 1.2;
-  font-size: 14px;
-}
-
-.search-area {
-  display: flex;
-  align-items: center;
-  background-color: #f3f3f3;
-  padding: 6px 10px;
-  border-radius: 8px;
-  width: 300px;
-}
-
-.search-area input {
-  border: none;
-  background: transparent;
-  outline: none;
-  flex: 1;
-  font-size: 14px;
-}
-
-.search-area i {
-  color: #777;
-  margin-left: 5px;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.actions .fa-bell {
-  font-size: 18px;
-  color: #555;
-  cursor: pointer;
-}
-
-.user-avatar {
-  width: 30px;
-  height: 30px;
-  background-color: #ccc;
-  border-radius: 50%;
-}
-
-.user-button {
-  background: none;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #333;
-}
-
 /* ======================
    CONTEÃšDO DO PERFIL
    ====================== */
@@ -316,4 +240,38 @@ main {
   text-align: center;
   color: #aaa;
   font-size: 0.8rem;
+}
+
+@media screen and (max-width: 670px) {
+  .btn-agendar {
+    margin: 0 auto;
+    background: #00bcd4;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+
+  .modal-content {
+    background: #fff;
+    padding: 0.7rem;
+    border-radius: 10px;
+    width: 85%;
+    max-width: 400px;
+    position: relative;
+    animation: fadeIn 0.3s ease-in-out;
+  }
 }
