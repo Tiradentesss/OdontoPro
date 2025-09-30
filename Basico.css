@@ -18,6 +18,7 @@ body {
 
 .top-header {
   display: flex;
+  
   justify-content: space-between;
   align-items: center;
   background-color: white;
@@ -94,4 +95,96 @@ body {
   align-items: center;
   gap: 5px;
   color: #333;
+}
+
+@media screen and (max-width: 768px) {
+  .top-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  /* Move .actions para o início apenas no mobile */
+  .actions {
+    order: -1;
+  }
+
+  /* Adicionais para melhor visual em mobile (opcional) */
+  .search-area {
+    flex: 1 1 100%;
+    max-width: none;
+    margin-top: 10px;
+  }
+
+  .logo-area {
+    flex: 1 1 auto;
+  }
+}
+
+/* FOOTER */
+
+.footer {
+  margin-top: auto;
+  background-color: #ffffff;
+  padding: 2rem 1rem 1rem;
+  box-shadow: 0 -1px 10px rgba(0,0,0,0.05);
+  font-size: 0.9rem;
+}
+
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 1rem;
+  gap: 1rem;
+}
+
+.footer-logo img.logo {
+  height: 40px;
+}
+
+.footer-text {
+  text-align: center;
+  flex: 1;
+  color: #666;
+}
+
+.footer-social {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-social a {
+  color: #00bcd4;
+  transition: transform 0.2s;
+  font-size: 1.2rem;
+}
+
+.footer-social a:hover {
+  transform: scale(1.2);
+  color: #0097a7;
+}
+
+.footer-bottom {
+  margin-top: 1rem;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.8rem;
+}
+
+/* Responsivo */
+
+@media screen and (max-width: 768px) {
+  .footer-top {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-social {
+    justify-content: center;
+  }
 }
