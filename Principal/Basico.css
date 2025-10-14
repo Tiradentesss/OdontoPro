@@ -98,27 +98,56 @@ body {
 
 @media screen and (max-width: 768px) {
   .top-header {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    gap: 10px;
   }
 
-  /* Move .actions para o início apenas no mobile */
-  .actions {
-    order: -1;
-  }
-
-  /* Adicionais para melhor visual em mobile (opcional) */
-  .search-area {
-    flex: 1 1 100%;
-    max-width: none;
-    margin-top: 10px;
-  }
-
+  /* Centraliza logo no topo */
   .logo-area {
-    flex: 1 1 auto;
+    order: 1;
+    justify-content: center;
+    width: 100%;
+    display: flex;
+  }
+
+  /* Esconde o sino no mobile */
+  .actions .fa-bell {
+    display: none;
+  }
+
+  /* Perfil logo abaixo da logo (acima da busca) */
+  .actions {
+    order: 2;
+    width: 90%;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .user-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Barra de pesquisa abaixo de tudo */
+  .search-area {
+    order: 3;
+    width: 90%;
+    max-width: none;
+    margin-top: 5px;
   }
 }
+
+/* Reaparece o sino quando voltar ao desktop */
+@media screen and (min-width: 769px) {
+  .actions .fa-bell {
+    display: inline;
+  }
+}
+
 
 /* FOOTER */
 
