@@ -148,3 +148,86 @@ p {
     text-decoration: none;
     color: #0099ff;
 }
+
+/* Estilos para telas até 768px (tablets e celulares maiores) */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        height: auto; /* para ajustar à altura do conteúdo */
+        overflow: visible; /* liberar scroll vertical */
+    }
+
+    .pacienteimg {
+        flex: none;
+        width: 100%;
+        height: 200px; /* altura fixa menor */
+    }
+
+    .pacienteimg img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .login {
+        flex: none;
+        width: 100%;
+        padding: 30px 20px;
+        background: linear-gradient(135deg, #F2F2F2, #91daeb);
+    }
+
+    .login > * {
+        max-width: 100%;
+    }
+
+    form {
+        padding-top: 20px;
+    }
+
+    input {
+        font-size: 16px;
+        padding: 14px;
+    }
+
+    .acessar-conta {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    .outros {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .outros button {
+        min-width: 100%;
+        justify-content: flex-start;
+        padding-left: 16px;
+    }
+
+    .criar-conta {
+        padding-top: 15px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+  .pacienteimg {
+    display: none; 
+  }
+  
+  .container {
+    flex-direction: column; 
+    height: auto; 
+  }
+
+  .login {
+    width: 100%; 
+    
+    flex: none; 
+  }
+  
+  .login > * {
+    max-width: 100%;
+  }
+}
