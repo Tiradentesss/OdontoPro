@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Header OdontoPro</title>
+    <link rel="stylesheet" href="Basico.css">
+    <link rel="stylesheet" href="Tela_configurações_novo_atualização_header e flooter_15-10-2025.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header class="top-header">
+        <div class="logo-area">
+            <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+        </div>
+
+        <div class="search-area">
+            <input type="text" placeholder="Pesquise aqui">
+            <i class="fas fa-search"></i>
+        </div>
+
+        <div class="actions">
+            <!-- Sino de notificações (desktop) -->
+            <i class="fas fa-bell" id="notifBtn"></i>
+
+            <!-- Avatar do usuário (desktop) -->
+            <div class="user-avatar" id="desktopAvatar"></div>
+
+            <!-- Botão de usuário (desktop) -->
+            <button class="user-button" id="userBtn">
+                <span class="user-name">Nome de Usuário</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+
+            <!-- Dropdown do usuário -->
+            <div class="dropdown-menu" id="userMenu">
+                <a href="configuracoes.html">Configurações</a>
+                <a href="#">Logout</a>
+            </div>
+
+            <!-- Dropdown de notificações -->
+            <div class="notif-menu" id="notifMenu">
+                <p>Nenhuma nova notificação</p>
+            </div>
+
+            <!-- Hamburger / avatar mobile -->
+            <div class="hamburger-container" id="hamburger">
+                <div class="user-avatar" id="mobileAvatar"></div>
+            </div>
+
+            <!-- Menu mobile -->
+            <div class="mobile-menu" id="mobileMenu">
+                <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
+                <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="tab-content" id="Perfil" style="display: block;">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="perfil-content">Perfil</button>
+                <button class="tab-button" data-tab="preferencias-content">Preferencias</button>
+                <button class="tab-button" data-tab="seguranca-content">Segurança</button>
+            </div>
+
+            <h2>Configurações</h2>
+
+            <!-- Conteúdo das Abas -->
+            <!-- Perfil -->
+            <div id="perfil-content" class="tab-section" style="display: block;">
+                <div class="nome">
+                    <label for="nome">Nome</label>
+                    <input type="text" id="nome" name="nome">
+                </div>
+
+                <div class="cpf">
+                    <label for="cpf">Cpf</label>
+                    <input type="text" id="cpf" name="cpf">
+                </div>
+
+                <div class="Data_de_Nascimento">
+                    <label for="Data de Nascimento">Data de Nascimento</label>
+                    <input type="datadenascimento" id="datadenascimento" name="datadenascimento">
+                </div>
+
+                <div class="email">
+                    <label for="email">Email</label>
+                    <input type="text" id="email" name="email">
+                </div>
+
+                <div class="cidade">
+                    <label for="cidade">Cidade</label>
+                    <input type="text" id="Cidade" name="Cidade">
+                </div>
+
+                <div class="endereço">
+                    <label for="endereço">Endereço</label>
+                    <input type="text" id="endereço" name="endereço">
+                </div>
+
+                <div class="cep">
+                    <label for="cep">Cep</label>
+                    <input type="text" id="cep" name="cep">
+                </div>
+
+                <div class="codigo_postal">
+                    <label for="codigo_postal">Código Postal</label>
+                    <input type="text" id="Codigo_Postal" name="Codigo_Postal">
+                </div>
+            </div>
+
+            <!-- Preferencias -->
+            <div id="preferencias-content" class="tab-section" style="display: none;">
+                <p>Notificações</p>
+
+                <div class="toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="Notificação01">Notificação</span>
+                </div>
+            </div>
+
+            <!-- Segurança -->
+            <div id="seguranca-content" class="tab-section" style="display: none;">
+                <p>Alterar Senha</p>
+
+                <div class="nova_senha">
+                    <label for="nova-senha">Nova senha</label>
+                    <input type="password" id="nova-senha" name="nova-senha" />
+                </div>
+
+                <div class="confirmar">
+                    <label for="confirmar">Confirme sua senha</label>
+                    <input type="password" id="confirmar" name="confirmar" />
+                </div>
+            </div>
+
+            <!-- Botões de Salvar das abas -->
+            <div class="botoes-salvar">
+                <button id="btn-salvar-perfil" class="salvar" type="button" style="display: block;">Salvar</button>
+                <button id="btn-salvar-preferencias" class="salvar" type="button" style="display: none;">Salvar</button>
+                <button id="btn-salvar-seguranca" class="salvar" type="button" style="display: none;">Salvar</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+            </div>
+            <div class="footer-text">
+                <p>OdontoPro Brasil Serviços Online e Software Ltda</p>
+            </div>
+            <div class="footer-social">
+                <a href="#"><i class="fab fa-facebook fa-lg"></i></a>
+                <a href="#"><i class="fab fa-instagram fa-lg"></i></a>
+                <a href="#"><i class="fab fa-twitter fa-lg"></i></a>
+                <a href="#"><i class="fab fa-linkedin fa-lg"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© odontopro.com.br 2025 - Agende agora sua consulta</p>
+        </div>
+    </footer>
+
+    <script src="Header.js"></script>
+
+    <script>
+        const tabButtons = document.querySelectorAll(".tab-button");
+        const tabSections = document.querySelectorAll(".tab-section");
+
+        const btnPerfil = document.getElementById("btn-salvar-perfil");
+        const btnPreferencias = document.getElementById("btn-salvar-preferencias");
+        const btnSeguranca = document.getElementById("btn-salvar-seguranca");
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const target = btn.getAttribute("data-tab");
+
+                tabButtons.forEach(b => b.classList.remove("active"));
+                tabSections.forEach(s => s.style.display = "none");
+
+                btn.classList.add("active");
+                document.getElementById(target).style.display = "block";
+
+                
+                btnPerfil.style.display = target === "perfil-content" ? "block" : "none";
+                btnPreferencias.style.display = target === "preferencias-content" ? "block" : "none";
+                btnSeguranca.style.display = target === "seguranca-content" ? "block" : "none";
+            });
+        });
+    </script>
+</body>
+
+</html>
