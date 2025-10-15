@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="ProfissionaisDisponiveis_atualização.css">
+    <link rel="stylesheet" href="Basico.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>OdontoPro | Profissionais Disponiveis </title>
+</head>
+<body>
+
+    <header class="top-header">
+        <div class="logo-area">
+            <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+        </div>
+
+        <div class="search-area">
+            <input type="text" placeholder="Pesquise aqui">
+            <i class="fas fa-search"></i>
+        </div>
+
+        <div class="actions">
+            <!-- Sino de notificações (desktop) -->
+            <i class="fas fa-bell" id="notifBtn"></i>
+
+            <!-- Avatar do usuário (desktop) -->
+            <div class="user-avatar" id="desktopAvatar"></div>
+
+            <!-- Botão de usuário (desktop) -->
+            <button class="user-button" id="userBtn">
+                <span class="user-name">Nome de Usuário</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+
+            <!-- Dropdown do usuário -->
+            <div class="dropdown-menu" id="userMenu">
+                <a href="configuracoes.html">Configurações</a>
+                <a href="#">Logout</a>
+            </div>
+
+            <!-- Dropdown de notificações -->
+            <div class="notif-menu" id="notifMenu">
+                <p>Nenhuma nova notificação</p>
+            </div>
+
+            <!-- Hamburger / avatar mobile -->
+            <div class="hamburger-container" id="hamburger">
+                <div class="user-avatar" id="mobileAvatar"></div>
+            </div>
+
+            <!-- Menu mobile -->
+            <div class="mobile-menu" id="mobileMenu">
+                <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
+                <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+
+  <!-- MAIN -->
+  <main class="container">
+    <aside class="filtros">
+      <div class="filtro-box">
+        <h3>Filtro</h3>
+        <label for="especialidade">Especialidade</label>
+        <select id="especialidade">
+          <option value="">Especialidade</option>
+        </select>
+        <button class="btn-aplicar">Aplicar</button>
+      </div>
+
+      <div class="avaliacao-box">
+        <h3>Avaliação</h3>
+        <form>
+          <div class="estrelas">
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></label><br>
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></label><br>
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></label><br>
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i><i class="fas fa-star"></i></label><br>
+            <label><input type="radio" name="avaliacao"> <i class="fas fa-star"></i></label>
+          </div>
+          <button class="btn-aplicar">Aplicar</button>
+        </form>
+      </div>
+    </aside>
+
+    <section class="conteudo">
+      <h2>Profissionais Disponíveis</h2>
+      <div class="cards">
+        
+        <!-- Card 1 -->
+        <section class="card" onclick="location.href='../PerfilDoProfissional/PerfilDoProfissional.html'">
+          <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Lucas Castro">
+          <h4>Lucas Castro</h4>
+          <p>Implantodontista</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+          </div>
+        </section>
+
+        <!-- Card 2 -->
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Ana Borges">
+          <h4>Ana Borges</h4>
+          <p>Ortodontista</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+          </div>
+        </section>
+
+        <!-- Card 3 -->
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+
+
+
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+        
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+
+        <section class="card" onclick="location.href='pagina1.html'">
+          <img src="https://randomuser.me/api/portraits/women/22.jpg" alt="Beatriz Borges">
+          <h4>Beatriz Borges</h4>
+          <p>Clínico Geral</p>
+          <div class="avaliacao">
+            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i><i class="far fa-star"></i>
+          </div>
+        </section>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-logo">
+        <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+      </div>
+      <div class="footer-text">
+        <p>OdontoPro Brasil Serviços Online e Software Ltda</p>
+      </div>
+      <div class="footer-social">
+        <a href="#"><i class="fab fa-facebook fa-lg"></i></a>
+        <a href="#"><i class="fab fa-instagram fa-lg"></i></a>
+        <a href="#"><i class="fab fa-twitter fa-lg"></i></a>
+        <a href="#"><i class="fab fa-linkedin fa-lg"></i></a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© odontopro.com.br 2025 - Agende agora sua consulta</p>
+    </div>
+</footer>
+
+ <script src="Header.js"></script>
+    
+</body>
+</html>
