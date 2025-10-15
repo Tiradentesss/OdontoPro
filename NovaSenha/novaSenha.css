@@ -1,95 +1,106 @@
-* {
-  box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
-  margin: 0;
-  padding: 0;
-}
+/* ============================================
+   NOVA SENHA - ESTILO UNIFICADO
+   ============================================ */
 
-body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f2f2f2;
-}
-
-.main {
-  width: 100%;
-  max-width: 500px;
-  background-color: white;
-  padding: 40px;
-  border-radius: 16px;
-
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  padding-top: 50px;
-  padding-bottom: 120px;
-}
-
-.img_logo {
-  width: 220px;
-  padding-bottom: 50px;
-  height: auto;
-  margin-bottom: 20px;
-}
-
-.Texto_inicial p {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.Subtitulo h4 {
-  font-size: 14px;
-  color: #989898;
-  text-align: center;
-  line-height: 1.4;
-  margin-bottom: 30px;
-}
-
-.Senhas_todas {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.grupo_senha{
-  display: flex;
-  flex-direction: column;
-}
-
-.Senhas_todas label {
-  color: #6C7278;
-  font-size: 12px;
-  margin-bottom: 5px;
-}
-
-.Senhas_todas input {
-  border-radius: 9px;
-  padding: 12px;
-  font-size: 16px;
-  width: 100%;
-  border: 2px solid rgba(0, 0, 0, 0.2);
-}
-
-.Senhas_todas button {
-  padding: 15px;
-  width: 100%;
-  border-radius: 13px;
-  color: white;
-  background-color: #1BC3EA;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.Senhas_todas button:hover {
-  background-color: #15a8c9;
-}
+   * {
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #F2F2F2, #91daeb);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Card principal */
+  .main {
+    width: 100%;
+    max-width: 460px;
+    background-color: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  /* Logo */
+  .img_logo {
+    width: 200px;
+    margin: 0 auto 25px;
+    height: auto;
+  }
+  
+  /* Texto inicial */
+  .Texto_inicial p {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .Subtitulo h4 {
+    font-size: 14px;
+    color: #6c7278;
+    line-height: 1.4;
+    margin-bottom: 25px;
+  }
+  
+  /* Campos de senha */
+  .Senhas_todas {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .grupo_senha {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .Senhas_todas label {
+    color: #6C7278;
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+  
+  .Senhas_todas input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    color: #333;
+    transition: border-color 0.3s ease;
+  }
+  
+  .Senhas_todas input:focus {
+    border-color: #00bfff;
+    outline: none;
+  }
+  
+  /* Botão principal */
+  .Senhas_todas button {
+    padding: 14px;
+    width: 100%;
+    border-radius: 10px;
+    color: white;
+    background-color: #00bfff;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  
+  .Senhas_todas button:hover {
+    background-color: #0099ff;
+    transform: scale(1.02);
+  }
+  

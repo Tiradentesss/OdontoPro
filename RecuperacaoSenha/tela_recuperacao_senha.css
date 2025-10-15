@@ -1,77 +1,120 @@
-*{
+/* ============================================
+   TELA DE RECUPERAÇÃO DE SENHA - NOVO ESTILO
+   ============================================ */
+
+   * {
     margin: 0;
     padding: 0;
     font-family: "Poppins", sans-serif;
-    align-content: center;
+    box-sizing: border-box;
 }
-body{
-    padding: 8vh;
+
+body {
+    background: linear-gradient(135deg, #F2F2F2, #91daeb);
     display: flex;
     justify-content: center;
-    background: #f2f2f2;
-    flex-wrap: wrap;
-}
-.conteudo{
-    background: #fff;
-    display: flex;
     align-items: center;
-    height: 778px;
-    width: 539px;
-    border-radius: 15px;
+    min-height: 100vh;
+}
+
+/* Container principal */
+.conteudo {
+    background: #ffffff;
+    display: flex;
     flex-direction: column;
-    gap: 15px;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 480px;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
-.imagem{
-  background: url(/logo1.png);
-  background-size: contain;
-  background-repeat: no-repeat;
-  width: 200px;
-  height: 150px;
-  margin-top: 150px;
+
+/* Logo */
+.imagem {
+    background: url(/logo1.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 200px;
+    height: 120px;
+    margin-bottom: 20px;
 }
-h2{
-    font-family: 'Poppins', sans-serif;
-    font-weight: 799;
-    font-size: 30px;
-    height: 20px;
+
+/* Título e texto */
+h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 10px;
 }
-p{
-    font-size: 12.5px;
-    height: 20px;
+
+p {
+    font-size: 14px;
     color: #6c7278;
-    font-weight: bold;
+    margin-bottom: 25px;
 }
-.redefinicao{
+
+/* Formulário */
+.redefinicao {
+    display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    display: flex;
-    height: 300px;
-}
-label{
-    color: #c2c2c2;
-    height: 3px;
-    font-weight: bold;
     width: 100%;
+    gap: 8px; /* reduz o espaçamento entre os itens do formulário */
 }
-input{
-    width: 400px;
-    padding: 15px 15px;
-    color: #c2c2c2;
-    font-weight: initial;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-size: 16px;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-}
-button{
+
+label {
     width: 100%;
-    padding: 15px 15px;
-    border: 1px solid #000;
-    background-color: #1bc3ea;
+    text-align: left;
+    color: #6c7278;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 0px; /* label colado ao input */
+    line-height: 1.2; /* ajusta a altura da linha */
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    color: #333;
+    transition: border-color 0.3s ease;
+}
+
+input:focus {
+    border-color: #00bfff;
+    outline: none;
+}
+
+/* Botão principal */
+button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background-color: #00bfff;
     color: #fff;
-    border-radius: 8px;
     font-size: 16px;
-    font-weight: 800;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+button:hover {
+    background-color: #0099ff;
+    transform: scale(1.02);
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+    .conteudo {
+        padding: 30px 20px;
+    }
 }

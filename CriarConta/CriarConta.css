@@ -1,89 +1,148 @@
-body, h1, a, nav, ul, li{
-    margin: 0px;
+/* ============================================
+   CRIAR CONTA - ESTILO FINAL AJUSTADO
+   ============================================ */
+
+   body {
+    margin: 0;
     padding: 0;
-    bottom: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #F2F2F2, #91daeb);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
 }
 
-body{
-    font-family: Arial, Helvetica, sans-serif;
+/* Container principal */
+main {
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 460px;
+    padding: 40px;
     text-align: center;
-    background: #F2F2F2;
-    /* background: linear-gradient(135deg, #F2F2F2, #91daeb); */
-    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-main{
-    margin: 100px;
+/* Logo */
+.logomarca img {
+    width: 190px;
+    margin-bottom: 30px;
 }
 
-.LadoA{
-    
+/* Título */
+h1 {
+    font-size: 25px;
+    margin-bottom: 25px;
+    color: #000;
+}
+
+/* Grupos de campos */
+.LadoA,
+.LadoB {
     display: flex;
     justify-content: space-between;
-    width: 400px;
-    height: 60px;
-    border-radius: 10px;
-    margin: 0 auto;
-    
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 10px;
 }
 
-.LadoB{
-    display: flex;
-    justify-content: space-between;
-    width: 400px;
-
-    height: 60px;
-    border-radius: 10px;
-    margin: 0 auto;
+.centro {
+    width: 100%;
 }
 
-.centro input{
-    display:block;
-    margin: 10px auto;
-    width: 400px;
-    height: 60px;
+/* Inputs */
+input {
+    flex: 1;
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
     border-radius: 10px;
-    color: #C4C4C4;
+    margin-top: 10px;
+    font-size: 15px;
+    color: #333;
+    background-color: #fff;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+input:focus {
+    border-color: #00bfff;
+    outline: none;
+}
+
+::placeholder {
+    color: #aaa;
+}
+
+/* ===== BOTÕES ===== */
+button,
+#enviar {
+    flex: 1;
+    width: 100%;
+    background-color: #00bfff;
+    color: #fff;
+    font-weight: bold;
     border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
+button:hover,
+#enviar:hover {
+    background-color: #0099ff;
+    transform: scale(1.02);
+}
 
-nav ul li input:hover{
+/* Se houver mais de um botão (ex: Voltar / Enviar) */
+.botoes {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Texto inferior */
+.criar-conta {
+    margin-top: 25px;
+    font-size: 14px;
+    color: #555;
+}
+
+.criar-conta a {
+    color: #00bfff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.criar-conta a:hover {
     text-decoration: underline;
 }
 
-button{
-    box-shadow: 0 0 8px rgba(0,0,0,0.2);
-    padding: 15px;
-    width: 190px;
-    border: none;
-    border-radius: 10px;
-    background-color: #ffffff;
-    color: #1f1f1f;
-    border: none;
-}
+/* Responsividade */
+@media (max-width: 480px) {
+    main {
+        padding: 30px 20px;
+        width: 90%;
+    }
 
-#enviar{
-    font-size: 20px;
-    margin: 10px;
-    width: 400px;
-    height: 60px;
-    border-radius: 10px;
-    background-color: #1BC3EA;
-    color: #FFFFFF;
-    border: none;
-    margin: 0 auto;
-}
+    .LadoA,
+    .LadoB,
+    .botoes {
+        flex-direction: column;
+    }
 
-::placeholder{
-    padding: 0 15px;
-}
-
-input{
-    box-shadow: 0 0 8px rgba(0,0,0,0.2);
-    font-weight: 550;
-    width: 190px;
-    border: none;
-    border-radius: 10px;
-
+    button,
+    #enviar {
+        width: 100%;
+    }
 }
