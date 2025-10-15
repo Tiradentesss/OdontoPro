@@ -7,22 +7,53 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header class="top-header">
-        <div class="logo-area">
-            <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+  <header class="top-header">
+    <div class="logo-area">
+        <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+    </div>
+
+    <div class="search-area">
+        <input type="text" placeholder="Pesquise aqui">
+        <i class="fas fa-search"></i>
+    </div>
+
+    <div class="actions">
+        <!-- Sino de notificações (desktop) -->
+        <i class="fas fa-bell" id="notifBtn"></i>
+
+        <!-- Avatar do usuário (desktop) -->
+        <div class="user-avatar" id="desktopAvatar"></div>
+
+        <!-- Botão de usuário (desktop) -->
+        <button class="user-button" id="userBtn">
+            <span class="user-name">Nome de Usuário</span>
+            <i class="fas fa-chevron-down"></i>
+        </button>
+
+        <!-- Dropdown do usuário -->
+        <div class="dropdown-menu" id="userMenu">
+            <a href="configuracoes.html">Configurações</a>
+            <a href="#">Logout</a>
         </div>
 
-        <div class="search-area">
-            <input type="text" placeholder="Pesquise aqui">
-            <i class="fas fa-search"></i>
+        <!-- Dropdown de notificações -->
+        <div class="notif-menu" id="notifMenu">
+            <p>Nenhuma nova notificação</p>
         </div>
 
-        <div class="actions">
-            <i class="fas fa-bell"></i>
-            <div class="user-avatar"></div>
-            <button class="user-button">Nome de Usuário <i class="fas fa-chevron-down"></i></button>
+        <!-- Hamburger / avatar mobile -->
+        <div class="hamburger-container" id="hamburger">
+            <div class="user-avatar" id="mobileAvatar"></div>
         </div>
-    </header>
+
+        <!-- Menu mobile -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
+            <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+            <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+</header>
 
     <footer class="footer">
         <div class="footer-top">
@@ -43,5 +74,7 @@
           <p>© odontopro.com.br 2025 - Agende agora sua consulta</p>
         </div>
     </footer>
+
+    <script src="Header.js"></script>
 </body>
 </html>

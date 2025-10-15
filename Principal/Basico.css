@@ -14,8 +14,7 @@ body {
   flex-direction: column;
 }
 
-/* HEADER */
-
+/*HEADER*/
 .top-header {
   display: flex;
   justify-content: space-between;
@@ -25,6 +24,8 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   flex-wrap: wrap;
   gap: 1rem;
+  position: relative;
+  z-index: 100;
 }
 
 .logo-area {
@@ -35,11 +36,6 @@ body {
 .logo {
   height: 60px;
   margin-right: 10px;
-}
-
-.logo-text {
-  line-height: 1.2;
-  font-size: 14px;
 }
 
 .search-area {
@@ -70,21 +66,34 @@ body {
   display: flex;
   align-items: center;
   gap: 20px;
+  position: relative;
 }
 
-.actions .fa-bell {
+#notifBtn {
   font-size: 18px;
   color: #555;
   cursor: pointer;
 }
 
-.user-avatar {
-  width: 30px;
-  height: 30px;
+/* Avatar desktop */
+#desktopAvatar {
+  width: 35px;
+  height: 35px;
   background-color: #ccc;
   border-radius: 50%;
+  cursor: pointer;
+  display: block;
 }
 
+#mobileAvatar {
+  width: 35px;
+  height: 35px;
+  background-color: #ccc;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Botão do usuário */
 .user-button {
   background: none;
   border: none;
@@ -94,45 +103,119 @@ body {
   align-items: center;
   gap: 5px;
   color: #333;
+  position: relative;
 }
 
+.user-name {
+  display: inline;
+}
+
+/* DROPDOWNS DESKTOP */
+.dropdown-menu,
+.notif-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 10px 0;
+  min-width: 180px;
+  display: none;
+  z-index: 10;
+}
+
+.dropdown-menu a,
+.notif-menu p {
+  display: block;
+  padding: 8px 15px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.dropdown-menu a:hover {
+  background-color: #f0f0f0;
+}
+
+.dropdown-menu.active,
+.notif-menu.active {
+  display: block;
+}
+
+/* HAMBURGER MOBILE */
+.hamburger-container {
+  display: none;
+}
+
+.mobile-menu {
+  display: none;
+  position: absolute;
+  top: 60px;
+  right: 10px;
+  width: 220px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  flex-direction: column;
+  z-index: 20;
+}
+
+.mobile-menu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+}
+
+.mobile-menu a:hover {
+  background-color: #f0f0f0;
+}
+
+/* RESPONSIVO */
 @media screen and (max-width: 768px) {
-  .top-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 15px;
-    gap: 10px;
+  .user-name,
+  .user-button,
+  #desktopAvatar,
+  #notifBtn {
+    display: none;
   }
 
-  /* Centraliza logo no topo */
+  .hamburger-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .mobile-menu.active {
+    display: flex;
+  }
+
+  .top-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+  }
+
   .logo-area {
     order: 1;
     justify-content: center;
     width: 100%;
-    display: flex;
   }
 
-  /* Esconde o sino no mobile */
-  .actions .fa-bell {
-    display: none;
-  }
-
-  /* Perfil logo abaixo da logo (acima da busca) */
   .actions {
     order: 2;
     width: 90%;
-    display: flex;
     justify-content: flex-end;
+    position: relative;
   }
 
-  .user-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  /* Barra de pesquisa abaixo de tudo */
   .search-area {
     order: 3;
     width: 90%;
@@ -141,13 +224,17 @@ body {
   }
 }
 
-/* Reaparece o sino quando voltar ao desktop */
 @media screen and (min-width: 769px) {
-  .actions .fa-bell {
-    display: inline;
+  #notifBtn {
+    display: inline-block;
+  }
+  #desktopAvatar {
+    display: block;
+  }
+  .hamburger-container {
+    display: none;
   }
 }
-
 
 /* FOOTER */
 
