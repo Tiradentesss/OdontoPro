@@ -96,6 +96,22 @@ button,
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
+.entrarCom{
+    flex: 1;
+    width: 100%;
+    background-color: #fff;
+    color: #00bfff;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
 button:hover,
 #enviar:hover {
     background-color: #0099ff;

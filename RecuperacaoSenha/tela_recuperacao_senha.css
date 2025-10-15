@@ -35,11 +35,13 @@ body {
 /* Logo */
 .imagem {
     background: url(/logo1.png);
-    background-size: contain;
+    background-size: contain;      /* mantém proporção */
     background-repeat: no-repeat;
     background-position: center;
-    width: 200px;
-    height: 120px;
+    width: 100%;                   /* ocupa toda a largura do container */
+    max-width: 250px;              /* limita o tamanho máximo */
+    height: auto;                  /* altura proporcional */
+    aspect-ratio: 5/3;             /* mantém proporção aproximada */
     margin-bottom: 20px;
 }
 
@@ -61,9 +63,9 @@ p {
 .redefinicao {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* label fica colado ao input */
     width: 100%;
-    gap: 8px; /* reduz o espaçamento entre os itens do formulário */
+    gap: 4px; /* espaçamento mínimo entre label e input */
 }
 
 label {
@@ -72,8 +74,8 @@ label {
     color: #6c7278;
     font-size: 13px;
     font-weight: 600;
-    margin-bottom: 0px; /* label colado ao input */
-    line-height: 1.2; /* ajusta a altura da linha */
+    margin-bottom: 0px; 
+    line-height: 1; /* deixa o label mais compacto verticalmente */
 }
 
 input {
@@ -116,5 +118,9 @@ button:hover {
 @media (max-width: 480px) {
     .conteudo {
         padding: 30px 20px;
+    }
+
+    .imagem {
+        max-width: 200px; /* ajusta logo para telas menores */
     }
 }
