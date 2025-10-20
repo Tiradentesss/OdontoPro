@@ -17,64 +17,70 @@
         <div class="logo-area">
             <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
         </div>
-    
+
         <div class="search-area">
             <input type="text" placeholder="Pesquise aqui">
             <i class="fas fa-search"></i>
         </div>
-    
+
         <div class="actions">
-            <!-- Sino de notificações (desktop) -->
             <i class="fas fa-bell" id="notifBtn"></i>
-    
-            <!-- Avatar do usuário (desktop) -->
             <div class="user-avatar" id="desktopAvatar"></div>
-    
-            <!-- Botão de usuário (desktop) -->
+
             <button class="user-button" id="userBtn">
                 <span class="user-name">Nome de Usuário</span>
                 <i class="fas fa-chevron-down"></i>
             </button>
-    
-            <!-- Dropdown do usuário -->
+
             <div class="dropdown-menu" id="userMenu">
-                <a href="../Configuracoes/Tela_configurações.html">Configurações</a>
-                <a href="../Login/login.html">Logout</a>
+                <a href="configuracoes.html">Configurações</a>
+                <a href="#">Logout</a>
             </div>
-    
-            <!-- Dropdown de notificações -->
+
             <div class="notif-menu" id="notifMenu">
                 <p>Nenhuma nova notificação</p>
             </div>
-    
-            <!-- Hamburger / avatar mobile -->
+
             <div class="hamburger-container" id="hamburger">
                 <div class="user-avatar" id="mobileAvatar"></div>
             </div>
-    
-            <!-- Menu mobile -->
+
             <div class="mobile-menu" id="mobileMenu">
                 <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
-                <a href="../Configuracoes/Tela_configurações.html"><i class="fas fa-cog"></i> Configurações</a>
-                <a href="../Login/login.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <a href="configuracoes.html"><i class="fas fa-cog"></i> Configurações</a>
+                <a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
         </div>
-        <script src="../Principal/Header.js"></script>
     </header>
 
     <main>
-        <div class="tab-content" id="Perfil" style="display: block;">
+        <div class="tab-content" id="Perfil">
             <div class="tabs">
                 <button class="tab-button active" data-tab="perfil-content">Perfil</button>
-                <button class="tab-button" data-tab="preferencias-content">Preferencias</button>
+                <button class="tab-button" data-tab="preferencias-content">Preferências</button>
                 <button class="tab-button" data-tab="seguranca-content">Segurança</button>
             </div>
 
             <h2>Configurações</h2>
 
-            <!-- Conteúdo das Abas -->
+           
             <!-- Perfil -->
-            <div id="perfil-content" class="tab-section" style="display: block;">
+            <div id="perfil-content" class="tab-section" style="display: grid;">
+
+             
+                <section class="avatar-section">
+                    <p class="avatar">Avatar</p>
+                    <div class="avatar-container">
+                        <div class="avatar-circle">
+                            <img src="" id="avatarImage">
+                        </div>
+                        <div class="avatar-buttons">
+                            <button type="button" class="btn-upload">Upload</button>
+                            <button type="button" class="btn-remove">Remover Foto</button>
+                        </div>
+                    </div>
+                    <p class="profile-text">Informações Pessoais</p>
+                </section>
                 <div class="nome">
                     <label for="nome">Nome</label>
                     <input type="text" id="nome" name="nome">
@@ -86,8 +92,8 @@
                 </div>
 
                 <div class="Data_de_Nascimento">
-                    <label for="Data de Nascimento">Data de Nascimento</label>
-                    <input type="datadenascimento" id="datadenascimento" name="datadenascimento">
+                    <label for="datadenascimento">Data de Nascimento</label>
+                    <input type="text" id="datadenascimento" name="datadenascimento">
                 </div>
 
                 <div class="email">
@@ -116,7 +122,7 @@
                 </div>
             </div>
 
-            <!-- Preferencias -->
+            <!-- Preferências -->
             <div id="preferencias-content" class="tab-section" style="display: none;">
                 <p>Notificações</p>
 
@@ -144,7 +150,7 @@
                 </div>
             </div>
 
-            <!-- Botões de Salvar das abas -->
+            <!-- Botões de Salvar -->
             <div class="botoes-salvar">
                 <button id="btn-salvar-perfil" class="salvar" type="button" style="display: block;">Salvar</button>
                 <button id="btn-salvar-preferencias" class="salvar" type="button" style="display: none;">Salvar</button>
@@ -173,6 +179,8 @@
         </div>
     </footer>
 
+    <script src="Header.js"></script>
+
     <script>
         const tabButtons = document.querySelectorAll(".tab-button");
         const tabSections = document.querySelectorAll(".tab-section");
@@ -185,13 +193,22 @@
             btn.addEventListener("click", () => {
                 const target = btn.getAttribute("data-tab");
 
+                // Remove todos os "active" e oculta as seções
                 tabButtons.forEach(b => b.classList.remove("active"));
                 tabSections.forEach(s => s.style.display = "none");
 
+                // Ativa botão atual
                 btn.classList.add("active");
-                document.getElementById(target).style.display = "block";
 
-                
+                // Exibe a aba correta, respeitando o display original
+                const section = document.getElementById(target);
+                if (target === "perfil-content") {
+                    section.style.display = "grid";
+                } else {
+                    section.style.display = "block";
+                }
+
+                // Mostrar o botão salvar correspondente
                 btnPerfil.style.display = target === "perfil-content" ? "block" : "none";
                 btnPreferencias.style.display = target === "preferencias-content" ? "block" : "none";
                 btnSeguranca.style.display = target === "seguranca-content" ? "block" : "none";
@@ -201,9 +218,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
