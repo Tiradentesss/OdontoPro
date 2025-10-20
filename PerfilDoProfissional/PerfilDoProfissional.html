@@ -14,168 +14,181 @@
 </head>
 <body>
 
-  <header class="top-header">
-    <div class="logo-area">
-        <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
-    </div>
-
-    <div class="search-area">
-        <input type="text" placeholder="Pesquise aqui">
-        <i class="fas fa-search"></i>
-    </div>
-
-    <div class="actions">
-        <!-- Sino de notificações (desktop) -->
-        <i class="fas fa-bell" id="notifBtn"></i>
-
-        <!-- Avatar do usuário (desktop) -->
-        <div class="user-avatar" id="desktopAvatar"></div>
-
-        <!-- Botão de usuário (desktop) -->
-        <button class="user-button" id="userBtn">
-            <span class="user-name">Nome de Usuário</span>
-            <i class="fas fa-chevron-down"></i>
-        </button>
-
-        <!-- Dropdown do usuário -->
-        <div class="dropdown-menu" id="userMenu">
-            <a href="../Configuracoes/Tela_configurações.html">Configurações</a>
-            <a href="../Login/login.html">Logout</a>
-        </div>
-
-        <!-- Dropdown de notificações -->
-        <div class="notif-menu" id="notifMenu">
-            <p>Nenhuma nova notificação</p>
-        </div>
-
-        <!-- Hamburger / avatar mobile -->
-        <div class="hamburger-container" id="hamburger">
-            <div class="user-avatar" id="mobileAvatar"></div>
-        </div>
-
-        <!-- Menu mobile -->
-        <div class="mobile-menu" id="mobileMenu">
-            <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
-            <a href="../Configuracoes/Tela_configurações.html"><i class="fas fa-cog"></i> Configurações</a>
-            <a href="../Login/login.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </div>
-    </div>
-    <script src="../Principal/Header.js"></script>
-</header>
-
-  <!-- Conteúdo principal -->
-  <main class="perfil-container">
-    <section class="perfil-main">
-      <div class="perfil-header">
-        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Dr. Lucas Castro" class="perfil-foto"/>
-        <div class="perfil-info">
-          <h2>Dr. Lucas Castro</h2>
-          <p class="especialidade">Implantodontista</p>
-          <div class="avaliacao">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-            <span>120 Avaliações</span>
-          </div>
-        </div>
-        <button class="btn-agendar">Agendar Consulta</button>
-      </div>
-
-      <div class="tabs">
-        <button class="tab-button active" data-tab="sobre">Sobre Dentista</button>
-        <button class="tab-button" data-tab="experiencia">Experiência</button>
-        <button class="tab-button" data-tab="avaliacao">Avaliação</button>
-      </div>
-
-      <div class="tab-content" id="sobre" style="display: block;">
-        <p>Há mais de 2 anos, escolhi a odontologia porque acredito que um sorriso pode mudar vidas. Mais do que estética, é uma forma de identidade. Quanto menos sorrisos escondidos atrás da mão, melhor.</p>
-      </div>
-
-      <div class="tab-content" id="experiencia">
-        <p>Com vasta experiência em odontologia moderna, o Dr. Lucas Castro é especialista em implantodontia. Atuou em diversas clínicas no Brasil e no exterior, oferecendo sempre um atendimento humanizado e atualizado com as mais recentes tecnologias.</p>
-      </div>
-
-      <div class="tab-content" id="avaliacao">
-        <p>Os consultórios oferecem estrutura médica robusta, mas o Lucas foi o diferencial! Muito calmo, atencioso e passa total segurança nos procedimentos. Já fiz dois implantes e tudo correu perfeitamente!</p>
-      </div>
-    </section>
-  </main>
-
-  <!-- Modal de Agendamento -->
-  <div id="agenda-modal" class="modal-overlay">
-    <div class="modal-content">
-      <span class="close-modal" id="fechar-modal">&times;</span>
-      <h3>Agende um atendimento</h3>
-      <form>
-        <label for="data">Data</label>
-        <input type="date" id="data" name="data"/>
-
-        <label for="horario">Horário</label>
-        <div class="horarios">
-          <button type="button">9:00</button>
-          <button type="button">9:30</button>
-          <button type="button">10:00</button>
-          <button type="button">10:30</button>
-          <button type="button">11:00</button>
-          <button type="button">11:30</button>
-        </div>
-
-        <button type="submit" class="btn-agendar-final">Agendar</button>
-      </form>
-    </div>
+<header class="top-header">
+  <div class="logo-area">
+      <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
   </div>
 
-  <footer class="footer">
-    <div class="footer-top">
-      <div class="footer-logo">
-        <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+  <div class="search-area">
+      <input type="text" placeholder="Pesquise aqui">
+      <i class="fas fa-search"></i>
+  </div>
+
+  <div class="actions">
+      <i class="fas fa-bell" id="notifBtn"></i>
+      <div class="user-avatar" id="desktopAvatar"></div>
+      <button class="user-button" id="userBtn">
+          <span class="user-name">Gabriel Gomes</span>
+          <i class="fas fa-chevron-down"></i>
+      </button>
+
+      <div class="dropdown-menu" id="userMenu">
+          <a href="../Configuracoes/Tela_configurações.html">Configurações</a>
+          <a href="../Login/login.html">Logout</a>
       </div>
-      <div class="footer-text">
-        <p>OdontoPro Brasil Serviços Online e Software Ltda</p>
+
+      <div class="notif-menu" id="notifMenu">
+          <p>Nenhuma nova notificação</p>
       </div>
-      <div class="footer-social">
-        <a href="#"><i class="fab fa-facebook fa-lg"></i></a>
-        <a href="#"><i class="fab fa-instagram fa-lg"></i></a>
-        <a href="#"><i class="fab fa-twitter fa-lg"></i></a>
-        <a href="#"><i class="fab fa-linkedin fa-lg"></i></a>
+
+      <div class="hamburger-container" id="hamburger">
+          <div class="user-avatar" id="mobileAvatar"></div>
+      </div>
+
+      <div class="mobile-menu" id="mobileMenu">
+          <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
+          <a href="../Configuracoes/Tela_configurações.html"><i class="fas fa-cog"></i> Configurações</a>
+          <a href="../Login/login.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+  </div>
+  <script src="../Principal/Header.js"></script>
+</header>
+
+<!-- CONTEÚDO PRINCIPAL -->
+<main class="perfil-container">
+  <section class="perfil-main">
+    <div class="perfil-header">
+      <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Dr. Lucas Castro" class="perfil-foto"/>
+      <div class="perfil-info">
+        <h2>Dr. Lucas Castro</h2>
+        <p class="especialidade">Clínico Geral e Dentista</p>
+        <div class="avaliacao">
+          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+          <span>120 Avaliações</span>
+        </div>
+      </div>
+      <button class="btn-agendar">Agendar Consulta</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-button active" data-tab="sobre">Sobre Dentista</button>
+      <button class="tab-button" data-tab="experiencia">Experiência</button>
+      <button class="tab-button" data-tab="avaliacao">Avaliação</button>
+    </div>
+
+    <div class="tab-content" id="sobre" style="display: block;">
+      <p>Há mais de 2 anos, escolhi a odontologia porque acredito que um sorriso pode mudar vidas. Mais do que estética, é uma forma de identidade. Quanto menos sorrisos escondidos atrás da mão, melhor.</p>
+    </div>
+
+    <div class="tab-content" id="experiencia">
+      <p>Com vasta experiência em odontologia moderna, o Dr. Lucas Castro é especialista em implantodontia. Atuou em diversas clínicas no Brasil e no exterior, oferecendo sempre um atendimento humanizado e atualizado com as mais recentes tecnologias.</p>
+    </div>
+
+    <div class="tab-content" id="avaliacao">
+      <div class="comentario-container">
+        <div class="comentario-input">
+          <input type="text" id="novoComentario" placeholder="Adicione um comentário">
+          <button id="btnAdicionar">Adicionar</button>
+        </div>
+
+        <div id="listaComentarios">
+          <div class="comentario">
+            <p>Dr. Lucas é incrível. Ele me ouviu com atenção, sem pressa...</p>
+            <span class="tempo">Comentado há 10 min atrás</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="footer-bottom">
-      <p>© odontopro.com.br 2025 - Agende agora sua consulta</p>
+  </section>
+</main>
+
+<!-- MODAL 1 - Escolha de horário -->
+<div id="agenda-modal" class="modal-overlay">
+  <div class="modal-content">
+    <span class="close-modal" id="fechar-modal">&times;</span>
+    <h3>Agende um atendimento</h3>
+    <form id="formAgendar">
+      <label for="data">Data</label>
+      <input type="date" id="data" name="data"/>
+
+      <label for="horario">Horário</label>
+      <div class="horarios">
+        <button type="button">9:00</button>
+        <button type="button">10:00</button>
+        <button type="button">11:00</button>
+        <button type="button">14:00</button>
+        <button type="button">15:00</button>
+        <button type="button">16:00</button>
+      </div>
+
+      <button type="button" id="abrirDadosConsulta" class="btn-agendar-final">Agendar</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL 2 - Dados da consulta -->
+<div id="dados-consulta-modal" class="modal-overlay">
+  <div class="modal-content">
+    <span class="close-modal" id="fechar-dados">&times;</span>
+    <h3>Dados Da Consulta</h3>
+    <form id="formDadosConsulta">
+      <label>Nome Completo</label>
+      <input type="text" placeholder="Digite seu nome" required>
+
+      <label>Email</label>
+      <input type="email" placeholder="Digite seu email" required>
+
+      <label>Telefone</label>
+      <input type="tel" placeholder="Digite seu número" required>
+
+      <label>Data e Hora</label>
+      <input type="text" id="dataHoraSelecionada" readonly>
+
+      <label>Especialidade Desejada</label>
+      <select>
+        <option>Clínico Geral</option>
+        <option>Implantodontia</option>
+        <option>Ortodontia</option>
+        <option>Endodontia</option>
+      </select>
+
+      <label>Observações</label>
+      <textarea placeholder="Adicione observações..."></textarea>
+
+      <button type="submit" class="btn-agendar-final">Confirmar</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL 3 - Sucesso -->
+<div id="sucesso-modal" class="modal-overlay">
+  <div class="modal-content sucesso">
+    <i class="fas fa-check-circle"></i>
+    <h3>Consulta Agendada com Sucesso</h3>
+    <button id="voltarInicio" class="btn-agendar-final">Voltar ao Início</button>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-top">
+    <div class="footer-logo">
+      <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
     </div>
+    <div class="footer-text">
+      <p>OdontoPro Brasil Serviços Online e Software Ltda</p>
+    </div>
+    <div class="footer-social">
+      <a href="#"><i class="fab fa-facebook fa-lg"></i></a>
+      <a href="#"><i class="fab fa-instagram fa-lg"></i></a>
+      <a href="#"><i class="fab fa-twitter fa-lg"></i></a>
+      <a href="#"><i class="fab fa-linkedin fa-lg"></i></a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© odontopro.com.br 2025 - Agende agora sua consulta</p>
+  </div>
 </footer>
 
-  <!-- JS -->
-  <script>
-    const tabButtons = document.querySelectorAll(".tab-button");
-    const tabContents = document.querySelectorAll(".tab-content");
-
-    tabButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        tabButtons.forEach(b => b.classList.remove("active"));
-        tabContents.forEach(c => c.style.display = "none");
-
-        btn.classList.add("active");
-        const tab = btn.getAttribute("data-tab");
-        document.getElementById(tab).style.display = "block";
-      });
-    });
-
-    const modal = document.getElementById("agenda-modal");
-    const abrirModalBtn = document.querySelector(".btn-agendar");
-    const fecharModalBtn = document.getElementById("fechar-modal");
-
-    abrirModalBtn.addEventListener("click", () => {
-      modal.style.display = "flex";
-    });
-
-    fecharModalBtn.addEventListener("click", () => {
-      modal.style.display = "none";
-    });
-
-    window.addEventListener("click", (e) => {
-      if (e.target === modal) {
-        modal.style.display = "none";
-      }
-    });
-  </script>
+<script src="PerfilDoProfissional.js"></script>
 </body>
 </html>
