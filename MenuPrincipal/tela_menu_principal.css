@@ -1,130 +1,172 @@
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
   font-family: "Poppins", sans-serif;
 }
 
 body {
-  display: flex;
   background-color: #f2f2f2;
   color: #333;
+  display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: white;
-  gap: 50px;
-  padding: 20px 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-.logo {
-  height: 40px;
-}
-.search-area {
-  display: flex;
-  align-items: center;
-  background-color: #f3f3f3;
-  padding: 10px 10px;
-  border-radius: 8px;
-  width: 500px;
-}
-
-.search-area input {
-  border: none;
-  background: transparent;
-  outline: none;
-  flex: 1;
-  font-size: 14px;
-}
-
-.search-area i {
-  color: #777;
-  margin-left: 5px;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.actions .fa-bell {
-  font-size: 18px;
-  color: #555;
-  cursor: pointer;
-}
-
-.user-avatar {
-  width: 30px;
-  height: 30px;
-  background-color: #ccc;
-  border-radius: 50%;
-}
-.user-button {
-  background: none;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #333;
-}
-.foto_perfil {
-  border-radius: 50%
-}
 main {
-  flex: 1;
-  display:flex;
+  display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  padding: 2rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-  border-color: #ffffff;
+  padding: 3rem 2rem;
+  gap: 2rem;
 }
-.imagem_clinica{
-  height: 78px;
-  width: 98px;
-}
-.options{
-  display: flex;
-  margin: 5px;
-  color: #1bc3ea;
-  background-color: #ffffff;
-  border: #ffffff;
-  border-radius: 8px;
-  height: 70px;
-  width: 900px;
-  font-size: large;
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  gap: 20px;
-}
-h4 h6 {
-  color: #333;
-}
-.tipo_opcao {
-  padding: 0px;
 
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000;
+  text-align: center;
 }
-.more_options{
+
+h4 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.principal {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  flex-direction: row-reverse;
+}
+
+.setup {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 260px;
+}
+
+.filtros, .avaliacao {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.filtros h4, .avaliacao h4 {
+  color: #111;
+  margin-bottom: 1rem;
+}
+
+.valores {
+  width: 100%;
+  height: 42px;
+  margin-bottom: 1rem;
+  background-color: #f2f3f5;
+  border: none;
+  border-radius: 8px;
+  padding: 0 10px;
+  color: #555;
+}
+
+.aplicar {
+  background-color: #1bc3ea;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 600;
+  height: 42px;
+  width: 100%;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.aplicar:hover {
+  background-color: #17aed1;
+}
+
+.opcoes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.options {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.options:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.imagem_clinica {
+  width: 100px;
+  height: 75px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.options h3 {
+  color: #1bc3ea;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.options i {
+  color: #ffa500;
+  font-size: 0.9rem;
+}
+
+.options h6 {
+  color: #333;
+  font-weight: 400;
+  font-size: 0.9rem;
+  margin-top: 3px;
+}
+
+.more_options {
   display: flex;
   justify-content: center;
   align-items: center;
   color: #1bc3ea;
-  background-color: #ffffff;
-  height:40px;
+  background-color: #fff;
+  height: 45px;
   width: 200px;
-  border: #1bc3ea;
-  border-radius: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid #1bc3ea;
+  border-radius: 25px;
+  font-weight: 600;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+  transition: 0.3s;
 }
+
+.more_options:hover {
+  background-color: #1bc3ea;
+  color: #fff;
+}
+
+.footer {
+  margin-top: auto;
+  background: #fff;
+  border-top: 1px solid #e0e0e0;
+  padding: 1.5rem 2rem;
+  text-align: center;
+}
+
 .footer-top {
   display: flex;
   justify-content: space-between;
@@ -133,31 +175,71 @@ h4 h6 {
   border-bottom: 1px solid #ddd;
   padding-bottom: 1rem;
 }
-  
+
 .footer-logo img.logo {
   height: 40px;
 }
-  
+
 .footer-text {
-  text-align: center;
-  flex: 1;
   color: #666;
 }
-  
+
 .footer-social a {
-  color: #00bcd4;
+  color: #1bc3ea;
   margin-left: 10px;
-  transition: transform 0.2s;
+  transition: transform 0.2s, color 0.2s;
 }
-  
+
 .footer-social a:hover {
   transform: scale(1.2);
-  color: #0097a7;
+  color: #139ec0;
 }
-  
+
 .footer-bottom {
   margin-top: 1rem;
-  text-align: center;
   color: #aaa;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .principal {
+    flex-direction: column-reverse;
+    align-items: center;
+  }
+
+  .setup {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .filtros, .avaliacao {
+    width: 45%;
+  }
+
+  .opcoes {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .setup {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .filtros, .avaliacao {
+    width: 100%;
+  }
+
+  .options {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .imagem_clinica {
+    width: 100%;
+    height: auto;
+  }
 }
