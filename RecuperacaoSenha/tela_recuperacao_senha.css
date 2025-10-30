@@ -1,0 +1,126 @@
+/* ============================================
+   TELA DE RECUPERAÇÃO DE SENHA - NOVO ESTILO
+   ============================================ */
+
+   * {
+    margin: 0;
+    padding: 0;
+    font-family: "Poppins", sans-serif;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #F2F2F2, #91daeb);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Container principal */
+.conteudo {
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 480px;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+/* Logo */
+.imagem {
+    background: url(/logo1.png);
+    background-size: contain;      /* mantém proporção */
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 100%;                   /* ocupa toda a largura do container */
+    max-width: 250px;              /* limita o tamanho máximo */
+    height: auto;                  /* altura proporcional */
+    aspect-ratio: 5/3;             /* mantém proporção aproximada */
+    margin-bottom: 20px;
+}
+
+/* Título e texto */
+h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 14px;
+    color: #6c7278;
+    margin-bottom: 25px;
+}
+
+/* Formulário */
+.redefinicao {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* label fica colado ao input */
+    width: 100%;
+    gap: 4px; /* espaçamento mínimo entre label e input */
+}
+
+label {
+    width: 100%;
+    text-align: left;
+    color: #6c7278;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 0px; 
+    line-height: 1; /* deixa o label mais compacto verticalmente */
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    color: #333;
+    transition: border-color 0.3s ease;
+}
+
+input:focus {
+    border-color: #00bfff;
+    outline: none;
+}
+
+/* Botão principal */
+button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background-color: #00bfff;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+button:hover {
+    background-color: #0099ff;
+    transform: scale(1.02);
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+    .conteudo {
+        padding: 30px 20px;
+    }
+
+    .imagem {
+        max-width: 200px; /* ajusta logo para telas menores */
+    }
+}
