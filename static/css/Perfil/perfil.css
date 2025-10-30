@@ -1,0 +1,171 @@
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: #f2f2f2;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px; /* limite melhor para leitura */
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.top-section {
+  display: flex;
+  flex-wrap: wrap; /* para não quebrar no mobile */
+  gap: 30px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.clinic-img {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.clinic-info {
+  flex: 1;
+  min-width: 280px;
+}
+
+.clinic-info h1 {
+  font-size: 24px;
+  color: #00b7ff;
+  margin-bottom: 8px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.stars {
+  color: orange;
+  font-size: 18px;
+}
+.avaliacoes {
+  font-size: 14px;
+  color: #666;
+}
+
+.descricao {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.dias {
+  margin-top: 20px;
+}
+.dias h3 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+.dias-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.dia-card {
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  flex: 1;
+  min-width: 180px;
+  text-align: center;
+  transition: 0.2s;
+}
+.dia-card:hover {
+  border-color: #00b7ff;
+}
+
+.horarios {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.horario {
+  border: 1px solid #00b7ff;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #00b7ff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.horario:hover {
+  background: #00b7ff;
+  color: #fff;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #00bfff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn:hover {
+  background-color: #0099cc;
+}
+
+.bottom-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 30px;
+}
+.info-box {
+  background: #fff;
+  padding: 30px; /* antes estava 20px, aumentei */
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.info-box h2 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #333;
+}
+.info-box p,
+.info-box li {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+/* ===== MAPA ===== */
+.map-container {
+  margin-top: 30px;
+  width: 100%;
+  height: 400px; /* igual ao figma */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.map-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
