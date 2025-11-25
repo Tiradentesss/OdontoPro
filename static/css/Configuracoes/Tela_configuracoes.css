@@ -1,0 +1,333 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    background: linear-gradient(135deg, #F2F2F2, #91daeb);
+    background-attachment: fixed; /* garante que o gradiente continue mesmo ao rolar */
+}
+
+.tabs {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2%;
+    margin-left: 20px;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.tab-button.active {
+    border-color: #00bcd4;
+    color: #00bcd4;
+}
+
+.tab-content {
+    margin: 20px 20%;
+    margin-top: 1rem;
+    background: #fff;
+    padding: 1rem;
+    border-radius: 10px;
+    min-height: 300px; /* altura mínima fixa */
+    position: relative; /* necessário para posicionamento absoluto interno */
+    overflow: hidden;
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 80px;
+}
+
+label {
+    margin-bottom: 15px;
+    display: block;
+}
+
+input {
+    width: 80%;
+    padding: 5px;
+    border: 1px solid hsl(210, 7%, 89%);
+    border-radius: 6px;
+}
+
+.nome, .Data_de_Nascimento, .email, .cidade, .endereço, .cep, .codigo_postal {
+    margin-bottom: 20px;
+    margin-left: 20px;
+}
+
+.nome {
+    margin-top: 20px;
+}
+
+.cpf {
+    margin-bottom: 20px;
+    margin-left: 20px;
+    margin-top: 17px;
+}
+
+.nova_senha,
+.confirmar {
+    width: 40%;
+    margin-left: 20px;
+}
+
+.nova_senha {
+    margin-top: 40px;
+    margin-bottom: 20px;
+}
+
+.confirmar {
+    margin-bottom: 120px;
+}
+
+#perfil-content {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.salvar {
+    width: 160px;
+    height: 45px;
+    border-radius: 10px;
+    font-size: 16px;
+    margin: 20px auto;
+    border: none;
+    background-color: #1BC3EA;
+    color: #ffffff;
+    display: block;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.salvar:hover {
+    background-color: #0fa9c9;
+}
+
+h2 {
+    margin-left: 20px;
+}
+
+p {
+    margin-top: 20px;
+    margin-left: 20px;
+}
+
+.salvar_segurança {
+    width: 16%;
+    height: 40px;
+    border-radius: 13px;
+    font-size: 18px;
+    border: none;
+    background-color: #1BC3EA;
+    color: #ffffff;
+    margin-left: 80%;
+}
+
+.toggle-switch {
+    margin-top: 20px;
+    margin-left: 20px;
+    position: relative;
+    width: 60px;
+    height: 34px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.slider::before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .slider {
+    background-color: #16DBCC;
+}
+
+.toggle-switch input:checked + .slider::before {
+    transform: translateX(26px);
+}
+
+.botoes-salvar {
+    margin-top: 20px;
+}
+
+/* Avatar container com título e texto abaixo */
+.avatar-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 5% 0 2%;
+}
+
+/* Título Avatar */
+.avatar-container h1 {
+    font-size: 1.5rem;
+    text-align: center;
+    color: #00bcd4;
+}
+
+/* Círculo do avatar */
+.avatar-circle {
+    margin-left: 1%;
+    margin-right: 5%;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Container dos botões ao lado do avatar */
+.avatar-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* Botões upload e remover */
+.avatar-actions button {
+    padding: 8px 12px;
+    border: none;
+    background-color: #1BC3EA;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.avatar-actions button:hover {
+    background-color: #0fa9c9;
+}
+
+/* Texto Profile abaixo do avatar */
+.avatar-profile-text {
+    margin-top: 12px;
+    font-size: 1.1rem;
+    color: #555;
+}
+
+.profile-text {
+    margin-left: 20px;
+    margin-top: 5%;
+}
+
+.btn-upload {
+    margin-left: 7%;
+    display: block;
+    margin-bottom: 15%;
+    padding: 5% 18%;
+    border-radius: 10px;
+    border: 1px solid hsl(210, 7%, 89%);
+    background: #1BC3EA;
+    color: white;
+    justify-content: center;
+}
+
+.btn-remove {
+    text-align: center;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid hsl(210, 7%, 89%);
+    background: #ea1b1b;
+    color: white;
+}
+
+.avatar-section {
+    grid-column: span 2; /* Faz a seção ocupar as duas colunas do grid */
+}
+
+/* Responsivo: para telas pequenas */
+@media (max-width: 480px) {
+    .avatar-actions {
+        flex-direction: column;
+        width: 150px;
+    }
+
+    .avatar-actions button {
+        width: 100%;
+    }
+}
+
+/* Responsivo geral */
+@media (max-width: 768px) {
+    .tabs {
+        flex-direction: row;
+        gap: 1rem;
+        margin: 2%;
+    }
+
+    .tab-content {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    input {
+        width: 80%;
+    }
+
+    .salvar,
+    .salvar_segurança {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .toggle {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .salvar_segurança {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #perfil-content {
+        grid-template-columns: 1fr;
+    }
+}

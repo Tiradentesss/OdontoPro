@@ -1,0 +1,53 @@
+{% load static %}
+
+<header class="top-header">
+    <div class="logo-area" >
+        <a href="{% url 'menuPrincipal' %}" >
+            <img src="{% static "img/OdontoLogo2.png" %}" alt="OdontoPro Logo" class="logo">
+        </a>
+    
+    </div>
+
+    <div class="search-area">
+        <input type="text" placeholder="Pesquise aqui">
+        <i class="fas fa-search"></i>
+    </div>
+
+    <div class="actions">
+        <!-- Sino de notificações (desktop) -->
+        <i class="fas fa-bell" id="notifBtn"></i>
+
+        <!-- Avatar do usuário (desktop) -->
+        <div class="user-avatar" id="desktopAvatar"></div>
+
+        <!-- Botão de usuário (desktop) -->
+        <button class="user-button" id="userBtn">
+            <span class="user-name">Nome de Usuário</span>
+            <i class="fas fa-chevron-down"></i>
+        </button>
+
+        <!-- Dropdown do usuário -->
+        <div class="dropdown-menu" id="userMenu">
+            <a href="{% url "configuracoes" %}">Configurações</a>
+            <a href="{% url "login" %}">Logout</a>
+        </div>
+
+        <!-- Dropdown de notificações -->
+        <div class="notif-menu" id="notifMenu">
+            <p>Nenhuma nova notificação</p>
+        </div>
+
+        <!-- Hamburger / avatar mobile -->
+        <div class="hamburger-container" id="hamburger">
+            <div class="user-avatar" id="mobileAvatar"></div>
+        </div>
+
+        <!-- Menu mobile -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
+            <a href="{% url "configuracoes" %}"><i class="fas fa-cog"></i> Configurações</a>
+            <a href="{% url "login" %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+    <script src="{% static "js/Header/header.js" %}"></script>
+</header>
