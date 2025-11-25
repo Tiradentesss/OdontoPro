@@ -31,6 +31,21 @@ class Clinica(models.Model):
     def __str__(self):
         return self.nome
 
+# Dias disponíveis da clínica
+class DiaDisponivel(models.Model):
+    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE, related_name='dias_disponiveis')
+    data = models.DateField()
+
+    def __str__(self):
+        return self.data.strftime("%d/%m/%Y")
+
+# Horários disponíveis para cada dia
+class HorarioDisponivel(models.Model):
+    dia = models.ForeignKey(DiaDisponivel, on_delete=models.CASCADE, related_name='horarios')
+    hora = models.TimeField()
+
+    def __str__(self):
+        return self.hora.strftime("%H:%M")
 
 
 # -------------------------

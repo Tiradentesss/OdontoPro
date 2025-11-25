@@ -46,24 +46,22 @@
         <div class="dias">
           <h3>Próximos dias disponíveis</h3>
           <div class="dias-cards">
-            <div class="dia-card">
-              <h4>Qua. 14 - Dez</h4>
-              <div class="horarios">
-                <span class="horario">08:00</span>
-                <span class="horario">09:00</span>
-                <span class="horario">11:00</span>
+            {% for dia in dias_disponiveis %}
+              <div class="dia-card">
+                <h4>{{ dia.data|date:"D. d - M" }}</h4>
+                <div class="horarios">
+                  {% for horario in dia.horarios.all %}
+                    <span class="horario">{{ horario.hora|time:"H:i" }}</span>
+                  {% empty %}
+                    <span class="horario">Sem horários</span>
+                  {% endfor %}
+                </div>
               </div>
-            </div>
-            <div class="dia-card">
-              <h4>Qui. 15 - Dez</h4>
-              <div class="horarios">
-                <span class="horario">08:00</span>
-                <span class="horario">09:00</span>
-                <span class="horario">11:00</span>
-              </div>
-            </div>
+            {% empty %}
+              <p>Não há dias disponíveis.</p>
+            {% endfor %}
           </div>
-        </div>
+        </div>        
 
         <button class="btn" onclick="location.href='{% url 'profissionaisDisponiveis' clinica.id %}'">Escolher Profissional</button>
       </div>
