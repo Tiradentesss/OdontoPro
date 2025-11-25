@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsivo.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <title>OdontoPro - Sistema de Gerenciamento</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="pacienteimg">
+            <img src="../OdontoIMG/Rectangle 2764.png" alt="Imagem OdontoPro">
+        </div>
+        
+        <div class="login">
+            <div class="logomarca">
+                <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro">
+            </div>
+
+            <h1>Faça login com sua Conta</h1>
+            <p>Digite seu e-mail para acessar sua conta</p>
+
+            <form>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Senha" required>
+                <button class="acessar-conta" type="submit" onclick="location.href='../MenuPrincipal/tela_menu_principal.html'">Acessar na conta</button>
+            </form>
+
+            <div class="esqueci-senha">
+                <div class="Lembrar01">
+                    <input id="manter-logado" type="checkbox">
+                    <label for="manter-logado">Lembrar Login</label>
+                </div>
+                <a href="../VerificarCodigo/VerificarCodigo.html">Esqueci Senha</a>
+            </div>
+
+            <div class="outros">
+                <button class="facebook">
+                    <img src="https://img.icons8.com/?size=100&id=uLWV5A9vXIPu&format=png&color=000000">
+                    <h5>Continuar com Facebook</h5>
+                </button>
+                <button class="google">
+                    <img src="https://img.icons8.com/?size=100&id=17949&format=png&color=000000">
+                    <h5>Continuar com Google</h5>
+                </button>
+            </div>
+
+
+            <div class="criar-conta">
+                <p>Ainda não tem uma conta ? <a href="../CriarConta/CriarConta.html">Criar conta</a></p>
+            </div>
+        </div>
+    </div>
+    <script src="login.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Header OdontoPro</title>
+    <link rel="stylesheet" href="Basico.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <header class="top-header">
+    <div class="logo-area">
+        <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+    </div>
+
+    <div class="search-area">
+        <input type="text" placeholder="Pesquise aqui">
+        <i class="fas fa-search"></i>
+    </div>
+
+    <div class="actions">
+        <!-- Sino de notificações (desktop) -->
+        <i class="fas fa-bell" id="notifBtn"></i>
+
+        <!-- Avatar do usuário (desktop) -->
+        <div class="user-avatar" id="desktopAvatar"></div>
+
+        <!-- Botão de usuário (desktop) -->
+        <button class="user-button" id="userBtn">
+            <span class="user-name">Nome de Usuário</span>
+            <i class="fas fa-chevron-down"></i>
+        </button>
+
+        <!-- Dropdown do usuário -->
+        <div class="dropdown-menu" id="userMenu">
+            <a href="../Configuracoes/Tela_configurações.html">Configurações</a>
+            <a href="../Login/login.html">Logout</a>
+        </div>
+
+        <!-- Dropdown de notificações -->
+        <div class="notif-menu" id="notifMenu">
+            <p>Nenhuma nova notificação</p>
+        </div>
+
+        <!-- Hamburger / avatar mobile -->
+        <div class="hamburger-container" id="hamburger">
+            <div class="user-avatar" id="mobileAvatar"></div>
+        </div>
+
+        <!-- Menu mobile -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
+            <a href="../Configuracoes/Tela_configurações.html"><i class="fas fa-cog"></i> Configurações</a>
+            <a href="../Login/login.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+    <script src="../Principal/Header.js"></script>
+</header>
+
+    <footer class="footer">
+        <div class="footer-top">
+          <div class="footer-logo">
+            <img src="../OdontoIMG/OdontoLogo2.png" alt="OdontoPro Logo" class="logo">
+          </div>
+          <div class="footer-text">
+            <p>OdontoPro Brasil Serviços Online e Software Ltda</p>
+          </div>
+          <div class="footer-social">
+            <a href="#"><i class="fab fa-facebook fa-lg"></i></a>
+            <a href="#"><i class="fab fa-instagram fa-lg"></i></a>
+            <a href="#"><i class="fab fa-twitter fa-lg"></i></a>
+            <a href="#"><i class="fab fa-linkedin fa-lg"></i></a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>© odontopro.com.br 2025 - Agende agora sua consulta</p>
+        </div>
+    </footer>
+
+</body>
+</html>
