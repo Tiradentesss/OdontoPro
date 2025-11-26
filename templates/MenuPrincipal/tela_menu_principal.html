@@ -8,10 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'css/HeaderFooter/HeaderFooter.css' %}">
     <link rel="stylesheet" href="{% static 'css/MenuPrincipal/tela_menu_principal.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" 
-          integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" 
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>OdontoPro | Menu Principal </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
+    <title>OdontoPro | Menu Principal</title>
 </head>
 
 <body>
@@ -24,75 +22,85 @@
     <h4>Clínicas Disponíveis</h4>
 
     <div class="principal">
-        <!-- Lista de clínicas -->
         <div class="opcoes">
+
             {% for clinica in clinicas %}
-            <div class="options" 
-                 onclick="location.href='{% url 'perfil' %}'"
-                 data-municipio="{{ clinica.endereco.rua }}" 
-                 data-bairro="{{ clinica.endereco.quadra }}"
-                 data-avaliacao="5">
-                 
-                 {% if clinica.imagem %}
-                 <img class="imagem_clinica" src="{{ clinica.imagem.url }}" alt="{{ clinica.nome }}">
-                 {% else %}
-                 <img class="imagem_clinica" src="{% static 'OdontoIMG/default_clinica.png' %}" alt="{{ clinica.nome }}">
-                 {% endif %}
-                 
-                 <div>
-                     <h3>{{ clinica.nome }}</h3>
-                     <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                     <h6><b>Telefone:</b> {{ clinica.telefone }}</h6>
-                     <h6><b>Descrição:</b> {{ clinica.descricao }}</h6>
-                     <h6><b>Endereço:</b> {{ clinica.endereco.rua }}, {{ clinica.endereco.numero }} - {{ clinica.endereco.cep }}</h6>
-                 </div>
+            <div class="options"
+                 onclick="location.href='{% url 'perfil' clinica.id %}'"
+                 data-municipio="{{ clinica.endereco.cidade|default_if_none:''|lower }}"
+                 data-bairro="{{ clinica.endereco.bairro|default_if_none:''|lower }}"
+                 data-estrelas="{{ clinica.avaliacao|default:0 }}">
+
+                {% if clinica.imagem %}
+                    <img class="imagem_clinica" src="{{ clinica.imagem.url }}" alt="{{ clinica.nome }}">
+                {% else %}
+                    <img class="imagem_clinica" src="{% static 'img/Clinica Orto.png' %}" alt="{{ clinica.nome }}">
+                {% endif %}
+
+                <div>
+                    <h3>{{ clinica.nome }}</h3>
+
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= clinica.avaliacao|floatformat:0 %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+
+                    <h6><b>Telefone:</b> {{ clinica.telefone }}</h6>
+                    <h6><b>Descrição:</b> {{ clinica.descricao }}</h6>
+                    <h6><b>Endereço:</b>
+                        {{ clinica.endereco.rua }},
+                        {{ clinica.endereco.numero }} -
+                        {{ clinica.endereco.bairro }} -
+                        {{ clinica.endereco.cidade }}
+                    </h6>
+                </div>
             </div>
             {% empty %}
-            <p>Nenhuma clínica cadastrada.</p>
+                <p>Nenhuma clínica cadastrada.</p>
             {% endfor %}
         </div>
 
-        <!-- Filtros -->
         <div class="setup">
             <div class="filtros">
                 <h4>Filtros</h4>
                 <h4>Busca</h4>
-                <select id="selectMunicipio" class="valores">
+
+                <select id="selectMunicipio" class="valores filtro">
                     <option value="">Selecione o seu município</option>
                     {% for municipio in municipios %}
-                    <option value="{{ municipio }}">{{ municipio }}</option>
+                        <option value="{{ municipio|default_if_none:''|lower }}">{{ municipio }}</option>
                     {% endfor %}
                 </select>
-                <select id="selectBairro" class="valores">
+
+                <select id="selectBairro" class="valores filtro">
                     <option value="">Selecione o seu bairro</option>
                     {% for bairro in bairros %}
-                    <option value="{{ bairro }}">{{ bairro }}</option>
+                        <option value="{{ bairro|default_if_none:''|lower }}">{{ bairro }}</option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="avaliacao">
                 <h4>Avaliação mínima</h4>
-                <select id="selectAvaliacao" class="valores">
+                <select id="selectAvaliacao" class="valores filtro">
                     <option value="">Todas</option>
-                    <option value="1">1 estrela</option>
-                    <option value="2">2 estrelas</option>
-                    <option value="3">3 estrelas</option>
-                    <option value="4">4 estrelas</option>
-                    <option value="5">5 estrelas</option>
+                    {% for i in "12345" %}
+                        <option value="{{ i }}">{{ i }} estrela{{ i|pluralize }}</option>
+                    {% endfor %}
                 </select>
             </div>
-
-            <button class="aplicar" id="btnFiltrar">Aplicar</button>
         </div>
     </div>
 
     <div class="more_options">
         <h4 class="tipo_opcao">Ver Mais</h4>
     </div>
-</main>
+  </main>
 
-<script src="{% static 'js/MenuPrincipal/Menu_Principal.js' %}"></script>
+  <script src="{% static 'js/MenuPrincipal/Menu_Principal.js' %}"></script>
 
   {% block footer %}
   {% include 'partials/footer/footer.html' %}

@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from .models import Paciente, Clinica
 
 def lista_clinicas(request):
-    clinicas = Clinica.objects.all()  # pega todas as clínicas do banco
+    clinicas = Clinica.objects.all()
     return render(request, 'clinicas.html', {'clinicas': clinicas})
 
 def login(request):
@@ -22,7 +22,6 @@ def login(request):
             messages.error(request, "Senha incorreta!")
             return render(request, "Login/login.html")
 
-        # Login correto → redirecionar
         return redirect("menuPrincipal")
 
     return render(request, "Login/login.html")
@@ -64,15 +63,21 @@ def recuperarSenha(request):
 
 def menuPrincipal(request):
     clinicas = Clinica.objects.all()
-    
-    municipios = clinicas.values_list('endereco__rua', flat=True).distinct()
-    bairros = clinicas.values_list('endereco__quadra', flat=True).distinct()
-    
+
+    # PEGANDO MUNICÍPIO E BAIRRO CORRETOS
+    municipios = clinicas.values_list('endereco__cidade', flat=True).distinct()
+    bairros = clinicas.values_list('endereco__bairro', flat=True).distinct()
+
+    # LIMPA ESPAÇOS E REMOVE NULLS
+    municipios = [m.strip() for m in municipios if m]
+    bairros = [b.strip() for b in bairros if b]
+
     context = {
         'clinicas': clinicas,
         'municipios': municipios,
-        'bairros': bairros
+        'bairros': bairros,
     }
+
     return render(request, "MenuPrincipal/tela_menu_principal.html", context)
 
 
@@ -85,13 +90,8 @@ def novaSenha(request):
 
 
 def perfil(request, clinica_id):
-    # Busca a clínica selecionada pelo ID
     clinica = get_object_or_404(Clinica, id=clinica_id)
-    
-    context = {
-        'clinica': clinica
-    }
-    return render(request, 'perfil.html', context)
+    return render(request, 'perfil.html', {'clinica': clinica})
 
 
 def perfilDoProfissional(request):

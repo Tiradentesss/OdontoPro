@@ -3,101 +3,68 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ clinica.nome }}</title>
-  <link rel="stylesheet" href="{% static 'css/Perfil/reset.css' %}">
-  <link rel="stylesheet" href="{% static 'css/Perfil/perfil.css' %}">
-  <link rel="stylesheet" href="{% static 'css/Perfil/responsivo.css' %}">
-  <link rel="stylesheet" href="{% static 'css/HeaderFooter/HeaderFooter.css' %}">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínicas</title>
+    <link rel="stylesheet" href="{% static 'css/menu.css' %}">
 </head>
 <body>
 
-  {% block header %}
-  {% include 'partials/header/header.html' %}
-  {% endblock %}
+<header class="top-header">
+    <h1>Clínicas</h1>
+</header>
 
-  <div class="container">
-    
-    <!-- Topo -->
-    <div class="top-section">
-      {% if clinica.imagem %}
-        <img src="{{ clinica.imagem.url }}" alt="{{ clinica.nome }}" class="clinic-img">
-      {% else %}
-        <img src="{% static 'OdontoIMG/default_clinica.png' %}" alt="{{ clinica.nome }}" class="clinic-img">
-      {% endif %}
+<main>
+    <section class="filter-section">
 
-      <div class="clinic-info">
-        <h1>{{ clinica.nome }}</h1>
-        <div class="rating">
-          <span class="stars">★★★★★</span> 
-          <span class="avaliacoes">{{ clinica.avaliacao|default:"5.0" }} | {{ clinica.num_avaliacoes|default:"0" }} avaliações</span>
+        <div class="filter-group">
+            <label>Especialidade:</label>
+            <select id="selectEspecialidade">
+                <option value="">Todas</option>
+                {% for esp in especialidades %}
+                    <option value="{{ esp.nome }}">{{ esp.nome }}</option>
+                {% endfor %}
+            </select>
         </div>
 
-        <p class="descricao">
-          {{ clinica.descricao|truncatewords:30 }} 
-          {% if clinica.descricao|length > 150 %}<a href="#">Mais</a>{% endif %}
-        </p>
+        <div class="filter-group">
+            <label>Tipo:</label>
+            <select id="selectTipo">
+                <option value="">Todos</option>
+                <option value="Particular">Particular</option>
+                <option value="Convênio">Convênio</option>
+            </select>
+        </div>
 
-        <p><strong>Consulta:</strong> R$ {{ clinica.preco_consulta|default:"0,00" }}</p>
+        <div class="filter-group">
+            <label>Preço máximo:</label>
+            <input type="number" id="inputPreco" placeholder="R$ 0,00">
+        </div>
 
-        <!-- Dias Disponíveis (placeholder por enquanto) -->
-        <div class="dias">
-          <h3>Próximos dias disponíveis</h3>
-          <div class="dias-cards">
-            {% for dia in dias_disponiveis %}
-              <div class="dia-card">
-                <h4>{{ dia.data|date:"D. d - M" }}</h4>
-                <div class="horarios">
-                  {% for horario in dia.horarios.all %}
-                    <span class="horario">{{ horario.hora|time:"H:i" }}</span>
-                  {% empty %}
-                    <span class="horario">Sem horários</span>
-                  {% endfor %}
-                </div>
-              </div>
-            {% empty %}
-              <p>Não há dias disponíveis.</p>
-            {% endfor %}
-          </div>
-        </div>        
+    </section>
 
-        <button class="btn" onclick="location.href='{% url 'profissionaisDisponiveis' clinica.id %}'">Escolher Profissional</button>
-      </div>
-    </div>
+    <section id="clinicasContainer" class="clinicas-container">
 
-    <!-- Informações -->
-    <div class="bottom-section">
-      <div class="info-box">
-        <h2>Endereço da Clínica</h2>
-        <p><strong>Endereço:</strong> {{ clinica.endereco.rua }} - {{ clinica.endereco.numero }} - {{ clinica.endereco.bairro }}, {{ clinica.endereco.cidade }} - {{ clinica.endereco.estado }}, {{ clinica.endereco.cep }}</p>
-        <p><strong>Telefone:</strong> {{ clinica.telefone }}</p>
-      </div>
+        {% for clinica in clinicas %}
+        <div class="clinica-card"
+            data-especialidades="{{ clinica.especialidades_nomes }}"
+            data-tipo="{{ clinica.tipo }}"
+            data-preco="{{ clinica.preco }}">
 
-      <div class="info-box">
-        <h2>Serviços</h2>
-        <ul>
-          {% for servico in clinica.servicos.all %}
-            <li>{{ servico.nome }}</li>
-          {% empty %}
-            <li>Nenhum serviço cadastrado</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
+            <img src="{% static 'img/Clinica Orto.png' %}" class="clinica-img">
+            <h3>{{ clinica.nome }}</h3>
+            <p><strong>Especialidades:</strong> {{ clinica.especialidades_nomes }}</p>
+            <p><strong>Tipo:</strong> {{ clinica.tipo }}</p>
+            <p><strong>Preço:</strong> R$ {{ clinica.preco }}</p>
 
-    <!-- Mapa placeholder -->
-    <div class="map-container">
-      <iframe 
-        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127639.20933941202!2d-48.52926499100763!3d-1.3411789414740773!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x92a461af84756ce1%3A0x570d540215864c35!2zQmVsw6ltLCBQQQ!5e0!3m2!1spt-BR!2sbr!4v1757779894888!5m2!1spt-BR!2sbr" 
-        allowfullscreen 
-        loading="lazy" 
-        referrerpolicy="no-referrer-when-downgrade">
-      </iframe>
-    </div>
-    
-  </div>
+        </div>
+        {% endfor %}
+
+    </section>
+</main>
+
+<script src="{% static 'js/menu.js' %}"></script>
+
 
   {% block footer %}
   {% include 'partials/footer/footer.html' %}

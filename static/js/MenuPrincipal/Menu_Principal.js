@@ -1,33 +1,55 @@
-document.addEventListener("DOMContentLoaded", function() {
-    const btnFiltrar = document.getElementById("btnFiltrar");
-    const selectMunicipio = document.getElementById("selectMunicipio");
-    const selectBairro = document.getElementById("selectBairro");
-    const selectAvaliacao = document.getElementById("selectAvaliacao");
+document.addEventListener("DOMContentLoaded", function () {
+    const filtros = document.querySelectorAll(".filtro");
     const clinicas = document.querySelectorAll(".opcoes .options");
 
-    btnFiltrar.addEventListener("click", function() {
-        const municipioSelecionado = selectMunicipio.value;
-        const bairroSelecionado = selectBairro.value;
-        const avaliacaoMinima = selectAvaliacao.value ? parseInt(selectAvaliacao.value) : 0;
+    // aplica filtros sempre que qualquer select mudar (aplica automaticamente)
+    filtros.forEach(filtro => {
+        filtro.addEventListener("change", aplicarFiltros);
+    });
+
+    // também aplica no carregamento inicial (útil para debug/testes)
+    aplicarFiltros();
+
+    function aplicarFiltros() {
+        // pega e normaliza (trim + lower) os valores selecionados
+        const municipioRaw = document.getElementById("selectMunicipio").value || "";
+        const bairroRaw = document.getElementById("selectBairro").value || "";
+        const avaliacaoRaw = document.getElementById("selectAvaliacao").value || "";
+
+        const municipio = municipioRaw.toString().trim().toLowerCase();
+        const bairro = bairroRaw.toString().trim().toLowerCase();
+        const avaliacaoMin = avaliacaoRaw === "" ? 0 : parseInt(avaliacaoRaw, 10);
 
         clinicas.forEach(clinica => {
-            const clinicaMunicipio = clinica.getAttribute("data-municipio");
-            const clinicaBairro = clinica.getAttribute("data-bairro");
-            const clinicaAvaliacao = parseInt(clinica.getAttribute("data-avaliacao") || 0);
+            // dataset pode conter espaços — normalizamos tudo
+            const clinicaMunicipio = (clinica.dataset.municipio || "").toString().trim().toLowerCase();
+            const clinicaBairro = (clinica.dataset.bairro || "").toString().trim().toLowerCase();
+
+            // avaliacao no data-* pode ser "5.0" ou "5" — usamos parseFloat e floor
+            const clinicaAvaliacao = Math.floor(parseFloat(clinica.dataset.avaliacao || 0));
 
             let mostrar = true;
 
-            if (municipioSelecionado && clinicaMunicipio !== municipioSelecionado) {
+            // filtro de municipio (se houver)
+            if (municipio !== "" && clinicaMunicipio !== municipio) {
                 mostrar = false;
             }
-            if (bairroSelecionado && clinicaBairro !== bairroSelecionado) {
+
+            // filtro de bairro (se houver)
+            if (bairro !== "" && clinicaBairro !== bairro) {
                 mostrar = false;
             }
-            if (avaliacaoMinima && clinicaAvaliacao < avaliacaoMinima) {
+
+            // filtro de avaliacao (se houver)
+            if (avaliacaoMin > 0 && clinicaAvaliacao < avaliacaoMin) {
                 mostrar = false;
             }
 
             clinica.style.display = mostrar ? "flex" : "none";
         });
-    });
+
+        // debug (descomente se quiser inspecionar valores no console)
+        // console.log({ municipio, bairro, avaliacaoMin });
+        // clinicas.forEach(c => console.log(c.dataset));
+    }
 });
