@@ -1,6 +1,5 @@
 from django.db import models
 
-
 # -------------------------
 # ENDERECO
 # -------------------------
@@ -10,7 +9,6 @@ class Endereco(models.Model):
     quadra = models.CharField(max_length=60)
     rua = models.CharField(max_length=60)
 
-    # ADICIONADO PARA COMPATIBILIDADE COM O HTML
     bairro = models.CharField(max_length=80, null=True, blank=True)
     cidade = models.CharField(max_length=80, null=True, blank=True)
     estado = models.CharField(max_length=2, null=True, blank=True)
@@ -32,7 +30,6 @@ class Clinica(models.Model):
 
     imagem = models.ImageField(upload_to='clinicas/', null=True, blank=True)
 
-    # ADICIONADOS PARA O HTML
     preco_consulta = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     avaliacao = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True, default=5.0)
     num_avaliacoes = models.IntegerField(default=0)
@@ -42,25 +39,36 @@ class Clinica(models.Model):
 
 
 # -------------------------
-# Dias disponíveis da clínica
+# Dias da semana disponíveis
 # -------------------------
-class DiaDisponivel(models.Model):
-    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE, related_name='dias_disponiveis')
-    data = models.DateField()
+class DiaSemanaDisponivel(models.Model):
+    DIAS_SEMANA = (
+        ("domingo", "Domingo"),
+        ("segunda", "Segunda-feira"),
+        ("terca", "Terça-feira"),
+        ("quarta", "Quarta-feira"),
+        ("quinta", "Quinta-feira"),
+        ("sexta", "Sexta-feira"),
+        ("sabado", "Sábado"),
+    )
+
+    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE, related_name='dias_semana')
+    dia = models.CharField(max_length=10, choices=DIAS_SEMANA)
 
     def __str__(self):
-        return self.data.strftime("%d/%m/%Y")
+        return f"{self.clinica.nome} - {self.get_dia_display()}"
 
 
 # -------------------------
-# Horários disponíveis
+# Horários de funcionamento
 # -------------------------
-class HorarioDisponivel(models.Model):
-    dia = models.ForeignKey(DiaDisponivel, on_delete=models.CASCADE, related_name='horarios')
-    hora = models.TimeField()
+class HorarioAberto(models.Model):
+    dia = models.ForeignKey(DiaSemanaDisponivel, on_delete=models.CASCADE, related_name='horarios')
+    hora_inicio = models.TimeField()
+    hora_fim = models.TimeField()
 
     def __str__(self):
-        return self.hora.strftime("%H:%M")
+        return f"{self.dia.get_dia_display()} {self.hora_inicio.strftime('%H:%M')} - {self.hora_fim.strftime('%H:%M')}"
 
 
 # -------------------------
@@ -74,6 +82,16 @@ class Paciente(models.Model):
     data_nascimento = models.DateField(null=True, blank=True)
     senha = models.CharField(max_length=255)  # hash
     telefone = models.CharField(max_length=14)
+
+    def __str__(self):
+        return self.nome
+
+
+# -------------------------
+# ESPECIALIDADE (NOVO)
+# -------------------------
+class Especialidade(models.Model):
+    nome = models.CharField(max_length=80)
 
     def __str__(self):
         return self.nome
@@ -95,112 +113,22 @@ class Medico(models.Model):
     telefone = models.CharField(max_length=14)
     clinica = models.ForeignKey(Clinica, on_delete=models.PROTECT)
 
+    # 🔥 Especialidades ManyToMany
+    especialidades = models.ManyToManyField(Especialidade, related_name="medicos")
+
     def __str__(self):
         return f"{self.nome} - {self.crm_cro}"
 
 
 # -------------------------
-# ESPECIALIDADES
-# -------------------------
-class Especialidade(models.Model):
-    nome = models.CharField(max_length=45)
-    descricao = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.nome
-
-
-# -------------------------
-# SERVIÇO (AGENDA)
+# SERVIÇO
 # -------------------------
 class Servico(models.Model):
-    STATUS = (
-        ("agendado", "Agendado"),
-        ("realizado", "Realizado"),
-        ("cancelado", "Cancelado"),
-    )
-
-    data = models.DateField()
-    hora = models.TimeField()
     tipo = models.CharField(max_length=45)
-    motivo = models.CharField(max_length=45, null=True, blank=True)
     descricao = models.CharField(max_length=200)
-    status = models.CharField(max_length=10, choices=STATUS)
-
-    paciente = models.ForeignKey(Paciente, on_delete=models.PROTECT)
-    medico = models.ForeignKey(Medico, on_delete=models.PROTECT)
-    especialidade = models.ForeignKey(Especialidade, on_delete=models.PROTECT)
 
     def __str__(self):
-        return f"{self.tipo} - {self.data}"
-
-
-# -------------------------
-# PRONTUÁRIO
-# -------------------------
-class Prontuario(models.Model):
-    data = models.DateField()
-    prescricao = models.CharField(max_length=100, null=True, blank=True)
-    descricao_procedimento = models.CharField(max_length=100)
-    data_modificacao = models.DateField()
-    paciente = models.ForeignKey(Paciente, on_delete=models.PROTECT)
-
-    def __str__(self):
-        return f"Prontuário {self.id}"
-
-
-# -------------------------
-# SETOR
-# -------------------------
-class Setor(models.Model):
-    nome_setor = models.CharField(max_length=45)
-    descricao = models.CharField(max_length=45)
-
-    def __str__(self):
-        return self.nome_setor
-
-
-# -------------------------
-# CARGO
-# -------------------------
-class Cargo(models.Model):
-    nome_cargo = models.CharField(max_length=45)
-    descricao = models.CharField(max_length=100)
-    setor = models.ForeignKey(Setor, on_delete=models.PROTECT)
-
-    def __str__(self):
-        return self.nome_cargo
-
-
-# -------------------------
-# GESTOR
-# -------------------------
-class Gestor(models.Model):
-    SEXO = (("f", "Feminino"), ("m", "Masculino"))
-
-    nome = models.CharField(max_length=85)
-    cpf = models.CharField(max_length=11, null=True, blank=True)
-    sexo = models.CharField(max_length=1, choices=SEXO)
-    email = models.EmailField(max_length=45)
-    data_nascimento = models.DateField(null=True, blank=True)
-    senha = models.CharField(max_length=255)
-    telefone = models.CharField(max_length=14)
-
-    clinica = models.ForeignKey(Clinica, on_delete=models.PROTECT)
-    cargo = models.ForeignKey(Cargo, on_delete=models.PROTECT)
-
-    def __str__(self):
-        return self.nome
-
-
-class ProntuarioMedico(models.Model):
-    prontuario = models.ForeignKey(Prontuario, on_delete=models.CASCADE)
-    medico = models.ForeignKey(Medico, on_delete=models.CASCADE)
-
-
-class EspecialidadeMedico(models.Model):
-    especialidade = models.ForeignKey(Especialidade, on_delete=models.CASCADE)
-    medico = models.ForeignKey(Medico, on_delete=models.CASCADE)
+        return self.tipo
 
 
 # -------------------------

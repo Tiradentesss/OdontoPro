@@ -1,247 +1,123 @@
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
   font-family: "Poppins", sans-serif;
 }
 
 body {
-  background-color: #f2f2f2;
-  color: #333;
+  background: #f2f2f2;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-.top-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: white;
-  padding: 10px 30px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-
-.logo-area {
-  display: flex;
-  align-items: center;
-}
-
-.logo {
-  height: 60px;
-  margin-right: 10px;
-}
-
-.logo-text {
-  line-height: 1.2;
-  font-size: 14px;
-}
-
-.search-area {
-  display: flex;
-  align-items: center;
-  background-color: #f3f3f3;
-  padding: 6px 10px;
-  border-radius: 8px;
-  width: 300px;
-}
-
-.search-area input {
-  border: none;
-  background: transparent;
-  outline: none;
-  flex: 1;
-  font-size: 14px;
-}
-
-.search-area i {
-  color: #777;
-  margin-left: 5px;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.actions .fa-bell {
-  font-size: 18px;
-  color: #555;
-  cursor: pointer;
-}
-
-.user-avatar {
-  width: 30px;
-  height: 30px;
-  background-color: #ccc;
-  border-radius: 50%;
-}
-
-.user-button {
-  background: none;
-  border: none;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #333;
-}
-
-/* header /\ */ 
-body {
-  background-color: #f2f2f2;
-  color: #333;
-}
-
 .container {
   display: flex;
-  padding: 2rem;
   gap: 2rem;
+  padding: 2rem;
   flex-wrap: wrap;
 }
 
+/* LADO ESQUERDO */
 .filtros {
-  padding-top: 45px;
+  min-width: 240px;
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
-.filtro-box,
-.avaliacao-box {
-  background-color: #fff;
+.filtro-box {
+  background: #fff;
   padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
-}
-
-.filtro-box h3,
-.avaliacao-box h3 {
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .filtro-box select {
   width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
+  padding: .6rem;
+  margin-top: .5rem;
+  border-radius: 6px;
 }
 
 .btn-aplicar {
-  background-color: #00bcd4;
-  color: white;
+  margin-top: 1rem;
+  padding: .6rem;
   border: none;
-  padding: 0.5rem;
-  width: 100%;
-  border-radius: 5px;
+  background: #00bcd4;
+  color: white;
   cursor: pointer;
-  transition: background 0.3s;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: .3s;
 }
 
 .btn-aplicar:hover {
-  background-color: #0097a7;
+  background: #0097a7;
 }
 
-.avaliacao-box label {
-  display: inline-block;
-  margin: 0.25rem 0;
-  cursor: pointer;
-  color: #ffc107;
-}
-
+/* LISTA DE PROFISSIONAIS */
 .conteudo {
   flex: 1;
 }
 
-.conteudo h2 {
-  margin-bottom: 1rem;
-}
-
 .cards {
+  margin-top: 1rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, max-content));
-  gap: 1rem;
-  justify-content: start; /* evita espalhar os itens igualmente */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.2rem;
 }
 
 .card {
-  max-width: 250px;
-  height:  250px;
-  background-color: #fff;
-  border-radius: 10px;
+  background: #fff;
+  border-radius: 12px;
   padding: 1rem;
   text-align: center;
-  transition: 0.3s;
+  transition: .3s;
   cursor: pointer;
   border: 2px solid transparent;
 }
 
 .card:hover {
-  transform: translateY(-5px);
   border-color: #00bcd4;
-  box-shadow: 0 4px 20px rgba(0, 188, 212, 0.2);
+  transform: translateY(-5px);
+  box-shadow: 0 4px 20px rgba(0,188,212,0.2);
 }
 
 .card img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  margin-bottom: 0.5rem;
+  object-fit: cover;
+  margin-bottom: .5rem;
 }
 
 .card h4 {
-  margin-bottom: 0.3rem;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  margin-bottom: .3rem;
 }
 
 .card p {
-  font-size: 0.9rem;
-  color: #777;
-  margin-bottom: 0.5rem;
+  color: #666;
+  margin-bottom: .5rem;
 }
 
 .card .avaliacao i {
   color: #ffc107;
-  margin: 0 1px;
 }
 
-/* responsividade */
+/* RESPONSIVO */
+@media (max-width: 720px) {
+  .container {
+      flex-direction: column;
+  }
 
-@media screen and (max-width: 670px) {
   .filtros {
-    padding-top: 45px;
-    width: 80vw;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-  
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, max-content));
-    gap: 1rem;
-    justify-content: center;
+      width: 100%;
   }
 
-  .conteudo h2 {
-    max-width: 100vw;
-    display: flex;
-    margin-bottom: 1rem;
-    justify-content: center;
-  }
-  
-  .card {
-    width: 100rem;
-    height:  250px;
-    background-color: #fff;
-    border-radius: 10px;
-    padding: 2rem;
-    text-align: center;
-    transition: 0.3s;
-    cursor: pointer;
-    border: 2px solid transparent;
+  .cards {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 }

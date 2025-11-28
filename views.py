@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
-from .models import Paciente, Clinica
+from .models import Paciente, Clinica, Medico, Especialidade
 
 def lista_clinicas(request):
     clinicas = Clinica.objects.all()
@@ -89,17 +89,49 @@ def novaSenha(request):
     return render(request, "NovaSenha/NovaSenha.html")
 
 
+from django.shortcuts import render, get_object_or_404
+from .models import Clinica, DiaSemanaDisponivel, HorarioAberto, ClinicaServico
+
 def perfil(request, clinica_id):
     clinica = get_object_or_404(Clinica, id=clinica_id)
-    return render(request, 'perfil.html', {'clinica': clinica})
+    
+    # Pega todos os dias da semana que a clínica funciona
+    dias_disponiveis = clinica.dias_semana.prefetch_related('horarios').all()
+
+    # Pega os serviços da clínica
+    servicos = ClinicaServico.objects.filter(clinica=clinica)
+
+    context = {
+        'clinica': clinica,
+        'dias_disponiveis': dias_disponiveis,
+        'servicos': servicos,
+    }
+    return render(request, 'Perfil/perfil.html', context)
+
+def perfilDoProfissional(request, id):
+    profissional = Medico.objects.get(id=id)
+    return render(request, "PerfilDoProfissional/PerfilDoProfissional.html", {
+        "profissional": profissional
+    })
 
 
-def perfilDoProfissional(request):
-    return render(request, "PerfilDoProfissional/PerfilDoProfissional.html")
 
+def profissionaisDisponiveis(request, clinica_id):
+    clinica = get_object_or_404(Clinica, id=clinica_id)
 
-def profissionaisDisponiveis(request):
-    return render(request, "ProfissionaisDisponiveis/ProfissionaisDisponiveis.html")
+    profissionais = Medico.objects.filter(clinica=clinica)
+
+    # especialidades presentes na clínica
+    especialidades = Especialidade.objects.filter(
+        medicos__in=profissionais
+    ).distinct()
+
+    context = {
+        "clinica": clinica,
+        "profissionais": profissionais,
+        "especialidades": especialidades
+    }
+    return render(request, "ProfissionaisDisponiveis/ProfissionaisDisponiveis.html", context)
 
 
 def verificarCodigo(request):

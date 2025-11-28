@@ -9,8 +9,9 @@ urlpatterns = [
     path("menuPrincipal/", views.menuPrincipal, name="menuPrincipal"),
     path("configuracoes/", views.configuracoes, name="configuracoes"),
     path("novaSenha/", views.novaSenha, name="novaSenha"),
+    path("profissional/<int:id>/", views.perfilDoProfissional, name="perfilDoProfissional"),
     path('perfil/<int:clinica_id>/', views.perfil, name='perfil'),
-    path('profissionaisDisponiveis/<int:clinica_id>/', views.profissionaisDisponiveis, name='profissionaisDisponiveis'),
+    path("clinica/<int:clinica_id>/profissionais/", views.profissionaisDisponiveis, name="profissionaisDisponiveis"),
     path("profissionaisDisponiveis/", views.profissionaisDisponiveis, name="profissionaisDisponiveis"),
     path("verificarCodigo/", views.verificarCodigo, name="verificarCodigo"),
 ]
