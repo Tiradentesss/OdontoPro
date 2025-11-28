@@ -21,7 +21,7 @@
     <!-- FILTROS -->
     <aside class="filtros">
         <div class="filtro-box">
-            <h3>Filtrar por Especialidade</h3>
+            <h3>Especialidade</h3>
 
             <select id="select-especialidade">
                 <option value="">Todas</option>
@@ -29,8 +29,17 @@
                     <option value="{{ esp.nome }}">{{ esp.nome }}</option>
                 {% endfor %}
             </select>
+        </div>
 
-            <button class="btn-aplicar" onclick="aplicarFiltro()">Aplicar</button>
+        <div class="filtro-box">
+            <h3>Avaliação</h3>
+
+            <div class="estrelas-filtro">
+                <label><input type="radio" name="filtro-estrelas" value="" checked> Todas</label>
+                <label><input type="radio" name="filtro-estrelas" value="5"> ⭐⭐⭐⭐⭐</label>
+                <label><input type="radio" name="filtro-estrelas" value="4"> ⭐⭐⭐⭐+</label>
+                <label><input type="radio" name="filtro-estrelas" value="3"> ⭐⭐⭐+</label>
+            </div>
         </div>
     </aside>
 
@@ -40,61 +49,56 @@
 
         <div class="cards" id="cards-container">
 
-            {% for profissional in profissionais %}
-            <section class="card"
-                data-especialidade="{% for esp in profissional.especialidades.all %}{{ esp.nome }} {% endfor %}"
-                onclick="location.href='{% url 'perfilDoProfissional' profissional.id %}'">
-
-                <!-- FOTO -->
-                {% if profissional.foto %}
-                    <img src="{{ profissional.foto.url }}" alt="{{ profissional.nome }}">
-                {% else %}
-                    <img src="{% static 'imgs/default-user.png' %}" alt="Sem foto">
-                {% endif %}
-
-                <!-- NOME -->
-                <h4>{{ profissional.nome }}</h4>
-
-                <!-- ESPECIALIDADES -->
-                <p>
-                    {% for esp in profissional.especialidades.all %}
-                        {{ esp.nome }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </p>
-
-                <!-- AVALIAÇÃO FIXA (por enquanto) -->
-                <div class="avaliacao">
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star"></i>
-                    <i class="fas fa-star-half-alt"></i>
-                    <i class="far fa-star"></i>
-                </div>
-
-            </section>
-            {% empty %}
-            <p>Nenhum profissional encontrado.</p>
-            {% endfor %}
-
-        </div>
+          {% for profissional in profissionais %}
+          <section class="card"
+              data-especialidade="{% for esp in profissional.especialidades.all %}{{ esp.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+              data-stars="{{ profissional.avaliacao|default:5 }}"
+              onclick="location.href='{% url 'perfilDoProfissional' profissional.id %}'">
+      
+              <!-- FOTO -->
+              {% if profissional.foto %}
+                  <img src="{{ profissional.foto.url }}" alt="{{ profissional.nome }}">
+              {% else %}
+                  <img src="{% static 'imgs/default-user.png' %}" alt="Sem foto">
+              {% endif %}
+      
+              <!-- NOME -->
+              <h4>{{ profissional.nome }}</h4>
+      
+              <!-- ESPECIALIDADES -->
+              <p>
+                  {% for esp in profissional.especialidades.all %}
+                      {{ esp.nome }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+              </p>
+      
+              <!-- AVALIAÇÃO REAL -->
+              <div class="avaliacao">
+                  {% with avaliacao=profissional.avaliacao|default:4 %}
+                      {% for i in "12345" %}
+                          {% if i|add:0 <= avaliacao %}
+                              <i class="fas fa-star"></i>
+                          {% elif i|add:-0.5 <= avaliacao %}
+                              <i class="fas fa-star-half-alt"></i>
+                          {% else %}
+                              <i class="far fa-star"></i>
+                          {% endif %}
+                      {% endfor %}
+                  {% endwith %}
+              </div>
+      
+          </section>
+          {% empty %}
+              <p>Nenhum profissional encontrado.</p>
+          {% endfor %}
+      
+      </div>      
     </section>
 </main>
 
 {% include 'partials/footer/footer.html' %}
 
-<script>
-function aplicarFiltro() {
-    let filtro = document.getElementById("select-especialidade").value.toLowerCase();
-    let cards = document.querySelectorAll(".card");
-
-    cards.forEach(card => {
-        let esp = card.getAttribute("data-especialidade").toLowerCase();
-
-        if (filtro === "" || esp.includes(filtro)) card.style.display = "block";
-        else card.style.display = "none";
-    });
-}
-</script>
+<script src="{% static 'js/ProfissionaisDisponiveis/ProfissionaisDisponiveis.js' %}"></script>
 
 </body>
 </html>

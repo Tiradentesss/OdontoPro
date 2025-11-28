@@ -39,21 +39,29 @@ body {
   padding: .6rem;
   margin-top: .5rem;
   border-radius: 6px;
+  cursor: pointer;
 }
 
-.btn-aplicar {
-  margin-top: 1rem;
-  padding: .6rem;
+/* BTN ESTRELAS */
+.estrelas-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-top: .8rem;
+}
+
+.estrela-btn, .estrela-limpar {
+  padding: 8px;
   border: none;
   background: #00bcd4;
   color: white;
-  cursor: pointer;
   border-radius: 6px;
+  cursor: pointer;
   font-weight: bold;
-  transition: .3s;
+  transition: .2s;
 }
 
-.btn-aplicar:hover {
+.estrela-btn:hover, .estrela-limpar:hover {
   background: #0097a7;
 }
 

@@ -116,6 +116,10 @@ class Medico(models.Model):
     # 🔥 Especialidades ManyToMany
     especialidades = models.ManyToManyField(Especialidade, related_name="medicos")
 
+    # ⭐ Avaliações (igual ao modelo Clinica)
+    avaliacao = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True, default=5.0)
+    num_avaliacoes = models.IntegerField(default=0)
+
     def __str__(self):
         return f"{self.nome} - {self.crm_cro}"
 
