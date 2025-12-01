@@ -1,85 +1,169 @@
-// -------- SELETORES -------- //
-const btnAgendar = document.querySelector(".btn-agendar");
+document.addEventListener("DOMContentLoaded", function () {
+  const btnOpen = document.getElementById("btn-open-agenda");
+  const modal = document.getElementById("agenda-modal");
+  const fechar = document.getElementById("fechar-modal");
+  const btnCancelar = document.getElementById("btn-cancelar");
+  const horariosList = document.getElementById("horarios-list");
+  const dataInput = document.getElementById("data");
+  const btnSelecionar = document.getElementById("btn-selecionar");
 
-// MODAL 1
-const modal1 = document.querySelector("#agenda-modal");
-const fecharModal1 = document.querySelector("#fechar-modal");
-const inputData = document.querySelector("#data");
-const botoesHora = document.querySelectorAll(".horarios button");
-let horaSelecionada = null;
+  const dadosModal = document.getElementById("dados-consulta-modal");
+  const fecharDados = document.getElementById("fechar-dados");
+  const formDados = document.getElementById("formDadosConsulta");
 
-const btnAvancar = document.querySelector("#abrirDadosConsulta");
+  const sucessoModal = document.getElementById("sucesso-modal");
+  const sucessoText = document.getElementById("sucesso-text");
+  const voltarInicio = document.getElementById("voltarInicio");
 
-// MODAL 2
-const modal2 = document.querySelector("#dados-consulta-modal");
-const fecharModal2 = document.querySelector("#fechar-dados");
-const inputDataHoraFinal = document.querySelector("#dataHoraSelecionada");
+  let selectedSlot = null;
 
-// MODAL 3
-const modalSucesso = document.querySelector("#sucesso-modal");
-const btnVoltarInicio = document.querySelector("#voltarInicio");
-
-
-// -------- ABRIR PRIMEIRO MODAL -------- //
-btnAgendar.addEventListener("click", () => {
-  modal1.classList.add("active");
-});
-
-
-// -------- SELECIONAR HORÁRIO -------- //
-botoesHora.forEach(btn => {
-  btn.addEventListener("click", () => {
-    // tirar seleção anterior
-    botoesHora.forEach(b => b.classList.remove("selecionado"));
-
-    // marcar o clicado
-    horaSelecionada = btn.textContent;
-    btn.classList.add("selecionado");
-  });
-});
-
-
-// -------- AVANÇAR PARA MODAL 2 -------- //
-btnAvancar.addEventListener("click", () => {
-  if (!inputData.value || !horaSelecionada) {
-    alert("Escolha uma data e um horário.");
-    return;
+  function abrirModal(m) {
+      m.style.display = "flex";
+      m.setAttribute("aria-hidden", "false");
+  }
+  function fecharModal(m) {
+      m.style.display = "none";
+      m.setAttribute("aria-hidden", "true");
   }
 
-  // Preencher campo no segundo modal
-  inputDataHoraFinal.value = `${inputData.value} às ${horaSelecionada}`;
+  btnOpen && btnOpen.addEventListener("click", () => {
+      abrirModal(modal);
+  });
+  fechar && fechar.addEventListener("click", () => fecharModal(modal));
+  btnCancelar && btnCancelar.addEventListener("click", () => fecharModal(modal));
 
-  // Abrir modal 2
-  modal1.classList.remove("active");
-  modal2.classList.add("active");
-});
+  // fechar modais por ESC
+  document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+          fecharModal(modal);
+          fecharModal(dadosModal);
+          fecharModal(sucessoModal);
+      }
+  });
 
+  // Ao selecionar data, buscar horários via API
+  dataInput && dataInput.addEventListener("change", async (e) => {
+      const date = e.target.value;
+      horariosList.innerHTML = "<p class='muted'>Buscando horários...</p>";
+      btnSelecionar.disabled = true;
+      selectedSlot = null;
 
-// -------- VOLTAR DO MODAL 2 PARA O 1 -------- //
-fecharModal2.addEventListener("click", () => {
-  modal2.classList.remove("active");
-  modal1.classList.add("active");
-});
+      if (!date) {
+          horariosList.innerHTML = "<p class='muted'>Escolha uma data para ver horários.</p>";
+          return;
+      }
 
+      try {
+          const resp = await fetch(`/api/medico/${window.PROFISSIONAL_ID}/horarios/?date=${date}`);
+          const json = await resp.json();
+          if (!resp.ok) {
+              horariosList.innerHTML = "<p class='muted'>Erro ao buscar horários.</p>";
+              return;
+          }
+          const slots = json.slots || [];
+          if (slots.length === 0) {
+              horariosList.innerHTML = "<p class='muted'>Sem horários disponíveis para essa data.</p>";
+              return;
+          }
 
-// -------- FECHAR MODAL 1 -------- //
-fecharModal1.addEventListener("click", () => {
-  modal1.classList.remove("active");
-  horaSelecionada = null;
-  botoesHora.forEach(b => b.classList.remove("selecionado"));
-});
+          horariosList.innerHTML = "";
+          slots.forEach(s => {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.textContent = s;
+              btn.className = "horario-button";
+              btn.addEventListener("click", () => {
+                  // desmarca todos
+                  document.querySelectorAll(".horario-button").forEach(b => b.classList.remove("ativo"));
+                  btn.classList.add("ativo");
+                  selectedSlot = s;
+                  btnSelecionar.disabled = false;
+              });
+              horariosList.appendChild(btn);
+          });
 
+      } catch (err) {
+          console.error(err);
+          horariosList.innerHTML = "<p class='muted'>Erro de rede ao buscar horários.</p>";
+      }
+  });
 
-// -------- FORM DE CONFIRMAÇÃO -------- //
-document.querySelector("#formDadosConsulta").addEventListener("submit", (e) => {
-  e.preventDefault();
+  // Continuar -> abrir modal de dados
+  btnSelecionar && btnSelecionar.addEventListener("click", () => {
+      if (!selectedSlot) return;
+      document.getElementById("selected_time").value = selectedSlot;
+      document.getElementById("selected_date").value = dataInput.value;
+      fecharModal(modal);
+      abrirModal(dadosModal);
+  });
 
-  modal2.classList.remove("active");
-  modalSucesso.classList.add("active");
-});
+  fecharDados && fecharDados.addEventListener("click", () => fecharModal(dadosModal));
 
+  // enviar agendamento via fetch
+  formDados && formDados.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-// -------- VOLTAR AO INÍCIO -------- //
-btnVoltarInicio.addEventListener("click", () => {
-  modalSucesso.classList.remove("active");
+      const nome = document.getElementById("nome").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const telefone = document.getElementById("telefone").value.trim();
+      const especialidade = document.getElementById("especialidade").value;
+      const observacoes = document.getElementById("observacoes").value;
+      const date = document.getElementById("selected_date").value;
+      const time = document.getElementById("selected_time").value;
+
+      if (!nome || !email || !telefone || !date || !time) {
+          alert("Preencha todos os campos obrigatórios.");
+          return;
+      }
+
+      const payload = {
+          nome,
+          email,
+          telefone,
+          date,
+          time,
+          especialidade,
+          observacoes
+      };
+
+      try {
+          const resp = await fetch(`/api/medico/${window.PROFISSIONAL_ID}/agendar/`, {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": window.CSRF_TOKEN
+              },
+              body: JSON.stringify(payload)
+          });
+          const json = await resp.json();
+          if (resp.ok && json.success) {
+              fecharModal(dadosModal);
+              sucessoText.textContent = `Agendamento confirmado para ${date} às ${time}. ID: ${json.consulta_id}`;
+              abrirModal(sucessoModal);
+          } else {
+              const err = json.error || "Erro ao agendar";
+              alert(err);
+          }
+      } catch (err) {
+          console.error(err);
+          alert("Erro de rede ao enviar agendamento.");
+      }
+  });
+
+  voltarInicio && voltarInicio.addEventListener("click", () => {
+      fecharModal(sucessoModal);
+  });
+
+  // TABS
+  document.querySelectorAll(".tab-button").forEach(btn => {
+      btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          const tab = btn.dataset.tab;
+          document.querySelectorAll(".tab-content").forEach(c => c.style.display = "none");
+          const content = document.getElementById(tab);
+          if (content) content.style.display = "block";
+      });
+  });
+
 });

@@ -1,7 +1,34 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django. http import JsonResponse
 from django.contrib.auth.hashers import make_password, check_password
-from .models import Paciente, Clinica, Medico, Especialidade
+from .models import Paciente, Clinica, Medico, Especialidade, HorarioAberto
+
+def agendar_profissional(request, medico_id):
+    medico = get_object_or_404(Medico, id=medico_id)
+    clinica = medico.clinica
+
+    return JsonResponse({
+        "medico": medico.nome,
+        "clinica": clinica.nome,
+        "status": "ok"
+    })
+
+def get_horarios_medico(request, medico_id):
+    medico = get_object_or_404(Medico, id=medico_id)
+
+    # horários do médico (dentro do horário da clínica)
+    horarios = []
+
+    for dia in medico.clinica.dias_semana.prefetch_related("horarios").all():
+        for h in dia.horarios.all():
+            horarios.append({
+                "dia": dia.dia,
+                "inicio": h.hora_inicio.strftime("%H:%M"),
+                "fim": h.hora_fim.strftime("%H:%M")
+            })
+
+    return JsonResponse({"horarios": horarios})
 
 def lista_clinicas(request):
     clinicas = Clinica.objects.all()
@@ -119,9 +146,9 @@ def perfilDoProfissional(request, id):
 def profissionaisDisponiveis(request, clinica_id):
     clinica = get_object_or_404(Clinica, id=clinica_id)
 
-    profissionais = Medico.objects.filter(clinica=clinica)
+    profissionais = Medico.objects.filter(clinica=clinica).prefetch_related("especialidades")
 
-    # especialidades presentes na clínica
+    # especialidades da clínica
     especialidades = Especialidade.objects.filter(
         medicos__in=profissionais
     ).distinct()
@@ -131,7 +158,9 @@ def profissionaisDisponiveis(request, clinica_id):
         "profissionais": profissionais,
         "especialidades": especialidades
     }
+
     return render(request, "ProfissionaisDisponiveis/ProfissionaisDisponiveis.html", context)
+
 
 
 def verificarCodigo(request):

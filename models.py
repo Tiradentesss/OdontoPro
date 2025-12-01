@@ -22,7 +22,7 @@ class Endereco(models.Model):
 # -------------------------
 class Clinica(models.Model):
     cnpj = models.CharField(max_length=45)
-    nome = models.CharField(max_length=45)
+    nome = models.CharField(max_length=85)
     descricao = models.CharField(max_length=300, null=True, blank=True)
     telefone = models.CharField(max_length=14)
     conta_bancaria_juridica = models.CharField(max_length=45)
@@ -39,7 +39,7 @@ class Clinica(models.Model):
 
 
 # -------------------------
-# Dias da semana disponíveis
+# Dias da semana disponíveis (para a clínica)
 # -------------------------
 class DiaSemanaDisponivel(models.Model):
     DIAS_SEMANA = (
@@ -60,7 +60,7 @@ class DiaSemanaDisponivel(models.Model):
 
 
 # -------------------------
-# Horários de funcionamento
+# Horários de funcionamento (por dia da clínica)
 # -------------------------
 class HorarioAberto(models.Model):
     dia = models.ForeignKey(DiaSemanaDisponivel, on_delete=models.CASCADE, related_name='horarios')
@@ -88,7 +88,7 @@ class Paciente(models.Model):
 
 
 # -------------------------
-# ESPECIALIDADE (NOVO)
+# ESPECIALIDADE
 # -------------------------
 class Especialidade(models.Model):
     nome = models.CharField(max_length=80)
@@ -98,7 +98,7 @@ class Especialidade(models.Model):
 
 
 # -------------------------
-# MÉDICO
+# MÉDICO (PROFISSIONAL)
 # -------------------------
 class Medico(models.Model):
     SEXO = (("f", "Feminino"), ("m", "Masculino"))
@@ -113,15 +113,34 @@ class Medico(models.Model):
     telefone = models.CharField(max_length=14)
     clinica = models.ForeignKey(Clinica, on_delete=models.PROTECT)
 
-    # 🔥 Especialidades ManyToMany
     especialidades = models.ManyToManyField(Especialidade, related_name="medicos")
 
-    # ⭐ Avaliações (igual ao modelo Clinica)
     avaliacao = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True, default=5.0)
     num_avaliacoes = models.IntegerField(default=0)
 
+    foto = models.ImageField(upload_to='medicos/', null=True, blank=True)  # opcional
+
     def __str__(self):
         return f"{self.nome} - {self.crm_cro}"
+
+
+# -------------------------
+# Horário do MÉDICO (cada médico tem seus horários por dia)
+# -------------------------
+class MedicoHorario(models.Model):
+    DIAS_SEMANA = DiaSemanaDisponivel.DIAS_SEMANA
+
+    medico = models.ForeignKey(Medico, on_delete=models.CASCADE, related_name='horarios_medico')
+    dia = models.CharField(max_length=10, choices=DIAS_SEMANA)
+    hora_inicio = models.TimeField()
+    hora_fim = models.TimeField()
+
+    class Meta:
+        verbose_name = "Horário do Médico"
+        verbose_name_plural = "Horários do Médico"
+
+    def __str__(self):
+        return f"{self.medico.nome} - {self.get_dia_display()} {self.hora_inicio.strftime('%H:%M')} - {self.hora_fim.strftime('%H:%M')}"
 
 
 # -------------------------
@@ -146,3 +165,30 @@ class ClinicaServico(models.Model):
 
     def __str__(self):
         return f"{self.clinica.nome} - {self.servico.tipo}"
+
+
+# -------------------------
+# Consulta (agendamento)
+# -------------------------
+class Consulta(models.Model):
+    STATUS = (
+        ("agendada", "Agendada"),
+        ("confirmada", "Confirmada"),
+        ("cancelada", "Cancelada"),
+        ("realizada", "Realizada"),
+    )
+
+    paciente = models.ForeignKey(Paciente, null=True, blank=True, on_delete=models.SET_NULL)
+    nome = models.CharField(max_length=120)  # para caso de reserva sem login
+    email = models.EmailField(max_length=120)
+    telefone = models.CharField(max_length=20)
+    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE)
+    medico = models.ForeignKey(Medico, on_delete=models.CASCADE)
+    especialidade = models.CharField(max_length=120, null=True, blank=True)
+    data_hora = models.DateTimeField()
+    observacoes = models.TextField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS, default="agendada")
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.nome} - {self.medico.nome} ({self.data_hora.strftime('%Y-%m-%d %H:%M')})"
