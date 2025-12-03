@@ -1,0 +1,89 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="CriarConta" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/CriarConta/CriarConta.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Odonto Pro | Cadastro </title>
+</head>
+<body>
+
+    <main id="mainContainer">
+
+        <!-- LOGO E TÍTULO -->
+        <img id="logo" class="Logo" src="{% static 'img/OdontoLogo1.png' %}" alt="Logo Odonto Pro"/>
+        <h2 id="titulo">Criar Conta</h2>
+        <br>
+
+        <!-- FORMULARIO ENGLOBANDO TUDO (sem quebrar o CSS) -->
+        
+        <form id="formCadastro" method="POST" action="{% url 'criarConta' %}">
+            {% csrf_token %}
+
+            <section id="Tudo">
+
+                <!-- Lado A: botões sociais -->
+                <div class="LadoA" id="ladoA">
+                    <a href="#" id="googleLink">
+                        <button id="googleBtn" class="entrarCom" type="button">
+                            <i class="fa-brands fa-google" style="color: #1BC3EA;"></i> Entrar com Google
+                        </button>
+                    </a>
+
+                    <a href="#" id="facebookLink">
+                        <button id="facebookBtn" class="entrarCom" type="button">
+                            <i class="fa-brands fa-facebook" style="color: #1BC3EA;"></i> Entrar com Facebook
+                        </button>
+                    </a>
+                </div>
+
+                <!-- Lado B: inputs Nome / Nascimento -->
+                <div class="LadoB" id="ladoB">
+
+                    <div class="input-group">
+                        <input type="text" id="nome" name="nome" placeholder="Nome Completo">
+                        <span class="erro-msg" id="erro-nome"></span>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="date" id="nascimento" name="data_nascimento">
+                        <span class="erro-msg" id="erro-nascimento"></span>
+                    </div>
+
+                </div>
+
+                <!-- Centro: inputs Email, Telefone, Senha -->
+                <div class="centro" id="centro">
+
+                    <div class="input-group">
+                        <input type="email" id="email" name="email" placeholder="Email">
+                        <span class="erro-msg" id="erro-email"></span>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" id="numero" name="telefone" placeholder="Número do Celular Completo">
+                        <span class="erro-msg" id="erro-numero"></span>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="password" id="senha" name="senha" placeholder="Senha">
+                        <span class="erro-msg" id="erro-senha"></span>
+                    </div>
+
+                    <!-- Botão de enviar -->
+                    <input id="enviar" type="submit" value="Cadastrar Conta">
+
+                </div>
+
+            </section>
+        </form>
+
+    </main>
+
+    <script src="{% static 'js/CriarConta/CriarConta.js' %}"></script>
+</body>
+</html>
