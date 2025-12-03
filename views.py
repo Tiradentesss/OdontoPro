@@ -1,13 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django. http import JsonResponse
+from django.http import JsonResponse  # CORREÇÃO: sem espaço
 from django.contrib.auth.hashers import make_password, check_password
-from .models import Paciente, Clinica, Medico, Especialidade, HorarioAberto
+from .models import Paciente, Clinica, Medico, Especialidade, HorarioAberto, DiaSemanaDisponivel, ClinicaServico
+from django.views.decorators.csrf import csrf_exempt
+import json
+from datetime import date
 
 def agendar_profissional(request, medico_id):
     medico = get_object_or_404(Medico, id=medico_id)
     clinica = medico.clinica
 
+    if request.method == "POST":
+        try:
+            payload = json.loads(request.body.decode("utf-8"))
+            # aqui você normalmente validaria e criaria um objeto Consulta/Agendamento no DB
+            # vou simular criação e retornar um id falso
+            consulta_id = 12345  # substitua pela lógica real de criação
+            return JsonResponse({"success": True, "consulta_id": consulta_id})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+    # GET — info básica
     return JsonResponse({
         "medico": medico.nome,
         "clinica": clinica.nome,
@@ -16,18 +30,17 @@ def agendar_profissional(request, medico_id):
 
 def get_horarios_medico(request, medico_id):
     medico = get_object_or_404(Medico, id=medico_id)
+    requested_date = request.GET.get("date")
 
-    # horários do médico (dentro do horário da clínica)
     horarios = []
 
+    # Exemplo simples: coletar horários da clínica (ajuste conforme seu modelo real)
+    # Aqui eu assumo que clinica.dias_semana é um relacionamento para os dias com horários
     for dia in medico.clinica.dias_semana.prefetch_related("horarios").all():
         for h in dia.horarios.all():
-            horarios.append({
-                "dia": dia.dia,
-                "inicio": h.hora_inicio.strftime("%H:%M"),
-                "fim": h.hora_fim.strftime("%H:%M")
-            })
+            horarios.append(f"{h.hora_inicio.strftime('%H:%M')} - {h.hora_fim.strftime('%H:%M')}")
 
+    # Se desejar filtrar por requested_date, implemente a lógica aqui (ex.: checar reservas já feitas)
     return JsonResponse({"horarios": horarios})
 
 def lista_clinicas(request):
@@ -115,10 +128,6 @@ def configuracoes(request):
 def novaSenha(request):
     return render(request, "NovaSenha/NovaSenha.html")
 
-
-from django.shortcuts import render, get_object_or_404
-from .models import Clinica, DiaSemanaDisponivel, HorarioAberto, ClinicaServico
-
 def perfil(request, clinica_id):
     clinica = get_object_or_404(Clinica, id=clinica_id)
     
@@ -136,10 +145,18 @@ def perfil(request, clinica_id):
     return render(request, 'Perfil/perfil.html', context)
 
 def perfilDoProfissional(request, id):
-    profissional = Medico.objects.get(id=id)
-    return render(request, "PerfilDoProfissional/PerfilDoProfissional.html", {
-        "profissional": profissional
-    })
+    profissional = get_object_or_404(Medico, id=id)
+    clinica = profissional.clinica
+    # especialidades para dropdown no form (ou apenas as do profissional)
+    especialidades = Especialidade.objects.filter(medicos=profissional).distinct()
+
+    context = {
+        "profissional": profissional,
+        "clinica": clinica,
+        "especialidades": especialidades,
+        "today": date.today()
+    }
+    return render(request, "PerfilDoProfissional/PerfilDoProfissional.html", context)
 
 
 
