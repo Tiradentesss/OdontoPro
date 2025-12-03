@@ -1,0 +1,190 @@
+/* perfil.css (substituir inteiro) */
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: #f2f2f2;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.top-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.clinic-img {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.clinic-info {
+  flex: 1;
+  min-width: 280px;
+}
+
+.clinic-info h1 {
+  font-size: 24px;
+  color: #00b7ff;
+  margin-bottom: 8px;
+}
+
+.rating {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+.stars { color: orange; font-size:18px; }
+.avaliacoes { font-size:14px; color:#666; }
+
+.descricao { font-size:14px; margin-bottom:8px; }
+
+.dias { margin-top:20px; }
+.dias h3 { font-size:16px; margin-bottom:10px; }
+
+/* ==== CARROSSEL WRAPPER ==== */
+.dias-wrapper {
+  position: relative;
+}
+
+/* container do carrossel (visível na largura definida) */
+.dias-cards {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding-bottom: 10px;
+
+  /* remove a barra no chrome, edge e safari */
+  scrollbar-width: none; /* Firefox */
+}
+.dias-cards::-webkit-scrollbar {
+  display: none; /* Chrome */
+}
+
+
+/* scrollbar styling */
+.dias-cards::-webkit-scrollbar { height: 8px; }
+.dias-cards::-webkit-scrollbar-thumb { background: #bbb; border-radius: 6px; }
+
+/* card fixo (mostra poucos por vez) */
+.dia-card {
+  width: 170px;              /* mostra ~3 a 4 dependendo da tela */
+  min-width: 170px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+
+  background: #fafafa !important;
+  border: 1px solid #ddd !important;
+  border-radius: 10px !important;
+  padding: 12px !important;
+  text-align: center;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.dia-card:hover { transform: translateY(-4px); border-color:#00b7ff !important; box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+
+.horarios { display:flex; gap:10px; justify-content:center; margin-top:8px; flex-wrap:wrap; }
+.horario {
+  border: 1px solid #00b7ff;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #00b7ff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.horario:hover { background: #00b7ff; color: #fff; }
+
+/* setas do carrossel */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  z-index: 5;
+}
+.carousel-arrow:hover { background: #fff; border-color: #00b7ff; }
+.carousel-prev { left: -18px; }
+.carousel-next { right: -18px; }
+
+/* responsividade */
+@media (max-width: 900px) {
+  .dia-card { width: 150px; min-width: 150px; }
+  .carousel-arrow { width: 32px; height: 32px; }
+}
+@media (max-width: 600px) {
+  .top-section { padding: 12px; gap: 12px; }
+  .clinic-img { max-width: 100%; height: auto; }
+  .dias-cards { gap: 10px; }
+  .dia-card { width: 140px; min-width: 140px; }
+  .carousel-prev { left: 6px; }
+  .carousel-next { right: 6px; }
+}
+
+.btn {
+  display:block;
+  width:100%;
+  max-width:800px;
+  margin:20px auto;
+  padding:12px 20px;
+  font-size:16px;
+  font-weight:bold;
+  text-align:center;
+  background-color:#00bfff;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  transition:background .3s;
+}
+.btn:hover { background-color:#0099cc; }
+
+.bottom-section {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:30px;
+  margin-top:30px;
+}
+.info-box {
+  background:#fff;
+  padding:30px;
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+.info-box h2 { font-size:18px; margin-bottom:12px; color:#333; }
+.info-box p, .info-box li { font-size:14px; margin-bottom:8px; }
+
+/* ===== MAPA ===== */
+.map-container {
+  margin-top:30px;
+  width:100%;
+  height:400px;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+.map-container iframe { width:100%; height:100%; border:none; }

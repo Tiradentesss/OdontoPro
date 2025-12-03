@@ -1,0 +1,106 @@
+/* ============================================
+   NOVA SENHA - ESTILO UNIFICADO
+   ============================================ */
+
+   * {
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #F2F2F2, #91daeb);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Card principal */
+  .main {
+    width: 100%;
+    max-width: 460px;
+    background-color: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  /* Logo */
+  .img_logo {
+    width: 200px;
+    margin: 0 auto 25px;
+    height: auto;
+  }
+  
+  /* Texto inicial */
+  .Texto_inicial p {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .Subtitulo h4 {
+    font-size: 14px;
+    color: #6c7278;
+    line-height: 1.4;
+    margin-bottom: 25px;
+  }
+  
+  /* Campos de senha */
+  .Senhas_todas {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .grupo_senha {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .Senhas_todas label {
+    color: #6C7278;
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+  
+  .Senhas_todas input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+    color: #333;
+    transition: border-color 0.3s ease;
+  }
+  
+  .Senhas_todas input:focus {
+    border-color: #00bfff;
+    outline: none;
+  }
+  
+  /* Botão principal */
+  .Senhas_todas button {
+    padding: 14px;
+    width: 100%;
+    border-radius: 10px;
+    color: white;
+    background-color: #00bfff;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  
+  .Senhas_todas button:hover {
+    background-color: #0099ff;
+    transform: scale(1.02);
+  }
+  
