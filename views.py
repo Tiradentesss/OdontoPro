@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.http import JsonResponse  # CORREÇÃO: sem espaço
 from django.contrib.auth.hashers import make_password, check_password
-from .models import Paciente, Clinica, Medico, Especialidade, HorarioAberto, DiaSemanaDisponivel, ClinicaServico
+from .models import Paciente, Clinica, Medico, Especialidade, HorarioAberto, DiaSemanaDisponivel, ClinicaServico, Consulta
 from django.views.decorators.csrf import csrf_exempt
 import json
-from datetime import date
+from django.utils.dateparse import parse_datetime
+from datetime import date, datetime
 
 def agendar_profissional(request, medico_id):
     medico = get_object_or_404(Medico, id=medico_id)
@@ -14,14 +15,55 @@ def agendar_profissional(request, medico_id):
     if request.method == "POST":
         try:
             payload = json.loads(request.body.decode("utf-8"))
-            # aqui você normalmente validaria e criaria um objeto Consulta/Agendamento no DB
-            # vou simular criação e retornar um id falso
-            consulta_id = 12345  # substitua pela lógica real de criação
-            return JsonResponse({"success": True, "consulta_id": consulta_id})
+
+            nome = payload.get("nome")
+            email = payload.get("email")
+            telefone = payload.get("telefone")
+            especialidade = payload.get("especialidade")
+            data = payload.get("date")      # YYYY-MM-DD
+            hora = payload.get("time")      # HH:MM
+            observacoes = payload.get("observacoes", "")
+
+            # validação
+            if not all([nome, email, telefone, data, hora]):
+                return JsonResponse(
+                    {"success": False, "error": "Campos obrigatórios faltando."},
+                    status=400
+                )
+
+            # juntar data + hora (correção principal)
+            try:
+                data_hora = datetime.strptime(f"{data} {hora}", "%Y-%m-%d %H:%M")
+            except ValueError:
+                return JsonResponse(
+                    {"success": False, "error": "Formato de data/hora inválido."},
+                    status=400
+                )
+
+            # criar consulta
+            consulta = Consulta.objects.create(
+                nome=nome,
+                email=email,
+                telefone=telefone,
+                clinica=clinica,
+                medico=medico,
+                especialidade=especialidade,
+                data_hora=data_hora,
+                observacoes=observacoes
+            )
+
+            return JsonResponse({
+                "success": True,
+                "consulta_id": consulta.id,
+                "mensagem": "Consulta agendada com sucesso!",
+                "data": data,
+                "hora": hora
+            })
+
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)}, status=400)
 
-    # GET — info básica
+    # GET — apenas informações básicas
     return JsonResponse({
         "medico": medico.nome,
         "clinica": clinica.nome,
