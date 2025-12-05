@@ -1,0 +1,181 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Perfil do Profissional - {{ profissional.nome }}</title>
+  <link rel="stylesheet" href="{% static 'css/HeaderFooter/HeaderFooter.css' %}">
+  <link rel="stylesheet" href="{% static 'css/PerfilDoProfissional/PerfilDoProfissional.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous"/>
+</head>
+<body>
+
+  {% include 'partials/header/header.html' %}
+
+<!-- CONTEÚDO PRINCIPAL -->
+<main class="perfil-container">
+  <section class="perfil-main">
+    <div class="perfil-header">
+      {% if profissional.foto %}
+        <img src="{{ profissional.foto.url }}" alt="{{ profissional.nome }}" class="perfil-foto"/>
+      {% else %}
+        <img src="{% static 'imgs/default-user.png' %}" alt="{{ profissional.nome }}" class="perfil-foto"/>
+      {% endif %}
+
+      <div class="perfil-info">
+        <h2>{{ profissional.nome }}</h2>
+
+        <p class="especialidade">
+            {% for esp in profissional.especialidades.all %}
+                {{ esp.nome }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                Profissional
+            {% endfor %}
+        </p>
+
+        <div class="avaliacao">
+          {% for i in "12345" %}
+            {% if forloop.counter <= profissional.avaliacao|floatformat:0 %}
+              <i class="fas fa-star"></i>
+            {% else %}
+              <i class="far fa-star"></i>
+            {% endif %}
+          {% endfor %}
+          <span>{{ profissional.avaliacao|default:"5.0" }} ({{ profissional.num_avaliacoes }} avaliações)</span>
+        </div>
+
+        <div>
+          <strong>Clínica:</strong> {{ clinica.nome }}
+        </div>
+
+      </div>
+
+      <button id="btn-open-agenda" class="btn-agendar">Agendar Consulta</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-button active" data-tab="sobre">Sobre</button>
+      <button class="tab-button" data-tab="experiencia">Experiência</button>
+      <button class="tab-button" data-tab="avaliacao">Avaliações</button>
+    </div>
+
+    <div class="tab-content" id="sobre" style="display: block;">
+      <p>{{ profissional.nome }} atua em {{ clinica.nome }}. {% if profissional.crm_cro %}CRM/CRO: {{ profissional.crm_cro }}.{% endif %}</p>
+      <p>{{ profissional.email }}</p>
+    </div>
+
+    <div class="tab-content" id="experiencia" style="display:none;">
+      <p>Especialidades:</p>
+      <ul>
+        {% for esp in profissional.especialidades.all %}
+          <li>{{ esp.nome }}</li>
+        {% empty %}
+          <li>Não informado</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="tab-content" id="avaliacao" style="display:none;">
+      <div class="comentario-container">
+        <div class="comentario-input">
+          <input type="text" id="novoComentario" placeholder="Adicione um comentário (somente front-end por enquanto)">
+          <button id="btnAdicionar">Adicionar</button>
+        </div>
+
+        <div id="listaComentarios">
+          <!-- Comentários mock por enquanto -->
+          <div class="comentario">
+            <p>Profissional muito atencioso. Excelente atendimento.</p>
+            <span class="tempo">Comentado recentemente</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- MODAL - SELECIONAR DATA E HORÁRIO -->
+<div id="agenda-modal" class="modal-overlay" aria-hidden="true">
+  <div class="modal-content">
+    <span class="close-modal" id="fechar-modal">&times;</span>
+    <h3>Agende um atendimento com {{ profissional.nome }}</h3>
+
+    <div class="form-row">
+      <label for="data">Escolha a data</label>
+      <input type="date" id="data" name="data" min="{{ today|date:'Y-m-d' }}">
+    </div>
+
+    <div class="form-row">
+      <label>Horários disponíveis</label>
+      <div id="horarios-list" class="horarios">
+        <!-- Botões de horário preenchidos via JS -->
+        <p class="muted">Escolha uma data para ver horários.</p>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:.5rem; margin-top: .6rem;">
+      <button id="btn-selecionar" class="btn-agendar-final" disabled>Continuar</button>
+      <button id="btn-cancelar" class="btn-agendar-final" style="background:#ccc; color:#111;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL - DADOS DA CONSULTA -->
+<div id="dados-consulta-modal" class="modal-overlay" aria-hidden="true">
+  <div class="modal-content">
+    <span class="close-modal" id="fechar-dados">&times;</span>
+    <h3>Preencha seus dados</h3>
+
+    <form id="formDadosConsulta">
+      {% csrf_token %}
+      <input type="hidden" id="selected_time" name="time">
+      <input type="hidden" id="selected_date" name="date">
+
+      <label>Nome Completo</label>
+      <input type="text" id="nome" name="nome" placeholder="Digite seu nome" required>
+
+      <label>Email</label>
+      <input type="email" id="email" name="email" placeholder="Digite seu email" required>
+
+      <label>Telefone</label>
+      <input type="tel" id="telefone" name="telefone" placeholder="Digite seu número" required>
+
+      <label>Especialidade</label>
+      <select id="especialidade" name="especialidade">
+        <option value="">Selecione (opcional)</option>
+        {% for esp in especialidades %}
+          <option value="{{ esp.nome }}">{{ esp.nome }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Observações</label>
+      <textarea id="observacoes" name="observacoes" placeholder="Adicione observações..."></textarea>
+
+      <button type="submit" class="btn-agendar-final">Confirmar Agendamento</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL - SUCESSO -->
+<div id="sucesso-modal" class="modal-overlay" aria-hidden="true">
+  <div class="modal-content sucesso">
+    <i class="fas fa-check-circle"></i>
+    <h3>Consulta Agendada com Sucesso</h3>
+    <p id="sucesso-text"></p>
+    <button id="voltarInicio" class="btn-agendar-final">Fechar</button>
+  </div>
+</div>
+
+{% include 'partials/footer/footer.html' %}
+
+<script>
+  // Passando algumas variáveis do server para o JS
+  window.PROFISSIONAL_ID = {{ profissional.id }};
+  window.CSRF_TOKEN = "{{ csrf_token }}";
+</script>
+
+<script defer src="{% static 'js/PerfilDoProfissional/PerfilDoProfissional.js' %}"></script>
+</body>
+</html>

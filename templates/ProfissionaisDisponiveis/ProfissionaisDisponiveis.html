@@ -1,0 +1,104 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profissionais Disponíveis</title>
+
+    <link rel="stylesheet" href="{% static 'css/ProfissionaisDisponiveis/ProfissionaisDisponiveis.css' %}">
+    <link rel="stylesheet" href="{% static 'css/HeaderFooter/HeaderFooter.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+{% include 'partials/header/header.html' %}
+
+<main class="container">
+
+    <!-- FILTROS -->
+    <aside class="filtros">
+        <div class="filtro-box">
+            <h3>Especialidade</h3>
+
+            <select id="select-especialidade">
+                <option value="">Todas</option>
+                {% for esp in especialidades %}
+                    <option value="{{ esp.nome }}">{{ esp.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filtro-box">
+            <h3>Avaliação</h3>
+
+            <div class="estrelas-filtro">
+                <label><input type="radio" name="filtro-estrelas" value="" checked> Todas</label>
+                <label><input type="radio" name="filtro-estrelas" value="5"> ⭐⭐⭐⭐⭐</label>
+                <label><input type="radio" name="filtro-estrelas" value="4"> ⭐⭐⭐⭐+</label>
+                <label><input type="radio" name="filtro-estrelas" value="3"> ⭐⭐⭐+</label>
+            </div>
+        </div>
+    </aside>
+
+    <!-- PROFISSIONAIS -->
+    <section class="conteudo">
+        <h2>Profissionais da Clínica {{ clinica.nome }}</h2>
+
+        <div class="cards" id="cards-container">
+
+          {% for profissional in profissionais %}
+          <section class="card"
+              data-especialidade="{% for esp in profissional.especialidades.all %}{{ esp.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+              data-stars="{{ profissional.avaliacao|default:5 }}"
+              onclick="location.href='{% url 'perfilDoProfissional' profissional.id %}'">
+      
+              <!-- FOTO -->
+              {% if profissional.foto %}
+                  <img src="{{ profissional.foto.url }}" alt="{{ profissional.nome }}">
+              {% else %}
+                  <img src="{% static 'imgs/default-user.png' %}" alt="Sem foto">
+              {% endif %}
+      
+              <!-- NOME -->
+              <h4>{{ profissional.nome }}</h4>
+      
+              <!-- ESPECIALIDADES -->
+              <p>
+                  {% for esp in profissional.especialidades.all %}
+                      {{ esp.nome }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+              </p>
+      
+              <!-- AVALIAÇÃO REAL -->
+              <div class="avaliacao">
+                  {% with avaliacao=profissional.avaliacao|default:4 %}
+                      {% for i in "12345" %}
+                          {% if i|add:0 <= avaliacao %}
+                              <i class="fas fa-star"></i>
+                          {% elif i|add:-0.5 <= avaliacao %}
+                              <i class="fas fa-star-half-alt"></i>
+                          {% else %}
+                              <i class="far fa-star"></i>
+                          {% endif %}
+                      {% endfor %}
+                  {% endwith %}
+              </div>
+      
+          </section>
+          {% empty %}
+              <p>Nenhum profissional encontrado.</p>
+          {% endfor %}
+      
+      </div>      
+    </section>
+</main>
+
+{% include 'partials/footer/footer.html' %}
+
+<script src="{% static 'js/ProfissionaisDisponiveis/ProfissionaisDisponiveis.js' %}"></script>
+
+</body>
+</html>

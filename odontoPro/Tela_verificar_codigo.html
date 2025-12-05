@@ -1,16 +1,29 @@
+<<<<<<<< HEAD:odontoPro/Tela_verificar_codigo.html
+========
+{% load static %}
+
+>>>>>>>> aebeb7a1570979faa1cf5ebb155eb4a53e8b031c:templates/NovaSenha/novaSenha.html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tela Verificar Código</title>
+<<<<<<<< HEAD:odontoPro/Tela_verificar_codigo.html
   <link rel="stylesheet" href="Tela_verificar_codigo.css" />
+========
+  <link rel="stylesheet" href="{% static "css/NovaSenha/novaSenha.css" %}">
+>>>>>>>> aebeb7a1570979faa1cf5ebb155eb4a53e8b031c:templates/NovaSenha/novaSenha.html
 </head>
 <body>
   <main class="main">
     <div class="container">
       <div class="Logo">
+<<<<<<<< HEAD:odontoPro/Tela_verificar_codigo.html
         <img class="img_logo" src="Logo moderna cirurgiã dentista azul (2) 1.png" alt="Logo" />
+========
+        <img class="img_logo" src="../OdontoIMG/OdontoLogo1.png" alt="Logo" />
+>>>>>>>> aebeb7a1570979faa1cf5ebb155eb4a53e8b031c:templates/NovaSenha/novaSenha.html
       </div>
 
       <div class="Texto_inicial">
@@ -34,7 +47,13 @@
           <input type="password" id="confirma-senha" name="confirma-senha" />
         </div>
 
+<<<<<<<< HEAD:odontoPro/Tela_verificar_codigo.html
         <button type="submit">Mudar Senha</button>
+========
+        <a href="{% url "login" %}">
+          <button type="button">Mudar Senha</button>
+        </a>
+>>>>>>>> aebeb7a1570979faa1cf5ebb155eb4a53e8b031c:templates/NovaSenha/novaSenha.html
       </form>
     </div>
   </main>
