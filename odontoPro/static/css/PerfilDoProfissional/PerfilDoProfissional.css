@@ -231,41 +231,152 @@ main {
   to {opacity: 1; transform: scale(1);}
 }
 
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: none;
-  background: rgba(0,0,0,0.6);
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.modal-content {
-  background: white;
-  padding: 25px;
-  width: 420px;
-  max-width: 90%;
-  border-radius: 12px;
-}
-
-.hora-btn {
-  padding: 8px 15px;
-  margin: 5px;
-  border: 1px solid #007bff;
-  background: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.hora-btn.selecionado {
-  background: #007bff;
-  color: white;
-}
-
 button {
   cursor: pointer;
+}
+
+/* ========== Regras para controlar visibilidade via aria-hidden ========== */
+/* Mostra o modal quando aria-hidden for "false" (seu JS parece usar aria-hidden) */
+.modal-overlay[aria-hidden="false"] {
+  display: flex;            /* mostra como flex para centralizar */
+  align-items: center;
+  justify-content: center;
+}
+
+/* Garante que quando oculto, esteja escondido (defensivo) */
+.modal-overlay[aria-hidden="true"] {
+  display: none;
+}
+
+/* Ajustes gerais do conteúdo do modal */
+.modal-content {
+  background: #fff;
+  padding: 1.6rem;
+  border-radius: 12px;
+  width: 92%;
+  max-width: 560px;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  max-height: 85vh;        /* evita ultrapassar a tela */
+  overflow-y: auto;        /* torna o conteúdo rolável */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Área do close com hit area maior */
+.close-modal {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 1.4rem;
+  color: #666;
+  padding: 6px;
+  border-radius: 6px;
+}
+.close-modal:hover { background: rgba(0,0,0,0.04); color: #333; }
+
+/* FORMS: inputs e selects fluidos dentro de modais */
+.modal-content input[type="text"],
+.modal-content input[type="email"],
+.modal-content input[type="tel"],
+.modal-content input[type="date"],
+.modal-content select,
+.modal-content textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem;
+  border: 1px solid #d0d7db;
+  border-radius: 8px;
+  margin-top: 0.35rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+/* textarea com altura mínima */
+.modal-content textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Label mais legível */
+.modal-content label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #333;
+  display: block;
+  margin-top: 0.6rem;
+}
+
+/* Botões dentro do modal: não forçar 100% */
+.modal-content .btn-agendar-final {
+  width: auto; /* sobrescreve regra global que tornava 100% */
+  min-width: 120px;
+  padding: 0.7rem 1rem;
+  display: inline-block;
+  margin-top: 0.6rem;
+}
+
+/* Para o botão de confirmação do formulário (se quiser full width) */
+#formDadosConsulta .btn-agendar-final {
+  width: 100%;
+}
+
+/* Horários */
+.horarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 8px;
+}
+
+.horarios button,
+.hora-btn {
+  background: #e6f7f9;
+  border: 1px solid #cfeff2;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 96px;
+  text-align: center;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.horarios button:hover {
+  transform: translateY(-2px);
+}
+
+.horarios button.ativo,
+.horarios button:focus,
+.horarios button.selected {
+  background: #00bcd4;
+  color: #fff;
+  border-color: rgba(0,0,0,0.06);
+}
+
+/* Mensagem neutra quando não há horários */
+.horarios .muted {
+  color: #7a8387;
+  margin: 0;
+  padding: 0.4rem 0;
+  width: 100%;
+}
+
+/* Layout responsivo para a tela de seleção (botões laterais) */
+@media (max-width: 520px) {
+  .modal-content { padding: 1.2rem; max-width: 96%; }
+  .perfil-header { padding: 0.8rem; }
+  .horarios button { min-width: 80px; padding: 0.45rem 0.6rem; font-size: 0.9rem; }
+}
+
+/* Previne scroll do body quando modal aberto (adiciona classe via JS) */
+body.modal-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* Pequeno ajuste para o modal de sucesso (centralizado) */
+.modal-content.sucesso {
+  padding: 1.6rem;
+  gap: 0.4rem;
 }
