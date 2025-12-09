@@ -148,3 +148,13 @@ p {
     text-decoration: none;
     color: #0099ff;
 }
+
+.cadastrar-clinica {
+    text-align: center;
+    font-size: 13px;
+}
+
+.cadastrar-clinica a {
+    text-decoration: none;
+    color: #0099ff;
+}
