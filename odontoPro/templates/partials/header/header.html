@@ -1,11 +1,10 @@
 {% load static %}
 
 <header class="top-header">
-    <div class="logo-area" >
-        <a href="{% url 'menuPrincipal' %}" >
+    <div class="logo-area">
+        <a href="{% url 'menuPrincipal' %}">
             <img src="{% static "img/OdontoLogo2.png" %}" alt="OdontoPro Logo" class="logo">
         </a>
-    
     </div>
 
     <div class="search-area">
@@ -14,13 +13,14 @@
     </div>
 
     <div class="actions">
-        <!-- Sino de notificações (desktop) -->
-        <img src="{% static 'img/Notificacao.png' %}" alt="notificações" class="notificacao"></img>
 
-        <!-- Avatar do usuário (desktop) -->
+        <!-- Sino de notificações (desktop) -->
+        <i class="fas fa-bell notificacao" id="notifBtn"></i>
+
+        <!-- Avatar -->
         <div class="user-avatar" id="desktopAvatar"></div>
 
-        <!-- Botão de usuário (desktop) -->
+        <!-- Botão de usuário -->
         <button class="user-button" id="userBtn">
             <span class="user-name">Nome de Usuário</span>
             <i class="fas fa-chevron-down"></i>
@@ -28,8 +28,8 @@
 
         <!-- Dropdown do usuário -->
         <div class="dropdown-menu" id="userMenu">
-            <a href="{% url "configuracoes" %}">Configurações</a>
-            <a href="{% url "login" %}">Logout</a>
+            <a href="{% url 'configuracoes' %}">Configurações</a>
+            <a href="{% url 'login' %}">Logout</a>
         </div>
 
         <!-- Dropdown de notificações -->
@@ -37,7 +37,7 @@
             <p>Nenhuma nova notificação</p>
         </div>
 
-        <!-- Hamburger / avatar mobile -->
+        <!-- Avatar mobile -->
         <div class="hamburger-container" id="hamburger">
             <div class="user-avatar" id="mobileAvatar"></div>
         </div>
@@ -45,9 +45,10 @@
         <!-- Menu mobile -->
         <div class="mobile-menu" id="mobileMenu">
             <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
-            <a href="{% url "configuracoes" %}"><i class="fas fa-cog"></i> Configurações</a>
-            <a href="{% url "login" %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <a href="{% url 'configuracoes' %}"><i class="fas fa-cog"></i> Configurações</a>
+            <a href="{% url 'login' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </div>
+
     <script src="{% static "js/Header/header.js" %}"></script>
 </header>
