@@ -1,0 +1,55 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento por QR Code</title>
+
+    <!-- CSS convertido para Django -->
+    <link rel="stylesheet" href="{% static 'css/Pagamento/pagamentos.css' %}">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Pagamento da Clinica</h1>
+            <p class="description">Finalize seu agendamento escaneando o QR Code abaixo.</p>
+
+            <div class="info-box">
+                <h3>Clinica Sorriso Vivo Odontologia</h3>
+                <p>Consulta agendada: <strong>15/12/2025 às 14:00</strong></p>
+                <p>Procedimento: <strong>Avaliação Odontológica</strong></p>
+            </div>
+
+            <div class="qrcode-container">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=Pagamento+Consulta+Odonto"
+                     alt="QR Code" class="qrcode">
+            </div>
+
+            <div class="preco-box">
+                <span>Valor da consulta:</span>
+                <strong>R$ 120,00</strong>
+            </div>
+
+            <div class="copy-area">
+                <input 
+                    type="text" 
+                    id="pixCode"
+                    value="00020101021126580014BR.GOV.BCB.PIX0136clinicaodontosorriso@pagamentos.com5204000053039865405120.005802BR5925Clinica Sorriso Mais6009CURITIBA62070503***6304ABCD"
+                    readonly
+                >
+                <button id="copyBtn">Copiar código Pix</button>
+            </div>
+
+            <p id="msg"></p>
+        </div>
+    </div>
+
+    <!-- JS convertido para Django -->
+    <script src="{% static 'js/Pagamentos/pagamentos.js' %}"></script>
+</body>
+</html>

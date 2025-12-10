@@ -1,0 +1,215 @@
+body {
+    background: #f5f6fa;
+    padding: 25px;
+    color: #333;
+    font-family: 'Poppins', sans-serif;
+}
+
+.top-bar {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.top-bar h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #2b2d42;
+}
+
+.container {
+    max-width: 950px;
+    margin: 0 auto;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 22px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 25px;
+
+    border: 1px solid #e6e9f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+}
+
+.info h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 12px;
+}
+
+.info p {
+    font-size: 14px;
+    margin-bottom: 6px;
+    color: #555;
+}
+
+.info strong {
+    color: #222;
+}
+
+/* COLUNA DIREITA */
+.status-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+}
+
+/* STATUS E BOTÕES (TAMANHOS IGUAIS) */
+.status,
+.btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 150px;         /* Ajuste final para tamanho uniforme */
+    height: 42px;             /* Mesma altura para status e botão */
+    text-align: center;
+    transition: .2s ease;
+}
+
+.agendado {
+    background: #e0f5fa;
+    color: #1BC3EA;
+}
+
+.confirmado {
+    background: #e8f9ee;
+    color: #1f9d47;
+}
+
+.cancelado {
+    background: #ffe6e8;
+    color: #d62828;
+}
+
+.btn {
+    background: #1BC3EA;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: #0dc9f3b6;
+}
+
+/* MODAL */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 99995;
+    animation: fadeIn .2s linear;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal {
+    background: #ffffff;
+    width: 420px;
+    max-width: 90%;
+    padding: 20px;
+    border-radius: 16px;
+
+    box-shadow: 0px 6px 25px rgba(0,0,0,0.15);
+
+    animation: modalEnter .25s ease;
+}
+
+@keyframes modalEnter {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2b2d42;
+}
+
+.modal-close {
+    font-size: 26px;
+    cursor: pointer;
+    color: #666;
+    transition: .2s;
+}
+
+.modal-close:hover {
+    color: #000;
+}
+
+.modal-body p {
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: #444;
+}
+
+.modal-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-sec {
+    background: #e7e9f3;
+    color: #2b2d42;
+}
+
+.btn-sec:hover {
+    background: #d6d9e6;
+}
+
+/* RESPONSIVIDADE */
+@media (max-width: 768px) {
+    .card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .status-area {
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .status, .btn {
+        width: 100%;
+        min-width: 100%;
+    }
+}

@@ -1,0 +1,71 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Acompanhamento de Consultas</title>
+
+    <link rel="stylesheet" href="{% static 'css/Consultas/consultas.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Consultas/consultasreset.css' %}">
+    <link rel="stylesheet" href="{% static 'css/Consultas/consultasresponsivas.css' %}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="top-bar">
+        <h1><i class="ri-calendar-check-line"></i> Acompanhamento de Consultas</h1>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="info">
+                <h2><i class="ri-user-heart-line"></i> Consulta com Dr. Ricardo</h2>
+                <p><strong><i class="ri-user-line"></i> Paciente:</strong> João Silva</p>
+                <p><strong><i class="ri-calendar-line"></i> Data:</strong> 12/05/2025</p>
+                <p><strong><i class="ri-time-line"></i> Horário:</strong> 10:00</p>
+                <p><strong><i class="ri-hospital-line"></i> Procedimento:</strong> Limpeza + Avaliação</p>
+            </div>
+
+            <div class="status-area">
+                <span class="status confirmado"><i class="ri-checkbox-circle-line"></i> Confirmado</span>
+                <button class="btn" onclick="openModal()">
+                    <i class="ri-file-list-line"></i> Ver detalhes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalhes -->
+    <div id="modal-detalhes" class="modal-overlay">
+
+        <div class="modal">
+
+            <div class="modal-header">
+                <h2><i class="ri-information-line"></i> Detalhes da Consulta</h2>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+
+            <div class="modal-body">
+                <p><strong><i class="ri-user-line"></i> Paciente:</strong> João Silva</p>
+                <p><strong><i class="ri-calendar-line"></i> Data:</strong> 12/05/2025</p>
+                <p><strong><i class="ri-time-line"></i> Horário:</strong> 10:00</p>
+                <p><strong><i class="ri-checkbox-circle-line"></i> Status:</strong> Confirmado</p>
+                <p><strong><i class="ri-hospital-line"></i> Procedimento:</strong> Limpeza + Avaliação</p>
+                <p><strong><i class="ri-user-heart-line"></i> Profissional:</strong> Dr. Ricardo</p>
+                <p><strong><i class="ri-map-pin-line"></i> Endereço:</strong> Rua das Flores, 125 — Centro</p>
+                <p><strong><i class="ri-map-line"></i> Localização:</strong> Clínica Sorriso Perfeito</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="{% static 'js/consultas.js' %}"></script>
+
+</body>
+
+</html>

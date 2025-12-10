@@ -224,3 +224,12 @@ def profissionaisDisponiveis(request, clinica_id):
 
 def verificarCodigo(request):
     return render(request, "VerificarCodigo/VerificarCodigo.html")
+
+def pagamento(request):
+    return render(request, "pagamento/pagamentos.html")
+
+def consultas(request):
+    return render(request, "Consultas/consultas.html")
+
+def cadastroclinica(request):
+    return render(request, "Cadastroclinica/clinica-cadastro.html")

@@ -1,0 +1,80 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro da Clínica</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/Cadastroclinica/clinica_cadastro.css' %}">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Cadastro da Clínica</h1>
+
+        <div class="input-group">
+            <label>Nome da Clínica</label>
+            <input type="text" id="nomeClinica" placeholder="Ex: Clínica Sorriso Vivo">
+        </div>
+
+        <div class="input-group">
+            <label>Descrição da Clínica</label>
+            <textarea id="descricaoClinica" placeholder="Fale sobre a clínica, especialidades, equipe..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>Foto da Clínica</label>
+            <input type="file" id="fotoInput" accept="image/*">
+            <img id="preview" src="" alt="Pré-visualização da imagem">
+        </div>
+
+        <button id="pagamentoBtn">Ir para Pagamento</button>
+
+        <button id="submitBtn">Salvar Informações</button>
+
+        <p class="msg" id="msg"></p>
+
+        <button id="backBtn" class="back">Voltar ao Início</button>
+    </div>
+
+    <script>
+        // Pré-visualização da imagem
+        document.getElementById("fotoInput").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById("preview").src = URL.createObjectURL(file);
+            }
+        });
+
+        // Botão salvar
+        document.getElementById("submitBtn").addEventListener("click", function () {
+            const nome = document.getElementById("nomeClinica").value.trim();
+            const desc = document.getElementById("descricaoClinica").value.trim();
+
+            if (!nome || !desc) {
+                document.getElementById("msg").style.color = "red";
+                document.getElementById("msg").textContent = "Preencha todos os campos!";
+                return;
+            }
+
+            document.getElementById("msg").style.color = "green";
+            document.getElementById("msg").textContent = "Informações salvas com sucesso!";
+        });
+
+        // Voltar ao início (Django URL)
+        document.getElementById("backBtn").addEventListener("click", function () {
+            window.location.href = "{% url 'menuPrincipal' %}";
+        });
+
+        document.getElementById("pagamentoBtn").addEventListener("click", function () {
+            window.location.href = "{% url 'pagamento' %}";
+        });
+        
+    </script>
+
+</body>
+</html>
