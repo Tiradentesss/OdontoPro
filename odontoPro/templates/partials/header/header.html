@@ -28,9 +28,17 @@
 
         <!-- Dropdown do usuário -->
         <div class="dropdown-menu" id="userMenu">
-            <a href="{% url 'configuracoes' %}">Configurações</a>
-            <a href="{% url 'login' %}">Logout</a>
+            <a href="{% url 'consultas' %}">
+                <i class="fas fa-calendar-check"></i> Consultas
+            </a>
+            <a href="{% url 'configuracoes' %}">
+                <i class="fas fa-cog"></i> Configurações
+            </a>
+            <a href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
         </div>
+        
 
         <!-- Dropdown de notificações -->
         <div class="notif-menu" id="notifMenu">
@@ -44,10 +52,22 @@
 
         <!-- Menu mobile -->
         <div class="mobile-menu" id="mobileMenu">
-            <a href="#" id="mobileNotifBtn"><i class="fas fa-bell"></i> Notificações</a>
-            <a href="{% url 'configuracoes' %}"><i class="fas fa-cog"></i> Configurações</a>
-            <a href="{% url 'login' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </div>
+            <a href="#" id="mobileNotifBtn">
+                <i class="fas fa-bell"></i> Notificações
+            </a>
+        
+            <a href="{% url 'consultas' %}">
+                <i class="fas fa-calendar-check"></i> Consultas
+            </a>
+        
+            <a href="{% url 'configuracoes' %}">
+                <i class="fas fa-cog"></i> Configurações
+            </a>
+        
+            <a href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>        
     </div>
 
     <script src="{% static "js/Header/header.js" %}"></script>

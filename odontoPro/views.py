@@ -41,7 +41,10 @@ def agendar_profissional(request, medico_id):
                 )
 
             # criar consulta
+            paciente_id = request.session.get("paciente_id")
+
             consulta = Consulta.objects.create(
+                paciente_id=paciente_id,
                 nome=nome,
                 email=email,
                 telefone=telefone,
@@ -51,6 +54,7 @@ def agendar_profissional(request, medico_id):
                 data_hora=data_hora,
                 observacoes=observacoes
             )
+
 
             return JsonResponse({
                 "success": True,
@@ -104,9 +108,17 @@ def login(request):
             messages.error(request, "Senha incorreta!")
             return render(request, "Login/login.html")
 
+        # =========================
+        # CRIA A SESSÃO
+        # =========================
+        request.session["paciente_id"] = paciente.id
+        request.session["paciente_nome"] = paciente.nome
+        request.session["paciente_email"] = paciente.email
+
         return redirect("menuPrincipal")
 
     return render(request, "Login/login.html")
+
 
 def criarConta(request):
     if request.method == "POST":
@@ -144,13 +156,14 @@ def recuperarSenha(request):
 
 
 def menuPrincipal(request):
+    if not paciente_logado(request):
+        return redirect("login")
+
     clinicas = Clinica.objects.all()
 
-    # PEGANDO MUNICÍPIO E BAIRRO CORRETOS
     municipios = clinicas.values_list('endereco__cidade', flat=True).distinct()
     bairros = clinicas.values_list('endereco__bairro', flat=True).distinct()
 
-    # LIMPA ESPAÇOS E REMOVE NULLS
     municipios = [m.strip() for m in municipios if m]
     bairros = [b.strip() for b in bairros if b]
 
@@ -162,15 +175,59 @@ def menuPrincipal(request):
 
     return render(request, "MenuPrincipal/tela_menu_principal.html", context)
 
-
 def configuracoes(request):
-    return render(request, "Configuracoes/Tela_configuracoes.html")
+    paciente_id = request.session.get("paciente_id")
+    if not paciente_id:
+        return redirect("login")
+
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+
+    if request.method == "POST":
+        tipo = request.POST.get("tipo")
+
+        # ======================
+        # PERFIL
+        # ======================
+        if tipo == "perfil":
+            paciente.nome = request.POST.get("nome")
+            paciente.cpf = request.POST.get("cpf")
+            paciente.email = request.POST.get("email")
+            paciente.telefone = request.POST.get("telefone")
+
+            data_nascimento = request.POST.get("data_nascimento")
+            if data_nascimento:
+                paciente.data_nascimento = data_nascimento
+
+            paciente.save()
+            return JsonResponse({"success": True, "mensagem": "Perfil atualizado com sucesso"})
+
+        # ======================
+        # SEGURANÇA
+        # ======================
+        if tipo == "senha":
+            nova = request.POST.get("nova_senha")
+            confirmar = request.POST.get("confirmar")
+
+            if nova != confirmar:
+                return JsonResponse({"success": False, "mensagem": "As senhas não coincidem"})
+
+            paciente.senha = make_password(nova)
+            paciente.save()
+
+            return JsonResponse({"success": True, "mensagem": "Senha alterada com sucesso"})
+
+    return render(request, "Configuracoes/Tela_configuracoes.html", {
+        "paciente": paciente
+    })
 
 
 def novaSenha(request):
     return render(request, "NovaSenha/NovaSenha.html")
 
 def perfil(request, clinica_id):
+    if not paciente_logado(request):
+        return redirect("login")
+
     clinica = get_object_or_404(Clinica, id=clinica_id)
     
     # Pega todos os dias da semana que a clínica funciona
@@ -187,6 +244,10 @@ def perfil(request, clinica_id):
     return render(request, 'Perfil/perfil.html', context)
 
 def perfilDoProfissional(request, id):
+    paciente_id = paciente_logado(request)
+    if not paciente_id:
+        return redirect("login")
+
     profissional = get_object_or_404(Medico, id=id)
     clinica = profissional.clinica
     # especialidades para dropdown no form (ou apenas as do profissional)
@@ -203,6 +264,10 @@ def perfilDoProfissional(request, id):
 
 
 def profissionaisDisponiveis(request, clinica_id):
+    paciente_id = paciente_logado(request)
+    if not paciente_id:
+        return redirect("login")
+    
     clinica = get_object_or_404(Clinica, id=clinica_id)
 
     profissionais = Medico.objects.filter(clinica=clinica).prefetch_related("especialidades")
@@ -220,7 +285,12 @@ def profissionaisDisponiveis(request, clinica_id):
 
     return render(request, "ProfissionaisDisponiveis/ProfissionaisDisponiveis.html", context)
 
+def logout(request):
+    request.session.flush()
+    return redirect("login")
 
+def paciente_logado(request):
+    return request.session.get("paciente_id")
 
 def verificarCodigo(request):
     return render(request, "VerificarCodigo/VerificarCodigo.html")
@@ -229,7 +299,16 @@ def pagamento(request):
     return render(request, "pagamento/pagamentos.html")
 
 def consultas(request):
-    return render(request, "Consultas/consultas.html")
+    paciente_id = paciente_logado(request)
+    if not paciente_id:
+        return redirect("login")
+
+    consultas = Consulta.objects.filter(paciente_id=paciente_id).order_by("-data_hora")
+
+    return render(request, "Consultas/consultas.html", {
+        "consultas": consultas
+    })
+
 
 def cadastroclinica(request):
     return render(request, "Cadastroclinica/clinica-cadastro.html")

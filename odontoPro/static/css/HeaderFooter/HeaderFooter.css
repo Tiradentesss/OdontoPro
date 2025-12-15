@@ -310,3 +310,11 @@ html, body {
     object-fit: contain; /* mantém a proporção sem distorcer */
     cursor: pointer;
 }
+
+.dropdown-menu a i,
+.mobile-menu a i {
+  width: 18px;
+  text-align: center;
+  color: #666;
+}
+
