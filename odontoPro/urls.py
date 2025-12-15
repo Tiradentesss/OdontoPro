@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/medico/<int:medico_id>/agendar/", views.agendar_profissional, name="agendarProfissional"),
 
     path("logout/", views.logout, name="logout"),
+    path("consulta/<int:consulta_id>/cancelar/", views.cancelar_consulta, name="cancelar_consulta"),
 
     path("pagamento/", views.pagamento, name="pagamento"),
     path("consultas/", views.consultas, name="consultas"),

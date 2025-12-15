@@ -2,7 +2,6 @@
 
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <title>Acompanhamento de Consultas</title>
@@ -17,32 +16,77 @@
 
 <body>
 
+    <!-- TOPO -->
     <div class="top-bar">
         <h1><i class="ri-calendar-check-line"></i> Acompanhamento de Consultas</h1>
+        <button class="btn btn-sec" onclick="history.back()">
+            <i class="ri-arrow-left-line"></i> Voltar
+        </button>
     </div>
 
     <div class="container">
-        <div class="card">
-            <div class="info">
-                <h2><i class="ri-user-heart-line"></i> Consulta com Dr. Ricardo</h2>
-                <p><strong><i class="ri-user-line"></i> Paciente:</strong> João Silva</p>
-                <p><strong><i class="ri-calendar-line"></i> Data:</strong> 12/05/2025</p>
-                <p><strong><i class="ri-time-line"></i> Horário:</strong> 10:00</p>
-                <p><strong><i class="ri-hospital-line"></i> Procedimento:</strong> Limpeza + Avaliação</p>
-            </div>
 
-            <div class="status-area">
-                <span class="status confirmado"><i class="ri-checkbox-circle-line"></i> Confirmado</span>
-                <button class="btn" onclick="openModal()">
-                    <i class="ri-file-list-line"></i> Ver detalhes
-                </button>
+        {% if consultas %}
+            {% for c in consultas %}
+            <div class="card">
+                <div class="info">
+                    <h2>
+                        <i class="ri-user-heart-line"></i>
+                        Consulta com {{ c.medico.nome }}
+                    </h2>
+
+                    <p><strong><i class="ri-user-line"></i> Paciente:</strong> {{ c.nome }}</p>
+                    <p><strong><i class="ri-calendar-line"></i> Data:</strong> {{ c.data_hora|date:"d/m/Y" }}</p>
+                    <p><strong><i class="ri-time-line"></i> Horário:</strong> {{ c.data_hora|date:"H:i" }}</p>
+                    <p><strong><i class="ri-hospital-line"></i> Procedimento:</strong>
+                        {{ c.especialidade|default:"Consulta" }}
+                    </p>
+                </div>
+
+                <div class="status-area">
+                    <span class="status {{ c.status }}">
+                        {{ c.get_status_display }}
+                    </span>
+                
+                    <button
+                        class="btn"
+                        onclick="openModal(this)"
+                        data-id="{{ c.id }}"
+                        data-paciente="{{ c.nome }}"
+                        data-data="{{ c.data_hora|date:'d/m/Y' }}"
+                        data-hora="{{ c.data_hora|date:'H:i' }}"
+                        data-status="{{ c.get_status_display }}"
+                        data-especialidade="{{ c.especialidade|default:'Consulta' }}"
+                        data-medico="{{ c.medico.nome }}"
+                        data-clinica="{{ c.clinica.nome }}"
+                        data-endereco="{{ c.clinica.endereco }}"
+                        data-observacoes="{{ c.observacoes|default:'-' }}"
+                    >
+                        Ver detalhes
+                    </button>
+                
+                    {% if c.status != "cancelada" %}
+                    <button
+                        class="btn btn-cancelar"
+                        onclick="cancelarConsulta({{ c.id }})"
+                    >
+                        Cancelar
+                    </button>
+                    {% endif %}
+                </div>
+                
             </div>
-        </div>
+            {% endfor %}
+        {% else %}
+            <p style="text-align:center; margin-top:40px;">
+                Nenhuma consulta encontrada.
+            </p>
+        {% endif %}
+
     </div>
 
-    <!-- Modal Detalhes -->
+    <!-- MODAL -->
     <div id="modal-detalhes" class="modal-overlay">
-
         <div class="modal">
 
             <div class="modal-header">
@@ -51,21 +95,20 @@
             </div>
 
             <div class="modal-body">
-                <p><strong><i class="ri-user-line"></i> Paciente:</strong> João Silva</p>
-                <p><strong><i class="ri-calendar-line"></i> Data:</strong> 12/05/2025</p>
-                <p><strong><i class="ri-time-line"></i> Horário:</strong> 10:00</p>
-                <p><strong><i class="ri-checkbox-circle-line"></i> Status:</strong> Confirmado</p>
-                <p><strong><i class="ri-hospital-line"></i> Procedimento:</strong> Limpeza + Avaliação</p>
-                <p><strong><i class="ri-user-heart-line"></i> Profissional:</strong> Dr. Ricardo</p>
-                <p><strong><i class="ri-map-pin-line"></i> Endereço:</strong> Rua das Flores, 125 — Centro</p>
-                <p><strong><i class="ri-map-line"></i> Localização:</strong> Clínica Sorriso Perfeito</p>
+                <p><strong>Paciente:</strong> <span id="m-paciente"></span></p>
+                <p><strong>Data:</strong> <span id="m-data"></span></p>
+                <p><strong>Horário:</strong> <span id="m-hora"></span></p>
+                <p><strong>Status:</strong> <span id="m-status"></span></p>
+                <p><strong>Procedimento:</strong> <span id="m-especialidade"></span></p>
+                <p><strong>Profissional:</strong> <span id="m-medico"></span></p>
+                <p><strong>Clínica:</strong> <span id="m-clinica"></span></p>
+                <p><strong>Endereço:</strong> <span id="m-endereco"></span></p>
+                <p><strong>Observações:</strong> <span id="m-observacoes"></span></p>
             </div>
 
         </div>
     </div>
 
-    <script src="{% static 'js/consultas.js' %}"></script>
-
+    <script src="{% static 'js/Consultas/consultas.js' %}"></script>
 </body>
-
 </html>

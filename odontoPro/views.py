@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.utils import timezone
 from django.http import JsonResponse  # CORREÇÃO: sem espaço
 from django.contrib.auth.hashers import make_password, check_password
 from .models import Paciente, Clinica, Medico, Especialidade, HorarioAberto, DiaSemanaDisponivel, ClinicaServico, Consulta
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 import json
 from django.utils.dateparse import parse_datetime
 from datetime import date, datetime
@@ -12,81 +14,79 @@ def agendar_profissional(request, medico_id):
     medico = get_object_or_404(Medico, id=medico_id)
     clinica = medico.clinica
 
-    if request.method == "POST":
-        try:
-            payload = json.loads(request.body.decode("utf-8"))
+    if request.method != "POST":
+        return JsonResponse({"error": "Método inválido"}, status=405)
 
-            nome = payload.get("nome")
-            email = payload.get("email")
-            telefone = payload.get("telefone")
-            especialidade = payload.get("especialidade")
-            data = payload.get("date")      # YYYY-MM-DD
-            hora = payload.get("time")      # HH:MM
-            observacoes = payload.get("observacoes", "")
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
 
-            # validação
-            if not all([nome, email, telefone, data, hora]):
-                return JsonResponse(
-                    {"success": False, "error": "Campos obrigatórios faltando."},
-                    status=400
-                )
+        data = payload.get("date")
+        hora = payload.get("time")
+        especialidade = payload.get("especialidade")
+        observacoes = payload.get("observacoes", "")
 
-            # juntar data + hora (correção principal)
-            try:
-                data_hora = datetime.strptime(f"{data} {hora}", "%Y-%m-%d %H:%M")
-            except ValueError:
-                return JsonResponse(
-                    {"success": False, "error": "Formato de data/hora inválido."},
-                    status=400
-                )
-
-            # criar consulta
-            paciente_id = request.session.get("paciente_id")
-
-            consulta = Consulta.objects.create(
-                paciente_id=paciente_id,
-                nome=nome,
-                email=email,
-                telefone=telefone,
-                clinica=clinica,
-                medico=medico,
-                especialidade=especialidade,
-                data_hora=data_hora,
-                observacoes=observacoes
+        if not data or not hora:
+            return JsonResponse(
+                {"success": False, "error": "Data e horário são obrigatórios."},
+                status=400
             )
 
+        try:
+            data_hora = datetime.strptime(f"{data} {hora}", "%Y-%m-%d %H:%M")
+        except ValueError:
+            return JsonResponse(
+                {"success": False, "error": "Formato de data/hora inválido."},
+                status=400
+            )
 
-            return JsonResponse({
-                "success": True,
-                "consulta_id": consulta.id,
-                "mensagem": "Consulta agendada com sucesso!",
-                "data": data,
-                "hora": hora
-            })
+        # ==========================
+        # PACIENTE DA SESSÃO
+        # ==========================
+        paciente_id = paciente_logado(request)
+        if not paciente_id:
+            return JsonResponse(
+                {"success": False, "error": "Usuário não autenticado."},
+                status=401
+            )
 
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)}, status=400)
+        paciente = get_object_or_404(Paciente, id=paciente_id)
 
-    # GET — apenas informações básicas
-    return JsonResponse({
-        "medico": medico.nome,
-        "clinica": clinica.nome,
-        "status": "ok"
-    })
+        consulta = Consulta.objects.create(
+            paciente=paciente,
+            nome=paciente.nome,
+            email=paciente.email,
+            telefone=paciente.telefone,
+            clinica=clinica,
+            medico=medico,
+            especialidade=especialidade,
+            data_hora=data_hora,
+            observacoes=observacoes
+        )
+
+        return JsonResponse({
+            "success": True,
+            "consulta_id": consulta.id,
+            "data": data,
+            "hora": hora
+        })
+
+    except Exception as e:
+        return JsonResponse(
+            {"success": False, "error": str(e)},
+            status=400
+        )
 
 def get_horarios_medico(request, medico_id):
     medico = get_object_or_404(Medico, id=medico_id)
-    requested_date = request.GET.get("date")
 
     horarios = []
 
-    # Exemplo simples: coletar horários da clínica (ajuste conforme seu modelo real)
-    # Aqui eu assumo que clinica.dias_semana é um relacionamento para os dias com horários
     for dia in medico.clinica.dias_semana.prefetch_related("horarios").all():
         for h in dia.horarios.all():
-            horarios.append(f"{h.hora_inicio.strftime('%H:%M')} - {h.hora_fim.strftime('%H:%M')}")
+            horarios.append(
+                f"{h.hora_inicio.strftime('%H:%M')} - {h.hora_fim.strftime('%H:%M')}"
+            )
 
-    # Se desejar filtrar por requested_date, implemente a lógica aqui (ex.: checar reservas já feitas)
     return JsonResponse({"horarios": horarios})
 
 def lista_clinicas(request):
@@ -233,7 +233,7 @@ def perfil(request, clinica_id):
     # Pega todos os dias da semana que a clínica funciona
     dias_disponiveis = clinica.dias_semana.prefetch_related('horarios').all()
 
-    # Pega os serviços da clínica
+    # Pega os serviços da clínicalogado
     servicos = ClinicaServico.objects.filter(clinica=clinica)
 
     context = {
@@ -248,19 +248,26 @@ def perfilDoProfissional(request, id):
     if not paciente_id:
         return redirect("login")
 
+    paciente = get_object_or_404(Paciente, id=paciente_id)
     profissional = get_object_or_404(Medico, id=id)
-    clinica = profissional.clinica
-    # especialidades para dropdown no form (ou apenas as do profissional)
-    especialidades = Especialidade.objects.filter(medicos=profissional).distinct()
+
+    especialidades = Especialidade.objects.filter(
+        medicos=profissional
+    ).distinct()
 
     context = {
+        "paciente": paciente,
         "profissional": profissional,
-        "clinica": clinica,
+        "clinica": profissional.clinica,
         "especialidades": especialidades,
         "today": date.today()
     }
-    return render(request, "PerfilDoProfissional/PerfilDoProfissional.html", context)
 
+    return render(
+        request,
+        "PerfilDoProfissional/PerfilDoProfissional.html",
+        context
+    )
 
 
 def profissionaisDisponiveis(request, clinica_id):
@@ -303,12 +310,40 @@ def consultas(request):
     if not paciente_id:
         return redirect("login")
 
-    consultas = Consulta.objects.filter(paciente_id=paciente_id).order_by("-data_hora")
+    consultas = Consulta.objects.filter(
+        paciente_id=paciente_id
+    ).order_by("-data_hora")
 
     return render(request, "Consultas/consultas.html", {
         "consultas": consultas
     })
 
-
 def cadastroclinica(request):
     return render(request, "Cadastroclinica/clinica-cadastro.html")
+
+@require_POST
+def cancelar_consulta(request, consulta_id):
+    paciente_id = paciente_logado(request)
+    if not paciente_id:
+        return JsonResponse({"success": False, "mensagem": "Não autorizado"}, status=403)
+
+    consulta = get_object_or_404(
+        Consulta,
+        id=consulta_id,
+        paciente_id=paciente_id
+    )
+
+    # regra simples: só cancelar se ainda não passou
+    if consulta.data_hora < timezone.now():
+        return JsonResponse({
+            "success": False,
+            "mensagem": "Não é possível cancelar consultas passadas."
+        })
+
+    consulta.status = "cancelada"
+    consulta.save()
+
+    return JsonResponse({
+        "success": True,
+        "mensagem": "Consulta cancelada com sucesso."
+    })
