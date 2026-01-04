@@ -1,0 +1,143 @@
+/* --- AJUSTES PARA TELAS MÉDIAS (TABLETS) --- */
+@media (max-width: 992px) {
+    .header-clinicas {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .controles-busca {
+        max-width: 100%;
+    }
+}
+
+/* --- AJUSTES PARA MOBILE (CELULARES) --- */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    /* 1. Menu Lateral vira Navbar Inferior */
+    .menu-lateral {
+        width: 100% !important;
+        height: 65px;
+        flex-direction: row;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        padding: 0;
+        justify-content: space-around;
+        border-right: none;
+        border-top: 1px solid #eee;
+        z-index: 1000;
+        background: white;
+    }
+
+    .seccao-logo, .botao-seta, .email-usuario, .botao-sair, .info-usuario {
+        display: none;
+    }
+
+    .itens-navegacao {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-around;
+        margin: 0;
+    }
+
+    .item-menu {
+        width: auto;
+        margin: 0;
+        padding: 10px;
+        font-size: 20px;
+    }
+
+    /* 2. Correção do Card da Clínica (Organização em Coluna) */
+    .card-clinica-principal {
+        flex-direction: column !important;
+        padding: 20px !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    .info-clinica-header {
+        display: flex;
+        flex-direction: column; /* Coloca Nome e Detalhes um sob o outro */
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* Ajuste da Logo para centralizar */
+    .logo-clinica {
+        margin-bottom: 10px;
+    }
+
+    /* Ajuste das Informações (Email e Tel) para ficarem abaixo do nome */
+    .detalhes-contato {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 14px;
+        color: #666;
+    }
+
+    /* Ajuste do botão Agendar para ficar no final, abaixo de tudo */
+    .btn-agendar-green {
+        width: 100% !important;
+        max-width: 280px !important; /* Limita a largura para não ficar esticado demais */
+        position: static !important;
+        margin-top: 20px !important; /* Dá distância das informações acima */
+        display: block !important;
+        order: 3; /* Garante que ele seja o último elemento do flex */
+    }
+
+    /* 3. Ajustes dos Modais (Pop-ups) */
+    .modal-content {
+        width: 92% !important;
+        padding: 20px !important;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .selection-row, .input-group {
+        flex-direction: column;
+        gap: 15px;
+        text-align: left;
+    }
+
+    .input-group>div {
+        width: 100%;
+    }
+
+    /* 4. Topbar e Busca */
+    .barra-topo {
+        padding: 0 15px;
+        height: 60px;
+    }
+
+    .controles-busca {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .campo-busca, .btn-filtro {
+        width: 100%;
+    }
+
+    .area-conteudo {
+        padding: 15px;
+        padding-bottom: 85px; /* Espaço para não cobrir o menu inferior */
+    }
+
+    .grid-clinicas {
+        grid-template-columns: 1fr;
+    }
+
+    /* 5. Abas de navegação interna */
+    .abas-container {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        gap: 10px;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+    }
+}
