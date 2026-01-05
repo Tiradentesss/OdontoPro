@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OdontoPro - Pagina Inicial</title>
+    <link rel="stylesheet" href="../src/dasboard.css">
+    <link rel="stylesheet" href="../src/dasboardresponsivo.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <nav class="menu-lateral" id="menuLateral">
+        <button class="botao-seta" onclick="alternarMenu()" id="botaoSeta">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <div class="seccao-logo">
+            <img src="/img/logo icon.png" alt="Ícone" class="logo-somente-icone">
+            <img src="/img/logo_completa.png" alt="Logo Completa" class="logo-texto-completo">
+        </div>
+
+        <div class="itens-navegacao">
+            <div class="item-menu ativo" onclick="mostrarTela('inicio', this)">
+                <i class="fa-solid fa-house"></i>
+                <span class="legenda">Página Inicial</span>
+            </div>
+            <div class="item-menu" onclick="mostrarTela('agenda', this)">
+                <i class="fa-solid fa-calendar"></i>
+                <span class="legenda">Agendamentos</span>
+            </div>
+            <div class="item-menu" onclick="mostrarTela('consultas', this)">
+                <i class="fa-solid fa-tooth"></i>
+                <span class="legenda">Minhas Consultas</span>
+            </div>
+            <div class="item-menu" onclick="mostrarTela('ajustes', this)">
+                <i class="fa-solid fa-gear"></i>
+                <span class="legenda">Ajustes</span>
+            </div>
+        </div>
+
+        <div id="btnLogout" class="botao-sair">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span class="legenda">Sair</span>
+        </div>
+    </nav>
+
+    <div class="container-principal">
+        <header class="barra-topo">
+            <div class="texto-boas-vindas">Olá Gabriel 👋🏼</div>
+            <div class="controles-usuario">
+                <button class="botao-notificacao">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="ponto-alerta"></span>
+                </button>
+                <div class="bloco-usuario">
+                    <div class="icone-usuario-avatar"><i class="fa-solid fa-user"></i></div>
+                    <div class="info-usuario">
+                        <span class="nome-usuario">Gabriel Gomes</span>
+                        <span class="email-usuario">gabrielgomes@gmail.com</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="area-conteudo">
+            <section id="inicio" class="tela ativa">
+                <h2 class="titulo-pagina">Página Inicial</h2>
+
+                <div class="container-carrossel">
+                    <div class="slide-carrossel"><img src="/img/banner simples.png"></div>
+                    <div class="slide-carrossel"><img src="/img/Agende já sua consulta (1).png"></div>
+                    <div class="container-pontos">
+                        <span class="ponto"></span><span class="ponto"></span>
+                    </div>
+                </div>
+
+                <div class="header-clinicas">
+                    <h2 class="titulo-pagina">Clínicas Disponíveis</h2>
+                    <div class="controles-busca">
+                        <div class="campo-busca">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" placeholder="Procurar Clínica" id="inputBuscaClinica">
+                        </div>
+                        <button class="btn-filtro">
+                            <i class="fa-solid fa-star"></i> Avaliação <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <button class="btn-filtro">
+                            <i class="fa-solid fa-sliders"></i> Filtros <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid-clinicas">
+                    <div class="card-clinica">
+                        <div class="banner-card">
+                            <img src="/img/clinica_lumina.png" class="fundo-banner" alt="Clinica Lumina">
+                            <div class="perfil-clinica-container">
+                                <img src="/img/logo Lumina.png" class="foto-perfil-card">
+                                <div class="selo-verificado-pequeno"><i class="fa-solid fa-check"></i></div>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="rating-row">
+                                <div class="rating-stars">
+                                    <i class="fa-solid fa-star star-yellow"></i>
+                                    <span>0.00</span>
+                                </div>
+                                <div class="user-stats">
+                                    <span class="number">320</span>
+                                    <div class="user-avatars">
+                                        <div class="mini-avatar"></div>
+                                        <div class="mini-avatar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h3>Clinica Lumina</h3>
+                            <button class="btn-saiba-mais" onclick="verDetalhesClinica()">
+                                Saiba Mais
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card-clinica">
+                        <div class="banner-card">
+                            <img src="/img/clinica_bem_dente.png" class="fundo-banner" alt="Clinica Bem Dente">
+                            <div class="perfil-clinica-container">
+                                <img src="/img/Logo Bem Dente.png" class="foto-perfil-card">
+                                <div class="selo-verificado-pequeno"><i class="fa-solid fa-check"></i></div>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="rating-row">
+                                <div class="rating-stars">
+                                    <i class="fa-solid fa-star star-yellow"></i>
+                                    <span>0.00</span>
+                                </div>
+                                <div class="user-stats">
+                                    <span class="number">175</span>
+                                    <div class="user-avatars">
+                                        <div class="mini-avatar"></div>
+                                        <div class="mini-avatar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h3>Clinica Bem Dente</h3>
+                            <button class="btn-saiba-mais">Saiba Mais</button>
+                        </div>
+                    </div>
+
+                    <div class="card-clinica">
+                        <div class="banner-card">
+                            <img src="/img/clinica_sorriso_vital.png" class="fundo-banner"
+                                alt="Clinica Sorriso Vital">
+                            <div class="perfil-clinica-container">
+                                <img src="/img/logo Sorriso VItal.png" class="foto-perfil-card">
+                                <div class="selo-verificado-pequeno"><i class="fa-solid fa-check"></i></div>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="rating-row">
+                                <div class="rating-stars">
+                                    <i class="fa-solid fa-star star-yellow"></i>
+                                    <span>0.00</span>
+                                </div>
+                                <div class="user-stats">
+                                    <span class="number">157</span>
+                                    <div class="user-avatars">
+                                        <div class="mini-avatar"></div>
+                                        <div class="mini-avatar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h3>Clinica Sorriso Vital</h3>
+                            <button class="btn-saiba-mais">Saiba Mais</button>
+                        </div>
+                    </div>
+
+                    <div class="card-clinica">
+                        <div class="banner-card">
+                            <img src="/img/clinica.essencial.png" class="fundo-banner" alt="Odonto Essencial">
+                            <div class="perfil-clinica-container">
+                                <img src="/img/logo Odonto Essencial.png" class="foto-perfil-card">
+                                <div class="selo-verificado-pequeno"><i class="fa-solid fa-check"></i></div>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="rating-row">
+                                <div class="rating-stars">
+                                    <i class="fa-solid fa-star star-yellow"></i>
+                                    <span>0.00</span>
+                                </div>
+                                <div class="user-stats">
+                                    <span class="number">296</span>
+                                    <div class="user-avatars">
+                                        <div class="mini-avatar"></div>
+                                        <div class="mini-avatar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h3>Odonto Essencial</h3>
+                            <button class="btn-saiba-mais">Saiba Mais</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="agenda" class="tela">
+                <h2 class="titulo-pagina">Agendamentos</h2>
+                <div class="grid-agendamentos">
+
+                    <div class="card-agendamento">
+                        <div class="header-agendamento">
+                            <span class="status-badge agendado">Agendado</span>
+                            <span class="data-consulta"><i class="fa-regular fa-calendar"></i> 26/10/2024</span>
+                        </div>
+                        <div class="corpo-agendamento">
+                            <h3>Clinica Lumina</h3>
+                            <p><i class="fa-solid fa-location-dot"></i> Av. Paulista, 1234 - SP</p>
+                            <p><i class="fa-solid fa-user-doctor"></i> Dr. João Silva</p>
+                            <p><i class="fa-regular fa-clock"></i> 14:00</p>
+                        </div>
+                        <button class="btn-detalhes"
+                            onclick="abrirModal('Clinica Lumina', 'Av. Paulista, 1234 - SP', 'Dr. João Silva', '26/10/2024', '14:00', 'Limpeza e Avaliação')">
+                            Ver Detalhes
+                        </button>
+                    </div>
+
+                    <div class="card-agendamento realizado-card">
+                        <div class="header-agendamento">
+                            <span class="status-badge realizado">Realizado</span>
+                            <span class="data-consulta">15/09/2024</span>
+                        </div>
+                        <div class="corpo-agendamento">
+                            <h3>Sorriso Vital</h3>
+                            <p><i class="fa-solid fa-location-dot"></i> Rua das Flores, 50 - RJ</p>
+                            <p><i class="fa-solid fa-user-doctor"></i> Dra. Ana Costa</p>
+                            <p><i class="fa-regular fa-clock"></i> 09:30</p>
+                        </div>
+                        <button class="btn-detalhes"
+                            onclick="abrirModal('Sorriso Vital', 'Rua das Flores, 50 - RJ', 'Dra. Ana Costa', '15/09/2024', '09:30', 'Extração de Siso')">
+                            Ver Detalhes
+                        </button>
+                    </div>
+
+                    <div class="card-agendamento cancelado-card">
+                        <div class="header-agendamento">
+                            <span class="status-badge cancelado">Cancelado</span>
+                            <span class="data-consulta">02/10/2024</span>
+                        </div>
+                        <div class="corpo-agendamento">
+                            <h3>Odonto Essencial</h3>
+                            <p><i class="fa-solid fa-location-dot"></i> Av. Central, 800 - BH</p>
+                            <p><i class="fa-solid fa-user-doctor"></i> Dr. Marcos Lima</p>
+                            <p><i class="fa-regular fa-clock"></i> 16:00</p>
+                        </div>
+                        <button class="btn-detalhes"
+                            onclick="abrirModal('Odonto Essencial', 'Av. Central, 800 - BH', 'Dr. Marcos Lima', '02/10/2024', '16:00', 'Clareamento Dental')">
+                            Ver Detalhes
+                        </button>
+                    </div>
+
+                </div>
+
+            </section>
+            <section id="consultas" class="tela">
+                <h2 class="titulo-pagina">Minhas Consultas</h2>
+                <div class="grid-agendamentos">
+                    <div class="card-agendamento">
+                        <div class="header-agendamento">
+                            <span class="status-badge agendado">Agendado</span>
+                            <span class="data-consulta"><i class="fa-regular fa-calendar"></i> 26/10/2024</span>
+                        </div>
+                        <div class="corpo-agendamento">
+                            <h3>Clinica Lumina</h3>
+                            <p><i class="fa-solid fa-user-doctor"></i> Dr. João Silva</p>
+                            <p><i class="fa-regular fa-clock"></i> 14:00</p>
+                        </div>
+                        <button class="btn-detalhes"
+                            onclick="abrirModal('Lumina', 'Dr. João Silva', '26/10/2024', '14:00', 'Limpeza e Avaliação')">
+                            Ver Detalhes
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="consultas" class="tela">
+                <h2 class="titulo-pagina">Minhas Consultas</h2>
+                <div class="grid-agendamentos">
+                    <div class="card-agendamento">
+                        <div class="header-agendamento">
+                            <span class="status-badge agendado">Agendado</span>
+                            <span class="data-consulta"><i class="fa-regular fa-calendar"></i> 26/10/2024</span>
+                        </div>
+                        <div class="corpo-agendamento">
+                            <h3>Clinica Lumina</h3>
+                            <p><i class="fa-solid fa-user-doctor"></i> Dr. João Silva</p>
+                            <p><i class="fa-regular fa-clock"></i> 14:00</p>
+                        </div>
+                        <button class="btn-detalhes"
+                            onclick="abrirModal('Clinica Lumina', 'Av. Paulista, 1234 - São Paulo', 'Dr. João Silva', '26/10/2024', '14:00', 'Limpeza e Avaliação')">
+                            Ver Detalhes
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <div id="modalDetalhes" class="modal-overlay">
+                <div class="modal-conteudo">
+                    <div class="modal-header">
+                        <h3>Detalhes da Consulta</h3>
+                        <button class="fechar-modal" onclick="fecharModal()">&times;</button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div id="infoConsulta">
+                            <div class="detalhe-item">
+                                <strong>Clínica:</strong>
+                                <span id="modalClinica"></span>
+                            </div>
+                            <div class="detalhe-item">
+                                <strong>Dentista:</strong>
+                                <span id="modalDentista"></span>
+                            </div>
+                            <div class="detalhe-item">
+                                <strong>Data e Hora:</strong>
+                                <span id="modalDataHora"></span>
+                            </div>
+                            <div class="detalhe-item">
+                                <strong>Procedimento:</strong>
+                                <span id="modalProcedimento"></span>
+                            </div>
+                            <div class="detalhe-item">
+                                <strong>Endereço:</strong>
+                                <span id="modalEndereco" style="font-size: 13px; color: var(--texto-suave);"></span>
+                            </div>
+                        </div>
+
+                        <div id="formReagendar" style="display: none;">
+                            <p style="margin-bottom: 15px; font-size: 14px; color: var(--texto-suave);">Selecione o novo
+                                horário desejado:</p>
+                            <div class="detalhe-item">
+                                <strong>Nova Data:</strong>
+                                <input type="date" id="novaData" class="input-reagendar">
+                            </div>
+                            <div class="detalhe-item">
+                                <strong>Novo Horário:</strong>
+                                <input type="time" id="novoHorario" class="input-reagendar">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn-secundario" id="btnFechar" onclick="fecharModal()">Fechar</button>
+                        <button class="btn-principal" id="btnAcaoPrincipal"
+                            onclick="prepararReagendamento()">Reagendar</button>
+                    </div>
+                </div>
+            </div>
+            </section>
+            <section id="ajustes" class="tela">
+                <h2 class="titulo-pagina">Ajustes</h2>
+                <div class="container-config">
+                    <div class="abas-config">
+                        <button class="aba-item ativa" onclick="trocarAba(event, 'aba-perfil')">Configurações</button>
+                        <button class="aba-item" onclick="trocarAba(event, 'aba-seguranca')">Login e segurança</button>
+                    </div>
+
+                    <div id="aba-perfil" class="conteudo-aba ativa">
+                        <p class="label-foto">Escolha uma foto de Perfil</p>
+                        <div class="upload-foto-container" onclick="document.getElementById('fileInput').click()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span>Upload da foto</span>
+                            <input type="file" id="fileInput" hidden>
+                        </div>
+
+                        <div class="grid-inputs">
+                            <div class="input-grupo">
+                                <label> Alterar nome</label>
+                                <input type="text" placeholder="Gabriel Gomes Matos">
+                            </div>
+                            <div class="input-grupo">
+                                <label> Alterar Email</label>
+                                <input type="email" placeholder="gabrielgomes@gmail.com">
+                            </div>
+                            <div class="input-grupo">
+                                <label>CPF</label>
+                                <input type="text" placeholder="000.000.000-00">
+                            </div>
+                            <div class="input-grupo">
+                                <label>Alterar número de Telefone</label>
+                                <input type="text" placeholder="(91) 99999-9999">
+                            </div>
+                        </div>
+
+                        <button class="btn-salvar">Salvar Alterações</button>
+                    </div>
+
+                    <div id="aba-seguranca" class="conteudo-aba">
+                        <div class="grid-inputs">
+                            <div class="input-grupo">
+                                <label>Senha Atual</label>
+                                <input type="password" placeholder="••••••••">
+                            </div>
+                            <div style="grid-column: span 1;"></div>
+                            <div class="input-grupo">
+                                <label>Nova Senha</label>
+                                <input type="password" placeholder="Digite a nova senha">
+                            </div>
+                            <div class="input-grupo">
+                                <label>Confirmar Nova Senha</label>
+                                <input type="password" placeholder="Confirme a nova senha">
+                            </div>
+                        </div>
+                        <button class="btn-salvar">Atualizar Senha</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="perfil-clinica" class="tela">
+                <div class="container-perfil">
+                    <h1 class="titulo-sessao">Sobre a Clinica</h1>
+                    <div class="card-branco header-clinica-detalhe">
+                        <div class="clinica-info-principal">
+                            <img src="/img/logo Lumina.png" alt="Logo Clínica" class="logo-clinica-detalhe">
+                            <div class="clinica-textos">
+                                <h2 id="detalheNomeClinica">Clinica Lumina</h2>
+                                <p><i class="fa-regular fa-envelope"></i> clinicalumina@gmail.com</p>
+                                <p><i class="fa-solid fa-phone-volume"></i> +55 (91) 9999-9999</p>
+                            </div>
+                        </div>
+                        <button id="btn-abrir-agendamento" class="agendar-btn">Agendar Consulta</button>
+                    </div>
+
+
+                    <div class="abas-perfil">
+                        <button class="aba-item ativa" onclick="trocarAba(event, 'sobre')">Sobre Clinica</button>
+                        <button class="aba-item" onclick="trocarAba(event, 'avaliacoes')">Avaliações</button>
+                        <button class="aba-item" onclick="trocarAba(event, 'endereco')">Endereço</button>
+                    </div>
+
+                    <div id="aba-sobre" class="aba-conteudo ativa">
+                        <div class="card-branco">
+                            <div class="tag-secao"><i class="fa-solid fa-tooth"></i> Descrição da Clinica</div>
+                            <p class="descricao-texto">A Clínica Lumina é uma clínica odontológica que atende diversas
+                                especialidades, focando em odontologia geral com uma equipe ampla...</p>
+                        </div>
+                        <div class="card-branco">
+                            <div class="tag-secao"><i class="fa-solid fa-clipboard-list"></i> Serviços Disponíveis</div>
+                            <ul class="lista-servicos-bullets">
+                                <li>Prótese Fixa</li>
+                                <li>Overdenture</li>
+                                <li>Cirurgia Guiada</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="aba-avaliacoes" class="aba-conteudo">
+                        <div class="card-branco">
+                            <div class="tag-secao"><i class="fa-solid fa-star"></i> O que dizem nossos pacientes</div>
+                            <div class="container-avaliacoes">
+                                <div class="card-feedback">
+                                    <div class="user-feedback">
+                                        <img src="https://i.pravatar.cc/150?u=1" alt="Paciente">
+                                        <div>
+                                            <strong>Ricardo Alves</strong>
+                                            <div class="estrelas">★★★★★</div>
+                                        </div>
+                                    </div>
+                                    <p>"Atendimento impecável desde a recepção até o consultório. Recomendo muito!"</p>
+                                </div>
+                                <div class="card-feedback">
+                                    <div class="user-feedback">
+                                        <img src="https://i.pravatar.cc/150?u=2" alt="Paciente">
+                                        <div>
+                                            <strong>Ana Clara</strong>
+                                            <div class="estrelas">★★★★★</div>
+                                        </div>
+                                    </div>
+                                    <p>"A clínica é moderna e os profissionais são muito atenciosos. Nota 10!"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="aba-endereco" class="aba-conteudo">
+                        <div class="card-branco">
+                            <div class="tag-secao"><i class="fa-solid fa-location-dot"></i> Localização</div>
+                            <div class="endereco-detalhes">
+                                <p><strong>Unidade Belém:</strong> Av. Visc. de Souza Franco, 600 - Reduto, Belém - PA,
+                                    66053-000</p>
+                                <p><i class="fa-solid fa-clock"></i> Segunda a Sexta: 08h às 18h | Sábado: 08h às 12h
+                                </p>
+                            </div>
+                            <div class="mapa-google">
+                                <iframe
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.513239247653!2d-48.4901!3d-1.4558!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMcKwMjcnMjAuOSJTIDQ4wrAyOScyNC40Ilc!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
+                                    width="100%" height="300" style="border:0; border-radius: 15px;" allowfullscreen=""
+                                    loading="lazy">
+                                </iframe>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-voltar-perfil" onclick="voltarParaInicio()">
+                        <i class="fa-solid fa-chevron-left"></i> Voltar
+                    </button>
+
+
+                    <div id="modal-agendamento-1" class="modal">
+                        <div class="modal-content">
+                            <span class="tag-online">📅 Agendamento Online</span>
+                            <h3>Preencha seu Dados</h3>
+                            <p class="subtitle">Todos os campos com * são obrigatórios</p>
+
+                            <input type="text" placeholder="Digite seu nome completo">
+
+                            <div class="selection-row">
+                                <div class="selection-group">
+                                    <label class="group-title">Gênero</label>
+                                    <div class="radio-options">
+                                        <label><input type="radio" name="gender" value="Masculino"> Masculino</label>
+                                        <label><input type="radio" name="gender" value="Feminino"> Feminino</label>
+                                    </div>
+                                </div>
+
+                                <div class="selection-group">
+                                    <label class="group-title">Faixa Etária</label>
+                                    <div class="radio-options">
+                                        <label><input type="radio" name="age" value="Adulto"> Adulto</label>
+                                        <label><input type="radio" name="age" value="Infantil"> Infantil</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <div>
+                                    <label>Email</label>
+                                    <input type="email" placeholder="Seu @gmail.com">
+                                </div>
+                                <div>
+                                    <label>Número de Telefone</label>
+                                    <input type="tel" placeholder="(91) 99999-9999">
+                                </div>
+                            </div>
+
+                            <textarea placeholder="Descreva seus sintomas ou informações adicionais"></textarea>
+
+                            <button class="btn-cyan" onclick="proximaEtapa()">Continuar Preenchendo</button>
+
+                            <div class="security-banner">
+                                🛡️ Suas informações estão seguras e protegidas
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="modal-agendamento-2" class="modal" style="display:none;">
+                        <div class="modal-content">
+                            <span class="tag-online">📅 Agendamento Online</span>
+                            <h3>Escolha o tipo de consulta</h3>
+
+                            <select>
+                                <option>Selecione uma Especialidade</option>
+                            </select>
+                            <select>
+                                <option>Escolha um Profissional</option>
+                            </select>
+
+                            <div class="input-group">
+                                <input type="date">
+                                <select>
+                                    <option>Selecione o Horário</option>
+                                </select>
+                            </div>
+
+                            <button class="btn-cyan" onclick="confirmarAgendamento()">Agendar Consulta</button>
+
+                            <div class="security-banner">
+                                🛡️ Suas informações estão seguras e protegidas
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="modal-sucesso" class="modal" style="display:none;">
+                        <div class="modal-content">
+                            <div class="success-icon">✅</div>
+                            <h3>Agendamento Realizado com Sucesso!</h3>
+                            <p>Sua consulta foi marcada e está segura.</p>
+                            <button class="btn-cyan" onclick="irParaMeusAgendamentos()">Ver Meus Agendamentos</button>
+                        </div>
+                    </div>
+            </section>
+        </main>
+    </div>
+    <script src="../JS/dasboard.js"></script>
+</body>
+
+</html>
