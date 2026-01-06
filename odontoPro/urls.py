@@ -1,27 +1,21 @@
+from django.contrib import admin
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.login, name="login"),
-    path("criarConta/", views.criarConta, name="criarConta"),
-    path("recuperarSenha/", views.recuperarSenha, name="recuperarSenha"),
-    path("menuPrincipal/", views.menuPrincipal, name="menuPrincipal"),
-    path("configuracoes/", views.configuracoes, name="configuracoes"),
-    path("novaSenha/", views.novaSenha, name="novaSenha"),
-    path("profissional/<int:id>/", views.perfilDoProfissional, name="perfilDoProfissional"),
-    path('perfil/<int:clinica_id>/', views.perfil, name='perfil'),
-    path("clinica/<int:clinica_id>/profissionais/", views.profissionaisDisponiveis, name="profissionaisDisponiveis"),
-    path("clinica/<int:clinica_id>/profissionais/", views.profissionaisDisponiveis, name="profissionaisDisponiveis"),
-    path("verificarCodigo/", views.verificarCodigo, name="verificarCodigo"),
+    path('admin/', admin.site.urls),
 
-    # AJAX / actions for perfil do profissional
-    path("api/medico/<int:medico_id>/horarios/", views.get_horarios_medico, name="api_get_horarios_medico"),
-    path("api/medico/<int:medico_id>/agendar/", views.agendar_profissional, name="agendarProfissional"),
+    # LOGIN PACIENTE (página inicial)
+    path('', views.login_paciente, name='login_paciente'),
+    path('login/', views.login_paciente, name='login_paciente'),
 
-    path("logout/", views.logout, name="logout"),
-    path("consulta/<int:consulta_id>/cancelar/", views.cancelar_consulta, name="cancelar_consulta"),
+    # LOGIN CLÍNICA
+    path('login-clinica/', views.login_clinica, name='login_clinica'),
 
-    path("pagamento/", views.pagamento, name="pagamento"),
-    path("consultas/", views.consultas, name="consultas"),
-    path("cadastroclinica/", views.cadastroclinica, name="cadastroclinica"),
+    # DASHBOARDS
+    path('dashboard-paciente/', views.dashboard_paciente, name='dashboard_paciente'),
+    path('dashboard-clinica/', views.dashboard_clinica, name='dashboard_clinica'),
+
+    # LOGOUT
+    path('logout/', views.logout_view, name='logout'),
 ]

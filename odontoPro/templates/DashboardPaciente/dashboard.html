@@ -1,0 +1,231 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard do Paciente</title>
+
+  <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboard.css' %}">
+  <script defer src="{% static 'js/DashboardPaciente/dashboard.js' %}"></script>
+
+  <!-- Ícones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+<!-- MENU LATERAL -->
+<aside class="menu-lateral" id="menuLateral">
+  <button class="botao-seta" onclick="toggleMenu()">
+    <i class="fas fa-chevron-right"></i>
+  </button>
+
+  <div class="seccao-logo">
+    <img src="{% static 'img/OdontoLogo2.png' %}" class="logo-somente-icone">
+    <img src="{% static 'img/OdontoLogoCompleta.png' %}" class="logo-texto-completo">
+  </div>
+
+  <nav class="itens-navegacao">
+
+    <div class="item-menu ativo" data-tela="home">
+      <i class="fas fa-house"></i>
+      <span class="legenda">Início</span>
+    </div>
+
+    <div class="item-menu" data-tela="clinicas">
+      <i class="fas fa-hospital"></i>
+      <span class="legenda">Clínicas</span>
+    </div>
+
+    <div class="item-menu" data-tela="agendamentos">
+      <i class="fas fa-calendar-check"></i>
+      <span class="legenda">Meus Agendamentos</span>
+    </div>
+
+    <div class="item-menu" data-tela="config">
+      <i class="fas fa-gear"></i>
+      <span class="legenda">Configurações</span>
+    </div>
+
+  </nav>
+
+  <div class="botao-sair" onclick="window.location.href='{% url 'logout' %}'">
+    <i class="fas fa-right-from-bracket"></i>
+    <span class="legenda">Sair</span>
+  </div>
+</aside>
+
+<!-- CONTEÚDO PRINCIPAL -->
+<section class="container-principal">
+
+  <!-- TOPBAR -->
+  <header class="barra-topo">
+    <h2>Dashboard</h2>
+
+    <div class="controles-usuario">
+      <button class="botao-notificacao">
+        <i class="fas fa-bell"></i>
+        <span class="ponto-alerta"></span>
+      </button>
+
+      <div class="bloco-usuario">
+        <div class="icone-usuario-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+
+        <div class="info-usuario">
+          <span class="nome-usuario">{{ request.user.first_name|default:request.user.username }}</span>
+          <span class="email-usuario">{{ request.user.email }}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="area-conteudo">
+
+    <!-- =========================
+         HOME
+    ========================== -->
+    <div class="tela ativa" id="tela-home">
+      <h3 class="titulo-pagina">Bem-vindo 👋</h3>
+
+      <div class="container-carrossel">
+        <div class="slide-carrossel ativo">
+          <img src="{% static 'img/banner1.png' %}">
+        </div>
+        <div class="slide-carrossel">
+          <img src="{% static 'img/banner2.png' %}">
+        </div>
+
+        <div class="container-pontos">
+          <span class="ponto ativo"></span>
+          <span class="ponto"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================
+         CLÍNICAS
+    ========================== -->
+    <div class="tela" id="tela-clinicas">
+      <h3 class="titulo-pagina">Clínicas disponíveis</h3>
+
+      <div class="header-clinicas">
+        <div class="controles-busca">
+          <div class="campo-busca">
+            <i class="fas fa-search"></i>
+            <input type="text" id="campoBuscaClinica" placeholder="Buscar clínica...">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-clinicas" id="listaClinicas">
+
+        {% for clinica in clinicas %}
+        <div class="card-clinica">
+          <div class="banner-card">
+            {% if clinica.banner %}
+              <img class="fundo-banner" src="{{ clinica.banner.url }}">
+            {% else %}
+              <img class="fundo-banner" src="{% static 'img/default-banner.jpg' %}">
+            {% endif %}
+
+            <div class="perfil-clinica-container">
+              {% if clinica.logo %}
+                <img class="foto-perfil-card" src="{{ clinica.logo.url }}">
+              {% else %}
+                <img class="foto-perfil-card" src="{% static 'img/default-clinic.png' %}">
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="info-card">
+            <h3>{{ clinica.nome }}</h3>
+
+            <div class="rating-row">
+              <div class="rating-stars">
+                <i class="fas fa-star star-yellow"></i>
+                {{ clinica.media_avaliacao|default:"5.0" }}
+              </div>
+            </div>
+
+            <button class="btn-saiba-mais"
+              onclick="window.location.href='{% url 'detalhe_clinica' clinica.id %}'">
+              Ver detalhes
+            </button>
+          </div>
+        </div>
+        {% empty %}
+        <p>Nenhuma clínica encontrada.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- =========================
+         AGENDAMENTOS
+    ========================== -->
+    <div class="tela" id="tela-agendamentos">
+      <h3 class="titulo-pagina">Meus agendamentos</h3>
+
+      <div class="grid-agendamentos">
+
+        {% for ag in agendamentos %}
+        <div class="card-agendamento">
+          <div class="header-agendamento">
+            <span class="status-badge {{ ag.status }}">
+              {{ ag.get_status_display }}
+            </span>
+          </div>
+
+          <div class="corpo-agendamento">
+            <h3>{{ ag.clinica.nome }}</h3>
+
+            <p><i class="fas fa-calendar"></i> {{ ag.data|date:"d/m/Y" }}</p>
+            <p><i class="fas fa-clock"></i> {{ ag.horario }}</p>
+
+            <button class="btn-detalhes"
+              onclick="abrirDetalhes({{ ag.id }})">
+              Detalhes
+            </button>
+          </div>
+        </div>
+        {% empty %}
+        <p>Você ainda não possui agendamentos.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- =========================
+         CONFIGURAÇÕES
+    ========================== -->
+    <div class="tela" id="tela-config">
+      <h3 class="titulo-pagina">Configurações</h3>
+
+      <div class="container-config">
+        <p>Aqui futuramente colocaremos edição de perfil, preferências etc.</p>
+      </div>
+    </div>
+
+  </main>
+</section>
+
+<!-- MODAL (genérico) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-conteudo">
+    <div class="modal-header">
+      <h3>Detalhes do Agendamento</h3>
+      <button class="fechar-modal" onclick="fecharModal()">×</button>
+    </div>
+
+    <div id="modalBody"></div>
+
+    <div class="modal-footer">
+      <button class="btn-secundario" onclick="fecharModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
