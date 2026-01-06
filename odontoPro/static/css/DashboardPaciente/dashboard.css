@@ -1564,3 +1564,40 @@ body {
     border-radius:10px;
 }
 
+.filtros-consultas {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 15px 0 25px 0;
+}
+
+.filtro-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--cinza-borda);
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+    transition: .2s ease;
+}
+
+.filtro-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+}
+
+.filtro-btn.ativo {
+    background: var(--azul-claro);
+    color: white;
+    border-color: var(--azul-claro);
+}
+
+@media (max-width: 768px) {
+    .filtros-consultas {
+        justify-content: center;
+    }
+    .filtro-btn {
+        flex: 1 1 45%;
+        text-align: center;
+    }
+}

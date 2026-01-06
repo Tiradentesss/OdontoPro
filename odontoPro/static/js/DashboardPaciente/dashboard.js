@@ -305,3 +305,51 @@ function fecharDetalhes(id) {
     document.getElementById("modal-" + id).style.display = "none";
 }
 
+function mostrarTela(id, el) {
+    document.querySelectorAll(".tela").forEach(sec => sec.classList.remove("ativa"));
+    document.getElementById(id).classList.add("ativa");
+
+    document.querySelectorAll(".item-menu").forEach(i => i.classList.remove("ativo"));
+    el.classList.add("ativo");
+}
+
+function alternarMenu() {
+    document.getElementById("menuLateral").classList.toggle("fechado");
+}
+
+function abrirDetalhes(id) {
+    document.getElementById("modal-" + id).classList.add("mostrar");
+}
+
+function fecharDetalhes(id) {
+    document.getElementById("modal-" + id).classList.remove("mostrar");
+}
+
+// -------- FILTROS DE CONSULTAS (SEM RECARREGAR) ----------
+document.addEventListener("DOMContentLoaded", function () {
+
+    const botoesFiltro = document.querySelectorAll(".filtro-btn");
+    const cards = document.querySelectorAll(".card-agendamento");
+
+    botoesFiltro.forEach(botao => {
+        botao.addEventListener("click", () => {
+
+            // remove ativo dos outros
+            botoesFiltro.forEach(b => b.classList.remove("ativo"));
+            botao.classList.add("ativo");
+
+            const filtro = botao.getAttribute("data-filtro");
+
+            cards.forEach(card => {
+                const status = card.getAttribute("data-status");
+
+                if (filtro === "todas" || status === filtro) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    });
+
+});

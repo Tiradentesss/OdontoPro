@@ -2,17 +2,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.hashers import check_password
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 
-from .models import Paciente, Clinica, Consulta
-from django.utils import timezone
+from .models import Paciente, Clinica, Consulta, Medico
+
 
 # -------- CANCELAR CONSULTA --------
 def cancelar_consulta(request, consulta_id):
     consulta = get_object_or_404(Consulta, id=consulta_id)
-
     consulta.status = "cancelada"
     consulta.save()
-
     messages.success(request, "Consulta cancelada com sucesso!")
     return redirect("dashboard_paciente")
 
@@ -28,7 +28,6 @@ def reagendar_consulta(request, consulta_id):
         if not nova_data or not novo_horario:
             messages.error(request, "Informe a nova data e horário.")
         else:
-            # Atualiza a consulta
             consulta.data_hora = f"{nova_data} {novo_horario}"
             consulta.status = "agendada"
             consulta.save()
@@ -36,29 +35,19 @@ def reagendar_consulta(request, consulta_id):
             messages.success(request, "Consulta reagendada com sucesso!")
             return redirect("dashboard_paciente")
 
-    return render(request, "DashboardPaciente/reagendar.html", {
-        "consulta": consulta
-    })
+    return render(request, "DashboardPaciente/reagendar.html", {"consulta": consulta})
 
 
-def perfil_clinica(request, id):
-    paciente_id = request.session.get("paciente_id")
-    if not paciente_id:
-        return redirect("login_paciente")
+def perfil_clinica(request, clinica_id):
+    clinica = get_object_or_404(Clinica, id=clinica_id)
+    medicos = clinica.medico_set.all() if hasattr(clinica, "medico_set") else []
+    consultas = Consulta.objects.filter(clinica=clinica).order_by("-data_hora")[:5]
 
-    clinica = get_object_or_404(Clinica, id=id)
-
-    # consultas dessa clínica visíveis ao paciente
-    consultas = Consulta.objects.filter(
-        clinica=clinica, paciente_id=paciente_id
-    ).order_by("-data")
-
-    contexto = {
+    return render(request, "Clinica/perfil_clinica.html", {
         "clinica": clinica,
+        "medicos": medicos,
         "consultas": consultas,
-    }
-
-    return render(request, "Clinica/perfil_clinica.html", contexto)
+    })
 
 
 # ---------- LOGIN PACIENTE ----------
@@ -67,19 +56,16 @@ def login_paciente(request):
         email = request.POST.get("email")
         senha = request.POST.get("senha")
 
-        # verifica se existe paciente
         try:
             paciente = Paciente.objects.get(email=email)
         except Paciente.DoesNotExist:
             messages.error(request, "Conta não encontrada. Cadastre-se primeiro.")
             return render(request, "LoginCadastro/login.html")
 
-        # senha incorreta
         if not check_password(senha, paciente.senha):
             messages.error(request, "Senha incorreta.")
             return render(request, "LoginCadastro/login.html")
 
-        # salva login na sessão
         request.session["paciente_id"] = paciente.id
         return redirect("dashboard_paciente")
 
@@ -94,11 +80,9 @@ def dashboard_paciente(request):
 
     paciente = Paciente.objects.get(id=paciente_id)
 
-    # todas as clínicas
     clinicas = Clinica.objects.all().order_by("nome")
 
-    # filtro de consultas
-    filtro_status = request.GET.get("status")   # ?status=agendada ...
+    filtro_status = request.GET.get("status")
     consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
 
     if filtro_status and filtro_status != "todas":
@@ -120,7 +104,28 @@ def logout_view(request):
     logout(request)
     return redirect("login_paciente")
 
+
 def login_clinica(request):
     request.session.flush()
     logout(request)
     return redirect("login_paciente")
+
+
+# 🔹 NOVO — RETORNA APENAS A LISTA FILTRADA (SEM RELOAD)
+def filtrar_consultas(request):
+    paciente_id = request.session.get("paciente_id")
+    paciente = get_object_or_404(Paciente, id=paciente_id)
+
+    status = request.GET.get("status", "todas")
+
+    consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
+    if status != "todas":
+        consultas = consultas.filter(status=status)
+
+    html = render_to_string(
+        "DashboardPaciente/partials/lista_consultas.html",
+        {"consultas": consultas},
+        request=request
+    )
+
+    return JsonResponse({"html": html})
