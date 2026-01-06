@@ -296,3 +296,12 @@ document.getElementById("btnLogout").addEventListener("click", function(e) {
     // Redireciona de volta para a tela de login
     window.location.href = "../../Login_e_Cadastro/html/login.html";
 });
+
+function abrirDetalhes(id) {
+    document.getElementById("modal-" + id).style.display = "flex";
+}
+
+function fecharDetalhes(id) {
+    document.getElementById("modal-" + id).style.display = "none";
+}
+

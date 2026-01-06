@@ -3,229 +3,283 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard do Paciente</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard do Paciente - OdontoPro</title>
 
-  <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboard.css' %}">
-  <script defer src="{% static 'js/DashboardPaciente/dashboard.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboardresponsivo.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Ícones -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script defer src="{% static 'js/DashboardPaciente/dashboard.js' %}"></script>
 </head>
 
 <body>
 
 <!-- MENU LATERAL -->
-<aside class="menu-lateral" id="menuLateral">
-  <button class="botao-seta" onclick="toggleMenu()">
-    <i class="fas fa-chevron-right"></i>
-  </button>
+<nav class="menu-lateral" id="menuLateral">
+    <button class="botao-seta" onclick="alternarMenu()" id="botaoSeta">
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
 
-  <div class="seccao-logo">
-    <img src="{% static 'img/OdontoLogo2.png' %}" class="logo-somente-icone">
-    <img src="{% static 'img/OdontoLogoCompleta.png' %}" class="logo-texto-completo">
-  </div>
-
-  <nav class="itens-navegacao">
-
-    <div class="item-menu ativo" data-tela="home">
-      <i class="fas fa-house"></i>
-      <span class="legenda">Início</span>
+    <div class="seccao-logo">
+        <img src="{% static 'img/logo icon.png' %}" class="logo-somente-icone">
+        <img src="{% static 'img/logo_completa.png' %}" class="logo-texto-completo">
     </div>
 
-    <div class="item-menu" data-tela="clinicas">
-      <i class="fas fa-hospital"></i>
-      <span class="legenda">Clínicas</span>
+    <div class="itens-navegacao">
+        <div class="item-menu ativo" onclick="mostrarTela('inicio', this)">
+            <i class="fa-solid fa-house"></i>
+            <span class="legenda">Página Inicial</span>
+        </div>
+
+        <!-- REMOVIDO: Agendamentos -->
+
+        <div class="item-menu" onclick="mostrarTela('consultas', this)">
+            <i class="fa-solid fa-tooth"></i>
+            <span class="legenda">Minhas Consultas</span>
+        </div>
+
+        <div class="item-menu" onclick="mostrarTela('ajustes', this)">
+            <i class="fa-solid fa-gear"></i>
+            <span class="legenda">Ajustes</span>
+        </div>
     </div>
 
-    <div class="item-menu" data-tela="agendamentos">
-      <i class="fas fa-calendar-check"></i>
-      <span class="legenda">Meus Agendamentos</span>
+    <div id="btnLogout" class="botao-sair" onclick="window.location.href='{% url 'logout' %}'">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span class="legenda">Sair</span>
     </div>
+</nav>
 
-    <div class="item-menu" data-tela="config">
-      <i class="fas fa-gear"></i>
-      <span class="legenda">Configurações</span>
+
+<!-- CONTEÚDO -->
+<div class="container-principal">
+
+<header class="barra-topo">
+    <div class="texto-boas-vindas">
+        Olá {{ paciente.nome }} 👋🏼
     </div>
-
-  </nav>
-
-  <div class="botao-sair" onclick="window.location.href='{% url 'logout' %}'">
-    <i class="fas fa-right-from-bracket"></i>
-    <span class="legenda">Sair</span>
-  </div>
-</aside>
-
-<!-- CONTEÚDO PRINCIPAL -->
-<section class="container-principal">
-
-  <!-- TOPBAR -->
-  <header class="barra-topo">
-    <h2>Dashboard</h2>
 
     <div class="controles-usuario">
-      <button class="botao-notificacao">
-        <i class="fas fa-bell"></i>
-        <span class="ponto-alerta"></span>
-      </button>
+        <button class="botao-notificacao">
+            <i class="fa-regular fa-bell"></i>
+            <span class="ponto-alerta"></span>
+        </button>
 
-      <div class="bloco-usuario">
-        <div class="icone-usuario-avatar">
-          <i class="fas fa-user"></i>
-        </div>
+        <div class="bloco-usuario">
+            <div class="icone-usuario-avatar">
+                <i class="fa-solid fa-user"></i>
+            </div>
 
-        <div class="info-usuario">
-          <span class="nome-usuario">{{ request.user.first_name|default:request.user.username }}</span>
-          <span class="email-usuario">{{ request.user.email }}</span>
+            <div class="info-usuario">
+                <span class="nome-usuario">{{ paciente.nome }}</span>
+                <span class="email-usuario">{{ paciente.email }}</span>
+            </div>
         </div>
-      </div>
     </div>
-  </header>
+</header>
 
-  <main class="area-conteudo">
 
-    <!-- =========================
-         HOME
-    ========================== -->
-    <div class="tela ativa" id="tela-home">
-      <h3 class="titulo-pagina">Bem-vindo 👋</h3>
+<main class="area-conteudo">
 
-      <div class="container-carrossel">
-        <div class="slide-carrossel ativo">
-          <img src="{% static 'img/banner1.png' %}">
-        </div>
+<!-- ================= INÍCIO ================= -->
+<section id="inicio" class="tela ativa">
+
+    <h2 class="titulo-pagina">Página Inicial</h2>
+
+    <div class="container-carrossel">
         <div class="slide-carrossel">
-          <img src="{% static 'img/banner2.png' %}">
+            <img src="{% static 'img/banner simples.png' %}">
+        </div>
+
+        <div class="slide-carrossel">
+            <img src="{% static 'img/Agende já sua consulta (1).png' %}">
         </div>
 
         <div class="container-pontos">
-          <span class="ponto ativo"></span>
-          <span class="ponto"></span>
+            <span class="ponto"></span>
+            <span class="ponto"></span>
         </div>
-      </div>
     </div>
 
-    <!-- =========================
-         CLÍNICAS
-    ========================== -->
-    <div class="tela" id="tela-clinicas">
-      <h3 class="titulo-pagina">Clínicas disponíveis</h3>
+    <div class="header-clinicas">
+        <h2 class="titulo-pagina">Clínicas Disponíveis</h2>
 
-      <div class="header-clinicas">
         <div class="controles-busca">
-          <div class="campo-busca">
-            <i class="fas fa-search"></i>
-            <input type="text" id="campoBuscaClinica" placeholder="Buscar clínica...">
-          </div>
+            <div class="campo-busca">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="inputBuscaClinica" type="text" placeholder="Procurar Clínica">
+            </div>
+
+            <button class="btn-filtro">
+                <i class="fa-solid fa-star"></i> Avaliação
+            </button>
+
+            <button class="btn-filtro">
+                <i class="fa-solid fa-sliders"></i> Filtros
+            </button>
         </div>
-      </div>
+    </div>
 
-      <div class="grid-clinicas" id="listaClinicas">
-
+    <div class="grid-clinicas" id="listaClinicas">
         {% for clinica in clinicas %}
         <div class="card-clinica">
-          <div class="banner-card">
-            {% if clinica.banner %}
-              <img class="fundo-banner" src="{{ clinica.banner.url }}">
-            {% else %}
-              <img class="fundo-banner" src="{% static 'img/default-banner.jpg' %}">
-            {% endif %}
-
-            <div class="perfil-clinica-container">
-              {% if clinica.logo %}
-                <img class="foto-perfil-card" src="{{ clinica.logo.url }}">
-              {% else %}
-                <img class="foto-perfil-card" src="{% static 'img/default-clinic.png' %}">
-              {% endif %}
-            </div>
-          </div>
-
-          <div class="info-card">
-            <h3>{{ clinica.nome }}</h3>
-
-            <div class="rating-row">
-              <div class="rating-stars">
-                <i class="fas fa-star star-yellow"></i>
-                {{ clinica.media_avaliacao|default:"5.0" }}
-              </div>
+            <div class="banner-card">
+                <img
+                    src="{% if clinica.imagem %}{{ clinica.imagem.url }}{% else %}{% static 'img/default-banner.jpg' %}{% endif %}"
+                    class="fundo-banner">
             </div>
 
-            <button class="btn-saiba-mais"
-              onclick="window.location.href='{% url 'detalhe_clinica' clinica.id %}'">
-              Ver detalhes
-            </button>
-          </div>
+            <div class="info-card">
+                <div class="rating-row">
+                    <div class="rating-stars">
+                        <i class="fa-solid fa-star star-yellow"></i>
+                        <span>{{ clinica.avaliacao|default:"0.0" }}</span>
+                    </div>
+                </div>
+
+                <div class="info-text">
+                    <h3>{{ clinica.nome }}</h3>
+                    <p>{{ clinica.endereco.bairro }}, {{ clinica.endereco.cidade }}</p>
+                </div>
+
+                <a href="{% url 'perfilClinica' clinica.id %}" class="btn-detalhes">
+                    Ver Clínica
+                </a>
+            </div>
         </div>
         {% empty %}
-        <p>Nenhuma clínica encontrada.</p>
+            <p>Nenhuma clínica cadastrada.</p>
         {% endfor %}
-      </div>
     </div>
+</section>
 
-    <!-- =========================
-         AGENDAMENTOS
-    ========================== -->
-    <div class="tela" id="tela-agendamentos">
-      <h3 class="titulo-pagina">Meus agendamentos</h3>
 
-      <div class="grid-agendamentos">
+<!-- ================= CONSULTAS ================= -->
+<section id="consultas" class="tela">
+  <h2 class="titulo-pagina">Minhas Consultas</h2>
 
-        {% for ag in agendamentos %}
-        <div class="card-agendamento">
+  <!-- Filtro -->
+  <div class="controles-busca">
+      <button class="btn-filtro" onclick="window.location='?status=todas'">
+          Todas
+      </button>
+      <button class="btn-filtro" onclick="window.location='?status=agendada'">
+          Agendadas
+      </button>
+      <button class="btn-filtro" onclick="window.location='?status=realizada'">
+          Realizadas
+      </button>
+      <button class="btn-filtro" onclick="window.location='?status=cancelada'">
+          Canceladas
+      </button>
+  </div>
+
+  <div class="grid-agendamentos">
+
+      {% if consultas %}
+      {% for cons in consultas %}
+      <div class="card-agendamento {% if cons.status == 'realizada' %}realizado-card{% elif cons.status == 'cancelada' %}cancelado-card{% endif %}">
+          
           <div class="header-agendamento">
-            <span class="status-badge {{ ag.status }}">
-              {{ ag.get_status_display }}
-            </span>
+              <span class="status-badge {{ cons.status }}">
+                  {{ cons.get_status_display }}
+              </span>
+
+              <span class="data-consulta">
+                  <i class="fa-regular fa-calendar"></i>
+                  {{ cons.data_hora|date:"d/m/Y" }}
+              </span>
           </div>
 
           <div class="corpo-agendamento">
-            <h3>{{ ag.clinica.nome }}</h3>
+              <h3>{{ cons.clinica.nome }}</h3>
 
-            <p><i class="fas fa-calendar"></i> {{ ag.data|date:"d/m/Y" }}</p>
-            <p><i class="fas fa-clock"></i> {{ ag.horario }}</p>
+              <p>
+                  <i class="fa-solid fa-user-doctor"></i>
+                  {{ cons.medico.nome }}
+              </p>
 
-            <button class="btn-detalhes"
-              onclick="abrirDetalhes({{ ag.id }})">
-              Detalhes
-            </button>
+              <p>
+                  <i class="fa-regular fa-clock"></i>
+                  {{ cons.data_hora|time:"H:i" }}
+              </p>
           </div>
-        </div>
-        {% empty %}
-        <p>Você ainda não possui agendamentos.</p>
-        {% endfor %}
+
+          <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
+              Ver Detalhes
+          </button>
       </div>
-    </div>
 
-    <!-- =========================
-         CONFIGURAÇÕES
-    ========================== -->
-    <div class="tela" id="tela-config">
-      <h3 class="titulo-pagina">Configurações</h3>
+      <!-- MODAL -->
+      <div class="modal" id="modal-{{ cons.id }}">
+          <div class="modal-conteudo">
+              <h3>Detalhes da Consulta</h3>
 
-      <div class="container-config">
-        <p>Aqui futuramente colocaremos edição de perfil, preferências etc.</p>
+              <p><strong>Status:</strong> {{ cons.get_status_display }}</p>
+              <p><strong>Clínica:</strong> {{ cons.clinica.nome }}</p>
+              <p><strong>Médico:</strong> {{ cons.medico.nome }}</p>
+              <p><strong>Data:</strong> {{ cons.data_hora|date:"d/m/Y" }}</p>
+              <p><strong>Hora:</strong> {{ cons.data_hora|time:"H:i" }}</p>
+
+              {% if cons.especialidade %}
+              <p><strong>Especialidade:</strong> {{ cons.especialidade }}</p>
+              {% endif %}
+
+              {% if cons.observacoes %}
+              <p><strong>Observações:</strong> {{ cons.observacoes }}</p>
+              {% endif %}
+
+              <div class="acoes-modal">
+                  {% if cons.status == 'agendada' %}
+                      <button class="btn-secundario">Reagendar</button>
+                      <button class="btn-cancelar">Cancelar</button>
+                  {% endif %}
+                  <button class="btn-fechar" onclick="fecharDetalhes('{{ cons.id }}')">
+                      Fechar
+                  </button>
+              </div>
+          </div>
       </div>
-    </div>
 
-  </main>
+      {% endfor %}
+      {% else %}
+          <p>Nenhuma consulta encontrada.</p>
+      {% endif %}
+  </div>
 </section>
 
-<!-- MODAL (genérico) -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-conteudo">
-    <div class="modal-header">
-      <h3>Detalhes do Agendamento</h3>
-      <button class="fechar-modal" onclick="fecharModal()">×</button>
-    </div>
+<!-- ================= AJUSTES ================= -->
+<section id="ajustes" class="tela">
+    <h2 class="titulo-pagina">Ajustes</h2>
+</section>
 
-    <div id="modalBody"></div>
-
-    <div class="modal-footer">
-      <button class="btn-secundario" onclick="fecharModal()">Fechar</button>
-    </div>
-  </div>
+</main>
 </div>
+
+<script>
+function mostrarTela(id, el) {
+    document.querySelectorAll(".tela").forEach(sec => sec.classList.remove("ativa"));
+    document.getElementById(id).classList.add("ativa");
+
+    document.querySelectorAll(".item-menu").forEach(i => i.classList.remove("ativo"));
+    el.classList.add("ativo");
+}
+
+function alternarMenu() {
+    document.getElementById("menuLateral").classList.toggle("fechado");
+}
+
+function abrirDetalhes(id) {
+    document.getElementById("modal-" + id).classList.add("mostrar");
+}
+
+function fecharDetalhes(id) {
+    document.getElementById("modal-" + id).classList.remove("mostrar");
+}
+</script>
 
 </body>
 </html>
