@@ -4,6 +4,9 @@ from django.contrib.auth import logout
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.dateparse import parse_datetime
 
 from .models import Paciente, Clinica, Consulta, Medico
 
@@ -38,6 +41,7 @@ def reagendar_consulta(request, consulta_id):
     return render(request, "DashboardPaciente/reagendar.html", {"consulta": consulta})
 
 
+# -------- PERFIL CLÍNICA --------
 def perfil_clinica(request, clinica_id):
     clinica = get_object_or_404(Clinica, id=clinica_id)
     medicos = clinica.medico_set.all() if hasattr(clinica, "medico_set") else []
@@ -79,7 +83,6 @@ def dashboard_paciente(request):
         return redirect("login_paciente")
 
     paciente = Paciente.objects.get(id=paciente_id)
-
     clinicas = Clinica.objects.all().order_by("nome")
 
     filtro_status = request.GET.get("status")
@@ -129,3 +132,69 @@ def filtrar_consultas(request):
     )
 
     return JsonResponse({"html": html})
+
+
+# 🔹 RETORNA especialidades e médicos da clínica
+@require_GET
+def clinica_detalhes(request, clinica_id):
+    try:
+        clinica = Clinica.objects.get(id=clinica_id)
+    except Clinica.DoesNotExist:
+        return JsonResponse({"error": "Clínica não encontrada"}, status=404)
+
+    especialidades = set()
+    for medico in clinica.medico_set.all():
+        for esp in medico.especialidades.all():
+            especialidades.add((esp.id, esp.nome))
+
+    medicos = [(m.id, m.nome) for m in clinica.medico_set.all()]
+
+    return JsonResponse({
+        "especialidades": list(especialidades),
+        "medicos": medicos
+    })
+
+
+# 🔹 AGENDAR CONSULTA (via popup)
+@csrf_exempt
+@require_POST
+def agendar_consulta(request):
+    nome = request.POST.get("nome")
+    email = request.POST.get("email")
+    telefone = request.POST.get("telefone")
+    clinica_id = request.POST.get("clinica_id")
+    medico_id = request.POST.get("medico_id")
+    especialidade = request.POST.get("especialidade", "")
+    data_hora = request.POST.get("data_hora")
+    observacoes = request.POST.get("observacoes", "")
+
+    if not all([nome, email, telefone, clinica_id, medico_id, data_hora]):
+        return JsonResponse({"error": "Preencha todos os campos obrigatórios"}, status=400)
+
+    try:
+        clinica = Clinica.objects.get(id=clinica_id)
+        medico = Medico.objects.get(id=medico_id)
+    except (Clinica.DoesNotExist, Medico.DoesNotExist):
+        return JsonResponse({"error": "Clínica ou médico não encontrado"}, status=404)
+
+    data_hora_dt = parse_datetime(data_hora)
+    if not data_hora_dt:
+        return JsonResponse({"error": "Data/Hora inválida"}, status=400)
+
+    consulta = Consulta.objects.create(
+        nome=nome,
+        email=email,
+        telefone=telefone,
+        clinica=clinica,
+        medico=medico,
+        especialidade=especialidade,
+        data_hora=data_hora_dt,
+        observacoes=observacoes,
+        status="agendada"
+    )
+
+    return JsonResponse({
+        "success": True,
+        "mensagem": "Consulta agendada com sucesso!",
+        "consulta_id": consulta.id
+    })

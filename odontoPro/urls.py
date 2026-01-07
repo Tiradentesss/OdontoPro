@@ -25,4 +25,12 @@ urlpatterns = [
 
     # 🔹 NOVO — FILTRO SEM RECARREGAR PÁGINA
     path("consultas/filtrar/", views.filtrar_consultas, name="filtrar_consultas"),
+
+    # 🔹 Retorna especialidades e médicos da clínica
+    path("clinica/<int:clinica_id>/detalhes/", views.clinica_detalhes, name="clinica_detalhes"),
+
+    # 🔹 Agendar consulta
+    path("consulta/agendar/", views.agendar_consulta, name="agendar_consulta"),
+
+
 ]
