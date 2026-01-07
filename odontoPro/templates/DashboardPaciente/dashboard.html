@@ -34,8 +34,6 @@
             <span class="legenda">Página Inicial</span>
         </div>
 
-        <!-- REMOVIDO: Agendamentos -->
-
         <div class="item-menu" onclick="mostrarTela('consultas', this)">
             <i class="fa-solid fa-tooth"></i>
             <span class="legenda">Minhas Consultas</span>
@@ -52,7 +50,6 @@
         <span class="legenda">Sair</span>
     </div>
 </nav>
-
 
 <!-- CONTEÚDO -->
 <div class="container-principal">
@@ -80,7 +77,6 @@
         </div>
     </div>
 </header>
-
 
 <main class="area-conteudo">
 
@@ -114,11 +110,11 @@
             </div>
 
             <button class="btn-filtro">
-                <i class="fa-solid fa-star"></i> Avaliação
+                <i class="fa-solid fa-star"></i> Avaliação <i class="fa-solid fa-chevron-down"></i>
             </button>
 
             <button class="btn-filtro">
-                <i class="fa-solid fa-sliders"></i> Filtros
+                <i class="fa-solid fa-sliders"></i> Filtros <i class="fa-solid fa-chevron-down"></i>
             </button>
         </div>
     </div>
@@ -145,9 +141,9 @@
                     <p>{{ clinica.endereco.bairro }}, {{ clinica.endereco.cidade }}</p>
                 </div>
 
-                <a href="{% url 'perfilClinica' clinica.id %}" class="btn-detalhes">
-                    Ver Clínica
-                </a>
+                <button class="btn-saiba-mais" onclick="abrirModalAgendamento('{{ clinica.id }}')">
+                    Saiba Mais
+                </button>
             </div>
         </div>
         {% empty %}
@@ -156,61 +152,200 @@
     </div>
 </section>
 
-
 <!-- ================= CONSULTAS ================= -->
 <section id="consultas" class="tela">
-  <h2 class="titulo-pagina">Minhas Consultas</h2>
+    <h2 class="titulo-pagina">Minhas Consultas</h2>
 
-  <!-- FILTROS -->
-  <div class="filtros-consultas">
-      <button class="filtro-btn ativo" data-filtro="todas">Todas</button>
-      <button class="filtro-btn" data-filtro="agendada">Agendadas</button>
-      <button class="filtro-btn" data-filtro="realizada">Realizadas</button>
-      <button class="filtro-btn" data-filtro="cancelada">Canceladas</button>
-  </div>
+    <div class="filtros-consultas">
+        <button class="filtro-btn ativo" data-filtro="todas">Todas</button>
+        <button class="filtro-btn" data-filtro="agendada">Agendadas</button>
+        <button class="filtro-btn" data-filtro="realizada">Realizadas</button>
+        <button class="filtro-btn" data-filtro="cancelada">Canceladas</button>
+    </div>
 
-  <div class="grid-agendamentos">
+    <div class="grid-agendamentos">
+        {% if consultas %}
+            {% for cons in consultas %}
+            <div class="card-agendamento 
+                        {% if cons.status == 'realizada' %}realizado-card{% elif cons.status == 'cancelada' %}cancelado-card{% endif %}"
+                 data-status="{{ cons.status }}">
+                
+                <div class="header-agendamento">
+                    <span class="status-badge {{ cons.status }}">
+                        {{ cons.get_status_display }}
+                    </span>
 
-      {% if consultas %}
-      {% for cons in consultas %}
-      <div class="card-agendamento 
-                  {% if cons.status == 'realizada' %}realizado-card{% elif cons.status == 'cancelada' %}cancelado-card{% endif %}"
-           data-status="{{ cons.status }}">
-          
-          <div class="header-agendamento">
-              <span class="status-badge {{ cons.status }}">
-                  {{ cons.get_status_display }}
-              </span>
+                    <span class="data-consulta">
+                        <i class="fa-regular fa-calendar"></i>
+                        {{ cons.data_hora|date:"d/m/Y" }}
+                    </span>
+                </div>
 
-              <span class="data-consulta">
-                  <i class="fa-regular fa-calendar"></i>
-                  {{ cons.data_hora|date:"d/m/Y" }}
-              </span>
-          </div>
+                <div class="corpo-agendamento">
+                    <h3>{{ cons.clinica.nome }}</h3>
+                    <p><i class="fa-solid fa-user-doctor"></i> {{ cons.medico.nome }}</p>
+                    <p><i class="fa-regular fa-clock"></i> {{ cons.data_hora|time:"H:i" }}</p>
+                </div>
 
-          <div class="corpo-agendamento">
-              <h3>{{ cons.clinica.nome }}</h3>
+                <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
+                    Ver Detalhes
+                </button>
 
-              <p><i class="fa-solid fa-user-doctor"></i> {{ cons.medico.nome }}</p>
-              <p><i class="fa-regular fa-clock"></i> {{ cons.data_hora|time:"H:i" }}</p>
-          </div>
+                <!-- 🔹 Modal Detalhes -->
+                <div class="modal" id="modal-{{ cons.id }}">
+                    <div class="modal-conteudo">
+                        <h3>Detalhes da Consulta</h3>
+                        <p><strong>Status:</strong> {{ cons.get_status_display }}</p>
+                        <p><strong>Clínica:</strong> {{ cons.clinica.nome }}</p>
+                        <p><strong>Médico:</strong> {{ cons.medico.nome }}</p>
+                        <p><strong>Data:</strong> {{ cons.data_hora|date:"d/m/Y" }}</p>
+                        <p><strong>Hora:</strong> {{ cons.data_hora|time:"H:i" }}</p>
+                        {% if cons.especialidade %}
+                            <p><strong>Especialidade:</strong> {{ cons.especialidade }}</p>
+                        {% endif %}
+                        {% if cons.observacoes %}
+                            <p><strong>Observações:</strong> {{ cons.observacoes }}</p>
+                        {% endif %}
+                        <div class="acoes-modal">
+                            <button class="btn-fechar" onclick="fecharDetalhes('{{ cons.id }}')">Fechar</button>
+                        </div>
+                    </div>
+                </div>
 
-          <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
-              Ver Detalhes
-          </button>
-      </div>
-
-      {% endfor %}
-      {% else %}
-          <p>Nenhuma consulta encontrada.</p>
-      {% endif %}
-  </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>Nenhuma consulta encontrada.</p>
+        {% endif %}
+    </div>
 </section>
 
 <!-- ================= AJUSTES ================= -->
 <section id="ajustes" class="tela">
     <h2 class="titulo-pagina">Ajustes</h2>
+    <div class="container-config">
+        <div class="abas-config">
+            <button class="aba-item ativa" onclick="trocarAba(event, 'aba-perfil')">Configurações</button>
+            <button class="aba-item" onclick="trocarAba(event, 'aba-seguranca')">Login e segurança</button>
+        </div>
+
+        <div id="aba-perfil" class="conteudo-aba ativa">
+            <p class="label-foto">Escolha uma foto de Perfil</p>
+            <div class="upload-foto-container" onclick="document.getElementById('fileInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Upload da foto</span>
+                <input type="file" id="fileInput" hidden>
+            </div>
+
+            <div class="grid-inputs">
+                <div class="input-grupo">
+                    <label> Alterar nome</label>
+                    <input type="text" placeholder="{{ paciente.nome }}">
+                </div>
+                <div class="input-grupo">
+                    <label> Alterar Email</label>
+                    <input type="email" placeholder="{{ paciente.email }}">
+                </div>
+            </div>
+
+            <button class="btn-salvar">Salvar Alterações</button>
+        </div>
+
+        <div id="aba-seguranca" class="conteudo-aba">
+            <div class="grid-inputs">
+                <div class="input-grupo">
+                    <label>Senha Atual</label>
+                    <input type="password" placeholder="••••••••">
+                </div>
+                <div class="input-grupo">
+                    <label>Nova Senha</label>
+                    <input type="password" placeholder="Digite a nova senha">
+                </div>
+                <div class="input-grupo">
+                    <label>Confirmar Nova Senha</label>
+                    <input type="password" placeholder="Confirme a nova senha">
+                </div>
+            </div>
+            <button class="btn-salvar">Atualizar Senha</button>
+        </div>
+    </div>
 </section>
+
+<!-- 🔹 Modais de Agendamento do pop-up original -->
+<div id="modal-agendamento-1" class="modal">
+    <div class="modal-content">
+        <span class="tag-online">📅 Agendamento Online</span>
+        <h3>Preencha seus Dados</h3>
+        <p class="subtitle">Todos os campos com * são obrigatórios</p>
+        <input type="text" placeholder="Digite seu nome completo">
+
+        <div class="selection-row">
+            <div class="selection-group">
+                <label class="group-title">Gênero</label>
+                <div class="radio-options">
+                    <label><input type="radio" name="gender" value="Masculino"> Masculino</label>
+                    <label><input type="radio" name="gender" value="Feminino"> Feminino</label>
+                </div>
+            </div>
+
+            <div class="selection-group">
+                <label class="group-title">Faixa Etária</label>
+                <div class="radio-options">
+                    <label><input type="radio" name="age" value="Adulto"> Adulto</label>
+                    <label><input type="radio" name="age" value="Infantil"> Infantil</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div>
+                <label>Email</label>
+                <input type="email" placeholder="Seu @gmail.com">
+            </div>
+            <div>
+                <label>Número de Telefone</label>
+                <input type="tel" placeholder="(91) 99999-9999">
+            </div>
+        </div>
+
+        <textarea placeholder="Descreva seus sintomas ou informações adicionais"></textarea>
+
+        <button class="btn-cyan" onclick="proximaEtapa()">Continuar Preenchendo</button>
+        <div class="security-banner">🛡️ Suas informações estão seguras e protegidas</div>
+    </div>
+</div>
+
+<div id="modal-agendamento-2" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="tag-online">📅 Agendamento Online</span>
+        <h3>Escolha o tipo de consulta</h3>
+        <select>
+            <option>Selecione uma Especialidade</option>
+        </select>
+        <select>
+            <option>Escolha um Profissional</option>
+        </select>
+
+        <div class="input-group">
+            <input type="date">
+            <select>
+                <option>Selecione o Horário</option>
+            </select>
+        </div>
+
+        <button class="btn-cyan" onclick="confirmarAgendamento()">Agendar Consulta</button>
+        <div class="security-banner">🛡️ Suas informações estão seguras e protegidas</div>
+    </div>
+</div>
+
+<div id="modal-sucesso" class="modal" style="display:none;">
+    <div class="modal-content">
+        <div class="success-icon">✅</div>
+        <h3>Agendamento Realizado com Sucesso!</h3>
+        <p>Sua consulta foi marcada e está segura.</p>
+        <button class="btn-cyan" onclick="irParaMeusAgendamentos()">Ver Meus Agendamentos</button>
+    </div>
+</div>
 
 </main>
 </div>
@@ -234,6 +369,23 @@ function abrirDetalhes(id) {
 
 function fecharDetalhes(id) {
     document.getElementById("modal-" + id).classList.remove("mostrar");
+}
+
+// 🔹 Funções para modais de agendamento
+function abrirModalAgendamento(clinicaId) {
+    document.getElementById('modal-agendamento-1').style.display = 'flex';
+}
+function proximaEtapa() {
+    document.getElementById('modal-agendamento-1').style.display = 'none';
+    document.getElementById('modal-agendamento-2').style.display = 'flex';
+}
+function confirmarAgendamento() {
+    document.getElementById('modal-agendamento-2').style.display = 'none';
+    document.getElementById('modal-sucesso').style.display = 'flex';
+}
+function irParaMeusAgendamentos() {
+    document.getElementById('modal-sucesso').style.display = 'none';
+    mostrarTela('consultas', document.querySelector(".item-menu[data-tela='consultas']") || document.querySelectorAll(".item-menu")[1]);
 }
 </script>
 
