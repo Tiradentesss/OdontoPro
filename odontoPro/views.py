@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
 
+
 @require_GET
 def horarios_clinica(request, clinica_id):
     data = request.GET.get("data")  # yyyy-mm-dd
@@ -201,43 +202,61 @@ def clinica_detalhes(request, clinica_id):
 # 🔹 AGENDAR CONSULTA (via popup)
 @csrf_exempt
 @require_POST
+
+
 def agendar_consulta(request):
-    nome = request.POST.get("nome")
-    email = request.POST.get("email")
-    telefone = request.POST.get("telefone")
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Método inválido"})
+
     clinica_id = request.POST.get("clinica_id")
     medico_id = request.POST.get("medico_id")
-    especialidade = request.POST.get("especialidade", "")
-    data_hora = request.POST.get("data_hora")
+    especialidade = request.POST.get("especialidade")
+    data_hora_str = request.POST.get("data_hora")
     observacoes = request.POST.get("observacoes", "")
 
-    if not all([nome, email, telefone, clinica_id, medico_id, data_hora]):
-        return JsonResponse({"error": "Preencha todos os campos obrigatórios"}, status=400)
+    if not all([clinica_id, medico_id, data_hora_str]):
+        return JsonResponse({"success": False, "error": "Dados incompletos"})
 
-    try:
-        clinica = Clinica.objects.get(id=clinica_id)
-        medico = Medico.objects.get(id=medico_id)
-    except (Clinica.DoesNotExist, Medico.DoesNotExist):
-        return JsonResponse({"error": "Clínica ou médico não encontrado"}, status=404)
+    data_hora = parse_datetime(data_hora_str)
+    if not data_hora:
+        return JsonResponse({"success": False, "error": "Data inválida"})
 
-    data_hora_dt = parse_datetime(data_hora)
-    if not data_hora_dt:
-        return JsonResponse({"error": "Data/Hora inválida"}, status=400)
+    clinica = Clinica.objects.get(id=clinica_id)
+    medico = Medico.objects.get(id=medico_id)
 
-    consulta = Consulta.objects.create(
+    # 🔒 evita conflito de horário
+    if Consulta.objects.filter(medico=medico, data_hora=data_hora).exists():
+        return JsonResponse({"success": False, "error": "Horário indisponível"})
+
+    paciente = None
+    nome = email = telefone = ""
+
+    # ✅ PACIENTE LOGADO (via sessão)
+    paciente_id = request.session.get("paciente_id")
+    if paciente_id:
+        paciente = Paciente.objects.get(id=paciente_id)
+        nome = paciente.nome
+        email = paciente.email
+        telefone = paciente.telefone
+    else:
+        # visitante (mantém compatibilidade)
+        nome = request.POST.get("nome")
+        email = request.POST.get("email")
+        telefone = request.POST.get("telefone")
+
+        if not all([nome, email, telefone]):
+            return JsonResponse({"success": False, "error": "Dados do paciente ausentes"})
+
+    Consulta.objects.create(
+        paciente=paciente,
         nome=nome,
         email=email,
         telefone=telefone,
         clinica=clinica,
         medico=medico,
         especialidade=especialidade,
-        data_hora=data_hora_dt,
-        observacoes=observacoes,
-        status="agendada"
+        data_hora=data_hora,
+        observacoes=observacoes
     )
 
-    return JsonResponse({
-        "success": True,
-        "mensagem": "Consulta agendada com sucesso!",
-        "consulta_id": consulta.id
-    })
+    return JsonResponse({"success": True})
