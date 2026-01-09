@@ -9,6 +9,49 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 
 from .models import Paciente, Clinica, Consulta, Medico
+from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
+from .models import DiaSemanaDisponivel, HorarioAberto
+
+@require_GET
+def horarios_clinica(request, clinica_id):
+    data = request.GET.get("data")  # yyyy-mm-dd
+    if not data:
+        return JsonResponse({"error": "Data não informada"}, status=400)
+
+    try:
+        data_dt = datetime.strptime(data, "%Y-%m-%d")
+    except ValueError:
+        return JsonResponse({"error": "Data inválida"}, status=400)
+
+    dia_semana_map = {
+        0: "segunda",
+        1: "terca",
+        2: "quarta",
+        3: "quinta",
+        4: "sexta",
+        5: "sabado",
+        6: "domingo",
+    }
+
+    dia_str = dia_semana_map[data_dt.weekday()]
+
+    try:
+        dia = DiaSemanaDisponivel.objects.get(
+            clinica_id=clinica_id,
+            dia=dia_str
+        )
+    except DiaSemanaDisponivel.DoesNotExist:
+        return JsonResponse({"horarios": []})
+
+    horarios = []
+    for h in dia.horarios.all():
+        hora = datetime.combine(data_dt, h.hora_inicio)
+        while hora.time() < h.hora_fim:
+            horarios.append(hora.strftime("%H:%M"))
+            hora += timedelta(minutes=30)
+
+    return JsonResponse({"horarios": horarios})
 
 
 # -------- CANCELAR CONSULTA --------

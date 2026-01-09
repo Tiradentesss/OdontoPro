@@ -32,5 +32,6 @@ urlpatterns = [
     # 🔹 Agendar consulta
     path("consulta/agendar/", views.agendar_consulta, name="agendar_consulta"),
 
+    path("clinica/<int:clinica_id>/horarios/",views.horarios_clinica,name="horarios_clinica"),
 
 ]

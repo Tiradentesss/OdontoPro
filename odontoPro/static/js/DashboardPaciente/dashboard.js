@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     carrosselAutomatico();
+    inicializarDataHorario();
 });
 
 let indice = 0;
@@ -68,126 +69,138 @@ function fecharDetalhes(id) {
 /* ================= POPUPS DE AGENDAMENTO ================= */
 let clinicaSelecionada = null;
 
+/* ABRIR MODAL */
 function abrirModalAgendamento(clinicaId) {
     clinicaSelecionada = clinicaId;
 
-    const modal1 = document.getElementById('modal-agendamento-1');
-    const modal2 = document.getElementById('modal-agendamento-2');
+    const modal1 = document.getElementById("modal-agendamento-1");
+    const modal2 = document.getElementById("modal-agendamento-2");
 
-    modal1.style.display = 'flex';
-    modal2.style.display = 'none';
+    modal1.style.display = "flex";
+    modal2.style.display = "none";
 
-    // Limpa selects
     const selectEspecialidade = modal2.querySelector("select:nth-of-type(1)");
     const selectMedico = modal2.querySelector("select:nth-of-type(2)");
-    selectEspecialidade.innerHTML = `<option>Selecione uma Especialidade</option>`;
-    selectMedico.innerHTML = `<option>Escolha um Profissional</option>`;
+    const horarioSelect = document.getElementById("horarioConsulta");
+
+    selectEspecialidade.innerHTML = `<option value="">Selecione uma Especialidade</option>`;
+    selectMedico.innerHTML = `<option value="">Escolha um Profissional</option>`;
+    horarioSelect.innerHTML = `<option value="">Selecione o Horário</option>`;
 
     fetch(`/clinica/${clinicaId}/detalhes/`)
         .then(res => res.json())
         .then(data => {
-            if (data.especialidades) {
-                data.especialidades.forEach(e => {
-                    let option = document.createElement("option");
-                    option.value = e[0];
-                    option.textContent = e[1];
-                    selectEspecialidade.appendChild(option);
-                });
-            }
-            if (data.medicos) {
-                data.medicos.forEach(m => {
-                    let option = document.createElement("option");
-                    option.value = m[0];
-                    option.textContent = m[1];
-                    selectMedico.appendChild(option);
-                });
-            }
+            data.especialidades.forEach(e => {
+                selectEspecialidade.innerHTML +=
+                    `<option value="${e[1]}">${e[1]}</option>`;
+            });
+
+            data.medicos.forEach(m => {
+                selectMedico.innerHTML +=
+                    `<option value="${m[0]}">${m[1]}</option>`;
+            });
         });
 }
 
+/* AVANÇAR */
 function proximaEtapa() {
-    document.getElementById('modal-agendamento-1').style.display = 'none';
-    document.getElementById('modal-agendamento-2').style.display = 'flex';
+    document.getElementById("modal-agendamento-1").style.display = "none";
+    document.getElementById("modal-agendamento-2").style.display = "flex";
 }
 
+/* DATA → HORÁRIOS DA CLÍNICA */
+function inicializarDataHorario() {
+    const dataInput = document.getElementById("dataConsulta");
+    const horarioSelect = document.getElementById("horarioConsulta");
+
+    if (!dataInput || !horarioSelect) return;
+
+    dataInput.addEventListener("change", () => {
+        horarioSelect.innerHTML = `<option>Carregando horários...</option>`;
+
+        fetch(`/clinica/${clinicaSelecionada}/horarios/?data=${dataInput.value}`)
+            .then(res => res.json())
+            .then(data => {
+                horarioSelect.innerHTML = `<option value="">Selecione o Horário</option>`;
+
+                if (!data.horarios || !data.horarios.length) {
+                    horarioSelect.innerHTML =
+                        `<option value="">Sem horários disponíveis</option>`;
+                    return;
+                }
+
+                data.horarios.forEach(h => {
+                    horarioSelect.innerHTML +=
+                        `<option value="${h}">${h}</option>`;
+                });
+            });
+    });
+}
+
+/* CONFIRMAR AGENDAMENTO */
 function confirmarAgendamento() {
-    const modal2 = document.getElementById('modal-agendamento-2');
+    const modal2 = document.getElementById("modal-agendamento-2");
 
-    const nome = document.querySelector('#modal-agendamento-1 input[type="text"]').value;
-    const email = document.querySelector('#modal-agendamento-1 input[type="email"]').value;
-    const telefone = document.querySelector('#modal-agendamento-1 input[type="tel"]').value;
-    const especialidadeSelect = modal2.querySelector("select:nth-of-type(1)");
-    const medicoSelect = modal2.querySelector("select:nth-of-type(2)");
-    const dataInput = modal2.querySelector("input[type='date']");
-    const horarioSelect = modal2.querySelector("select:nth-of-type(3)");
-    const observacoes = document.querySelector('#modal-agendamento-1 textarea').value;
+    const nome = document.querySelector("#modal-agendamento-1 input[type='text']").value;
+    const email = document.querySelector("#modal-agendamento-1 input[type='email']").value;
+    const telefone = document.querySelector("#modal-agendamento-1 input[type='tel']").value;
+    const especialidade = modal2.querySelector("select:nth-of-type(1)").value;
+    const medico = modal2.querySelector("select:nth-of-type(2)").value;
+    const data = document.getElementById("dataConsulta").value;
+    const hora = document.getElementById("horarioConsulta").value;
+    const observacoes = document.querySelector("#modal-agendamento-1 textarea").value;
 
-    const especialidade = especialidadeSelect.value;
-    const medico = medicoSelect.value;
-    const data = dataInput.value;
-    const hora = horarioSelect.value;
-
-    if (!nome || !email || !telefone || !clinicaSelecionada || !especialidade || !medico || !data || !hora) {
+    if (!nome || !email || !telefone || !especialidade || !medico || !data || !hora) {
         alert("Preencha todos os campos obrigatórios");
         return;
     }
 
-    const data_hora = `${data} ${hora}`;
-
-    fetch('/consulta/agendar/', {
-        method: 'POST',
+    fetch("/consulta/agendar/", {
+        method: "POST",
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': getCookie('csrftoken')
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": getCookie("csrftoken")
         },
         body: new URLSearchParams({
-            nome, email, telefone,
+            nome,
+            email,
+            telefone,
             clinica_id: clinicaSelecionada,
             medico_id: medico,
             especialidade,
-            data_hora,
+            data_hora: `${data} ${hora}`,
             observacoes
         })
     })
     .then(res => res.json())
     .then(res => {
         if (res.success) {
-            modal2.style.display = 'none';
-            document.getElementById('modal-sucesso').style.display = 'flex';
+            modal2.style.display = "none";
+            document.getElementById("modal-sucesso").style.display = "flex";
         } else {
-            alert(res.error || "Erro ao agendar consulta.");
+            alert(res.error || "Erro ao agendar consulta");
         }
     });
 }
 
+/* IR PARA CONSULTAS */
 function irParaMeusAgendamentos() {
-    document.getElementById('modal-sucesso').style.display = 'none';
-    mostrarTela('consultas', document.querySelectorAll(".item-menu")[1]);
+    document.getElementById("modal-sucesso").style.display = "none";
+    mostrarTela("consultas", document.querySelectorAll(".item-menu")[1]);
 }
 
-// Função para pegar cookie CSRF
+/* ================= CSRF ================= */
 function getCookie(name) {
     let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let c of cookies) {
+    if (document.cookie) {
+        document.cookie.split(";").forEach(c => {
             c = c.trim();
-            if (c.startsWith(name + '=')) {
+            if (c.startsWith(name + "=")) {
                 cookieValue = decodeURIComponent(c.substring(name.length + 1));
-                break;
             }
-        }
+        });
     }
     return cookieValue;
-}
-
-/* ================= LOGOUT ================= */
-const btnLogout = document.getElementById("btnLogout");
-if (btnLogout) {
-    btnLogout.addEventListener("click", function (e) {
-        e.preventDefault();
-        window.location.href = "../../Login_e_Cadastro/html/login.html";
-    });
 }
 
 /* ================= FILTROS DAS CONSULTAS ================= */
@@ -197,16 +210,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     botoesFiltro.forEach(botao => {
         botao.addEventListener("click", () => {
-
             botoesFiltro.forEach(b => b.classList.remove("ativo"));
             botao.classList.add("ativo");
 
             const filtro = botao.dataset.filtro;
-
             cards.forEach(card => {
                 const status = card.dataset.status;
                 card.style.display =
-                    (filtro === "todas" || filtro === status) ? "block" : "none";
+                    filtro === "todas" || filtro === status ? "block" : "none";
             });
         });
     });
