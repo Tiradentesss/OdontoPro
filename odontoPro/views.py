@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET, require_POST
@@ -12,7 +12,6 @@ from .models import Paciente, Clinica, Consulta, Medico
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
-
 
 @require_GET
 def horarios_clinica(request, clinica_id):
@@ -260,3 +259,51 @@ def agendar_consulta(request):
     )
 
     return JsonResponse({"success": True})
+
+def configuracoes_conta(request):
+    paciente_id = request.session.get('paciente_id')
+
+    if not paciente_id:
+        return redirect('login')
+
+    paciente = Paciente.objects.get(id=paciente_id)
+
+    if request.method == 'POST':
+        paciente.nome = request.POST.get('nome')
+        paciente.email = request.POST.get('email')
+        paciente.cpf = request.POST.get('cpf')
+        paciente.telefone = request.POST.get('telefone')
+
+        paciente.save()
+        messages.success(request, 'Dados atualizados com sucesso!')
+        return redirect('configuracoes_conta')
+
+    return redirect('dashboard_paciente')
+
+
+def alterar_senha_paciente(request):
+    paciente_id = request.session.get('paciente_id')
+
+    if not paciente_id:
+        return redirect('login')
+
+    paciente = Paciente.objects.get(id=paciente_id)
+
+    if request.method == 'POST':
+        senha_atual = request.POST.get('senha_atual')
+        nova_senha = request.POST.get('nova_senha')
+        confirmar_senha = request.POST.get('confirmar_senha')
+
+        if not check_password(senha_atual, paciente.senha):
+            messages.error(request, 'Senha atual incorreta.')
+            return redirect('configuracoes_conta')
+
+        if nova_senha != confirmar_senha:
+            messages.error(request, 'As senhas não coincidem.')
+            return redirect('configuracoes_conta')
+
+        paciente.senha = make_password(nova_senha)
+        paciente.save()
+
+        messages.success(request, 'Senha alterada com sucesso!')
+        return redirect('configuracoes_conta')

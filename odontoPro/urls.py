@@ -34,4 +34,6 @@ urlpatterns = [
 
     path("clinica/<int:clinica_id>/horarios/",views.horarios_clinica,name="horarios_clinica"),
 
+    path('configuracoes/', views.configuracoes_conta, name='configuracoes_conta'),
+    path('alterar-senha/', views.alterar_senha_paciente, name='alterar_senha_paciente'),
 ]
