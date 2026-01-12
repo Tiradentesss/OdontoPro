@@ -307,3 +307,35 @@ def alterar_senha_paciente(request):
 
         messages.success(request, 'Senha alterada com sucesso!')
         return redirect('configuracoes_conta')
+
+def cadastrar_paciente(request):
+    if request.method != "POST":
+        return redirect("login_paciente")
+
+    nome = request.POST.get("nome")
+    email = request.POST.get("email")
+    senha = request.POST.get("senha")
+    confirmar = request.POST.get("confirmar_senha")
+
+    if not all([nome, email, senha, confirmar]):
+        messages.error(request, "Preencha todos os campos.")
+        return redirect("login_paciente")
+
+    if senha != confirmar:
+        messages.error(request, "As senhas não coincidem.")
+        return redirect("login_paciente")
+
+    if Paciente.objects.filter(email=email).exists():
+        messages.error(request, "Este e-mail já está cadastrado.")
+        return redirect("login_paciente")
+
+    paciente = Paciente.objects.create(
+        nome=nome,
+        email=email,
+        senha=make_password(senha),
+        telefone=""  # pode ajustar depois
+    )
+
+    request.session["paciente_id"] = paciente.id
+    messages.success(request, "Conta criada com sucesso!")
+    return redirect("dashboard_paciente")

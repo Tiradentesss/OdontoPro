@@ -36,4 +36,6 @@ urlpatterns = [
 
     path('configuracoes/', views.configuracoes_conta, name='configuracoes_conta'),
     path('alterar-senha/', views.alterar_senha_paciente, name='alterar_senha_paciente'),
+
+    path('cadastrar/', views.cadastrar_paciente, name='cadastrar_paciente'),
 ]

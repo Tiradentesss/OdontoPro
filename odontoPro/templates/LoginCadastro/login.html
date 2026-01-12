@@ -102,30 +102,32 @@
         <span>ou preencha os dados</span>
       </div>
 
-      <form class="modal-form">
-        <div class="input-group">
-          <label>Nome Completo</label>
-          <input type="text" placeholder="Seu nome">
-        </div>
+      <form class="modal-form" method="POST" action="{% url 'cadastrar_paciente' %}">
+  {% csrf_token %}
 
-        <div class="input-group">
-          <label>E-mail</label>
-          <input type="email" placeholder="exemplo@email.com">
-        </div>
+  <div class="input-group">
+    <label>Nome Completo</label>
+    <input type="text" name="nome" required>
+  </div>
 
-        <div class="input-row" style="display: flex; gap: 15px;">
-          <div class="input-group" style="flex: 1;">
-            <label>Senha</label>
-            <input type="password" placeholder="********">
-          </div>
-          <div class="input-group" style="flex: 1;">
-            <label>Confirmar</label>
-            <input type="password" placeholder="********">
-          </div>
-        </div>
+  <div class="input-group">
+    <label>E-mail</label>
+    <input type="email" name="email" required>
+  </div>
 
-        <button type="submit" class="btn-login">Criar minha conta</button>
-      </form>
+  <div class="input-row" style="display: flex; gap: 15px;">
+    <div class="input-group" style="flex: 1;">
+      <label>Senha</label>
+      <input type="password" name="senha" required>
+    </div>
+    <div class="input-group" style="flex: 1;">
+      <label>Confirmar</label>
+      <input type="password" name="confirmar_senha" required>
+    </div>
+  </div>
+
+  <button type="submit" class="btn-login">Criar minha conta</button>
+</form>
     </div>
   </div>
 

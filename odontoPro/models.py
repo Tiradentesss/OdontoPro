@@ -28,7 +28,19 @@ class Clinica(models.Model):
     conta_bancaria_juridica = models.CharField(max_length=45)
     endereco = models.ForeignKey('Endereco', on_delete=models.PROTECT)
 
-    imagem = models.ImageField(upload_to='clinicas/', null=True, blank=True)
+    # 🔹 NOVO: logo da clínica (perfil)
+    logo = models.ImageField(
+        upload_to='clinicas/logo/',
+        null=True,
+        blank=True
+    )
+
+    # 🔹 EXISTENTE (mantido para compatibilidade)
+    imagem = models.ImageField(
+        upload_to='clinicas/',
+        null=True,
+        blank=True
+    )
 
     preco_consulta = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     avaliacao = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True, default=5.0)
@@ -36,6 +48,31 @@ class Clinica(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+
+class ClinicaImagem(models.Model):
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name='imagens'
+    )
+
+    imagem = models.ImageField(
+        upload_to='clinicas/capa/',
+        null=False,
+        blank=False
+    )
+
+    ordem = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        ordering = ['ordem']
+        verbose_name = 'Imagem da Clínica'
+        verbose_name_plural = 'Imagens da Clínica'
+
+    def __str__(self):
+        return f"{self.clinica.nome} - Imagem {self.ordem}"
 
 
 # -------------------------
@@ -83,9 +120,10 @@ class Paciente(models.Model):
     senha = models.CharField(max_length=255)  # hash
     telefone = models.CharField(max_length=14)
 
+    foto = models.ImageField(upload_to='pacientes/', null=True, blank=True)
+
     def __str__(self):
         return self.nome
-
 
 # -------------------------
 # ESPECIALIDADE
