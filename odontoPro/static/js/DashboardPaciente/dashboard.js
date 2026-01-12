@@ -242,21 +242,21 @@ if (btnLogout) {
 /* ================= CONFIGURAÇÕES / ABAS ================= */
 function trocarAba(event, abaId) {
     // Esconde todos os conteúdos das abas
-    document.querySelectorAll('.aba-conteudo').forEach(aba => {
+    document.querySelectorAll('.conteudo-aba').forEach(aba => {
         aba.classList.remove('ativa');
         aba.style.display = 'none';
     });
 
-    // Remove classe ativa de todos os botões
+    // Remove classe ativa dos botões
     document.querySelectorAll('.aba-item').forEach(btn => {
         btn.classList.remove('ativa');
     });
 
-    // Mostra a aba selecionada
-    const abaAtiva = document.getElementById('aba-' + abaId);
+    // Mostra a aba selecionada (ID JÁ VEM CORRETO)
+    const abaAtiva = document.getElementById(abaId);
     if (abaAtiva) {
-        abaAtiva.style.display = 'flex'; // ou 'block', conforme seu layout
-        setTimeout(() => abaAtiva.classList.add('ativa'), 10);
+        abaAtiva.style.display = 'block'; // ou 'flex' se o layout exigir
+        abaAtiva.classList.add('ativa');
     }
 
     // Ativa o botão clicado
