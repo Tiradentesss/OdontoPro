@@ -5,19 +5,25 @@ function alternarMenu() {
 
 /* ================= TROCAR DE TELA ================= */
 function mostrarTela(id, btn) {
-    const telas = document.querySelectorAll(".tela");
-    const itens = document.querySelectorAll(".item-menu");
+    document.querySelectorAll(".tela").forEach(t => {
+        t.classList.remove("ativa");
+        t.style.display = "none";
+    });
 
-    telas.forEach(t => t.classList.remove("ativa"));
-    document.getElementById(id).classList.add("ativa");
+    document.querySelectorAll(".item-menu").forEach(i => i.classList.remove("ativo"));
 
-    itens.forEach(i => i.classList.remove("ativo"));
-    if (btn) btn.classList.add("ativo");
-
-    document.querySelector(".area-conteudo").scrollTo({ top: 0, behavior: "smooth" });
+    const tela = document.getElementById(id);
+    if (tela) {
+        tela.classList.add("ativa");
+        tela.style.display = "block";
+        if (btn) btn.classList.add("ativo");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        const area = document.querySelector(".area-conteudo");
+        if (area) area.scrollTo({ top: 0, behavior: "smooth" });
+    }
 }
 
-/* ================= CARROSSEL + BUSCA ================= */
+/* ================= BUSCA + CARROSSEL ================= */
 document.addEventListener("DOMContentLoaded", () => {
     const inputBusca = document.getElementById("inputBuscaClinica");
 
@@ -33,13 +39,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     carrosselAutomatico();
     inicializarDataHorario();
+    inicializarFiltrosConsultas();
 });
 
 let indice = 0;
 function carrosselAutomatico() {
     const slides = document.getElementsByClassName("slide-carrossel");
     const pontos = document.getElementsByClassName("ponto");
-
     if (!slides.length) return;
 
     for (let i = 0; i < slides.length; i++) slides[i].style.display = "none";
@@ -47,7 +53,7 @@ function carrosselAutomatico() {
     if (indice > slides.length) indice = 1;
 
     for (let i = 0; i < pontos.length; i++)
-        pontos[i].className = pontos[i].className.replace(" ativo", "");
+        pontos[i].classList.remove("ativo");
 
     slides[indice - 1].style.display = "block";
     if (pontos[indice - 1]) pontos[indice - 1].classList.add("ativo");
@@ -55,7 +61,7 @@ function carrosselAutomatico() {
     setTimeout(carrosselAutomatico, 5000);
 }
 
-/* ================= MODAL DE CONSULTAS ================= */
+/* ================= MODAL DE DETALHES ================= */
 function abrirDetalhes(id) {
     const modal = document.getElementById("modal-" + id);
     if (modal) modal.classList.add("mostrar");
@@ -66,10 +72,9 @@ function fecharDetalhes(id) {
     if (modal) modal.classList.remove("mostrar");
 }
 
-/* ================= POPUPS DE AGENDAMENTO ================= */
+/* ================= AGENDAMENTO ================= */
 let clinicaSelecionada = null;
 
-/* ABRIR MODAL */
 function abrirModalAgendamento(clinicaId) {
     clinicaSelecionada = clinicaId;
 
@@ -102,13 +107,12 @@ function abrirModalAgendamento(clinicaId) {
         });
 }
 
-/* AVANÇAR */
 function proximaEtapa() {
     document.getElementById("modal-agendamento-1").style.display = "none";
     document.getElementById("modal-agendamento-2").style.display = "flex";
 }
 
-/* DATA → HORÁRIOS DA CLÍNICA */
+/* ================= DATA → HORÁRIOS ================= */
 function inicializarDataHorario() {
     const dataInput = document.getElementById("dataConsulta");
     const horarioSelect = document.getElementById("horarioConsulta");
@@ -122,37 +126,48 @@ function inicializarDataHorario() {
             .then(res => res.json())
             .then(data => {
                 horarioSelect.innerHTML = `<option value="">Selecione o Horário</option>`;
-
                 if (!data.horarios || !data.horarios.length) {
-                    horarioSelect.innerHTML =
-                        `<option value="">Sem horários disponíveis</option>`;
+                    horarioSelect.innerHTML = `<option value="">Sem horários disponíveis</option>`;
                     return;
                 }
-
                 data.horarios.forEach(h => {
-                    horarioSelect.innerHTML +=
-                        `<option value="${h}">${h}</option>`;
+                    horarioSelect.innerHTML += `<option value="${h}">${h}</option>`;
                 });
             });
     });
 }
 
-/* CONFIRMAR AGENDAMENTO */
+/* ================= CONFIRMAR ================= */
 function confirmarAgendamento() {
     const modal2 = document.getElementById("modal-agendamento-2");
 
-    const nome = document.querySelector("#modal-agendamento-1 input[type='text']").value;
-    const email = document.querySelector("#modal-agendamento-1 input[type='email']").value;
-    const telefone = document.querySelector("#modal-agendamento-1 input[type='tel']").value;
+    const nomeInput = document.querySelector("#modal-agendamento-1 input[type='text']");
+    const emailInput = document.querySelector("#modal-agendamento-1 input[type='email']");
+    const telInput = document.querySelector("#modal-agendamento-1 input[type='tel']");
+
     const especialidade = modal2.querySelector("select:nth-of-type(1)").value;
     const medico = modal2.querySelector("select:nth-of-type(2)").value;
     const data = document.getElementById("dataConsulta").value;
     const hora = document.getElementById("horarioConsulta").value;
     const observacoes = document.querySelector("#modal-agendamento-1 textarea").value;
 
-    if (!nome || !email || !telefone || !especialidade || !medico || !data || !hora) {
+    if (!medico || !data || !hora) {
         alert("Preencha todos os campos obrigatórios");
         return;
+    }
+
+    const body = {
+        clinica_id: clinicaSelecionada,
+        medico_id: medico,
+        especialidade,
+        data_hora: `${data} ${hora}`,
+        observacoes
+    };
+
+    if (nomeInput && emailInput && telInput) {
+        body.nome = nomeInput.value;
+        body.email = emailInput.value;
+        body.telefone = telInput.value;
     }
 
     fetch("/consulta/agendar/", {
@@ -161,16 +176,7 @@ function confirmarAgendamento() {
             "Content-Type": "application/x-www-form-urlencoded",
             "X-CSRFToken": getCookie("csrftoken")
         },
-        body: new URLSearchParams({
-            nome,
-            email,
-            telefone,
-            clinica_id: clinicaSelecionada,
-            medico_id: medico,
-            especialidade,
-            data_hora: `${data} ${hora}`,
-            observacoes
-        })
+        body: new URLSearchParams(body)
     })
     .then(res => res.json())
     .then(res => {
@@ -183,10 +189,31 @@ function confirmarAgendamento() {
     });
 }
 
-/* IR PARA CONSULTAS */
+/* ================= CONSULTAS ================= */
 function irParaMeusAgendamentos() {
-    document.getElementById("modal-sucesso").style.display = "none";
+    const modal = document.getElementById("modal-sucesso");
+    if (modal) modal.style.display = "none";
     mostrarTela("consultas", document.querySelectorAll(".item-menu")[1]);
+}
+
+/* ================= FILTROS ================= */
+function inicializarFiltrosConsultas() {
+    const botoes = document.querySelectorAll(".filtro-btn");
+    const cards = document.querySelectorAll(".card-agendamento");
+
+    botoes.forEach(btn => {
+        btn.addEventListener("click", () => {
+            botoes.forEach(b => b.classList.remove("ativo"));
+            btn.classList.add("ativo");
+
+            const filtro = btn.dataset.filtro;
+            cards.forEach(card => {
+                const status = card.dataset.status;
+                card.style.display =
+                    filtro === "todas" || filtro === status ? "block" : "none";
+            });
+        });
+    });
 }
 
 /* ================= CSRF ================= */
@@ -203,22 +230,37 @@ function getCookie(name) {
     return cookieValue;
 }
 
-/* ================= FILTROS DAS CONSULTAS ================= */
-document.addEventListener("DOMContentLoaded", function () {
-    const botoesFiltro = document.querySelectorAll(".filtro-btn");
-    const cards = document.querySelectorAll(".card-agendamento");
-
-    botoesFiltro.forEach(botao => {
-        botao.addEventListener("click", () => {
-            botoesFiltro.forEach(b => b.classList.remove("ativo"));
-            botao.classList.add("ativo");
-
-            const filtro = botao.dataset.filtro;
-            cards.forEach(card => {
-                const status = card.dataset.status;
-                card.style.display =
-                    filtro === "todas" || filtro === status ? "block" : "none";
-            });
-        });
+/* ================= LOGOUT ================= */
+const btnLogout = document.getElementById("btnLogout");
+if (btnLogout) {
+    btnLogout.addEventListener("click", e => {
+        e.preventDefault();
+        window.location.href = "../../Login_e_Cadastro/html/login.html";
     });
-});
+}
+
+/* ================= CONFIGURAÇÕES / ABAS ================= */
+function trocarAba(event, abaId) {
+    // Esconde todos os conteúdos das abas
+    document.querySelectorAll('.aba-conteudo').forEach(aba => {
+        aba.classList.remove('ativa');
+        aba.style.display = 'none';
+    });
+
+    // Remove classe ativa de todos os botões
+    document.querySelectorAll('.aba-item').forEach(btn => {
+        btn.classList.remove('ativa');
+    });
+
+    // Mostra a aba selecionada
+    const abaAtiva = document.getElementById('aba-' + abaId);
+    if (abaAtiva) {
+        abaAtiva.style.display = 'flex'; // ou 'block', conforme seu layout
+        setTimeout(() => abaAtiva.classList.add('ativa'), 10);
+    }
+
+    // Ativa o botão clicado
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('ativa');
+    }
+}
