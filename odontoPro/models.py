@@ -230,3 +230,79 @@ class Consulta(models.Model):
 
     def __str__(self):
         return f"{self.nome} - {self.medico.nome} ({self.data_hora.strftime('%Y-%m-%d %H:%M')})"
+    
+    # -------------------------
+# AVALIAÇÃO
+# -------------------------
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+
+class Avaliacao(models.Model):
+    nota = models.IntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
+
+    comentario = models.TextField()
+
+    paciente = models.ForeignKey(
+        Paciente,
+        on_delete=models.CASCADE,
+        related_name="avaliacoes"
+    )
+
+    medico = models.ForeignKey(
+        Medico,
+        on_delete=models.CASCADE,
+        related_name="avaliacoes"
+    )
+
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name="avaliacoes"
+    )
+
+    data_postagem = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-data_postagem']
+
+    def __str__(self):
+        return f"{self.paciente.nome} - {self.nota}"
+
+    # 🔹 Sempre que salvar ou deletar, atualiza médias
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.atualizar_medias()
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        self.atualizar_medias()
+
+    def atualizar_medias(self):
+        # ===== MÉDICO =====
+        aval_medico = Avaliacao.objects.filter(medico=self.medico)
+
+        self.medico.num_avaliacoes = aval_medico.count()
+
+        if aval_medico.exists():
+            self.medico.avaliacao = sum(a.nota for a in aval_medico) / aval_medico.count()
+        else:
+            self.medico.avaliacao = 5.0
+
+        self.medico.save()
+
+        # ===== CLÍNICA =====
+        aval_clinica = Avaliacao.objects.filter(clinica=self.clinica)
+
+        self.clinica.num_avaliacoes = aval_clinica.count()
+
+        if aval_clinica.exists():
+            self.clinica.avaliacao = sum(a.nota for a in aval_clinica) / aval_clinica.count()
+        else:
+            self.clinica.avaliacao = 5.0
+
+        self.clinica.save()
