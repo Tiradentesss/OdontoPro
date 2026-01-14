@@ -231,13 +231,38 @@
 
         <div id="aba-perfil" class="conteudo-aba ativa">
 
-    <!-- FOTO (VISUAL APENAS - NÃO ENVIA NADA AINDA) -->
+    <!-- FOTO -->
     <p class="label-foto">Escolha uma foto de Perfil</p>
-    <div class="upload-foto-container" onclick="document.getElementById('fileInput').click()">
-        <i class="fa-solid fa-cloud-arrow-up"></i>
-        <span>Upload da foto</span>
-        <input type="file" id="fileInput" hidden disabled>
+
+    <div class="foto-wrapper">
+        <label for="fileInput" class="upload-foto-container">
+            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+            <img id="previewFoto" class="preview-foto" alt="Preview">
+            <span class="upload-text">Upload da foto</span>
+        </label>
+
+        <input
+            type="file"
+            id="fileInput"
+            name="foto_perfil"
+            accept="image/*"
+            hidden
+        >
+
+            </div>
+        </label>
     </div>
+
+    <input
+        type="file"
+        id="fileInput"
+        name="foto_perfil"
+        accept="image/*"
+        hidden
+    >
+
+
+
 
     <!-- FORMULÁRIO REAL -->
     <div class="grid-inputs">

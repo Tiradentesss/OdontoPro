@@ -264,3 +264,31 @@ function trocarAba(event, abaId) {
         event.currentTarget.classList.add('ativa');
     }
 }
+
+document.getElementById("fileInput").addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const img = document.getElementById("previewFoto");
+    img.src = URL.createObjectURL(file);
+    img.style.display = "block";
+});
+
+const fileInput = document.getElementById("fileInput");
+const preview = document.getElementById("previewFoto");
+const container = document.querySelector(".upload-foto-container");
+
+fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            preview.src = reader.result;
+            container.classList.add("has-image");
+        };
+
+        reader.readAsDataURL(file);
+    }
+});
