@@ -264,7 +264,7 @@ def configuracoes_conta(request):
     paciente_id = request.session.get('paciente_id')
 
     if not paciente_id:
-        return redirect('login')
+        return redirect('login_paciente')
 
     paciente = Paciente.objects.get(id=paciente_id)
 
@@ -274,11 +274,17 @@ def configuracoes_conta(request):
         paciente.cpf = request.POST.get('cpf')
         paciente.telefone = request.POST.get('telefone')
 
+        # 🔥 SALVAR FOTO
+        if 'foto' in request.FILES:
+            paciente.foto = request.FILES['foto']
+
+
         paciente.save()
         messages.success(request, 'Dados atualizados com sucesso!')
         return redirect('configuracoes_conta')
 
     return redirect('dashboard_paciente')
+
 
 
 def alterar_senha_paciente(request):
@@ -339,3 +345,4 @@ def cadastrar_paciente(request):
     request.session["paciente_id"] = paciente.id
     messages.success(request, "Conta criada com sucesso!")
     return redirect("dashboard_paciente")
+

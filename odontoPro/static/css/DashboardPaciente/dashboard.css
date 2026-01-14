@@ -212,14 +212,15 @@ body {
 .icone-usuario-avatar {
     width: 45px;
     height: 45px;
-    background: #f0f4f8;
-    color: var(--azul-claro);
+
     border-radius: 50%;
+    overflow: hidden;      /* 🔥 essencial */
+
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
 }
+
 
 .info-usuario {
     display: flex;
@@ -423,22 +424,30 @@ body {
 
 .perfil-clinica-container {
     position: absolute;
-    bottom: -25px;
+    top: 120px;       /* 🔥 metade dentro, metade fora */
     left: 20px;
+
     width: 60px;
     height: 60px;
+
+    border-radius: 50%;
+    background: #fff;
+    overflow: hidden;
+
     z-index: 10;
 }
 
 .foto-perfil-card {
     width: 100%;
     height: 100%;
+    display: block;
+
+    object-fit: cover;       /* 🔥 NÃO use contain aqui */
+    object-position: center;
+
     border-radius: 50%;
-    border: 4px solid var(--branco);
-    background: white;
-    object-fit: contain;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
 
 .selo-verificado-pequeno {
     position: absolute;
@@ -1602,11 +1611,6 @@ body {
     }
 }
 
-/* Wrapper impede estourar */
-.foto-wrapper {
-    width: auto;
-}
-
 /* BOTÃO */
 .foto-botao {
     width: 120px !important;
@@ -1636,77 +1640,87 @@ body {
     border-radius: 50%;
 }
 
-/* PLACEHOLDER */
-.foto-placeholder {
-    text-align: center;
-    color: #888;
-    font-size: 13px;
-}
+/* ==================================================
+   UPLOAD DE FOTO DE PERFIL (VERSÃO FINAL LIMPA)
+================================================== */
 
-.foto-placeholder i {
-    font-size: 22px;
-    margin-bottom: 4px;
-    display: block;
-}
-
+/* Wrapper apenas para alinhamento */
 .foto-wrapper {
     display: flex;
-    align-items: center;   /* 🔹 centraliza verticalmente */
-    margin-top: 12px;      /* ajuste fino */
+    align-items: center;
+    margin-top: 0;
 }
 
+/* Container clicável */
 .upload-foto-container {
     width: 120px;
     height: 120px;
+    min-width: 120px;
+    min-height: 120px;
+
     border-radius: 50%;
-    overflow: hidden;
-    position: relative;
+    border: 2px dashed #CBD5E0;
+    background-color: #fafafa;
 
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+
+    transition: border-color 0.3s, background 0.3s;
 }
 
-/* imagem */
+.upload-foto-container:hover {
+    border-color: #00B9E8;
+    background: #F7FAFC;
+}
+
+/* Ícone e texto (estado vazio) */
+.upload-icon {
+    font-size: 24px;
+    color: #718096;
+}
+
+.upload-text {
+    font-size: 12px;
+    color: #718096;
+}
+
+/* Preview da imagem */
 .preview-foto {
     width: 100%;
     height: 100%;
-    object-fit: cover;          /* 🔥 mantém proporção */
+    object-fit: cover;        /* 🔥 cobre sem distorcer */
     object-position: center;
     border-radius: 50%;
     display: none;
 }
 
-/* quando tem imagem */
+/* Quando existe imagem selecionada */
 .upload-foto-container.has-image .preview-foto {
     display: block;
 }
 
-/* esconder ícone/texto */
-.upload-foto-container.has-image i,
-.upload-foto-container.has-image span {
+.upload-foto-container.has-image .upload-icon,
+.upload-foto-container.has-image .upload-text {
     display: none;
 }
 
+/* Avatar do header (mantém proporção correta) */
+/* Avatar do header */
+.avatar-header {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
 
+    object-fit: cover;
+    object-position: center;
 
-/* Ícone + texto (estado vazio) */
-.upload-icon,
-.upload-text {
-    color: #888;
-    transition: opacity 0.3s;
-}
-
-
-
-/* Quando tem imagem */
-.upload-foto-container.has-image .upload-icon,
-.upload-foto-container.has-image .upload-text {
-    opacity: 0;
-}
-
-.upload-foto-container.has-image .preview-foto {
     display: block;
 }
+
+

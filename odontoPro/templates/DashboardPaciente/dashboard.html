@@ -67,8 +67,13 @@
 
         <div class="bloco-usuario">
             <div class="icone-usuario-avatar">
-                <i class="fa-solid fa-user"></i>
+                {% if paciente.foto %}
+                    <img src="{{ paciente.foto.url }}" class="avatar-topo">
+                {% else %}
+                    <i class="fa-solid fa-user"></i>
+                {% endif %}
             </div>
+
 
             <div class="info-usuario">
                 <span class="nome-usuario">{{ paciente.nome }}</span>
@@ -232,90 +237,57 @@
         <div id="aba-perfil" class="conteudo-aba ativa">
 
     <!-- FOTO -->
-    <p class="label-foto">Escolha uma foto de Perfil</p>
+    <form method="POST"
+        action="{% url 'configuracoes_conta' %}"
+        enctype="multipart/form-data">
+        {% csrf_token %}
 
-    <div class="foto-wrapper">
-        <label for="fileInput" class="upload-foto-container">
-            <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-            <img id="previewFoto" class="preview-foto" alt="Preview">
-            <span class="upload-text">Upload da foto</span>
-        </label>
+        <!-- FOTO -->
+        <p class="label-foto">Escolha uma foto de Perfil</p>
 
-        <input
-            type="file"
-            id="fileInput"
-            name="foto_perfil"
-            accept="image/*"
-            hidden
-        >
+        <div class="foto-wrapper">
+            <label for="fileInput" class="upload-foto-container">
+                <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                <img id="previewFoto" class="preview-foto" alt="Preview">
+                <span class="upload-text">Upload da foto</span>
+            </label>
 
-            </div>
-        </label>
-    </div>
+            <!-- 🔥 AGORA DENTRO DO FORM -->
+            <input
+                type="file"
+                id="fileInput"
+                name="foto"
+                accept="image/*"
+                hidden
+            >
+        </div>
 
-    <input
-        type="file"
-        id="fileInput"
-        name="foto_perfil"
-        accept="image/*"
-        hidden
-    >
+        <!-- RESTO DO FORM -->
+        <div class="input-grupo">
+            <label>Nome</label>
+            <input type="text" name="nome" value="{{ paciente.nome }}" required>
+        </div>
 
+        <div class="input-grupo">
+            <label>Email</label>
+            <input type="email" name="email" value="{{ paciente.email }}" required>
+        </div>
 
+        <div class="input-grupo">
+            <label>CPF</label>
+            <input type="text" name="cpf" value="{{ paciente.cpf }}">
+        </div>
 
+        <div class="input-grupo">
+            <label>Telefone</label>
+            <input type="text" name="telefone" value="{{ paciente.telefone }}">
+        </div>
 
-    <!-- FORMULÁRIO REAL -->
-    <div class="grid-inputs">
-        <form method="POST" action="{% url 'configuracoes_conta' %}">
-            {% csrf_token %}
+        <button type="submit" class="btn-salvar">
+            Salvar alterações
+        </button>
+    </form>
 
-            <div class="input-grupo">
-                <label>Nome</label>
-                <input 
-                    type="text"
-                    name="nome"
-                    value="{{ paciente.nome }}"
-                    required
-                    autocomplete="name"
-                >
-            </div>
-
-            <div class="input-grupo">
-                <label>Email</label>
-                <input 
-                    type="email"
-                    name="email"
-                    value="{{ paciente.email }}"
-                    required
-                    autocomplete="email"
-                >
-            </div>
-
-            <div class="input-grupo">
-                <label>CPF</label>
-                <input 
-                    type="text"
-                    name="cpf"
-                    value="{{ paciente.cpf }}"
-                    required
-                >
-            </div>
-
-            <div class="input-grupo">
-                <label>Número de Telefone</label>
-                <input 
-                    type="text"
-                    name="telefone"
-                    value="{{ paciente.telefone }}"
-                    required
-                    autocomplete="tel"
-                >
-            </div>
-
-            <button type="submit" class="btn-salvar">
-                Salvar alterações
-            </button>
-        </form>
     </div>
 
 </div>
