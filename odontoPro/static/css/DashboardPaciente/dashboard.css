@@ -1723,4 +1723,60 @@ body {
     display: block;
 }
 
+/* ===== LOGO SOBREPOSTA NO CARD DA CLÍNICA ===== */
+
+.banner-card {
+    position: relative;
+}
+
+/* círculo externo */
+.logo-sobreposta {
+    position: absolute;
+    bottom: -35px;
+    left: 16px;
+
+    width: 70px;
+    height: 70px;
+
+    border-radius: 50%;
+    background: #fff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    border: 3px solid #fff;
+
+    overflow: hidden;
+    z-index: 10;
+}
+
+/* imagem da logo */
+.logo-sobreposta img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+}
+
+/* quando não tiver logo */
+.logo-placeholder {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #e9f2ff;
+    color: #2a6bff;
+    font-size: 26px;
+}
+
+/* empurrar conteúdo para baixo por causa da logo */
+.card-clinica .info-card {
+    padding-top: 42px;
+}
 
