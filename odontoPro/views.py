@@ -346,3 +346,100 @@ def cadastrar_paciente(request):
     messages.success(request, "Conta criada com sucesso!")
     return redirect("dashboard_paciente")
 
+
+@require_POST
+def criar_avaliacao(request):
+    """
+    View para criar uma avaliação de consulta.
+    Espera os dados: consulta_id, clinica_id, medico_id, nota, comentario (opcional)
+    """
+    from .models import Avaliacao
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        consulta_id = request.POST.get("consulta_id")
+        clinica_id = request.POST.get("clinica_id")
+        medico_id = request.POST.get("medico_id")
+        nota_str = request.POST.get("nota", "5")
+        comentario = request.POST.get("comentario", "").strip()
+        
+        logger.info(f"Avaliação recebida: consulta={consulta_id}, clínica={clinica_id}, médico={medico_id}, nota={nota_str}")
+        
+        # Converter nota para inteiro
+        try:
+            nota = int(nota_str)
+        except ValueError:
+            return JsonResponse({
+                "success": False,
+                "message": "Nota deve ser um número inteiro"
+            }, status=400)
+        
+        # Validações
+        if not all([clinica_id, medico_id]):
+            return JsonResponse({
+                "success": False,
+                "message": "Dados incompletos: clínica_id e medico_id são obrigatórios"
+            }, status=400)
+        
+        if nota < 1 or nota > 5:
+            return JsonResponse({
+                "success": False,
+                "message": "Classificação inválida (deve ser entre 1 e 5)"
+            }, status=400)
+        
+        # Obter paciente da sessão
+        paciente_id = request.session.get("paciente_id")
+        if not paciente_id:
+            return JsonResponse({
+                "success": False,
+                "message": "Você não está logado"
+            }, status=401)
+        
+        # Obter objetos
+        try:
+            clinica = Clinica.objects.get(id=clinica_id)
+            medico = Medico.objects.get(id=medico_id)
+            paciente = Paciente.objects.get(id=paciente_id)
+        except (Clinica.DoesNotExist, Medico.DoesNotExist, Paciente.DoesNotExist) as e:
+            return JsonResponse({
+                "success": False,
+                "message": f"Objeto não encontrado: {str(e)}"
+            }, status=404)
+        
+        # Verificar se já existe avaliação para este médico e clínica pelo paciente
+        avaliacao_existente = Avaliacao.objects.filter(
+            paciente=paciente,
+            medico=medico,
+            clinica=clinica
+        ).first()
+        
+        if avaliacao_existente:
+            # Atualizar avaliação existente
+            avaliacao_existente.nota = nota
+            avaliacao_existente.comentario = comentario
+            avaliacao_existente.save()
+            logger.info(f"Avaliação atualizada: {avaliacao_existente.id}")
+        else:
+            # Criar nova avaliação
+            avaliacao = Avaliacao.objects.create(
+                paciente=paciente,
+                clinica=clinica,
+                medico=medico,
+                nota=nota,
+                comentario=comentario
+            )
+            logger.info(f"Avaliação criada: {avaliacao.id}")
+        
+        return JsonResponse({
+            "success": True,
+            "message": "Avaliação registrada com sucesso!"
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao processar avaliação: {str(e)}", exc_info=True)
+        return JsonResponse({
+            "success": False,
+            "message": f"Erro ao processar avaliação: {str(e)}"
+        }, status=500)

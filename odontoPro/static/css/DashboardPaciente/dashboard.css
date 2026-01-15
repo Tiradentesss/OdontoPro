@@ -324,63 +324,141 @@ body {
 /* ==========================================
    HEADER DE CLÍNICAS (BUSCA E FILTRO)
    ========================================== */
+
+/* Container do header (título + controles) */
 .header-clinicas {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    gap: 15px;
-    flex-wrap: wrap;
+    display: flex;              /* Coloca título e controles lado a lado */
+    justify-content: space-between; /* Espaço entre o título e os controles */
+    align-items: center;        /* Alinha verticalmente ao centro */
+    margin-bottom: 25px;        /* Espaçamento abaixo do header */
+    gap: 15px;                  /* Espaçamento interno entre elementos */
+    flex-wrap: wrap;            /* Permite quebrar linha em telas pequenas */
 }
 
+/* Container que segura os controles de busca e filtros */
 .controles-busca {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    display: flex;              /* Coloca todos os elementos lado a lado */
+    align-items: center;        /* Centraliza verticalmente */
+    gap: 12px;                  /* Espaçamento entre os controles */
+    justify-content: flex-end;  /* Posiciona tudo à direita da página */
+    flex-wrap: wrap;            /* Permite quebra de linha em telas pequenas */
 }
 
+/* Campo de busca */
 .campo-busca {
-    background: var(--branco);
-    border: 1px solid var(--cor-borda);
-    padding: 0 15px;
-    border-radius: 0px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 280px;
-    height: 48px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+    background: var(--branco);          /* Fundo branco */
+    border: 1px solid var(--cor-borda); /* Borda do campo */
+    padding: 0 15px;                    /* Espaçamento interno horizontal */
+    border-radius: 0px;                 /* Bordas quadradas */
+    display: flex;                      /* Para alinhar ícone + input */
+    align-items: center;                /* Centraliza verticalmente */
+    gap: 10px;                          /* Espaço entre ícone e input */
+    min-width: 280px;                   /* Largura mínima */
+    height: 48px;                       /* Altura do campo */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02); /* Sombra leve */
 }
 
+/* Input dentro do campo de busca */
 .campo-busca input {
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 14px;
-    width: 100%;
-    color: var(--texto-principal);
+    border: none;           /* Remove borda padrão */
+    outline: none;          /* Remove outline ao focar */
+    background: transparent;/* Fundo transparente */
+    font-size: 14px;        /* Tamanho da fonte */
+    width: 100%;            /* Preenche todo o espaço disponível */
+    color: var(--texto-principal); /* Cor do texto */
 }
 
+/* Container do botão de filtro + dropdown */
+.filtro-container {
+    position: relative;     /* Necessário para posicionar o dropdown em relação ao botão */
+    display: inline-block;  /* Mantém botão e dropdown juntos */
+}
+
+/* Dropdown de avaliação */
+.dropdown-filtro {
+    position: absolute;          /* Posiciona em relação ao botão */
+    top: calc(100% + 5px);       /* Logo abaixo do botão com pequeno espaçamento */
+    left: 0;                      /* Alinhado à esquerda do botão */
+    background: var(--branco);    /* Fundo branco */
+    border: 1px solid var(--cor-borda); /* Borda */
+    width: 200px;                 /* Largura fixa do dropdown */
+    display: none;                /* Inicialmente escondido */
+    flex-direction: column;       /* Mantém opções em coluna (vertical) */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08); /* Sombra leve */
+    z-index: 100;                 /* Fica sobre outros elementos */
+    border-radius: 4px;           /* Bordas arredondadas */
+    overflow: hidden; 
+    transition: opacity 0.2s ease, transform 0.2s ease; /* Animação suave */
+    transform-origin: top;        /* Origem da animação */
+    opacity: 0;                   /* Inicialmente invisível */
+}
+
+/* Dropdown visível */
+.dropdown-filtro.mostrar {
+    display: flex; /* Mostra o dropdown */
+    opacity: 1;    /* Torna visível */
+    transform: scaleY(1); /* Animação de abertura */
+}
+
+/* Cada opção dentro do dropdown */
+.dropdown-filtro .opcao {
+    padding: 12px 16px;  /* Espaçamento interno */
+    cursor: pointer;      /* Cursor de clique */
+    font-size: 14px;      /* Tamanho da fonte */
+    transition: background 0.2s ease; /* Transição suave */
+}
+
+/* Hover das opções */
+.dropdown-filtro .opcao:hover {
+    background: #f1f5f9;  /* Destaque ao passar o mouse */
+    font-weight: 500;     /* Texto um pouco mais bold */
+}
+
+/* Botões de filtro adicionais */
 .btn-filtro {
-    background: var(--branco);
-    border: 1px solid var(--cor-borda);
-    padding: 0 18px;
-    height: 48px;
-    border-radius: 0px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--texto-suave);
-    font-weight: 500;
-    transition: 0.3s;
+    background: var(--branco);          /* Fundo branco */
+    border: 1px solid var(--cor-borda); /* Borda */
+    padding: 0 18px;                    /* Espaçamento horizontal */
+    height: 48px;                        /* Altura */
+    border-radius: 0px;                 /* Bordas quadradas */
+    cursor: pointer;                    /* Cursor de clique */
+    display: flex;                      /* Para alinhar ícones e texto */
+    align-items: center;                /* Centraliza verticalmente */
+    gap: 8px;                           /* Espaço entre ícones e texto */
+    font-size: 14px;                     /* Tamanho da fonte */
+    color: var(--texto-suave);          /* Cor do texto */
+    font-weight: 500;                    /* Negrito leve */
+    transition: 0.3s;                    /* Transição suave ao hover */
+    position: relative;                 /* Para posicionar dropdown */
 }
 
+/* Hover do botão */
 .btn-filtro:hover {
-    background: #f8fafc;
-    border-color: #cbd5e0;
+    background: #f8fafc;                /* Fundo levemente cinza */
+    border-color: #cbd5e0;              /* Borda mais clara */
 }
+
+/* ================= DROPDOWN DE LOCALIZAÇÃO ================= */
+#dropdownFiltroLocalizacao {
+    width: 280px;
+    min-height: auto;
+}
+
+#dropdownFiltroLocalizacao select {
+    transition: border-color 0.2s ease;
+}
+
+#dropdownFiltroLocalizacao select:focus {
+    outline: none;
+    border-color: var(--azul-claro);
+    box-shadow: 0 0 0 2px rgba(77, 184, 255, 0.1);
+}
+
+#selectEstado,
+#selectCidade {
+    width: 100%;
+}
+
 
 /* ==========================================
    GRID E CARDS DE CLÍNICAS
@@ -605,6 +683,106 @@ body {
 .btn-detalhes:hover {
     background: var(--azul-claro);
     color: white;
+}
+
+/* ================= BOTÃO DE AVALIAÇÃO ================= */
+.btn-avaliar {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #FFB800;
+    background: transparent;
+    color: #FFB800;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.btn-avaliar:hover {
+    background: #FFB800;
+    color: white;
+}
+
+/* ================= SEÇÃO DE AVALIAÇÃO COM ESTRELAS ================= */
+.avaliacao-section {
+    border: 2px solid #FFB800;
+    background: linear-gradient(135deg, rgba(255, 184, 0, 0.05) 0%, rgba(255, 184, 0, 0.02) 100%);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.avaliacao-section h4 {
+    color: #FFB800;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.avaliacao-stars {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    font-size: 28px;
+}
+
+.avaliacao-stars .star {
+    transition: all 0.2s ease;
+    color: #ddd;
+}
+
+.avaliacao-stars .star:hover {
+    transform: scale(1.2);
+    color: #FFB800;
+    filter: drop-shadow(0 0 5px rgba(255, 184, 0, 0.5));
+}
+
+.avaliacao-stars .star.selecionada {
+    color: #FFB800;
+    text-shadow: 0 0 8px rgba(255, 184, 0, 0.6);
+}
+
+.btn-enviar-avaliacao {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    background: #FFB800;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-enviar-avaliacao:hover {
+    background: #e6a500;
+    box-shadow: 0 4px 12px rgba(255, 184, 0, 0.3);
+}
+
+.btn-cancelar-avaliacao {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: transparent;
+    color: #999;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-cancelar-avaliacao:hover {
+    background: #f5f5f5;
 }
 
 /* ==========================================

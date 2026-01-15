@@ -114,19 +114,52 @@
                 <input id="inputBuscaClinica" type="text" placeholder="Procurar Clínica">
             </div>
 
-            <button class="btn-filtro">
-                <i class="fa-solid fa-star"></i> Avaliação <i class="fa-solid fa-chevron-down"></i>
-            </button>
+            <div class="filtro-container">
+                <button class="btn-filtro" id="btnFiltro">
+                    <i class="fa-solid fa-star"></i> Avaliação
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
 
-            <button class="btn-filtro">
-                <i class="fa-solid fa-sliders"></i> Filtros <i class="fa-solid fa-chevron-down"></i>
-            </button>
+                <div class="dropdown-filtro" id="dropdownFiltro">
+                    <div class="opcao">⭐ 1 estrela</div>
+                    <div class="opcao">⭐⭐ 2 estrelas</div>
+                    <div class="opcao">⭐⭐⭐ 3 estrelas</div>
+                    <div class="opcao">⭐⭐⭐⭐ 4 estrelas</div>
+                    <div class="opcao">⭐⭐⭐⭐⭐ 5 estrelas</div>
+                </div>
+            </div>
+
+            <div class="filtro-container">
+                <button class="btn-filtro" id="btnFiltroLocalizacao">
+                    <i class="fa-solid fa-sliders"></i> Filtros <i class="fa-solid fa-chevron-down"></i>
+                </button>
+
+                <div class="dropdown-filtro" id="dropdownFiltroLocalizacao">
+                    <div style="padding: 12px 16px; border-bottom: 1px solid #ddd;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 13px;">Estado</label>
+                        <select id="selectEstado" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                            <option value="">Todos os estados</option>
+                        </select>
+                    </div>
+                    
+                    <div style="padding: 12px 16px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 13px;">Cidade</label>
+                        <select id="selectCidade" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                            <option value="">Todas as cidades</option>
+                        </select>
+                    </div>
+                    
+                    <div style="padding: 8px 12px; border-top: 1px solid #ddd;">
+                        <button id="btnLimparFiltroLocalizacao" style="width: 100%; padding: 8px; background: #f1f5f9; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px; color: #666;">✕ Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="grid-clinicas" id="listaClinicas">
         {% for clinica in clinicas %}
-        <div class="card-clinica">
+        <div class="card-clinica" data-avaliacao="{{ clinica.avaliacao|default:0 }}" data-estado="{{ clinica.endereco.estado|default:'' }}" data-cidade="{{ clinica.endereco.cidade|default:'' }}">
 
             <!-- BANNER -->
             <div class="banner-card">
@@ -209,6 +242,37 @@
                 <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
                     Ver Detalhes
                 </button>
+
+                <!-- Botão de Avaliar (só para consultas realizadas) -->
+                {% if cons.status == 'realizada' %}
+                <button class="btn-avaliar" onclick="mostrarEstrelas('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
+                    ⭐ Avaliar Consulta
+                </button>
+                {% endif %}
+
+                <!-- 🔹 Seção de Avaliação com Estrelas (inicialmente oculta) -->
+                <div class="avaliacao-section" id="avaliacao-{{ cons.id }}" style="display: none; margin-top: 15px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px;">Avaliar Consulta</h4>
+                    
+                    <div class="avaliacao-stars" style="display: flex; gap: 10px; margin-bottom: 15px; font-size: 28px;">
+                        <span class="star" data-valor="1" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
+                        <span class="star" data-valor="2" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
+                        <span class="star" data-valor="3" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
+                        <span class="star" data-valor="4" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
+                        <span class="star" data-valor="5" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
+                    </div>
+
+                    <textarea id="comentario-{{ cons.id }}" placeholder="Deixe um comentário sobre a consulta (opcional)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; min-height: 80px;"></textarea>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-enviar-avaliacao" onclick="enviarAvaliacao('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
+                            Enviar Avaliação
+                        </button>
+                        <button class="btn-cancelar-avaliacao" onclick="ocultarEstrelas('{{ cons.id }}')">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
 
                 <!-- 🔹 Modal Detalhes -->
                 <div class="modal" id="modal-{{ cons.id }}">

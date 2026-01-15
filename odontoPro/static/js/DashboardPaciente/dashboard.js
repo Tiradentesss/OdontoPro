@@ -292,3 +292,321 @@ fileInput.addEventListener("change", () => {
         reader.readAsDataURL(file);
     }
 });
+
+/* ================= FILTRO DE ESTRELAS ================= */
+function initFiltroEstrelas(btnId, dropdownId) {
+    const btnFiltro = document.getElementById(btnId);
+    const dropdown = document.getElementById(dropdownId);
+    const opcoes = dropdown.querySelectorAll(".opcao");
+    const listaClinicas = document.getElementById("listaClinicas");
+
+    if (!btnFiltro || !dropdown) return; // segurança
+
+    btnFiltro.addEventListener("click", (e) => {
+        e.stopPropagation(); // impede o clique de fechar imediatamente
+        dropdown.classList.toggle("mostrar");
+    });
+
+    // Adicionar evento click em cada opção de estrelas
+    opcoes.forEach((opcao, index) => {
+        const estrelas = index + 1; // 1 a 5 estrelas
+        
+        opcao.style.cursor = "pointer";
+        opcao.addEventListener("click", (e) => {
+            e.stopPropagation();
+            
+            console.log(`Filtro de ${estrelas} estrelas selecionado`);
+            
+            // Filtrar clínicas
+            aplicarFiltros();
+            
+            // Fechar dropdown
+            dropdown.classList.remove("mostrar");
+            
+            // Atualizar texto do botão
+            btnFiltro.innerHTML = `<i class="fa-solid fa-star"></i> ${opcao.textContent} <i class="fa-solid fa-chevron-down"></i>`;
+        });
+    });
+
+    // Fechar dropdown ao clicar fora
+    document.addEventListener("click", (e) => {
+        if (!dropdown.contains(e.target) && e.target !== btnFiltro) {
+            dropdown.classList.remove("mostrar");
+        }
+    });
+    
+    // Adicionar opção "Limpar filtro" (opcional)
+    const opcaoLimpar = document.createElement("div");
+    opcaoLimpar.className = "opcao";
+    opcaoLimpar.textContent = "✕ Limpar filtro";
+    opcaoLimpar.style.cursor = "pointer";
+    opcaoLimpar.style.color = "#666";
+    opcaoLimpar.style.borderTop = "1px solid #ddd";
+    opcaoLimpar.style.paddingTop = "8px";
+    opcaoLimpar.style.marginTop = "8px";
+    
+    opcaoLimpar.addEventListener("click", (e) => {
+        e.stopPropagation();
+        
+        console.log("Filtro de estrelas limpo");
+        
+        // Resetar texto do botão
+        btnFiltro.innerHTML = `<i class="fa-solid fa-star"></i> Avaliação <i class="fa-solid fa-chevron-down"></i>`;
+        
+        // Aplicar filtros (agora sem filtro de estrelas)
+        aplicarFiltros();
+        
+        // Fechar dropdown
+        dropdown.classList.remove("mostrar");
+    });
+    
+    dropdown.appendChild(opcaoLimpar);
+}
+
+/* ================= FILTRO DE LOCALIZAÇÃO ================= */
+function initFiltroLocalizacao(btnId, dropdownId) {
+    const btnFiltro = document.getElementById(btnId);
+    const dropdown = document.getElementById(dropdownId);
+    const selectEstado = document.getElementById("selectEstado");
+    const selectCidade = document.getElementById("selectCidade");
+    const btnLimpar = document.getElementById("btnLimparFiltroLocalizacao");
+    const listaClinicas = document.getElementById("listaClinicas");
+
+    if (!btnFiltro || !dropdown) return;
+
+    // Obter lista de estados únicos das clínicas
+    const estados = new Set();
+    const cidades = new Map(); // Map de estado -> Set de cidades
+
+    const cards = listaClinicas.querySelectorAll(".card-clinica");
+    cards.forEach(card => {
+        const estado = card.getAttribute("data-estado") || "";
+        const cidade = card.getAttribute("data-cidade") || "";
+        
+        if (estado) {
+            estados.add(estado);
+            if (!cidades.has(estado)) {
+                cidades.set(estado, new Set());
+            }
+            if (cidade) {
+                cidades.get(estado).add(cidade);
+            }
+        }
+    });
+
+    // Ordenar e popular select de estados
+    const estadosOrdenados = Array.from(estados).sort();
+    estadosOrdenados.forEach(estado => {
+        const option = document.createElement("option");
+        option.value = estado;
+        option.textContent = estado;
+        selectEstado.appendChild(option);
+    });
+
+    // Evento ao mudar estado
+    selectEstado.addEventListener("change", () => {
+        const estadoSelecionado = selectEstado.value;
+        
+        // Limpar cidades
+        selectCidade.innerHTML = '<option value="">Todas as cidades</option>';
+        
+        // Poblar cidades do estado selecionado
+        if (estadoSelecionado && cidades.has(estadoSelecionado)) {
+            const cidadesDoEstado = Array.from(cidades.get(estadoSelecionado)).sort();
+            cidadesDoEstado.forEach(cidade => {
+                const option = document.createElement("option");
+                option.value = cidade;
+                option.textContent = cidade;
+                selectCidade.appendChild(option);
+            });
+        }
+        
+        aplicarFiltros();
+    });
+
+    // Evento ao mudar cidade
+    selectCidade.addEventListener("change", () => {
+        aplicarFiltros();
+    });
+
+    // Evento de botão limpar
+    btnLimpar.addEventListener("click", () => {
+        selectEstado.value = "";
+        selectCidade.value = "";
+        selectCidade.innerHTML = '<option value="">Todas as cidades</option>';
+        aplicarFiltros();
+    });
+
+    // Toggle dropdown
+    btnFiltro.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle("mostrar");
+    });
+
+    // Fechar dropdown ao clicar fora
+    document.addEventListener("click", (e) => {
+        if (!dropdown.contains(e.target) && e.target !== btnFiltro) {
+            dropdown.classList.remove("mostrar");
+        }
+    });
+}
+
+/* ================= FUNÇÃO PARA APLICAR TODOS OS FILTROS ================= */
+function aplicarFiltros() {
+    const cards = document.querySelectorAll(".card-clinica");
+    
+    // Obter filtros
+    const filtroEstrelas = parseInt(obterFiltroEstrelas()) || 0;
+    const filtroEstado = document.getElementById("selectEstado").value || "";
+    const filtroCidade = document.getElementById("selectCidade").value || "";
+    
+    console.log(`Aplicando filtros: estrelas=${filtroEstrelas}, estado=${filtroEstado}, cidade=${filtroCidade}`);
+    
+    cards.forEach(card => {
+        const avaliacao = parseFloat(card.getAttribute("data-avaliacao") || 0);
+        const estado = card.getAttribute("data-estado") || "";
+        const cidade = card.getAttribute("data-cidade") || "";
+        
+        let mostrar = true;
+        
+        // Filtro de estrelas
+        if (filtroEstrelas > 0 && avaliacao < filtroEstrelas) {
+            mostrar = false;
+        }
+        
+        // Filtro de estado
+        if (filtroEstado && estado !== filtroEstado) {
+            mostrar = false;
+        }
+        
+        // Filtro de cidade
+        if (filtroCidade && cidade !== filtroCidade) {
+            mostrar = false;
+        }
+        
+        card.style.display = mostrar ? "flex" : "none";
+    });
+}
+
+/* ================= FUNÇÃO AUXILIAR PARA OBTER FILTRO DE ESTRELAS ================= */
+function obterFiltroEstrelas() {
+    const btnFiltro = document.getElementById("btnFiltro");
+    const texto = btnFiltro.textContent;
+    
+    if (texto.includes("1 estrela")) return 1;
+    if (texto.includes("2 estrelas")) return 2;
+    if (texto.includes("3 estrelas")) return 3;
+    if (texto.includes("4 estrelas")) return 4;
+    if (texto.includes("5 estrelas")) return 5;
+    
+    return 0;
+}
+
+// Inicializar filtros
+document.addEventListener("DOMContentLoaded", () => {
+    initFiltroEstrelas("btnFiltro", "dropdownFiltro");
+    initFiltroLocalizacao("btnFiltroLocalizacao", "dropdownFiltroLocalizacao");
+});
+/* ================= AVALIAÇÃO ================= */
+let avaliacoesSelecionadas = {}; // Armazenar avaliação por consulta
+
+function mostrarEstrelas(consultaId, clinicaId, medicoId) {
+    console.log(`Mostrando estrelas para consulta ${consultaId}`);
+    const secao = document.getElementById(`avaliacao-${consultaId}`);
+    if (secao) {
+        secao.style.display = "block";
+        // Scroll suave para a seção
+        secao.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } else {
+        console.error(`Seção de avaliação não encontrada: avaliacao-${consultaId}`);
+    }
+}
+
+function ocultarEstrelas(consultaId) {
+    const secao = document.getElementById(`avaliacao-${consultaId}`);
+    if (secao) {
+        secao.style.display = "none";
+        // Limpar seleção
+        document.querySelectorAll(`#avaliacao-${consultaId} .star`).forEach(star => {
+            star.classList.remove("selecionada");
+        });
+        delete avaliacoesSelecionadas[consultaId];
+    }
+}
+
+function selecionarEstrela(elemento, consultaId) {
+    const valor = parseInt(elemento.getAttribute("data-valor"));
+    console.log(`Estrela ${valor} selecionada para consulta ${consultaId}`);
+    avaliacoesSelecionadas[consultaId] = valor;
+    
+    // Remove seleção anterior
+    document.querySelectorAll(`#avaliacao-${consultaId} .star`).forEach(star => {
+        star.classList.remove("selecionada");
+    });
+    
+    // Seleciona até o valor clicado
+    const secao = document.getElementById(`avaliacao-${consultaId}`);
+    if (secao) {
+        const stars = secao.querySelectorAll(".star");
+        for (let i = 0; i < valor; i++) {
+            stars[i].classList.add("selecionada");
+        }
+    }
+}
+
+function enviarAvaliacao(consultaId, clinicaId, medicoId) {
+    console.log(`Enviando avaliação para consulta ${consultaId}, clínica ${clinicaId}, médico ${medicoId}`);
+    console.log(`Avaliações selecionadas:`, avaliacoesSelecionadas);
+    
+    const nota = avaliacoesSelecionadas[consultaId];
+    
+    if (!nota || nota === 0) {
+        alert("Por favor, selecione uma classificação em estrelas!");
+        return;
+    }
+    
+    const comentario = document.getElementById(`comentario-${consultaId}`).value;
+    const csrfToken = getCookie("csrftoken");
+    
+    console.log(`Enviando: nota=${nota}, comentário=${comentario}, csrf=${csrfToken}`);
+    
+    // Fazer requisição para enviar avaliação
+    fetch("/avaliacao/criar/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": csrfToken
+        },
+        body: new URLSearchParams({
+            consulta_id: consultaId,
+            clinica_id: clinicaId,
+            medico_id: medicoId,
+            nota: nota,
+            comentario: comentario
+        })
+    })
+    .then(res => {
+        console.log("Resposta recebida, status:", res.status);
+        return res.json();
+    })
+    .then(data => {
+        console.log("Dados da resposta:", data);
+        if (data.success) {
+            alert("Avaliação enviada com sucesso!");
+            ocultarEstrelas(consultaId);
+            // Desabilitar botão de avaliação
+            const btnAvaliar = document.querySelector(`button.btn-avaliar[onclick*="mostrarEstrelas('${consultaId}"]`);
+            if (btnAvaliar) {
+                btnAvaliar.disabled = true;
+                btnAvaliar.textContent = "✅ Avaliado";
+                btnAvaliar.style.opacity = "0.6";
+            }
+        } else {
+            alert(data.message || "Erro ao enviar avaliação");
+        }
+    })
+    .catch(err => {
+        console.error("Erro na requisição:", err);
+        alert("Erro ao enviar avaliação! Verifique o console.");
+    });
+}
