@@ -346,3 +346,33 @@ def cadastrar_paciente(request):
     messages.success(request, "Conta criada com sucesso!")
     return redirect("dashboard_paciente")
 
+
+# ---------- DETALHES DA CONSULTA (API JSON) ----------
+def detalhes_consulta(request, consulta_id):
+    """Retorna os detalhes de uma consulta em JSON para o modal"""
+    from django.http import JsonResponse
+    
+    try:
+        consulta = Consulta.objects.get(id=consulta_id)
+        
+        # Verificar se o paciente tem permissão para ver essa consulta
+        paciente_id = request.session.get("paciente_id")
+        if consulta.paciente_id != paciente_id:
+            return JsonResponse({"erro": "Acesso negado"}, status=403)
+        
+        dados = {
+            "id": consulta.id,
+            "status": consulta.get_status_display(),
+            "clinica": consulta.clinica.nome,
+            "medico": consulta.medico.nome,
+            "data": consulta.data_hora.strftime("%d/%m/%Y"),
+            "hora": consulta.data_hora.strftime("%H:%M"),
+            "especialidade": consulta.especialidade or "Não informado",
+            "observacoes": consulta.observacoes or "Nenhuma",
+            "telefone": consulta.telefone,
+            "email": consulta.email,
+        }
+        return JsonResponse(dados)
+    except Consulta.DoesNotExist:
+        return JsonResponse({"erro": "Consulta não encontrada"}, status=404)
+

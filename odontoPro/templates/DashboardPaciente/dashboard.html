@@ -210,27 +210,6 @@
                     Ver Detalhes
                 </button>
 
-                <!-- 🔹 Modal Detalhes -->
-                <div class="modal" id="modal-{{ cons.id }}">
-                    <div class="modal-conteudo">
-                        <h3>Detalhes da Consulta</h3>
-                        <p><strong>Status:</strong> {{ cons.get_status_display }}</p>
-                        <p><strong>Clínica:</strong> {{ cons.clinica.nome }}</p>
-                        <p><strong>Médico:</strong> {{ cons.medico.nome }}</p>
-                        <p><strong>Data:</strong> {{ cons.data_hora|date:"d/m/Y" }}</p>
-                        <p><strong>Hora:</strong> {{ cons.data_hora|time:"H:i" }}</p>
-                        {% if cons.especialidade %}
-                            <p><strong>Especialidade:</strong> {{ cons.especialidade }}</p>
-                        {% endif %}
-                        {% if cons.observacoes %}
-                            <p><strong>Observações:</strong> {{ cons.observacoes }}</p>
-                        {% endif %}
-                        <div class="acoes-modal">
-                            <button class="btn-fechar" onclick="fecharDetalhes('{{ cons.id }}')">Fechar</button>
-                        </div>
-                    </div>
-                </div>
-
             </div>
             {% endfor %}
         {% else %}
@@ -238,6 +217,33 @@
         {% endif %}
     </div>
 </section>
+
+<!-- 🔹 MODAIS DE DETALHES DAS CONSULTAS - Renderizados aqui! -->
+{% if consultas %}
+    {% for cons in consultas %}
+    <div class="modal" id="modal-{{ cons.id }}">
+        <div class="modal-conteudo">
+            <h3>Detalhes da Consulta</h3>
+            <p><strong>Status:</strong> {{ cons.get_status_display }}</p>
+            <p><strong>Clínica:</strong> {{ cons.clinica.nome }}</p>
+            <p><strong>Médico:</strong> {{ cons.medico.nome }}</p>
+            <p><strong>Data:</strong> {{ cons.data_hora|date:"d/m/Y" }}</p>
+            <p><strong>Hora:</strong> {{ cons.data_hora|time:"H:i" }}</p>
+            {% if cons.especialidade %}
+                <p><strong>Especialidade:</strong> {{ cons.especialidade }}</p>
+            {% endif %}
+            {% if cons.observacoes %}
+                <p><strong>Observações:</strong> {{ cons.observacoes }}</p>
+            {% endif %}
+            <p><strong>Email:</strong> {{ cons.email }}</p>
+            <p><strong>Telefone:</strong> {{ cons.telefone }}</p>
+            <div class="acoes-modal">
+                <button class="btn-fechar" onclick="fecharDetalhes('{{ cons.id }}')">Fechar</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
 
 <!-- ================= AJUSTES ================= -->
 <section id="ajustes" class="tela">
@@ -434,45 +440,6 @@
 
 </main>
 </div>
-
-<script>
-function mostrarTela(id, el) {
-    document.querySelectorAll(".tela").forEach(sec => sec.classList.remove("ativa"));
-    document.getElementById(id).classList.add("ativa");
-
-    document.querySelectorAll(".item-menu").forEach(i => i.classList.remove("ativo"));
-    el.classList.add("ativo");
-}
-
-function alternarMenu() {
-    document.getElementById("menuLateral").classList.toggle("fechado");
-}
-
-function abrirDetalhes(id) {
-    document.getElementById("modal-" + id).classList.add("mostrar");
-}
-
-function fecharDetalhes(id) {
-    document.getElementById("modal-" + id).classList.remove("mostrar");
-}
-
-// 🔹 Funções para modais de agendamento
-function abrirModalAgendamento(clinicaId) {
-    document.getElementById('modal-agendamento-1').style.display = 'flex';
-}
-function proximaEtapa() {
-    document.getElementById('modal-agendamento-1').style.display = 'none';
-    document.getElementById('modal-agendamento-2').style.display = 'flex';
-}
-function confirmarAgendamento() {
-    document.getElementById('modal-agendamento-2').style.display = 'none';
-    document.getElementById('modal-sucesso').style.display = 'flex';
-}
-function irParaMeusAgendamentos() {
-    document.getElementById('modal-sucesso').style.display = 'none';
-    mostrarTela('consultas', document.querySelector(".item-menu[data-tela='consultas']") || document.querySelectorAll(".item-menu")[1]);
-}
-</script>
 
 </body>
 </html>

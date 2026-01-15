@@ -64,12 +64,25 @@ function carrosselAutomatico() {
 /* ================= MODAL DE DETALHES ================= */
 function abrirDetalhes(id) {
     const modal = document.getElementById("modal-" + id);
-    if (modal) modal.classList.add("mostrar");
+    if (modal) {
+        modal.style.display = "flex";
+        
+        // Fechar quando clicar fora do modal
+        modal.onclick = function(event) {
+            if (event.target === modal) {
+                fecharDetalhes(id);
+            }
+        }
+    } else {
+        console.error("Modal não encontrado: modal-" + id);
+    }
 }
 
 function fecharDetalhes(id) {
     const modal = document.getElementById("modal-" + id);
-    if (modal) modal.classList.remove("mostrar");
+    if (modal) {
+        modal.style.display = "none";
+    }
 }
 
 /* ================= AGENDAMENTO ================= */

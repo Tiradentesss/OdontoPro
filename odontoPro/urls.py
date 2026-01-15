@@ -24,6 +24,7 @@ urlpatterns = [
     # CONSULTAS
     path("consulta/<int:consulta_id>/cancelar/", views.cancelar_consulta, name="cancelar_consulta"),
     path("consulta/<int:consulta_id>/reagendar/", views.reagendar_consulta, name="reagendar_consulta"),
+    path("consulta/<int:consulta_id>/detalhes/", views.detalhes_consulta, name="detalhes_consulta"),
 
     # 🔹 NOVO — FILTRO SEM RECARREGAR PÁGINA
     path("consultas/filtrar/", views.filtrar_consultas, name="filtrar_consultas"),
