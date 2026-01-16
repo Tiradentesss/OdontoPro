@@ -1900,6 +1900,197 @@ body {
     transform: translateY(-2px);
 }
 
+/* ===== MENU DE ABAS ===== */
+.abas-perfil {
+    display: flex;
+    gap: 15px;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    width: fit-content;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.aba-item {
+    padding: 15px 0;
+    padding-bottom: 12px;
+    margin-right: 15px;
+    border: none;
+    background: transparent;
+    color: #a0aec0;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 0;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+    position: relative;
+}
+
+.aba-item:hover {
+    color: #718096;
+}
+
+.aba-item.ativa {
+    color: #00b9e8;
+    border-bottom-color: #00b9e8;
+}
+
+/* ===== CONTEÚDO DAS ABAS ===== */
+.aba-conteudo {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.aba-conteudo.ativa {
+    display: flex;
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* Tag de Seção */
+.tag-secao {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #f7fafc;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 20px;
+    width: fit-content;
+}
+
+.tag-secao i {
+    color: #00b9e8;
+}
+
+/* Listas de Serviços */
+.lista-servicos-bullets {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.lista-servicos-bullets li {
+    padding: 8px 0;
+    color: #4a5568;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.lista-servicos-bullets li::before {
+    content: "•";
+    color: #00b9e8;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+/* Descrição Texto */
+.descricao-texto {
+    line-height: 1.7;
+    color: #4a5568;
+    margin: 0;
+}
+
+/* ===== AVALIAÇÕES ===== */
+.container-avaliacoes {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.card-feedback {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #edf2f7;
+    border-left: 4px solid #00b9e8;
+}
+
+.user-feedback {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.user-feedback img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-feedback strong {
+    display: block;
+    color: #2d3748;
+    font-size: 14px;
+}
+
+.estrelas {
+    color: #ffc107;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+.card-feedback p {
+    color: #4a5568;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ===== ENDEREÇO E MAPA ===== */
+.endereco-detalhes {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 20px;
+}
+
+.endereco-detalhes p {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: #4a5568;
+    margin: 15px 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.mapa-google {
+    margin-top: 20px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Botão Voltar */
+.btn-voltar-perfil {
+    background: #edf2f7;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    color: #718096;
+    font-weight: 600;
+    cursor: pointer;
+    align-self: flex-start;
+    margin-top: 10px;
+    transition: 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-voltar-perfil:hover {
+    background: #e2e8f0;
+    color: #2d3748;
+}
+
 
 
 
