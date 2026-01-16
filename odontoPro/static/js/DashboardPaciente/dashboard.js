@@ -38,7 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     carrosselAutomatico();
-    inicializarDataHorario();
     inicializarFiltrosConsultas();
     
     // Inicializar filtros de clínicas
@@ -81,126 +80,11 @@ let clinicaSelecionada = null;
 
 function abrirModalAgendamento(clinicaId) {
     clinicaSelecionada = clinicaId;
-
-    const modal1 = document.getElementById("modal-agendamento-1");
-    const modal2 = document.getElementById("modal-agendamento-2");
-
-    modal1.style.display = "flex";
-    modal2.style.display = "none";
-
-    const selectEspecialidade = modal2.querySelector("select:nth-of-type(1)");
-    const selectMedico = modal2.querySelector("select:nth-of-type(2)");
-    const horarioSelect = document.getElementById("horarioConsulta");
-
-    selectEspecialidade.innerHTML = `<option value="">Selecione uma Especialidade</option>`;
-    selectMedico.innerHTML = `<option value="">Escolha um Profissional</option>`;
-    horarioSelect.innerHTML = `<option value="">Selecione o Horário</option>`;
-
-    fetch(`/clinica/${clinicaId}/detalhes/`)
-        .then(res => res.json())
-        .then(data => {
-            data.especialidades.forEach(e => {
-                selectEspecialidade.innerHTML +=
-                    `<option value="${e[1]}">${e[1]}</option>`;
-            });
-
-            data.medicos.forEach(m => {
-                selectMedico.innerHTML +=
-                    `<option value="${m[0]}">${m[1]}</option>`;
-            });
-        });
+    mostrarTela('perfil-clinica', null);
+    carregarPerfilClinica(clinicaId);
 }
 
-function proximaEtapa() {
-    document.getElementById("modal-agendamento-1").style.display = "none";
-    document.getElementById("modal-agendamento-2").style.display = "flex";
-}
-
-/* ================= DATA → HORÁRIOS ================= */
-function inicializarDataHorario() {
-    const dataInput = document.getElementById("dataConsulta");
-    const horarioSelect = document.getElementById("horarioConsulta");
-
-    if (!dataInput || !horarioSelect) return;
-
-    dataInput.addEventListener("change", () => {
-        horarioSelect.innerHTML = `<option>Carregando horários...</option>`;
-
-        fetch(`/clinica/${clinicaSelecionada}/horarios/?data=${dataInput.value}`)
-            .then(res => res.json())
-            .then(data => {
-                horarioSelect.innerHTML = `<option value="">Selecione o Horário</option>`;
-                if (!data.horarios || !data.horarios.length) {
-                    horarioSelect.innerHTML = `<option value="">Sem horários disponíveis</option>`;
-                    return;
-                }
-                data.horarios.forEach(h => {
-                    horarioSelect.innerHTML += `<option value="${h}">${h}</option>`;
-                });
-            });
-    });
-}
-
-/* ================= CONFIRMAR ================= */
-function confirmarAgendamento() {
-    const modal2 = document.getElementById("modal-agendamento-2");
-
-    const nomeInput = document.querySelector("#modal-agendamento-1 input[type='text']");
-    const emailInput = document.querySelector("#modal-agendamento-1 input[type='email']");
-    const telInput = document.querySelector("#modal-agendamento-1 input[type='tel']");
-
-    const especialidade = modal2.querySelector("select:nth-of-type(1)").value;
-    const medico = modal2.querySelector("select:nth-of-type(2)").value;
-    const data = document.getElementById("dataConsulta").value;
-    const hora = document.getElementById("horarioConsulta").value;
-    const observacoes = document.querySelector("#modal-agendamento-1 textarea").value;
-
-    if (!medico || !data || !hora) {
-        alert("Preencha todos os campos obrigatórios");
-        return;
-    }
-
-    const body = {
-        clinica_id: clinicaSelecionada,
-        medico_id: medico,
-        especialidade,
-        data_hora: `${data} ${hora}`,
-        observacoes
-    };
-
-    if (nomeInput && emailInput && telInput) {
-        body.nome = nomeInput.value;
-        body.email = emailInput.value;
-        body.telefone = telInput.value;
-    }
-
-    fetch("/consulta/agendar/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-CSRFToken": getCookie("csrftoken")
-        },
-        body: new URLSearchParams(body)
-    })
-    .then(res => res.json())
-    .then(res => {
-        if (res.success) {
-            modal2.style.display = "none";
-            document.getElementById("modal-sucesso").style.display = "flex";
-        } else {
-            alert(res.error || "Erro ao agendar consulta");
-        }
-    });
-}
-
-/* ================= CONSULTAS ================= */
-function irParaMeusAgendamentos() {
-    const modal = document.getElementById("modal-sucesso");
-    if (modal) modal.style.display = "none";
-    mostrarTela("consultas", document.querySelectorAll(".item-menu")[1]);
-}
-
-/* ================= FILTROS ================= */
+/* ================= UPLOAD DE FOTO ================= */
 function inicializarFiltrosConsultas() {
     const botoes = document.querySelectorAll(".filtro-btn");
     const cards = document.querySelectorAll(".card-agendamento");
@@ -611,26 +495,6 @@ function enviarAvaliacao(consultaId, clinicaId, medicoId) {
     });
 }
 
-/* ================= MODAIS DE AGENDAMENTO ================= */
-function abrirModalAgendamento(clinicaId) {
-    document.getElementById('modal-agendamento-1').style.display = 'flex';
-}
-
-function proximaEtapa() {
-    document.getElementById('modal-agendamento-1').style.display = 'none';
-    document.getElementById('modal-agendamento-2').style.display = 'flex';
-}
-
-function confirmarAgendamento() {
-    document.getElementById('modal-agendamento-2').style.display = 'none';
-    document.getElementById('modal-sucesso').style.display = 'flex';
-}
-
-function irParaMeusAgendamentos() {
-    document.getElementById('modal-sucesso').style.display = 'none';
-    mostrarTela('consultas', document.querySelectorAll(".item-menu")[1]);
-}
-
 /* ================= UPLOAD DE FOTO ================= */
 document.addEventListener("DOMContentLoaded", () => {
     const fileInput = document.getElementById("fileInput");
@@ -669,15 +533,54 @@ function trocarAba(event, abaId) {
         btn.classList.remove('ativa');
     });
 
-    // Mostra a aba selecionada
-    const abaAtiva = document.getElementById(abaId);
-    if (abaAtiva) {
-        abaAtiva.style.display = 'block';
-        abaAtiva.classList.add('ativa');
-    }
-
     // Ativa o botão clicado
     if (event && event.currentTarget) {
         event.currentTarget.classList.add('ativa');
     }
+}
+
+/* ================= PERFIL DA CLÍNICA ================= */
+function carregarPerfilClinica(clinicaId) {
+    fetch(`/clinica/${clinicaId}/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('conteudo-perfil-clinica').innerHTML = html;
+        })
+        .catch(error => console.error('Erro ao carregar perfil:', error));
+}
+
+function trocarAbaClinica(event, abaId) {
+    // Remove classe ativa de todos os botões e conteúdos
+    document.querySelectorAll('.abas-perfil .aba-item').forEach(btn => btn.classList.remove('ativa'));
+    document.querySelectorAll('.aba-conteudo').forEach(content => content.classList.remove('ativa'));
+
+    // Ativa o botão clicado
+    event.currentTarget.classList.add('ativa');
+
+    // Ativa o conteúdo correspondente
+    const abaConteudo = document.getElementById(`aba-${abaId}`);
+    if (abaConteudo) {
+        abaConteudo.classList.add('ativa');
+    }
+}
+
+/* ================= VOLTAR PARA INÍCIO ================= */
+function voltarParaInicio() {
+    mostrarTela('inicio', document.querySelector(".item-menu"));
+}
+
+/* ================= FUNÇÕES DE AGENDAMENTO ================= */
+function proximaEtapa() {
+    document.getElementById('modal-agendamento-1').style.display = 'none';
+    document.getElementById('modal-agendamento-2').style.display = 'flex';
+}
+
+function confirmarAgendamento() {
+    document.getElementById('modal-agendamento-2').style.display = 'none';
+    document.getElementById('modal-sucesso').style.display = 'flex';
+}
+
+/* ================= IR PARA MEUS AGENDAMENTOS ================= */
+function irParaMeusAgendamentos() {
+    mostrarTela('consultas', document.querySelectorAll(".item-menu")[1]);
 }

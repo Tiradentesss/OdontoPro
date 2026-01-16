@@ -1,0 +1,429 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ clinica.nome }} - OdontoPro</title>
+
+    <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboardresponsivo.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f4f7fe;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .container-clinica {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header-clinica {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .logo-clinica {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .logo-clinica img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .logo-clinica i {
+            font-size: 60px;
+            color: #4db8ff;
+        }
+
+        .info-clinica {
+            flex-grow: 1;
+        }
+
+        .titulo-clinica {
+            font-size: 32px;
+            font-weight: 700;
+            color: #313131;
+            margin-bottom: 10px;
+        }
+
+        .rating-clinica {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stars {
+            color: #ffc107;
+        }
+
+        .avaliacao-texto {
+            color: #6C7293;
+            font-size: 14px;
+        }
+
+        .descricao-clinica {
+            color: #6C7293;
+            font-size: 15px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .contato-clinica {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .contato-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #313131;
+        }
+
+        .contato-item i {
+            color: #4db8ff;
+            font-size: 18px;
+        }
+
+        .secao {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .secao-titulo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #313131;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .grid-medicos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card-medico {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card-medico:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(77, 184, 255, 0.15);
+            border-color: #4db8ff;
+        }
+
+        .foto-medico {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 3px solid white;
+        }
+
+        .foto-medico img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .foto-medico i {
+            font-size: 50px;
+            color: #4db8ff;
+        }
+
+        .nome-medico {
+            font-size: 18px;
+            font-weight: 600;
+            color: #313131;
+            margin-bottom: 8px;
+        }
+
+        .crm-medico {
+            color: #6C7293;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .especialidades-medico {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .badge-especialidade {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .avaliacao-medico {
+            color: #ffc107;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .email-medico {
+            color: #6C7293;
+            font-size: 12px;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+
+        .btn-agendar {
+            background: #4db8ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .btn-agendar:hover {
+            background: #2da5e0;
+        }
+
+        .btn-voltar {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            color: #313131;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        .btn-voltar:hover {
+            background: #e2e8f0;
+        }
+
+        .endereco-clinica {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 4px solid #4db8ff;
+        }
+
+        .endereco-clinica strong {
+            color: #313131;
+        }
+
+        .endereco-clinica p {
+            color: #6C7293;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .sem-medicos {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6C7293;
+        }
+
+        .sem-medicos i {
+            font-size: 48px;
+            color: #cbd5e0;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .header-clinica {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .info-clinica {
+                text-align: center;
+            }
+
+            .contato-clinica {
+                justify-content: center;
+            }
+
+            .titulo-clinica {
+                font-size: 24px;
+            }
+
+            .grid-medicos {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-clinica">
+        <!-- Botão Voltar -->
+        <button class="btn-voltar" onclick="window.history.back()">
+            <i class="fa-solid fa-arrow-left"></i> Voltar
+        </button>
+
+        <!-- Header da Clínica -->
+        <div class="header-clinica">
+            <div class="logo-clinica">
+                {% if clinica.logo %}
+                    <img src="{{ clinica.logo.url }}" alt="{{ clinica.nome }}">
+                {% else %}
+                    <i class="fa-solid fa-hospital"></i>
+                {% endif %}
+            </div>
+
+            <div class="info-clinica">
+                <h1 class="titulo-clinica">{{ clinica.nome }}</h1>
+
+                <div class="rating-clinica">
+                    <span class="stars">
+                        {% for i in "12345" %}
+                            {% if i|add:"0" <= clinica.avaliacao|floatformat:0 %}
+                                <i class="fa-solid fa-star"></i>
+                            {% elif i|add:"0"|add:"-1" < clinica.avaliacao|floatformat:0 %}
+                                <i class="fa-solid fa-star-half-stroke"></i>
+                            {% else %}
+                                <i class="fa-regular fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                    <span class="avaliacao-texto">
+                        <strong>{{ clinica.avaliacao }}</strong> ({{ clinica.num_avaliacoes }} avaliações)
+                    </span>
+                </div>
+
+                {% if clinica.descricao %}
+                    <p class="descricao-clinica">{{ clinica.descricao }}</p>
+                {% endif %}
+
+                <div class="contato-clinica">
+                    <div class="contato-item">
+                        <i class="fa-solid fa-phone"></i>
+                        <span>{{ clinica.telefone }}</span>
+                    </div>
+                    {% if clinica.preco_consulta %}
+                        <div class="contato-item">
+                            <i class="fa-solid fa-money-bill"></i>
+                            <span>R$ {{ clinica.preco_consulta|floatformat:2 }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="endereco-clinica">
+                    <strong><i class="fa-solid fa-map-pin"></i> Localização</strong>
+                    <p>{{ clinica.endereco.rua }}, {{ clinica.endereco.numero }}</p>
+                    <p>{{ clinica.endereco.bairro }}, {{ clinica.endereco.cidade }} - {{ clinica.endereco.estado }}</p>
+                    <p>CEP: {{ clinica.endereco.cep }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Médicos -->
+        <div class="secao">
+            <h2 class="secao-titulo">
+                <i class="fa-solid fa-user-doctor"></i> Médicos e Especialistas
+            </h2>
+
+            {% if medicos %}
+                <div class="grid-medicos">
+                    {% for medico in medicos %}
+                        <div class="card-medico">
+                            <div class="foto-medico">
+                                {% if medico.foto %}
+                                    <img src="{{ medico.foto.url }}" alt="{{ medico.nome }}">
+                                {% else %}
+                                    <i class="fa-solid fa-user-doctor"></i>
+                                {% endif %}
+                            </div>
+
+                            <div class="nome-medico">{{ medico.nome }}</div>
+                            <div class="crm-medico">CRM/CRO: {{ medico.crm_cro }}</div>
+
+                            {% if medico.especialidades.all %}
+                                <div class="especialidades-medico">
+                                    {% for esp in medico.especialidades.all %}
+                                        <span class="badge-especialidade">{{ esp.nome }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="avaliacao-medico">
+                                ⭐ {{ medico.avaliacao }}/5.0
+                            </div>
+
+                            <div class="email-medico">{{ medico.email }}</div>
+
+                            <button class="btn-agendar" onclick="alert('Agendamento em breve!')">
+                                📅 Agendar Consulta
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="sem-medicos">
+                    <i class="fa-solid fa-stethoscope"></i>
+                    <p>Nenhum médico cadastrado nesta clínica.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Rodapé -->
+        <div style="text-align: center; color: #6C7293; font-size: 14px; margin-top: 40px; padding: 20px;">
+            <p>&copy; 2026 OdontoPro - Todos os direitos reservados</p>
+        </div>
+    </div>
+</body>
+</html>
