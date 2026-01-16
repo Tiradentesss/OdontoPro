@@ -610,3 +610,74 @@ function enviarAvaliacao(consultaId, clinicaId, medicoId) {
         alert("Erro ao enviar avaliação! Verifique o console.");
     });
 }
+
+/* ================= MODAIS DE AGENDAMENTO ================= */
+function abrirModalAgendamento(clinicaId) {
+    document.getElementById('modal-agendamento-1').style.display = 'flex';
+}
+
+function proximaEtapa() {
+    document.getElementById('modal-agendamento-1').style.display = 'none';
+    document.getElementById('modal-agendamento-2').style.display = 'flex';
+}
+
+function confirmarAgendamento() {
+    document.getElementById('modal-agendamento-2').style.display = 'none';
+    document.getElementById('modal-sucesso').style.display = 'flex';
+}
+
+function irParaMeusAgendamentos() {
+    document.getElementById('modal-sucesso').style.display = 'none';
+    mostrarTela('consultas', document.querySelectorAll(".item-menu")[1]);
+}
+
+/* ================= UPLOAD DE FOTO ================= */
+document.addEventListener("DOMContentLoaded", () => {
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("previewFoto");
+    const container = document.querySelector(".upload-foto-container");
+
+    if (fileInput) {
+        fileInput.addEventListener("change", function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = () => {
+                preview.src = reader.result;
+                if (container) {
+                    container.classList.add("has-image");
+                }
+            };
+
+            reader.readAsDataURL(file);
+        });
+    }
+});
+
+/* ================= ABAS DE CONFIGURAÇÃO ================= */
+function trocarAba(event, abaId) {
+    // Esconde todos os conteúdos das abas
+    document.querySelectorAll('.conteudo-aba').forEach(aba => {
+        aba.classList.remove('ativa');
+        aba.style.display = 'none';
+    });
+
+    // Remove classe ativa dos botões
+    document.querySelectorAll('.aba-item').forEach(btn => {
+        btn.classList.remove('ativa');
+    });
+
+    // Mostra a aba selecionada
+    const abaAtiva = document.getElementById(abaId);
+    if (abaAtiva) {
+        abaAtiva.style.display = 'block';
+        abaAtiva.classList.add('ativa');
+    }
+
+    // Ativa o botão clicado
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('ativa');
+    }
+}

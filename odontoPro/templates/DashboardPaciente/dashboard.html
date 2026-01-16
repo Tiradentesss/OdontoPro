@@ -17,7 +17,6 @@
 
 <body>
 
-<!-- MENU LATERAL -->
 <nav class="menu-lateral" id="menuLateral">
     <button class="botao-seta" onclick="alternarMenu()" id="botaoSeta">
         <i class="fa-solid fa-chevron-right"></i>
@@ -29,17 +28,17 @@
     </div>
 
     <div class="itens-navegacao">
-        <div class="item-menu ativo" onclick="mostrarTela('inicio', this)">
+        <div class="item-menu ativo" data-tela="inicio" onclick="mostrarTela('inicio', this)">
             <i class="fa-solid fa-house"></i>
             <span class="legenda">Página Inicial</span>
         </div>
 
-        <div class="item-menu" onclick="mostrarTela('consultas', this)">
+        <div class="item-menu" data-tela="consultas" onclick="mostrarTela('consultas', this)">
             <i class="fa-solid fa-tooth"></i>
             <span class="legenda">Minhas Consultas</span>
         </div>
 
-        <div class="item-menu" onclick="mostrarTela('ajustes', this)">
+        <div class="item-menu" data-tela="ajustes" onclick="mostrarTela('ajustes', this)">
             <i class="fa-solid fa-gear"></i>
             <span class="legenda">Ajustes</span>
         </div>
@@ -498,45 +497,6 @@
 
 </main>
 </div>
-
-<script>
-function mostrarTela(id, el) {
-    document.querySelectorAll(".tela").forEach(sec => sec.classList.remove("ativa"));
-    document.getElementById(id).classList.add("ativa");
-
-    document.querySelectorAll(".item-menu").forEach(i => i.classList.remove("ativo"));
-    el.classList.add("ativo");
-}
-
-function alternarMenu() {
-    document.getElementById("menuLateral").classList.toggle("fechado");
-}
-
-function abrirDetalhes(id) {
-    document.getElementById("modal-" + id).classList.add("mostrar");
-}
-
-function fecharDetalhes(id) {
-    document.getElementById("modal-" + id).classList.remove("mostrar");
-}
-
-// 🔹 Funções para modais de agendamento
-function abrirModalAgendamento(clinicaId) {
-    document.getElementById('modal-agendamento-1').style.display = 'flex';
-}
-function proximaEtapa() {
-    document.getElementById('modal-agendamento-1').style.display = 'none';
-    document.getElementById('modal-agendamento-2').style.display = 'flex';
-}
-function confirmarAgendamento() {
-    document.getElementById('modal-agendamento-2').style.display = 'none';
-    document.getElementById('modal-sucesso').style.display = 'flex';
-}
-function irParaMeusAgendamentos() {
-    document.getElementById('modal-sucesso').style.display = 'none';
-    mostrarTela('consultas', document.querySelector(".item-menu[data-tela='consultas']") || document.querySelectorAll(".item-menu")[1]);
-}
-</script>
 
 </body>
 </html>
