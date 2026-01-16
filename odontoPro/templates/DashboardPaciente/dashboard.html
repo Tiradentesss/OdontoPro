@@ -435,44 +435,5 @@
 </main>
 </div>
 
-<script>
-function mostrarTela(id, el) {
-    document.querySelectorAll(".tela").forEach(sec => sec.classList.remove("ativa"));
-    document.getElementById(id).classList.add("ativa");
-
-    document.querySelectorAll(".item-menu").forEach(i => i.classList.remove("ativo"));
-    el.classList.add("ativo");
-}
-
-function alternarMenu() {
-    document.getElementById("menuLateral").classList.toggle("fechado");
-}
-
-function abrirDetalhes(id) {
-    document.getElementById("modal-" + id).classList.add("mostrar");
-}
-
-function fecharDetalhes(id) {
-    document.getElementById("modal-" + id).classList.remove("mostrar");
-}
-
-// 🔹 Funções para modais de agendamento
-function abrirModalAgendamento(clinicaId) {
-    document.getElementById('modal-agendamento-1').style.display = 'flex';
-}
-function proximaEtapa() {
-    document.getElementById('modal-agendamento-1').style.display = 'none';
-    document.getElementById('modal-agendamento-2').style.display = 'flex';
-}
-function confirmarAgendamento() {
-    document.getElementById('modal-agendamento-2').style.display = 'none';
-    document.getElementById('modal-sucesso').style.display = 'flex';
-}
-function irParaMeusAgendamentos() {
-    document.getElementById('modal-sucesso').style.display = 'none';
-    mostrarTela('consultas', document.querySelector(".item-menu[data-tela='consultas']") || document.querySelectorAll(".item-menu")[1]);
-}
-</script>
-
 </body>
 </html>
