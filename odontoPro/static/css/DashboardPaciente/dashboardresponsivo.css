@@ -3,10 +3,23 @@
     .header-clinicas {
         flex-direction: column;
         align-items: stretch;
+        flex-wrap: wrap;
     }
 
     .controles-busca {
+        width: 100%;
         max-width: 100%;
+        justify-content: space-between;
+    }
+
+    .campo-busca {
+        width: 100% !important;
+        max-width: 300px;
+    }
+
+    .grid-clinicas {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 15px;
     }
 }
 
@@ -115,11 +128,17 @@
 
     .controles-busca {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
+        width: 100%;
     }
 
-    .campo-busca, .btn-filtro {
+    .campo-busca {
+        width: 100% !important;
+    }
+
+    .btn-filtro {
         width: 100%;
+        flex: 1;
     }
 
     .area-conteudo {
@@ -128,6 +147,15 @@
     }
 
     .grid-clinicas {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .dropdown-filtro,
+    #dropdownFiltroLocalizacao {
+        width: calc(100vw - 30px) !important;
+        max-width: 100%;
+    }
         grid-template-columns: 1fr;
     }
 

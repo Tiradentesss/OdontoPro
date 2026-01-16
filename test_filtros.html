@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste de Filtros</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f7fe;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        h1 {
+            color: #313131;
+            margin-bottom: 20px;
+        }
+        
+        .status {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            color: #2e7d32;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+        }
+        
+        .status.warning {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            color: #e65100;
+        }
+        
+        .button-group {
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #4db8ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #2da5e0;
+        }
+        
+        .test-log {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        
+        .test-log .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .test-log .log-entry:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Teste de Filtros OdontoPro</h1>
+        
+        <div id="statusContainer"></div>
+        
+        <div class="button-group">
+            <button onclick="runTests()">▶ Executar Testes</button>
+            <button onclick="clearLog()">🗑️ Limpar Log</button>
+        </div>
+        
+        <div class="test-log" id="testLog"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('testLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : type === 'warning' ? '⚠' : 'ℹ';
+            
+            entry.textContent = `[${timestamp}] ${icon} ${message}`;
+            entry.style.color = type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : type === 'warning' ? '#ff9800' : '#999';
+            
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('testLog').innerHTML = '';
+            log('Log limpo');
+        }
+        
+        function updateStatus(html) {
+            document.getElementById('statusContainer').innerHTML = html;
+        }
+        
+        function runTests() {
+            clearLog();
+            log('===== INICIANDO TESTES =====', 'info');
+            
+            let passed = 0;
+            let failed = 0;
+            
+            // Teste 1: Verificar elementos HTML
+            log('Teste 1: Verificando elementos HTML...', 'info');
+            
+            const btnFiltro = document.getElementById('btnFiltro');
+            const dropdown = document.getElementById('dropdownFiltro');
+            const btnFiltroLoc = document.getElementById('btnFiltroLocalizacao');
+            const dropdownLoc = document.getElementById('dropdownFiltroLocalizacao');
+            
+            if (!btnFiltro) {
+                log('❌ Botão de filtro de estrelas não encontrado', 'error');
+                failed++;
+            } else {
+                log('✓ Botão de filtro de estrelas encontrado', 'success');
+                passed++;
+            }
+            
+            if (!dropdown) {
+                log('❌ Dropdown de estrelas não encontrado', 'error');
+                failed++;
+            } else {
+                log('✓ Dropdown de estrelas encontrado', 'success');
+                passed++;
+            }
+            
+            if (!btnFiltroLoc) {
+                log('❌ Botão de filtro de localização não encontrado', 'error');
+                failed++;
+            } else {
+                log('✓ Botão de filtro de localização encontrado', 'success');
+                passed++;
+            }
+            
+            // Teste 2: Verificar funções
+            log('Teste 2: Verificando funções JavaScript...', 'info');
+            
+            if (typeof initFiltroEstrelas !== 'function') {
+                log('❌ Função initFiltroEstrelas não está definida', 'error');
+                failed++;
+            } else {
+                log('✓ Função initFiltroEstrelas está definida', 'success');
+                passed++;
+            }
+            
+            if (typeof initFiltroLocalizacao !== 'function') {
+                log('❌ Função initFiltroLocalizacao não está definida', 'error');
+                failed++;
+            } else {
+                log('✓ Função initFiltroLocalizacao está definida', 'success');
+                passed++;
+            }
+            
+            if (typeof aplicarFiltros !== 'function') {
+                log('❌ Função aplicarFiltros não está definida', 'error');
+                failed++;
+            } else {
+                log('✓ Função aplicarFiltros está definida', 'success');
+                passed++;
+            }
+            
+            // Teste 3: Verificar CSS
+            log('Teste 3: Verificando estilos CSS...', 'info');
+            
+            if (dropdown) {
+                const computedStyle = window.getComputedStyle(dropdown);
+                const zIndex = computedStyle.zIndex;
+                if (zIndex === 'auto' || parseInt(zIndex) < 100) {
+                    log(`⚠ z-index do dropdown pode estar baixo: ${zIndex}`, 'warning');
+                } else {
+                    log(`✓ z-index do dropdown está correto: ${zIndex}`, 'success');
+                    passed++;
+                }
+            }
+            
+            // Resultado final
+            log('===== FIM DOS TESTES =====', 'info');
+            log(`Testes passaram: ${passed} | Testes falharam: ${failed}`, passed > 0 && failed === 0 ? 'success' : failed > 0 ? 'error' : 'warning');
+            
+            // Update status
+            const statusHtml = `
+                <div class="status ${failed > 0 ? 'error' : 'success'}">
+                    <strong>Resultado:</strong> ${passed} ✓ | ${failed} ✗
+                </div>
+            `;
+            updateStatus(statusHtml);
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', function() {
+            log('Página carregada. Clique em "Executar Testes" para começar.');
+        });
+    </script>
+</body>
+</html>

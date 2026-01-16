@@ -40,6 +40,10 @@ document.addEventListener("DOMContentLoaded", () => {
     carrosselAutomatico();
     inicializarDataHorario();
     inicializarFiltrosConsultas();
+    
+    // Inicializar filtros de clínicas
+    initFiltroEstrelas("btnFiltro", "dropdownFiltro");
+    initFiltroLocalizacao("btnFiltroLocalizacao", "dropdownFiltroLocalizacao");
 });
 
 let indice = 0;
@@ -294,6 +298,8 @@ fileInput.addEventListener("change", () => {
 });
 
 /* ================= FILTRO DE ESTRELAS ================= */
+let filtroEstrelasSelecionado = 0; // Armazenar filtro selecionado
+
 function initFiltroEstrelas(btnId, dropdownId) {
     const btnFiltro = document.getElementById(btnId);
     const dropdown = document.getElementById(dropdownId);
@@ -317,6 +323,9 @@ function initFiltroEstrelas(btnId, dropdownId) {
             
             console.log(`Filtro de ${estrelas} estrelas selecionado`);
             
+            // Armazenar filtro selecionado
+            filtroEstrelasSelecionado = estrelas;
+            
             // Filtrar clínicas
             aplicarFiltros();
             
@@ -324,7 +333,8 @@ function initFiltroEstrelas(btnId, dropdownId) {
             dropdown.classList.remove("mostrar");
             
             // Atualizar texto do botão
-            btnFiltro.innerHTML = `<i class="fa-solid fa-star"></i> ${opcao.textContent} <i class="fa-solid fa-chevron-down"></i>`;
+            const textoOpcao = opcao.textContent.trim();
+            btnFiltro.innerHTML = `<i class="fa-solid fa-star"></i> ${textoOpcao} <i class="fa-solid fa-chevron-down"></i>`;
         });
     });
 
@@ -349,6 +359,9 @@ function initFiltroEstrelas(btnId, dropdownId) {
         e.stopPropagation();
         
         console.log("Filtro de estrelas limpo");
+        
+        // Resetar filtro
+        filtroEstrelasSelecionado = 0;
         
         // Resetar texto do botão
         btnFiltro.innerHTML = `<i class="fa-solid fa-star"></i> Avaliação <i class="fa-solid fa-chevron-down"></i>`;
@@ -490,23 +503,10 @@ function aplicarFiltros() {
 
 /* ================= FUNÇÃO AUXILIAR PARA OBTER FILTRO DE ESTRELAS ================= */
 function obterFiltroEstrelas() {
-    const btnFiltro = document.getElementById("btnFiltro");
-    const texto = btnFiltro.textContent;
-    
-    if (texto.includes("1 estrela")) return 1;
-    if (texto.includes("2 estrelas")) return 2;
-    if (texto.includes("3 estrelas")) return 3;
-    if (texto.includes("4 estrelas")) return 4;
-    if (texto.includes("5 estrelas")) return 5;
-    
-    return 0;
+    // Usar a variável global em vez de tentar parsear o texto do botão
+    return filtroEstrelasSelecionado;
 }
 
-// Inicializar filtros
-document.addEventListener("DOMContentLoaded", () => {
-    initFiltroEstrelas("btnFiltro", "dropdownFiltro");
-    initFiltroLocalizacao("btnFiltroLocalizacao", "dropdownFiltroLocalizacao");
-});
 /* ================= AVALIAÇÃO ================= */
 let avaliacoesSelecionadas = {}; // Armazenar avaliação por consulta
 
