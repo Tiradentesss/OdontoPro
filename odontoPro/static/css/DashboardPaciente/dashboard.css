@@ -378,7 +378,7 @@ body {
     position: relative;     /* Necessário para posicionar o dropdown em relação ao botão */
     display: inline-block;  /* Mantém botão e dropdown juntos */
     flex-shrink: 0;         /* Não encolhe */
-    z-index: 10;            /* Para garantir que o dropdown fica acima */
+    z-index: 1001;            /* Para garantir que o dropdown fica acima */
 }
 
 /* Dropdown de avaliação */
@@ -733,7 +733,7 @@ body {
     background: linear-gradient(135deg, rgba(255, 184, 0, 0.05) 0%, rgba(255, 184, 0, 0.02) 100%);
     animation: slideDown 0.3s ease-out;
     position: relative;
-    z-index: 200;
+    z-index: 1000;
 }
 
 @keyframes slideDown {
