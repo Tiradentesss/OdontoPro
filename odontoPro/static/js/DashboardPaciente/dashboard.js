@@ -1,3 +1,6 @@
+/* ================= VARIÁVEIS GLOBAIS ================= */
+let filtroEstrelasSelecionado = 0;
+
 /* ================= MENU LATERAL ================= */
 function alternarMenu() {
     document.getElementById("menuLateral").classList.toggle("fechado");
@@ -23,7 +26,6 @@ function mostrarTela(id, btn) {
     }
 }
 
-/* ================= BUSCA + CARROSSEL ================= */
 document.addEventListener("DOMContentLoaded", () => {
     const inputBusca = document.getElementById("inputBuscaClinica");
 
@@ -46,7 +48,64 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Fechar modais ao clicar fora
     inicializarFechoDeModais();
+    
+    // Adicionar listener para validação de email em tempo real
+    const emailInput = document.getElementById('inputEmail');
+    if (emailInput) {
+        emailInput.addEventListener('blur', validarCampoEmail);
+    }
+    
+    // Listener para resize - readjustar dropdowns se necessário
+    window.addEventListener("resize", () => {
+        const dropdownAtivoAval = document.getElementById("dropdownFiltro");
+        const dropdownAtivoLoc = document.getElementById("dropdownFiltroLocalizacao");
+        
+        if (dropdownAtivoAval && dropdownAtivoAval.classList.contains("mostrar")) {
+            ajustarPosicaoDropdown(dropdownAtivoAval, document.getElementById("btnFiltro"));
+        }
+        
+        if (dropdownAtivoLoc && dropdownAtivoLoc.classList.contains("mostrar")) {
+            ajustarPosicaoDropdown(dropdownAtivoLoc, document.getElementById("btnFiltroLocalizacao"));
+        }
+    });
 });
+
+/* ================= FUNÇÃO PARA AJUSTAR POSIÇÃO DO DROPDOWN ================= */
+function ajustarPosicaoDropdown(dropdown, botao) {
+    // Aguardar um pouco para garantir que o dropdown está renderizado com display:flex
+    setTimeout(() => {
+        const botaoRect = botao.getBoundingClientRect();
+        const dropdownRect = dropdown.getBoundingClientRect();
+        const parent = botao.parentElement;
+        
+        // Reset para calcular corretamente
+        dropdown.style.left = "0";
+        dropdown.style.right = "auto";
+        dropdown.style.top = "calc(100% + 5px)";
+        dropdown.style.bottom = "auto";
+        
+        // Recalcular após reset
+        const newDropdownRect = dropdown.getBoundingClientRect();
+        
+        // Verificar se sai da tela à direita
+        if (newDropdownRect.right > window.innerWidth - 15) {
+            dropdown.style.left = "auto";
+            dropdown.style.right = "0";
+        } else {
+            dropdown.style.left = "0";
+        }
+        
+        // Verificar se sai da tela para baixo
+        const finalDropdownRect = dropdown.getBoundingClientRect();
+        if (finalDropdownRect.bottom > window.innerHeight - 60) {
+            dropdown.style.top = "auto";
+            dropdown.style.bottom = "calc(100% + 5px)";
+        } else {
+            dropdown.style.top = "calc(100% + 5px)";
+            dropdown.style.bottom = "auto";
+        }
+    }, 50);
+}
 
 let indice = 0;
 function carrosselAutomatico() {
@@ -92,6 +151,10 @@ function abrirModalAgendamentoClinica() {
     const modal = document.getElementById('modal-agendamento-1');
     if (modal) {
         modal.style.display = 'flex';
+        // Scroll suave para o modal
+        setTimeout(() => {
+            modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 50);
     }
 }
 
@@ -178,41 +241,38 @@ function trocarAba(event, abaId) {
     }
 }
 
-document.getElementById("fileInput").addEventListener("change", function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const img = document.getElementById("previewFoto");
-    img.src = URL.createObjectURL(file);
-    img.style.display = "block";
-});
-
+/* ================= UPLOAD DE FOTO ================= */
 const fileInput = document.getElementById("fileInput");
 const preview = document.getElementById("previewFoto");
 const container = document.querySelector(".upload-foto-container");
 
-fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
+// Apenas um listener para fileInput
+if (fileInput) {
+    fileInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    if (file) {
         const reader = new FileReader();
 
         reader.onload = () => {
-            preview.src = reader.result;
-            container.classList.add("has-image");
+            if (preview) {
+                preview.src = reader.result;
+                preview.style.display = "block";
+            }
+            if (container) {
+                container.classList.add("has-image");
+            }
         };
 
         reader.readAsDataURL(file);
-    }
-});
+    });
+}
 
 /* ================= FILTRO DE ESTRELAS ================= */
-let filtroEstrelasSelecionado = 0; // Armazenar filtro selecionado
-
 function initFiltroEstrelas(btnId, dropdownId) {
     const btnFiltro = document.getElementById(btnId);
     const dropdown = document.getElementById(dropdownId);
-    const opcoes = dropdown.querySelectorAll(".opcao");
+    const opcoes = dropdown ? dropdown.querySelectorAll(".opcao") : [];
     const listaClinicas = document.getElementById("listaClinicas");
 
     if (!btnFiltro || !dropdown) return; // segurança
@@ -227,6 +287,11 @@ function initFiltroEstrelas(btnId, dropdownId) {
         }
         
         dropdown.classList.toggle("mostrar");
+        
+        // Ajustar posição do dropdown se necessário
+        if (dropdown.classList.contains("mostrar")) {
+            setTimeout(() => ajustarPosicaoDropdown(dropdown, btnFiltro), 0);
+        }
     });
 
     // Adicionar evento click em cada opção de estrelas
@@ -301,13 +366,13 @@ function initFiltroLocalizacao(btnId, dropdownId) {
     const btnLimpar = document.getElementById("btnLimparFiltroLocalizacao");
     const listaClinicas = document.getElementById("listaClinicas");
 
-    if (!btnFiltro || !dropdown) return;
+    if (!btnFiltro || !dropdown || !selectEstado || !selectCidade) return;
 
     // Obter lista de estados únicos das clínicas
     const estados = new Set();
     const cidades = new Map(); // Map de estado -> Set de cidades
 
-    const cards = listaClinicas.querySelectorAll(".card-clinica");
+    const cards = listaClinicas ? listaClinicas.querySelectorAll(".card-clinica") : [];
     cards.forEach(card => {
         const estado = card.getAttribute("data-estado") || "";
         const cidade = card.getAttribute("data-cidade") || "";
@@ -359,12 +424,14 @@ function initFiltroLocalizacao(btnId, dropdownId) {
     });
 
     // Evento de botão limpar
-    btnLimpar.addEventListener("click", () => {
-        selectEstado.value = "";
-        selectCidade.value = "";
-        selectCidade.innerHTML = '<option value="">Todas as cidades</option>';
-        aplicarFiltros();
-    });
+    if (btnLimpar) {
+        btnLimpar.addEventListener("click", () => {
+            selectEstado.value = "";
+            selectCidade.value = "";
+            selectCidade.innerHTML = '<option value="">Todas as cidades</option>';
+            aplicarFiltros();
+        });
+    }
 
     // Toggle dropdown
     btnFiltro.addEventListener("click", (e) => {
@@ -377,6 +444,11 @@ function initFiltroLocalizacao(btnId, dropdownId) {
         }
         
         dropdown.classList.toggle("mostrar");
+        
+        // Ajustar posição do dropdown se necessário
+        if (dropdown.classList.contains("mostrar")) {
+            setTimeout(() => ajustarPosicaoDropdown(dropdown, btnFiltro), 0);
+        }
     });
 
     // Fechar dropdown ao clicar fora
@@ -391,10 +463,13 @@ function initFiltroLocalizacao(btnId, dropdownId) {
 function aplicarFiltros() {
     const cards = document.querySelectorAll(".card-clinica");
     
-    // Obter filtros
+    // Obter filtros com verificação de nulidade
     const filtroEstrelas = parseInt(obterFiltroEstrelas()) || 0;
-    const filtroEstado = document.getElementById("selectEstado").value || "";
-    const filtroCidade = document.getElementById("selectCidade").value || "";
+    const selectEstado = document.getElementById("selectEstado");
+    const selectCidade = document.getElementById("selectCidade");
+    
+    const filtroEstado = selectEstado ? (selectEstado.value || "") : "";
+    const filtroCidade = selectCidade ? (selectCidade.value || "") : "";
     
     console.log(`Aplicando filtros: estrelas=${filtroEstrelas}, estado=${filtroEstado}, cidade=${filtroCidade}`);
     
@@ -488,7 +563,8 @@ function enviarAvaliacao(consultaId, clinicaId, medicoId) {
         return;
     }
     
-    const comentario = document.getElementById(`comentario-${consultaId}`).value;
+    const comentarioInput = document.getElementById(`comentario-${consultaId}`);
+    const comentario = comentarioInput ? comentarioInput.value : "";
     const csrfToken = getCookie("csrftoken");
     
     console.log(`Enviando: nota=${nota}, comentário=${comentario}, csrf=${csrfToken}`);
@@ -559,29 +635,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-/* ================= ABAS DE CONFIGURAÇÃO ================= */
-function trocarAba(event, abaId) {
-    // Esconde todos os conteúdos das abas
-    document.querySelectorAll('.conteudo-aba').forEach(aba => {
-        aba.classList.remove('ativa');
-        aba.style.display = 'none';
-    });
-
-    // Remove classe ativa dos botões
-    document.querySelectorAll('.aba-item').forEach(btn => {
-        btn.classList.remove('ativa');
-    });
-
-    // Ativa o botão clicado
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('ativa');
-    }
-}
-
 /* ================= PERFIL DA CLÍNICA ================= */
 function carregarPerfilClinica(clinicaId) {
-    // Função para carregar dados da clínica dinamicamente (implementado no futuro com API)
+    // Função para carregar dados da clínica dinamicamente
     console.log('Perfil da clínica carregado:', clinicaId);
+    
+    // Buscar o card da clínica para preencher informações
+    const clinicaCard = document.querySelector(`[data-clinica-id="${clinicaId}"]`);
+    if (clinicaCard) {
+        const nome = clinicaCard.querySelector("h3")?.textContent || "Clínica";
+        const endereco = clinicaCard.getAttribute("data-endereco") || "Endereço não disponível";
+        const telefone = clinicaCard.getAttribute("data-telefone") || "Telefone não disponível";
+        
+        // Atualizar as informações no perfil (se houver elementos)
+        const nomeElemento = document.querySelector("#perfil-clinica .nome-clinica");
+        const enderecoElemento = document.querySelector("#perfil-clinica .endereco-clinica");
+        const telefoneElemento = document.querySelector("#perfil-clinica .telefone-clinica");
+        
+        if (nomeElemento) nomeElemento.textContent = nome;
+        if (enderecoElemento) enderecoElemento.textContent = endereco;
+        if (telefoneElemento) telefoneElemento.textContent = telefone;
+    }
 }
 
 function trocarAbaClinica(event, abaId) {
@@ -629,11 +703,20 @@ function validarCampoEmail() {
 
 function proximaEtapa() {
     // Validar campos obrigatórios do primeiro modal
-    const nome = document.getElementById('inputNome').value.trim();
-    const email = document.getElementById('inputEmail').value.trim();
-    const telefone = document.getElementById('inputTelefone').value.trim();
+    const nomeInput = document.getElementById('inputNome');
+    const emailInput = document.getElementById('inputEmail');
+    const telefoneInput = document.getElementById('inputTelefone');
     const genero = document.querySelector('input[name="gender"]:checked');
     const idade = document.querySelector('input[name="age"]:checked');
+    
+    if (!nomeInput || !emailInput || !telefoneInput) {
+        alert('Erro ao acessar formulário. Recarregue a página.');
+        return;
+    }
+    
+    const nome = nomeInput.value.trim();
+    const email = emailInput.value.trim();
+    const telefone = telefoneInput.value.trim();
     
     if (!nome) {
         alert('Por favor, digite seu nome completo.');
@@ -661,16 +744,29 @@ function proximaEtapa() {
     }
     
     // Se validação passou, prosseguir
-    document.getElementById('modal-agendamento-1').style.display = 'none';
-    document.getElementById('modal-agendamento-2').style.display = 'flex';
+    const modal1 = document.getElementById('modal-agendamento-1');
+    const modal2 = document.getElementById('modal-agendamento-2');
+    
+    if (modal1) modal1.style.display = 'none';
+    if (modal2) modal2.style.display = 'flex';
 }
 
 function confirmarAgendamento() {
     // Validar campos do segundo modal
-    const especialidade = document.getElementById('selectEspecialidade').value;
-    const profissional = document.getElementById('selectProfissional').value;
-    const data = document.getElementById('inputData').value;
-    const horario = document.getElementById('selectHorario').value;
+    const selectEspecialidade = document.getElementById('selectEspecialidade');
+    const selectProfissional = document.getElementById('selectProfissional');
+    const inputData = document.getElementById('inputData');
+    const selectHorario = document.getElementById('selectHorario');
+    
+    if (!selectEspecialidade || !selectProfissional || !inputData || !selectHorario) {
+        alert('Erro ao acessar formulário. Recarregue a página.');
+        return;
+    }
+    
+    const especialidade = selectEspecialidade.value;
+    const profissional = selectProfissional.value;
+    const data = inputData.value;
+    const horario = selectHorario.value;
     
     if (!especialidade) {
         alert('Por favor, selecione uma especialidade.');
@@ -693,15 +789,22 @@ function confirmarAgendamento() {
     }
     
     // Se validação passou, mostrar sucesso
-    document.getElementById('modal-agendamento-2').style.display = 'none';
-    document.getElementById('modal-sucesso').style.display = 'flex';
+    const modal2 = document.getElementById('modal-agendamento-2');
+    const modalSucesso = document.getElementById('modal-sucesso');
+    
+    if (modal2) modal2.style.display = 'none';
+    if (modalSucesso) modalSucesso.style.display = 'flex';
 }
 
 /* Funções para fechar os modais */
 function fecharModalAgendamento() {
-    document.getElementById('modal-agendamento-1').style.display = 'none';
-    document.getElementById('modal-agendamento-2').style.display = 'none';
-    document.getElementById('modal-sucesso').style.display = 'none';
+    const modal1 = document.getElementById('modal-agendamento-1');
+    const modal2 = document.getElementById('modal-agendamento-2');
+    const modalSucesso = document.getElementById('modal-sucesso');
+    
+    if (modal1) modal1.style.display = 'none';
+    if (modal2) modal2.style.display = 'none';
+    if (modalSucesso) modalSucesso.style.display = 'none';
     
     // Resetar formulário
     limparFormularioAgendamento();
@@ -709,14 +812,15 @@ function fecharModalAgendamento() {
 
 /* Função para limpar o formulário de agendamento */
 function limparFormularioAgendamento() {
-    document.getElementById('inputNome').value = '';
-    document.getElementById('inputEmail').value = '';
-    document.getElementById('inputTelefone').value = '';
-    document.getElementById('inputSintomas').value = '';
-    document.getElementById('selectEspecialidade').value = '';
-    document.getElementById('selectProfissional').value = '';
-    document.getElementById('inputData').value = '';
-    document.getElementById('selectHorario').value = '';
+    const campos = [
+        'inputNome', 'inputEmail', 'inputTelefone', 'inputSintomas',
+        'selectEspecialidade', 'selectProfissional', 'inputData', 'selectHorario'
+    ];
+    
+    campos.forEach(id => {
+        const campo = document.getElementById(id);
+        if (campo) campo.value = '';
+    });
     
     // Limpar radio buttons
     document.querySelectorAll('input[name="gender"]').forEach(r => r.checked = false);

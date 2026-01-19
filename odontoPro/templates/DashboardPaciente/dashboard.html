@@ -422,14 +422,14 @@
 
                 <!-- 🔹 Seção de Avaliação com Estrelas (inicialmente oculta) -->
                 <div class="avaliacao-section" id="avaliacao-{{ cons.id }}" style="display: none; margin-top: 15px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
-                    <h4 style="margin-bottom: 10px;">Avaliar Consulta</h4>
+                    <h4 style="margin-bottom: 15px;">⭐ Avaliar Consulta</h4>
                     
-                    <div class="avaliacao-stars" style="display: flex; gap: 10px; margin-bottom: 15px; font-size: 28px;">
-                        <span class="star" data-valor="1" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
-                        <span class="star" data-valor="2" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
-                        <span class="star" data-valor="3" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
-                        <span class="star" data-valor="4" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
-                        <span class="star" data-valor="5" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer; color: #ddd;">★</span>
+                    <div class="avaliacao-stars" style="display: flex; gap: 10px; margin-bottom: 15px; font-size: 32px; justify-content: center;">
+                        <span class="star" data-valor="1" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                        <span class="star" data-valor="2" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                        <span class="star" data-valor="3" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                        <span class="star" data-valor="4" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                        <span class="star" data-valor="5" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
                     </div>
 
                     <textarea id="comentario-{{ cons.id }}" placeholder="Deixe um comentário sobre a consulta (opcional)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; min-height: 80px;"></textarea>
