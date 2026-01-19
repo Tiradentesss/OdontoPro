@@ -313,9 +313,10 @@ function initFiltroEstrelas(btnId, dropdownId) {
             // Fechar dropdown
             dropdown.classList.remove("mostrar");
             
-            // Atualizar texto do botão
+            // Atualizar texto do botão - removendo a estrela preta (⭐) e mantendo só as estrelas amarelas
             const textoOpcao = opcao.textContent.trim();
-            btnFiltro.innerHTML = `<i class="fa-solid fa-star"></i> ${textoOpcao} <i class="fa-solid fa-chevron-down"></i>`;
+            const textoSemEstrelaAlternativa = textoOpcao.replace(/^⭐\s*/, ''); // Remove estrela preta no início
+            btnFiltro.innerHTML = `${textoSemEstrelaAlternativa} <i class="fa-solid fa-chevron-down"></i>`;
         });
     });
 
