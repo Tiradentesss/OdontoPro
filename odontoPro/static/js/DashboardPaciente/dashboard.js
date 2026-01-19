@@ -43,6 +43,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Inicializar filtros de clínicas
     initFiltroEstrelas("btnFiltro", "dropdownFiltro");
     initFiltroLocalizacao("btnFiltroLocalizacao", "dropdownFiltroLocalizacao");
+    
+    // Fechar modais ao clicar fora
+    inicializarFechoDeModais();
 });
 
 let indice = 0;
@@ -82,6 +85,28 @@ function abrirModalAgendamento(clinicaId) {
     clinicaSelecionada = clinicaId;
     mostrarTela('perfil-clinica', null);
     carregarPerfilClinica(clinicaId);
+}
+
+/* Função para abrir o modal de agendamento na página de perfil da clínica */
+function abrirModalAgendamentoClinica() {
+    const modal = document.getElementById('modal-agendamento-1');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+/* Função para fechar modais ao clicar fora deles */
+function inicializarFechoDeModais() {
+    const modaisAgendamento = document.querySelectorAll('#modal-agendamento-1, #modal-agendamento-2, #modal-sucesso');
+    
+    modaisAgendamento.forEach(modal => {
+        modal.addEventListener('click', function(event) {
+            // Fecha o modal apenas se clicou no fundo (não no conteúdo)
+            if (event.target === modal) {
+                fecharModalAgendamento();
+            }
+        });
+    });
 }
 
 /* ================= UPLOAD DE FOTO ================= */
@@ -578,6 +603,18 @@ function proximaEtapa() {
 function confirmarAgendamento() {
     document.getElementById('modal-agendamento-2').style.display = 'none';
     document.getElementById('modal-sucesso').style.display = 'flex';
+}
+
+/* Funções para fechar os modais */
+function fecharModalAgendamento() {
+    document.getElementById('modal-agendamento-1').style.display = 'none';
+    document.getElementById('modal-agendamento-2').style.display = 'none';
+    document.getElementById('modal-sucesso').style.display = 'none';
+}
+
+function voltarParaModal1() {
+    document.getElementById('modal-agendamento-2').style.display = 'none';
+    document.getElementById('modal-agendamento-1').style.display = 'flex';
 }
 
 /* ================= IR PARA MEUS AGENDAMENTOS ================= */
