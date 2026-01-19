@@ -294,7 +294,7 @@
                 <h3>Preencha seu Dados</h3>
                 <p class="subtitle">Todos os campos com * são obrigatórios</p>
 
-                <input type="text" placeholder="Digite seu nome completo">
+                <input type="text" id="inputNome" name="nome" placeholder="Digite seu nome completo" required>
 
                 <div class="selection-row">
                     <div class="selection-group">
@@ -317,15 +317,16 @@
                 <div class="input-group">
                     <div>
                         <label>Email</label>
-                        <input type="email" placeholder="Seu @gmail.com">
+                        <input type="email" id="inputEmail" name="email" placeholder="Seu @gmail.com" required onchange="validarCampoEmail()">
+                        <small id="emailError" style="color: #e74c3c; display: none; margin-top: 5px;">Email inválido. Use: usuario@email.com</small>
                     </div>
                     <div>
                         <label>Número de Telefone</label>
-                        <input type="tel" placeholder="(91) 99999-9999">
+                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required>
                     </div>
                 </div>
 
-                <textarea placeholder="Descreva seus sintomas ou informações adicionais"></textarea>
+                <textarea id="inputSintomas" name="sintomas" placeholder="Descreva seus sintomas ou informações adicionais"></textarea>
 
                 <button class="btn-cyan" onclick="proximaEtapa()">Continuar Preenchendo</button>
 
@@ -340,17 +341,17 @@
                 <span class="tag-online">📅 Agendamento Online</span>
                 <h3>Escolha o tipo de consulta</h3>
 
-                <select>
-                    <option>Selecione uma Especialidade</option>
+                <select id="selectEspecialidade" name="especialidade" required>
+                    <option value="">Selecione uma Especialidade</option>
                 </select>
-                <select>
-                    <option>Escolha um Profissional</option>
+                <select id="selectProfissional" name="profissional" required>
+                    <option value="">Escolha um Profissional</option>
                 </select>
 
                 <div class="input-group">
-                    <input type="date">
-                    <select>
-                        <option>Selecione o Horário</option>
+                    <input type="date" id="inputData" name="data" required>
+                    <select id="selectHorario" name="horario" required>
+                        <option value="">Selecione o Horário</option>
                     </select>
                 </div>
 

@@ -219,6 +219,13 @@ function initFiltroEstrelas(btnId, dropdownId) {
 
     btnFiltro.addEventListener("click", (e) => {
         e.stopPropagation(); // impede o clique de fechar imediatamente
+        
+        // Fechar o outro dropdown
+        const outroDropdown = document.getElementById("dropdownFiltroLocalizacao");
+        if (outroDropdown) {
+            outroDropdown.classList.remove("mostrar");
+        }
+        
         dropdown.classList.toggle("mostrar");
     });
 
@@ -362,6 +369,13 @@ function initFiltroLocalizacao(btnId, dropdownId) {
     // Toggle dropdown
     btnFiltro.addEventListener("click", (e) => {
         e.stopPropagation();
+        
+        // Fechar o outro dropdown
+        const outroDropdown = document.getElementById("dropdownFiltro");
+        if (outroDropdown) {
+            outroDropdown.classList.remove("mostrar");
+        }
+        
         dropdown.classList.toggle("mostrar");
     });
 
@@ -566,12 +580,8 @@ function trocarAba(event, abaId) {
 
 /* ================= PERFIL DA CLÍNICA ================= */
 function carregarPerfilClinica(clinicaId) {
-    fetch(`/clinica/${clinicaId}/`)
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('conteudo-perfil-clinica').innerHTML = html;
-        })
-        .catch(error => console.error('Erro ao carregar perfil:', error));
+    // Função para carregar dados da clínica dinamicamente (implementado no futuro com API)
+    console.log('Perfil da clínica carregado:', clinicaId);
 }
 
 function trocarAbaClinica(event, abaId) {
@@ -595,12 +605,94 @@ function voltarParaInicio() {
 }
 
 /* ================= FUNÇÕES DE AGENDAMENTO ================= */
+
+/* Função para validar email */
+function validarEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
+
+/* Função para validar campo de email em tempo real */
+function validarCampoEmail() {
+    const emailInput = document.getElementById('inputEmail');
+    const emailError = document.getElementById('emailError');
+    const email = emailInput.value.trim();
+    
+    if (email && !validarEmail(email)) {
+        emailError.style.display = 'block';
+        emailInput.style.borderColor = '#e74c3c';
+    } else {
+        emailError.style.display = 'none';
+        emailInput.style.borderColor = '';
+    }
+}
+
 function proximaEtapa() {
+    // Validar campos obrigatórios do primeiro modal
+    const nome = document.getElementById('inputNome').value.trim();
+    const email = document.getElementById('inputEmail').value.trim();
+    const telefone = document.getElementById('inputTelefone').value.trim();
+    const genero = document.querySelector('input[name="gender"]:checked');
+    const idade = document.querySelector('input[name="age"]:checked');
+    
+    if (!nome) {
+        alert('Por favor, digite seu nome completo.');
+        return;
+    }
+    
+    if (!email || !validarEmail(email)) {
+        alert('Por favor, digite um email válido (exemplo: usuario@email.com).');
+        return;
+    }
+    
+    if (!telefone || telefone.length < 10) {
+        alert('Por favor, digite um telefone válido.');
+        return;
+    }
+    
+    if (!genero) {
+        alert('Por favor, selecione um gênero.');
+        return;
+    }
+    
+    if (!idade) {
+        alert('Por favor, selecione uma faixa etária.');
+        return;
+    }
+    
+    // Se validação passou, prosseguir
     document.getElementById('modal-agendamento-1').style.display = 'none';
     document.getElementById('modal-agendamento-2').style.display = 'flex';
 }
 
 function confirmarAgendamento() {
+    // Validar campos do segundo modal
+    const especialidade = document.getElementById('selectEspecialidade').value;
+    const profissional = document.getElementById('selectProfissional').value;
+    const data = document.getElementById('inputData').value;
+    const horario = document.getElementById('selectHorario').value;
+    
+    if (!especialidade) {
+        alert('Por favor, selecione uma especialidade.');
+        return;
+    }
+    
+    if (!profissional) {
+        alert('Por favor, selecione um profissional.');
+        return;
+    }
+    
+    if (!data) {
+        alert('Por favor, selecione uma data.');
+        return;
+    }
+    
+    if (!horario) {
+        alert('Por favor, selecione um horário.');
+        return;
+    }
+    
+    // Se validação passou, mostrar sucesso
     document.getElementById('modal-agendamento-2').style.display = 'none';
     document.getElementById('modal-sucesso').style.display = 'flex';
 }
@@ -610,14 +702,29 @@ function fecharModalAgendamento() {
     document.getElementById('modal-agendamento-1').style.display = 'none';
     document.getElementById('modal-agendamento-2').style.display = 'none';
     document.getElementById('modal-sucesso').style.display = 'none';
+    
+    // Resetar formulário
+    limparFormularioAgendamento();
 }
 
-function voltarParaModal1() {
-    document.getElementById('modal-agendamento-2').style.display = 'none';
-    document.getElementById('modal-agendamento-1').style.display = 'flex';
+/* Função para limpar o formulário de agendamento */
+function limparFormularioAgendamento() {
+    document.getElementById('inputNome').value = '';
+    document.getElementById('inputEmail').value = '';
+    document.getElementById('inputTelefone').value = '';
+    document.getElementById('inputSintomas').value = '';
+    document.getElementById('selectEspecialidade').value = '';
+    document.getElementById('selectProfissional').value = '';
+    document.getElementById('inputData').value = '';
+    document.getElementById('selectHorario').value = '';
+    
+    // Limpar radio buttons
+    document.querySelectorAll('input[name="gender"]').forEach(r => r.checked = false);
+    document.querySelectorAll('input[name="age"]').forEach(r => r.checked = false);
 }
 
 /* ================= IR PARA MEUS AGENDAMENTOS ================= */
 function irParaMeusAgendamentos() {
     mostrarTela('consultas', document.querySelectorAll(".item-menu")[1]);
+    fecharModalAgendamento();
 }
