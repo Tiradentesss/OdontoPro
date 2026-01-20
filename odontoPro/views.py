@@ -46,8 +46,9 @@ def horarios_clinica(request, clinica_id):
 
     horarios = []
     for h in dia.horarios.all():
-        hora = datetime.combine(data_dt, h.hora_inicio)
-        while hora.time() < h.hora_fim:
+        hora = make_aware(datetime.combine(data_dt, h.hora_inicio))
+        hora_fim = h.hora_fim
+        while hora.time() < hora_fim:
             horarios.append(hora.strftime("%H:%M"))
             hora += timedelta(minutes=30)
 
@@ -87,7 +88,7 @@ def reagendar_consulta(request, consulta_id):
 # -------- PERFIL CLÍNICA --------
 def perfil_clinica(request, clinica_id):
     clinica = get_object_or_404(Clinica, id=clinica_id)
-    medicos = clinica.medico_set.all() if hasattr(clinica, "medico_set") else []
+    medicos = Medico.objects.filter(clinica=clinica)
     consultas = Consulta.objects.filter(clinica=clinica).order_by("-data_hora")[:5]
 
     return render(request, "Clinica/perfil_clinica.html", {
@@ -152,9 +153,26 @@ def logout_view(request):
 
 
 def login_clinica(request):
-    request.session.flush()
-    logout(request)
-    return redirect("login_paciente")
+    """Login para clínicas/profissionais"""
+    if request.method == "POST":
+        email = request.POST.get("email")
+        senha = request.POST.get("senha")
+
+        try:
+            medico = Medico.objects.get(email=email)
+        except Medico.DoesNotExist:
+            messages.error(request, "Conta não encontrada.")
+            return render(request, "LoginCadastro/login.html")
+
+        if not check_password(senha, medico.senha):
+            messages.error(request, "Senha incorreta.")
+            return render(request, "LoginCadastro/login.html")
+
+        request.session["medico_id"] = medico.id
+        request.session["clinica_id"] = medico.clinica.id
+        return redirect("painel_profissional")
+
+    return render(request, "LoginCadastro/login.html")
 
 
 # 🔹 NOVO — RETORNA APENAS A LISTA FILTRADA (SEM RELOAD)
@@ -198,11 +216,6 @@ def clinica_detalhes(request, clinica_id):
     })
 
 
-# 🔹 AGENDAR CONSULTA (via popup)
-@csrf_exempt
-@require_POST
-
-
 def agendar_consulta(request):
     if request.method != "POST":
         return JsonResponse({"success": False, "error": "Método inválido"})
@@ -220,8 +233,11 @@ def agendar_consulta(request):
     if not data_hora:
         return JsonResponse({"success": False, "error": "Data inválida"})
 
-    clinica = Clinica.objects.get(id=clinica_id)
-    medico = Medico.objects.get(id=medico_id)
+    try:
+        clinica = Clinica.objects.get(id=clinica_id)
+        medico = Medico.objects.get(id=medico_id)
+    except (Clinica.DoesNotExist, Medico.DoesNotExist):
+        return JsonResponse({"success": False, "error": "Clínica ou médico não encontrado"}, status=404)
 
     # 🔒 evita conflito de horário
     if Consulta.objects.filter(medico=medico, data_hora=data_hora).exists():
@@ -233,10 +249,13 @@ def agendar_consulta(request):
     # ✅ PACIENTE LOGADO (via sessão)
     paciente_id = request.session.get("paciente_id")
     if paciente_id:
-        paciente = Paciente.objects.get(id=paciente_id)
-        nome = paciente.nome
-        email = paciente.email
-        telefone = paciente.telefone
+        try:
+            paciente = Paciente.objects.get(id=paciente_id)
+            nome = paciente.nome
+            email = paciente.email
+            telefone = paciente.telefone
+        except Paciente.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Paciente não encontrado"}, status=404)
     else:
         # visitante (mantém compatibilidade)
         nome = request.POST.get("nome")
@@ -278,12 +297,11 @@ def configuracoes_conta(request):
         if 'foto' in request.FILES:
             paciente.foto = request.FILES['foto']
 
-
         paciente.save()
         messages.success(request, 'Dados atualizados com sucesso!')
         return redirect('configuracoes_conta')
 
-    return redirect('dashboard_paciente')
+    return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
 
 
 
@@ -291,7 +309,7 @@ def alterar_senha_paciente(request):
     paciente_id = request.session.get('paciente_id')
 
     if not paciente_id:
-        return redirect('login')
+        return redirect('login_paciente')
 
     paciente = Paciente.objects.get(id=paciente_id)
 
@@ -313,6 +331,8 @@ def alterar_senha_paciente(request):
 
         messages.success(request, 'Senha alterada com sucesso!')
         return redirect('configuracoes_conta')
+
+    return redirect('configuracoes_conta')
 
 def cadastrar_paciente(request):
     if request.method != "POST":

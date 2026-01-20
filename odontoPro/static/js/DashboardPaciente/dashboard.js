@@ -49,6 +49,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Fechar modais ao clicar fora
     inicializarFechoDeModais();
     
+    // Adicionar listener para carregamento de horários quando data é selecionada
+    const inputData = document.getElementById('inputData');
+    if (inputData) {
+        inputData.addEventListener('change', function() {
+            if (this.value && clinicaSelecionada) {
+                carregarHorarios(clinicaSelecionada, this.value);
+            }
+        });
+    }
+    
     // Adicionar listener para validação de email em tempo real
     const emailInput = document.getElementById('inputEmail');
     if (emailInput) {
@@ -144,6 +154,7 @@ function abrirModalAgendamento(clinicaId) {
     clinicaSelecionada = clinicaId;
     mostrarTela('perfil-clinica', null);
     carregarPerfilClinica(clinicaId);
+    carregarMedicosClinica(clinicaId);
 }
 
 /* Função para abrir o modal de agendamento na página de perfil da clínica */
@@ -658,6 +669,108 @@ function carregarPerfilClinica(clinicaId) {
     }
 }
 
+function carregarMedicosClinica(clinicaId) {
+    // Buscar médicos da clínica via AJAX
+    fetch(`/clinica/${clinicaId}/detalhes/`)
+        .then(response => response.json())
+        .then(data => {
+            const listaMedicos = document.getElementById('lista-medicos');
+            if (!listaMedicos) return;
+            
+            listaMedicos.innerHTML = ''; // Limpar lista anterior
+            
+            if (data.medicos && data.medicos.length > 0) {
+                data.medicos.forEach(medico => {
+                    const medicoCard = document.createElement('div');
+                    medicoCard.style.cssText = 'background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center;';
+                    medicoCard.innerHTML = `
+                        <div style="font-size: 3rem; margin-bottom: 10px;"><i class="fa-solid fa-user-doctor"></i></div>
+                        <h4>${medico[1]}</h4>
+                        <p style="font-size: 0.9rem; color: #666;">ID: ${medico[0]}</p>
+                    `;
+                    listaMedicos.appendChild(medicoCard);
+                });
+            } else {
+                listaMedicos.innerHTML = '<p>Nenhum médico cadastrado nesta clínica.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar médicos:', error);
+            const listaMedicos = document.getElementById('lista-medicos');
+            if (listaMedicos) {
+                listaMedicos.innerHTML = '<p>Erro ao carregar médicos.</p>';
+            }
+        });
+}
+
+function carregarEspecialidadesEMedicos(clinicaId) {
+    // Buscar especialidades e médicos da clínica via AJAX
+    fetch(`/clinica/${clinicaId}/detalhes/`)
+        .then(response => response.json())
+        .then(data => {
+            // Preencher especialidades
+            const selectEspecialidade = document.getElementById('selectEspecialidade');
+            if (selectEspecialidade && data.especialidades) {
+                selectEspecialidade.innerHTML = '<option value="">Selecione uma Especialidade</option>';
+                data.especialidades.forEach(esp => {
+                    const option = document.createElement('option');
+                    option.value = esp[0]; // ID
+                    option.textContent = esp[1]; // Nome
+                    selectEspecialidade.appendChild(option);
+                });
+            }
+            
+            // Preencher médicos
+            const selectProfissional = document.getElementById('selectProfissional');
+            if (selectProfissional && data.medicos) {
+                selectProfissional.innerHTML = '<option value="">Escolha um Profissional</option>';
+                data.medicos.forEach(medico => {
+                    const option = document.createElement('option');
+                    option.value = medico[0]; // ID
+                    option.textContent = medico[1]; // Nome
+                    selectProfissional.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar especialidades e médicos:', error);
+            alert('Erro ao carregar dados. Tente novamente.');
+        });
+}
+
+function carregarHorarios(clinicaId, data) {
+    // Buscar horários disponíveis da clínica para a data selecionada
+    fetch(`/clinica/${clinicaId}/horarios/?data=${data}`)
+        .then(response => response.json())
+        .then(data => {
+            const selectHorario = document.getElementById('selectHorario');
+            if (!selectHorario) return;
+            
+            selectHorario.innerHTML = '<option value="">Selecione o Horário</option>';
+            
+            if (data.horarios && data.horarios.length > 0) {
+                data.horarios.forEach(horario => {
+                    const option = document.createElement('option');
+                    option.value = horario;
+                    option.textContent = horario;
+                    selectHorario.appendChild(option);
+                });
+            } else {
+                const option = document.createElement('option');
+                option.disabled = true;
+                option.textContent = 'Nenhum horário disponível';
+                selectHorario.appendChild(option);
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar horários:', error);
+            const selectHorario = document.getElementById('selectHorario');
+            if (selectHorario) {
+                selectHorario.innerHTML = '<option value="">Erro ao carregar horários</option>';
+            }
+        });
+}
+
 function trocarAbaClinica(event, abaId) {
     // Remove classe ativa de todos os botões e conteúdos
     document.querySelectorAll('.abas-perfil .aba-item').forEach(btn => btn.classList.remove('ativa'));
@@ -749,6 +862,9 @@ function proximaEtapa() {
     
     if (modal1) modal1.style.display = 'none';
     if (modal2) modal2.style.display = 'flex';
+    
+    // Carregar especialidades e médicos da clínica selecionada
+    carregarEspecialidadesEMedicos(clinicaSelecionada);
 }
 
 function confirmarAgendamento() {
@@ -757,6 +873,9 @@ function confirmarAgendamento() {
     const selectProfissional = document.getElementById('selectProfissional');
     const inputData = document.getElementById('inputData');
     const selectHorario = document.getElementById('selectHorario');
+    const inputNome = document.getElementById('inputNome');
+    const inputEmail = document.getElementById('inputEmail');
+    const inputTelefone = document.getElementById('inputTelefone');
     
     if (!selectEspecialidade || !selectProfissional || !inputData || !selectHorario) {
         alert('Erro ao acessar formulário. Recarregue a página.');
@@ -764,16 +883,19 @@ function confirmarAgendamento() {
     }
     
     const especialidade = selectEspecialidade.value;
-    const profissional = selectProfissional.value;
+    const medico_id = selectProfissional.value;
     const data = inputData.value;
     const horario = selectHorario.value;
+    const nome = inputNome?.value || '';
+    const email = inputEmail?.value || '';
+    const telefone = inputTelefone?.value || '';
     
     if (!especialidade) {
         alert('Por favor, selecione uma especialidade.');
         return;
     }
     
-    if (!profissional) {
+    if (!medico_id) {
         alert('Por favor, selecione um profissional.');
         return;
     }
@@ -788,12 +910,49 @@ function confirmarAgendamento() {
         return;
     }
     
-    // Se validação passou, mostrar sucesso
-    const modal2 = document.getElementById('modal-agendamento-2');
-    const modalSucesso = document.getElementById('modal-sucesso');
+    // Combinar data e horário em formato ISO 8601
+    const data_hora = `${data}T${horario}:00`;
     
-    if (modal2) modal2.style.display = 'none';
-    if (modalSucesso) modalSucesso.style.display = 'flex';
+    // Preparar dados para envio
+    const formData = new FormData();
+    formData.append('clinica_id', clinicaSelecionada);
+    formData.append('medico_id', medico_id);
+    formData.append('especialidade', especialidade);
+    formData.append('data_hora', data_hora);
+    formData.append('nome', nome);
+    formData.append('email', email);
+    formData.append('telefone', telefone);
+    
+    // Enviar para servidor
+    fetch('/consulta/agendar/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Se agendamento foi bem-sucedido, mostrar sucesso
+            const modal2 = document.getElementById('modal-agendamento-2');
+            const modalSucesso = document.getElementById('modal-sucesso');
+            
+            if (modal2) modal2.style.display = 'none';
+            if (modalSucesso) modalSucesso.style.display = 'flex';
+            
+            // Recarregar página após 3 segundos para atualizar a lista de consultas
+            setTimeout(() => {
+                location.reload();
+            }, 3000);
+        } else {
+            alert('Erro ao agendar: ' + (data.error || 'Erro desconhecido'));
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao enviar agendamento:', error);
+        alert('Erro ao agendar consulta. Tente novamente.');
+    });
 }
 
 /* Funções para fechar os modais */
