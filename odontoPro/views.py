@@ -285,21 +285,42 @@ def configuracoes_conta(request):
     if not paciente_id:
         return redirect('login_paciente')
 
-    paciente = Paciente.objects.get(id=paciente_id)
+    try:
+        paciente = Paciente.objects.get(id=paciente_id)
+    except Paciente.DoesNotExist:
+        request.session.flush()
+        messages.error(request, 'Sua conta foi removida.')
+        return redirect('login_paciente')
 
     if request.method == 'POST':
-        paciente.nome = request.POST.get('nome')
-        paciente.email = request.POST.get('email')
-        paciente.cpf = request.POST.get('cpf')
-        paciente.telefone = request.POST.get('telefone')
+        try:
+            paciente.nome = request.POST.get('nome', paciente.nome)
+            paciente.email = request.POST.get('email', paciente.email)
+            paciente.cpf = request.POST.get('cpf', paciente.cpf)
+            paciente.telefone = request.POST.get('telefone', paciente.telefone)
 
-        # 🔥 SALVAR FOTO
-        if 'foto' in request.FILES:
-            paciente.foto = request.FILES['foto']
+            # 🔥 SALVAR FOTO
+            if 'foto' in request.FILES:
+                arquivo = request.FILES['foto']
+                # Validar tamanho (máx 5MB)
+                if arquivo.size > 5 * 1024 * 1024:
+                    messages.error(request, 'Arquivo muito grande. Máximo 5MB.')
+                    return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
+                
+                # Validar tipo
+                tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif']
+                if arquivo.content_type not in tipos_permitidos:
+                    messages.error(request, 'Tipo de arquivo não permitido. Use JPG, PNG ou GIF.')
+                    return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
+                
+                paciente.foto = arquivo
 
-        paciente.save()
-        messages.success(request, 'Dados atualizados com sucesso!')
-        return redirect('configuracoes_conta')
+            paciente.save()
+            messages.success(request, 'Dados atualizados com sucesso!')
+            return redirect('dashboard_paciente')
+        except Exception as e:
+            messages.error(request, f'Erro ao salvar: {str(e)}')
+            return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
 
     return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
 
