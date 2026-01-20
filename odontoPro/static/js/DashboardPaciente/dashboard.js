@@ -941,10 +941,10 @@ function confirmarAgendamento() {
             if (modal2) modal2.style.display = 'none';
             if (modalSucesso) modalSucesso.style.display = 'flex';
             
-            // Recarregar página após 3 segundos para atualizar a lista de consultas
+            // Recarregar página após 2 segundos para atualizar a lista de consultas
             setTimeout(() => {
                 location.reload();
-            }, 3000);
+            }, 2000);
         } else {
             alert('Erro ao agendar: ' + (data.error || 'Erro desconhecido'));
         }
