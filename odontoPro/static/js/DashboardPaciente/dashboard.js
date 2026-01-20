@@ -3,7 +3,7 @@ let filtroEstrelasSelecionado = 0;
 
 /* ================= MENU LATERAL ================= */
 function alternarMenu() {
-    document.getElementById("menuLateral").classList.toggle("fechado");
+    document.getElementById("menuLateral").classList.toggle("aberto");
 }
 
 /* ================= TROCAR DE TELA ================= */
