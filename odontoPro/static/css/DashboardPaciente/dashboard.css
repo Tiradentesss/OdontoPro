@@ -629,6 +629,7 @@ body {
     cursor: pointer;
     width: 100%;
     transition: background 0.3s;
+    margin-top: 8px;
 }
 
 .btn-saiba-mais:hover {
@@ -1155,7 +1156,8 @@ body {
 .input-grupo {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    margin-bottom: 20px;
 }
 
 .input-grupo label {
@@ -1183,6 +1185,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: 0.3s;
+    margin-top: 15px;
 }
 
 .btn-salvar:hover {

@@ -166,11 +166,7 @@ function abrirModalAgendamento(clinicaId) {
 function abrirModalAgendamentoClinica() {
     const modal = document.getElementById('modal-agendamento-1');
     if (modal) {
-        modal.style.display = 'flex';
-        // Scroll suave para o modal
-        setTimeout(() => {
-            modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 50);
+        modal.classList.add('mostrar');
     }
 }
 
@@ -865,8 +861,8 @@ function proximaEtapa() {
     const modal1 = document.getElementById('modal-agendamento-1');
     const modal2 = document.getElementById('modal-agendamento-2');
     
-    if (modal1) modal1.style.display = 'none';
-    if (modal2) modal2.style.display = 'flex';
+    if (modal1) modal1.classList.remove('mostrar');
+    if (modal2) modal2.classList.add('mostrar');
     
     // Carregar especialidades e médicos da clínica selecionada
     carregarEspecialidadesEMedicos(clinicaSelecionada);
@@ -943,8 +939,8 @@ function confirmarAgendamento() {
             const modal2 = document.getElementById('modal-agendamento-2');
             const modalSucesso = document.getElementById('modal-sucesso');
             
-            if (modal2) modal2.style.display = 'none';
-            if (modalSucesso) modalSucesso.style.display = 'flex';
+            if (modal2) modal2.classList.remove('mostrar');
+            if (modalSucesso) modalSucesso.classList.add('mostrar');
             
             // Recarregar página após 2 segundos para atualizar a lista de consultas
             setTimeout(() => {
@@ -966,9 +962,9 @@ function fecharModalAgendamento() {
     const modal2 = document.getElementById('modal-agendamento-2');
     const modalSucesso = document.getElementById('modal-sucesso');
     
-    if (modal1) modal1.style.display = 'none';
-    if (modal2) modal2.style.display = 'none';
-    if (modalSucesso) modalSucesso.style.display = 'none';
+    if (modal1) modal1.classList.remove('mostrar');
+    if (modal2) modal2.classList.remove('mostrar');
+    if (modalSucesso) modalSucesso.classList.remove('mostrar');
     
     // Resetar formulário
     limparFormularioAgendamento();
