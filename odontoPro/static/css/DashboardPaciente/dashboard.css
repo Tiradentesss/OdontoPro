@@ -650,8 +650,6 @@ body {
     padding: 20px;
     border: 1px solid var(--cor-borda);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-    position: relative;
-    z-index: 1;
 }
 
 .header-agendamento {
@@ -1341,21 +1339,22 @@ body {
 
 /* Container do Modal (Background escurecido) */
 .modal {
-    display: none; /* Escondido por padrão */
-    position: fixed;
-    z-index: 9999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    justify-content: center;
-    align-items: center;
+    display: none !important; /* Escondido por padrão */
+    position: fixed !important;
+    z-index: 999999 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: visible !important;
 }
 
 /* Mostrar modal quando tem classe mostrar */
 .modal.mostrar {
-    display: flex;
+    display: flex !important;
 }
 
 /* Caixa do Modal */
@@ -1539,15 +1538,51 @@ body {
 }
 
 .modal-conteudo{
-    background:#fff;
-    padding:20px;
-    border-radius:15px;
-    width:360px;
+    background: var(--branco) !important;
+    padding: 40px !important;
+    border-radius: 15px !important;
+    width: 360px !important;
+    border: 1px solid var(--cor-borda) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    z-index: 1000000 !important;
+}
+
+.modal-conteudo h3 {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    margin-bottom: 25px !important;
+    color: #333 !important;
+}
+
+.modal-conteudo p {
+    font-size: 15px !important;
+    color: #444 !important;
+    margin-bottom: 12px !important;
+    line-height: 1.8 !important;
+    display: grid !important;
+    grid-template-columns: 80px 1fr !important;
+    gap: 15px !important;
+    align-items: center !important;
+}
+
+.modal-conteudo p strong {
+    color: #222 !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+}
+
+.modal-conteudo strong {
+    color: #333 !important;
+    font-weight: 600 !important;
+}
 }
 
 .acoes-modal{
-    margin-top:15px;
-    display:flex;
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
     justify-content:space-between;
     gap:10px;
 }
@@ -1568,18 +1603,23 @@ body {
     border-radius:10px;
 }
 
-.btn-fechar{
-    background: #0099cc;
-    color:#fff;
-    border:none;
-    padding:8px 14px;
-    border-radius:10px;
+.btn-fechar {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--azul-claro);
+    background: var(--azul-claro);
+    color: white;
+    font-weight: 600;
     cursor: pointer;
-    transition: 0.3s ease;
+    transition: 0.3s;
+    font-size: 14px;
 }
 
 .btn-fechar:hover {
-    background: #0077aa;
+    background: transparent;
+    color: var(--azul-claro);
+    border: 1px solid var(--azul-claro);
 }
 
 .filtros-consultas {
