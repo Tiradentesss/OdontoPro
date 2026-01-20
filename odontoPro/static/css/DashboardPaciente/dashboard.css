@@ -1343,7 +1343,7 @@ body {
 .modal {
     display: none; /* Escondido por padrão */
     position: fixed;
-    z-index: 1000;
+    z-index: 9999;
     left: 0;
     top: 0;
     width: 100%;
@@ -1351,6 +1351,11 @@ body {
     background-color: rgba(0, 0, 0, 0.4);
     justify-content: center;
     align-items: center;
+}
+
+/* Mostrar modal quando tem classe mostrar */
+.modal.mostrar {
+    display: flex;
 }
 
 /* Caixa do Modal */
@@ -1564,11 +1569,17 @@ body {
 }
 
 .btn-fechar{
-    background:#aaa;
+    background: #0099cc;
     color:#fff;
     border:none;
     padding:8px 14px;
     border-radius:10px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.btn-fechar:hover {
+    background: #0077aa;
 }
 
 .filtros-consultas {

@@ -138,8 +138,13 @@ function carrosselAutomatico() {
 
 /* ================= MODAL DE DETALHES ================= */
 function abrirDetalhes(id) {
+    console.log('Abrindo detalhes para ID:', id);
     const modal = document.getElementById("modal-" + id);
-    if (modal) modal.classList.add("mostrar");
+    if (modal) {
+        modal.classList.add("mostrar");
+    } else {
+        console.log('Modal não encontrado para ID:', id);
+    }
 }
 
 function fecharDetalhes(id) {
