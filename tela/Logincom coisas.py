@@ -77,38 +77,39 @@ def tela_login():
         container.grid_columnconfigure(1, weight=1)
         container.grid_rowconfigure(0, weight=1)
 
-    sidebar = ctk.CTkFrame(container, fg_color="#1f6aa5")
-    sidebar.grid(row=0, column=0)
+        sidebar = ctk.CTkFrame(container, fg_color="#1f6aa5")
+        sidebar.grid(row=0, column=0)
 
-    ctk.CTkLabel(sidebar, text="MENU", font=("Arial", 22, "bold"), text_color="white").pack(pady=30)
+        ctk.CTkLabel(sidebar, text="MENU", font=("Arial", 22, "bold"), text_color="white").pack(pady=30)
 
-    content = ctk.CTkFrame(container, fg_color="white")
-    content.grid(row=0, column=1, sticky="nsew", padx=15, pady=15)
+        content = ctk.CTkFrame(container, fg_color="white")
+        content.grid(row=0, column=1, sticky="nsew", padx=15, pady=15)
 
-    def trocar_tela(func):
-        for w in content.winfo_children():
-            w.destroy()
-        content.after(100, func)
+        def trocar_tela(func):
+            for w in content.winfo_children():
+                w.destroy()
+            content.after(100, func)
 
-    def inicio():
-        ctk.CTkLabel(content, text="Dashboard", font=("Arial", 32, "bold"), text_color="#1f6aa5").pack(pady=40)
-    
-    def usuarios():
-        ctk.CTkLabel(content, text="Cadastro de usuarios", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=20)
+        def inicio():
+            ctk.CTkLabel(content, text="Dashboard", font=("Arial", 32, "bold"), text_color="#1f6aa5").pack(pady=40)
+        
+        def usuarios():
+            ctk.CTkLabel(content, text="Cadastro de usuarios", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=20)
 
-    def produtos():
-        ctk.CTkLabel(content, text="Gestão de produtos", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=20)
+        def produtos():
+            ctk.CTkLabel(content, text="Gestão de produtos", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=20)
 
-    def botao(texto, comando):
-        ctk.CTkButton(sidebar, text=texto, fg_color="#1f6aa5", hover_color="#174f7d", text_color="white", font=("Arial", 16), height=45, command=lambda: trocar_tela(comando)).pack(fill="x", padx=20, pady=6)
+        def botao(texto, comando):
+            ctk.CTkButton(sidebar, text=texto, fg_color="#1f6aa5", hover_color="#174f7d", text_color="white", font=("Arial", 16), height=45, command=lambda: trocar_tela(comando)).pack(fill="x", padx=20, pady=6)
 
-        botao("Inicio", inicio)
+            botao("Inicio", inicio)
 
-        if tipo == "admin":
-            botao("Usuarios", usuarios)
+            if tipo == "admin":
+                botao("Usuarios", usuarios)
 
-        botao("Produtos", produtos)
-        botao("Sair", tela_login)
+            botao("Produtos", produtos)
+            botao("Sair", tela_login)
 
+            inicio()
 tela_login()
 app.mainloop()
