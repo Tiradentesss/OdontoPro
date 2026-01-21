@@ -37,3 +37,10 @@ for card in cards:
     frame.grid_propagate(False)
 
     ctk.CTkLabel(frame, text=card, font=("Arial", 18)).pack(expando=True)
+
+    coluna += 1
+    if coluna > 2:
+        coluna = 0
+        linha += 1
+
+app.mainloop()
