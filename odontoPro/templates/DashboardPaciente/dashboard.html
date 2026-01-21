@@ -17,7 +17,6 @@
 
 <body>
 
-<!-- MENU LATERAL -->
 <nav class="menu-lateral" id="menuLateral">
     <button class="botao-seta" onclick="alternarMenu()" id="botaoSeta">
         <i class="fa-solid fa-chevron-right"></i>
@@ -114,19 +113,52 @@
                 <input id="inputBuscaClinica" type="text" placeholder="Procurar Clínica">
             </div>
 
-            <button class="btn-filtro">
-                <i class="fa-solid fa-star"></i> Avaliação <i class="fa-solid fa-chevron-down"></i>
-            </button>
+            <div class="filtro-container">
+                <button class="btn-filtro" id="btnFiltro">
+                    <i class="fa-solid fa-star"></i> Avaliação
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
 
-            <button class="btn-filtro">
-                <i class="fa-solid fa-sliders"></i> Filtros <i class="fa-solid fa-chevron-down"></i>
-            </button>
+                <div class="dropdown-filtro" id="dropdownFiltro">
+                    <div class="opcao">⭐ 1 estrela</div>
+                    <div class="opcao">⭐⭐ 2 estrelas</div>
+                    <div class="opcao">⭐⭐⭐ 3 estrelas</div>
+                    <div class="opcao">⭐⭐⭐⭐ 4 estrelas</div>
+                    <div class="opcao">⭐⭐⭐⭐⭐ 5 estrelas</div>
+                </div>
+            </div>
+
+            <div class="filtro-container">
+                <button class="btn-filtro" id="btnFiltroLocalizacao">
+                    <i class="fa-solid fa-sliders"></i> Filtros <i class="fa-solid fa-chevron-down"></i>
+                </button>
+
+                <div class="dropdown-filtro" id="dropdownFiltroLocalizacao">
+                    <div style="padding: 12px 16px; border-bottom: 1px solid #ddd;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 13px;">Estado</label>
+                        <select id="selectEstado" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                            <option value="">Todos os estados</option>
+                        </select>
+                    </div>
+                    
+                    <div style="padding: 12px 16px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333; font-size: 13px;">Cidade</label>
+                        <select id="selectCidade" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                            <option value="">Todas as cidades</option>
+                        </select>
+                    </div>
+                    
+                    <div style="padding: 8px 12px; border-top: 1px solid #ddd;">
+                        <button id="btnLimparFiltroLocalizacao" style="width: 100%; padding: 8px; background: #f1f5f9; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 13px; color: #666;">✕ Limpar Filtros</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="grid-clinicas" id="listaClinicas">
         {% for clinica in clinicas %}
-        <div class="card-clinica">
+        <div class="card-clinica" data-avaliacao="{{ clinica.avaliacao|default:0 }}" data-estado="{{ clinica.endereco.estado|default:'' }}" data-cidade="{{ clinica.endereco.cidade|default:'' }}">
 
             <!-- BANNER -->
             <div class="banner-card">
@@ -171,6 +203,177 @@
     </div>
 </section>
 
+<!-- ================= PERFIL DA CLÍNICA ================= -->
+<section id="perfil-clinica" class="tela">
+    <div class="container-perfil">
+        <h1 class="titulo-sessao">Sobre a Clinica</h1>
+        <div class="card-branco header-clinica-detalhe">
+            <div class="clinica-info-principal">
+                <img src="/img/logo Lumina.png" alt="Logo Clínica" class="logo-clinica-detalhe">
+                <div class="clinica-textos">
+                    <h2 id="detalheNomeClinica">Clinica Lumina</h2>
+                    <p><i class="fa-regular fa-envelope"></i> clinicalumina@gmail.com</p>
+                    <p><i class="fa-solid fa-phone-volume"></i> +55 (91) 9999-9999</p>
+                </div>
+            </div>
+            <button id="btn-abrir-agendamento" class="agendar-btn" onclick="abrirModalAgendamentoClinica()">Agendar Consulta</button>
+        </div>
+
+
+        <div class="abas-perfil">
+            <button class="aba-item ativa" onclick="trocarAbaClinica(event, 'sobre')">Descrição</button>
+            <button class="aba-item" onclick="trocarAbaClinica(event, 'avaliacoes')">Avaliação</button>
+            <button class="aba-item" onclick="trocarAbaClinica(event, 'endereco')">Endereço</button>
+        </div>
+
+        <div id="aba-sobre" class="aba-conteudo ativa">
+            <div class="card-branco">
+                <div class="tag-secao"><i class="fa-solid fa-tooth"></i> Descrição da Clínica</div>
+                <p class="descricao-texto">A Clínica Lumina é uma clínica odontológica que atende diversas especialidades, focando em odontologia geral com uma equipe ampla...</p>
+                <div class="tag-secao" style="margin-top: 25px;"><i class="fa-solid fa-clipboard-list"></i> Serviços Disponíveis</div>
+                <ul class="lista-servicos-bullets">
+                    <li>Prótese Fixa</li>
+                    <li>Overdenture</li>
+                    <li>Cirurgia Guiada</li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="aba-avaliacoes" class="aba-conteudo">
+            <div class="card-branco">
+                <div class="tag-secao"><i class="fa-solid fa-star"></i> O que dizem nossos pacientes</div>
+                <div class="container-avaliacoes">
+                    <div class="card-feedback">
+                        <div class="user-feedback">
+                            <img src="https://i.pravatar.cc/150?u=1" alt="Paciente">
+                            <div>
+                                <strong>Ricardo Alves</strong>
+                                <div class="estrelas">★★★★★</div>
+                            </div>
+                        </div>
+                        <p>"Atendimento impecável desde a recepção até o consultório. Recomendo muito!"</p>
+                    </div>
+                    <div class="card-feedback">
+                        <div class="user-feedback">
+                            <img src="https://i.pravatar.cc/150?u=2" alt="Paciente">
+                            <div>
+                                <strong>Ana Clara</strong>
+                                <div class="estrelas">★★★★★</div>
+                            </div>
+                        </div>
+                        <p>"A clínica é moderna e os profissionais são muito atenciosos. Nota 10!"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="aba-endereco" class="aba-conteudo">
+            <div class="card-branco">
+                <div class="tag-secao"><i class="fa-solid fa-location-dot"></i> Localização</div>
+                <div class="endereco-detalhes">
+                    <p><strong>Unidade Belém:</strong> Av. Visc. de Souza Franco, 600 - Reduto, Belém - PA, 66053-000</p>
+                    <p><i class="fa-solid fa-clock"></i> Segunda a Sexta: 08h às 18h | Sábado: 08h às 12h</p>
+                </div>
+                <div class="mapa-google">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.513239247653!2d-48.4901!3d-1.4558!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMcKwMjcnMjAuOSJTIDQ4wrAyOScyNC40Ilc!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
+                        width="100%" height="300" style="border:0; border-radius: 15px;" allowfullscreen=""
+                        loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+        <button class="btn-voltar-perfil" onclick="voltarParaInicio()">
+            <i class="fa-solid fa-chevron-left"></i> Voltar
+        </button>
+
+
+        <div id="modal-agendamento-1" class="modal">
+            <div class="modal-content">
+                <span class="tag-online">📅 Agendamento Online</span>
+                <h3>Preencha seu Dados</h3>
+                <p class="subtitle">Todos os campos com * são obrigatórios</p>
+
+                <input type="text" id="inputNome" name="nome" placeholder="Digite seu nome completo" required>
+
+                <div class="selection-row">
+                    <div class="selection-group">
+                        <label class="group-title">Gênero</label>
+                        <div class="radio-options">
+                            <label><input type="radio" name="gender" value="Masculino"> Masculino</label>
+                            <label><input type="radio" name="gender" value="Feminino"> Feminino</label>
+                        </div>
+                    </div>
+
+                    <div class="selection-group">
+                        <label class="group-title">Faixa Etária</label>
+                        <div class="radio-options">
+                            <label><input type="radio" name="age" value="Adulto"> Adulto</label>
+                            <label><input type="radio" name="age" value="Infantil"> Infantil</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div>
+                        <label>Email</label>
+                        <input type="email" id="inputEmail" name="email" placeholder="Seu @gmail.com" required onchange="validarCampoEmail()">
+                        <small id="emailError" style="color: #e74c3c; display: none; margin-top: 5px;">Email inválido. Use: usuario@email.com</small>
+                    </div>
+                    <div>
+                        <label>Número de Telefone</label>
+                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required>
+                    </div>
+                </div>
+
+                <textarea id="inputSintomas" name="sintomas" placeholder="Descreva seus sintomas ou informações adicionais"></textarea>
+
+                <button class="btn-cyan" onclick="proximaEtapa()">Continuar Preenchendo</button>
+
+                <div class="security-banner">
+                    🛡️ Suas informações estão seguras e protegidas
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-agendamento-2" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="tag-online">📅 Agendamento Online</span>
+                <h3>Escolha o tipo de consulta</h3>
+
+                <select id="selectEspecialidade" name="especialidade" required>
+                    <option value="">Selecione uma Especialidade</option>
+                </select>
+                <select id="selectProfissional" name="profissional" required>
+                    <option value="">Escolha um Profissional</option>
+                </select>
+
+                <div class="input-group">
+                    <input type="date" id="inputData" name="data" required>
+                    <select id="selectHorario" name="horario" required>
+                        <option value="">Selecione o Horário</option>
+                    </select>
+                </div>
+
+                <button class="btn-cyan" onclick="confirmarAgendamento()">Agendar Consulta</button>
+
+                <div class="security-banner">
+                    🛡️ Suas informações estão seguras e protegidas
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-sucesso" class="modal" style="display:none;">
+            <div class="modal-content">
+                <div class="success-icon">✅</div>
+                <h3>Agendamento Realizado com Sucesso!</h3>
+                <p>Sua consulta foi marcada e está segura.</p>
+                <button class="btn-cyan" onclick="irParaMeusAgendamentos()">Ver Meus Agendamentos</button>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ================= CONSULTAS ================= -->
 <section id="consultas" class="tela">
     <h2 class="titulo-pagina">Minhas Consultas</h2>
@@ -209,6 +412,37 @@
                 <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
                     Ver Detalhes
                 </button>
+
+                <!-- Botão de Avaliar (só para consultas realizadas) -->
+                {% if cons.status == 'realizada' %}
+                <button class="btn-avaliar" onclick="mostrarEstrelas('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
+                    Avaliar Consulta
+                </button>
+                {% endif %}
+
+                <!-- 🔹 Seção de Avaliação com Estrelas (inicialmente oculta) -->
+                <div class="avaliacao-section" id="avaliacao-{{ cons.id }}" style="display: none; margin-top: 15px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+                    <h4 style="margin-bottom: 15px;">Avaliar Consulta</h4>
+                    
+                    <div class="avaliacao-stars" style="display: flex; gap: 10px; margin-bottom: 15px; font-size: 32px; justify-content: center;">
+                        <span class="star" data-valor="1" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                        <span class="star" data-valor="2" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                        <span class="star" data-valor="3" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                        <span class="star" data-valor="4" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                        <span class="star" data-valor="5" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                    </div>
+
+                    <textarea id="comentario-{{ cons.id }}" placeholder="Deixe um comentário sobre a consulta (opcional)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; min-height: 80px;"></textarea>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-enviar-avaliacao" onclick="enviarAvaliacao('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
+                            Enviar Avaliação
+                        </button>
+                        <button class="btn-cancelar-avaliacao" onclick="ocultarEstrelas('{{ cons.id }}')">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
 
                 <!-- 🔹 Modal Detalhes -->
                 <div class="modal" id="modal-{{ cons.id }}">
@@ -393,83 +627,6 @@
     </div>
 
 </section>
-
-<!-- 🔹 Modais de Agendamento do pop-up original -->
-<div id="modal-agendamento-1" class="modal">
-    <div class="modal-content">
-        <span class="tag-online">📅 Agendamento Online</span>
-        <h3>Preencha seus Dados</h3>
-        <p class="subtitle">Todos os campos com * são obrigatórios</p>
-        <input type="text" placeholder="Digite seu nome completo">
-
-        <div class="selection-row">
-            <div class="selection-group">
-                <label class="group-title">Gênero</label>
-                <div class="radio-options">
-                    <label><input type="radio" name="gender" value="Masculino"> Masculino</label>
-                    <label><input type="radio" name="gender" value="Feminino"> Feminino</label>
-                </div>
-            </div>
-
-            <div class="selection-group">
-                <label class="group-title">Faixa Etária</label>
-                <div class="radio-options">
-                    <label><input type="radio" name="age" value="Adulto"> Adulto</label>
-                    <label><input type="radio" name="age" value="Infantil"> Infantil</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="input-group">
-            <div>
-                <label>Email</label>
-                <input type="email" placeholder="Seu @gmail.com">
-            </div>
-            <div>
-                <label>Número de Telefone</label>
-                <input type="tel" placeholder="(91) 99999-9999">
-            </div>
-        </div>
-
-        <textarea placeholder="Descreva seus sintomas ou informações adicionais"></textarea>
-
-        <button class="btn-cyan" onclick="proximaEtapa()">Continuar Preenchendo</button>
-        <div class="security-banner">🛡️ Suas informações estão seguras e protegidas</div>
-    </div>
-</div>
-
-<div id="modal-agendamento-2" class="modal" style="display:none;">
-    <div class="modal-content">
-        <span class="tag-online">📅 Agendamento Online</span>
-        <h3>Escolha o tipo de consulta</h3>
-        <select>
-            <option>Selecione uma Especialidade</option>
-        </select>
-        <select>
-            <option>Escolha um Profissional</option>
-        </select>
-
-        <div class="input-group">
-            <input type="date" id="dataConsulta">
-            <select id="horarioConsulta">
-                <option value="">Selecione o Horário</option>
-            </select>
-        </div>
-
-
-        <button class="btn-cyan" onclick="confirmarAgendamento()">Agendar Consulta</button>
-        <div class="security-banner">🛡️ Suas informações estão seguras e protegidas</div>
-    </div>
-</div>
-
-<div id="modal-sucesso" class="modal" style="display:none;">
-    <div class="modal-content">
-        <div class="success-icon">✅</div>
-        <h3>Agendamento Realizado com Sucesso!</h3>
-        <p>Sua consulta foi marcada e está segura.</p>
-        <button class="btn-cyan" onclick="irParaMeusAgendamentos()">Ver Meus Agendamentos</button>
-    </div>
-</div>
 
 </main>
 </div>

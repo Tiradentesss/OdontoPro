@@ -40,6 +40,9 @@ urlpatterns = [
     path('alterar-senha/', views.alterar_senha_paciente, name='alterar_senha_paciente'),
 
     path('cadastrar/', views.cadastrar_paciente, name='cadastrar_paciente'),
+    
+    # 🔹 AVALIAÇÃO
+    path('avaliacao/criar/', views.criar_avaliacao, name='criar_avaliacao'),
 ]
 
 if settings.DEBUG:

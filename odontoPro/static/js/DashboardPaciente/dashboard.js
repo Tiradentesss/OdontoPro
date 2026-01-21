@@ -1,6 +1,7 @@
-/* =======================================================
-   MENU LATERAL
-======================================================= */
+/* ================= VARIÁVEIS GLOBAIS ================= */
+let filtroEstrelasSelecionado = 0;
+
+/* ================= MENU LATERAL ================= */
 function alternarMenu() {
     document.getElementById("menuLateral").classList.toggle("fechado");
 }
@@ -34,9 +35,6 @@ function mostrarTela(id, btn) {
     }
 }
 
-/* =======================================================
-   BUSCA + CARROSSEL
-======================================================= */
 document.addEventListener("DOMContentLoaded", () => {
     const inputBusca = document.getElementById("inputBuscaClinica");
 
@@ -52,9 +50,72 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     carrosselAutomatico();
-    inicializarDataHorario();
     inicializarFiltrosConsultas();
+    
+    // Inicializar filtros de clínicas
+    initFiltroEstrelas("btnFiltro", "dropdownFiltro");
+    initFiltroLocalizacao("btnFiltroLocalizacao", "dropdownFiltroLocalizacao");
+    
+    // Fechar modais ao clicar fora
+    inicializarFechoDeModais();
+    
+    // Adicionar listener para validação de email em tempo real
+    const emailInput = document.getElementById('inputEmail');
+    if (emailInput) {
+        emailInput.addEventListener('blur', validarCampoEmail);
+    }
+    
+    // Listener para resize - readjustar dropdowns se necessário
+    window.addEventListener("resize", () => {
+        const dropdownAtivoAval = document.getElementById("dropdownFiltro");
+        const dropdownAtivoLoc = document.getElementById("dropdownFiltroLocalizacao");
+        
+        if (dropdownAtivoAval && dropdownAtivoAval.classList.contains("mostrar")) {
+            ajustarPosicaoDropdown(dropdownAtivoAval, document.getElementById("btnFiltro"));
+        }
+        
+        if (dropdownAtivoLoc && dropdownAtivoLoc.classList.contains("mostrar")) {
+            ajustarPosicaoDropdown(dropdownAtivoLoc, document.getElementById("btnFiltroLocalizacao"));
+        }
+    });
 });
+
+/* ================= FUNÇÃO PARA AJUSTAR POSIÇÃO DO DROPDOWN ================= */
+function ajustarPosicaoDropdown(dropdown, botao) {
+    // Aguardar um pouco para garantir que o dropdown está renderizado com display:flex
+    setTimeout(() => {
+        const botaoRect = botao.getBoundingClientRect();
+        const dropdownRect = dropdown.getBoundingClientRect();
+        const parent = botao.parentElement;
+        
+        // Reset para calcular corretamente
+        dropdown.style.left = "0";
+        dropdown.style.right = "auto";
+        dropdown.style.top = "calc(100% + 5px)";
+        dropdown.style.bottom = "auto";
+        
+        // Recalcular após reset
+        const newDropdownRect = dropdown.getBoundingClientRect();
+        
+        // Verificar se sai da tela à direita
+        if (newDropdownRect.right > window.innerWidth - 15) {
+            dropdown.style.left = "auto";
+            dropdown.style.right = "0";
+        } else {
+            dropdown.style.left = "0";
+        }
+        
+        // Verificar se sai da tela para baixo
+        const finalDropdownRect = dropdown.getBoundingClientRect();
+        if (finalDropdownRect.bottom > window.innerHeight - 60) {
+            dropdown.style.top = "auto";
+            dropdown.style.bottom = "calc(100% + 5px)";
+        } else {
+            dropdown.style.top = "calc(100% + 5px)";
+            dropdown.style.bottom = "auto";
+        }
+    }, 50);
+}
 
 let indice = 0;
 
@@ -126,47 +187,6 @@ let clinicaSelecionada = null;
 
 function abrirModalAgendamento(clinicaId) {
     clinicaSelecionada = clinicaId;
-
-    const modal1 = document.getElementById("modal-agendamento-1");
-    const modal2 = document.getElementById("modal-agendamento-2");
-
-    modal1.style.display = "flex";
-    modal2.style.display = "none";
-
-    const selectEspecialidade = modal2.querySelector("select:nth-of-type(1)");
-    const selectMedico = modal2.querySelector("select:nth-of-type(2)");
-    const horarioSelect = document.getElementById("horarioConsulta");
-
-    selectEspecialidade.innerHTML =
-        `<option value="">Selecione uma Especialidade</option>`;
-    selectMedico.innerHTML =
-        `<option value="">Escolha um Profissional</option>`;
-    horarioSelect.innerHTML =
-        `<option value="">Selecione o Horário</option>`;
-
-    fetch(`/clinica/${clinicaId}/detalhes/`)
-        .then(res => res.json())
-        .then(data => {
-            data.especialidades.forEach(e => {
-                selectEspecialidade.innerHTML +=
-                    `<option value="${e[1]}">${e[1]}</option>`;
-            });
-
-            data.medicos.forEach(m => {
-                selectMedico.innerHTML +=
-                    `<option value="${m[0]}">${m[1]}</option>`;
-            });
-        });
-}
-
-function proximaEtapa() {
-    document.getElementById("modal-agendamento-1").style.display = "none";
-    document.getElementById("modal-agendamento-2").style.display = "flex";
-}
-
-/* =======================================================
-   DATA → HORÁRIOS
-======================================================= */
 function inicializarDataHorario() {
     const dataInput = document.getElementById("dataConsulta");
     const horarioSelect = document.getElementById("horarioConsulta");
@@ -201,7 +221,6 @@ function inicializarDataHorario() {
 
 /* =======================================================
    CONFIRMAR AGENDAMENTO
-======================================================= */
 function confirmarAgendamento() {
     const modal2 = document.getElementById("modal-agendamento-2");
 
@@ -263,7 +282,37 @@ function confirmarAgendamento() {
 
 /* =======================================================
    FILTROS CONSULTAS
-======================================================= */
+    mostrarTela('perfil-clinica', null);
+    carregarPerfilClinica(clinicaId);
+}
+
+/* Função para abrir o modal de agendamento na página de perfil da clínica */
+function abrirModalAgendamentoClinica() {
+    const modal = document.getElementById('modal-agendamento-1');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Scroll suave para o modal
+        setTimeout(() => {
+            modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 50);
+    }
+}
+
+/* Função para fechar modais ao clicar fora deles */
+function inicializarFechoDeModais() {
+    const modaisAgendamento = document.querySelectorAll('#modal-agendamento-1, #modal-agendamento-2, #modal-sucesso');
+    
+    modaisAgendamento.forEach(modal => {
+        modal.addEventListener('click', function(event) {
+            // Fecha o modal apenas se clicou no fundo (não no conteúdo)
+            if (event.target === modal) {
+                fecharModalAgendamento();
+            }
+        });
+    });
+}
+
+/* ================= UPLOAD DE FOTO ================= */
 function inicializarFiltrosConsultas() {
     const botoes = document.querySelectorAll(".filtro-btn");
     const cards = document.querySelectorAll(".card-agendamento");
@@ -358,15 +407,3 @@ function trocarAba(event, abaId) {
 
 /* =======================================================
    IR PARA CONSULTAS APÓS SUCESSO
-======================================================= */
-function irParaMeusAgendamentos() {
-    const modal =
-        document.getElementById("modal-sucesso");
-
-    if (modal) modal.style.display = "none";
-
-    mostrarTela(
-        "consultas",
-        document.querySelectorAll(".item-menu")[1]
-    );
-}
