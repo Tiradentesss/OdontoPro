@@ -70,3 +70,18 @@ def tela_login():
 
     def abrir_dashboard(tipo):
         limpar_tela()
+        
+        container = ctk.CTkFrame(app)
+        container.pack(expand=True, fill="both")
+
+        container.grid_columnconfigure(1, weight=1)
+        container.grid_rowconfigure(0, weight=1)
+
+    sidebar = ctk.CTkFrame(container, fg_color="#1f6aa5")
+    sidebar.grid(row=0, column=0)
+
+    ctk.CTkLabel(sidebar, text="MENU", font=("Arial", 22, "bold"), text_color="white").pack(pady=30)
+
+    content = ctk.CTkFrame(container, fg_color="white")
+    content.grid(row=0, column=1, sticky="nsew", padx=15, pady=15)
+    
