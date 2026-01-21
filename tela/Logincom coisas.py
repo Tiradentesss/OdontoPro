@@ -84,4 +84,17 @@ def tela_login():
 
     content = ctk.CTkFrame(container, fg_color="white")
     content.grid(row=0, column=1, sticky="nsew", padx=15, pady=15)
+
+    def trocar_tela(func):
+        for w in content.winfo_children():
+            w.destroy()
+        content.after(100, func)
+
+    def inicio():
+        ctk.CTkLabel(content, text="Dashboard", font=("Arial", 32, "bold"), text_color="#1f6aa5").pack(pady=40)
     
+    def usuarios():
+        ctk.CTkLabel(content, text="Cadastro de usuarios", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=40)
+
+    def produtos():
+        ctk.CTkLabel(content, text="Gestão de produtos", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=40)
