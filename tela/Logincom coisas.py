@@ -45,13 +45,13 @@ def tela_login():
 
     ctk.CTkLabel(left, text="LOGIN", font=("Arial", 30, "bold"), text_color="#1f6aa5").pack(pady=(120, 10))
 
-    usuario=ctk.CTkEntry(right, placeholder_text="Usuário", width=280, heigth=45)
+    usuario=ctk.CTkEntry(right, placeholder_text="Usuário", width=280, height=45)
     usuario.pack(pady=10)
 
     senha_frame=ctk.CTkFrame(right, fg_color="transparent")
     senha_frame.pack(pady=10)
 
-    senha=ctk.CTkEntry(senha_frame, placeholder_text="Senha", show="*", width=280, heigth=45)
+    senha=ctk.CTkEntry(senha_frame, placeholder_text="Senha", show="*", width=280, height=45)
     senha.pack(side="left", padx=(0, 5))
 
     def autenticar():
@@ -94,7 +94,21 @@ def tela_login():
         ctk.CTkLabel(content, text="Dashboard", font=("Arial", 32, "bold"), text_color="#1f6aa5").pack(pady=40)
     
     def usuarios():
-        ctk.CTkLabel(content, text="Cadastro de usuarios", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=40)
+        ctk.CTkLabel(content, text="Cadastro de usuarios", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=20)
 
     def produtos():
-        ctk.CTkLabel(content, text="Gestão de produtos", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=40)
+        ctk.CTkLabel(content, text="Gestão de produtos", font=("Arial", 26, "bold"), text_color="#1f6aa5").pack(pady=20)
+
+    def botao(texto, comando):
+        ctk.CTkButton(sidebar, text=texto, fg_color="#1f6aa5", hover_color="#174f7d", text_color="white", font=("Arial", 16), height=45, command=lambda: trocar_tela(comando)).pack(fill="x", padx=20, pady=6)
+
+        botao("Inicio", inicio)
+
+        if tipo == "admin":
+            botao("Usuarios", usuarios)
+
+        botao("Produtos", produtos)
+        botao("Sair", tela_login)
+
+tela_login()
+app.mainloop()
