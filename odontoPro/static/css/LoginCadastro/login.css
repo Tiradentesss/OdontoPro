@@ -7,7 +7,7 @@
 }
 
 body {
-    background-image: url('/img/imagem\ background.png');
+    background-image: url('/static/img/imagem background.png');
     background-size: cover;
     background-attachment: fixed; /* A imagem não rola com a página */
     background-position: center;
@@ -200,7 +200,7 @@ body {
 /* --- LADO DA IMAGEM --- */
 .login-image-side {
     flex: 1;
-    background-image: url('/img/dentista\ tela\ de\ login.png');
+    background-image: url('/static/img/dentista tela de login.png');
     background-size: cover;
     background-position: center;
     margin: 15px;
