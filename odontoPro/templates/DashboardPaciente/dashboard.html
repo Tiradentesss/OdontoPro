@@ -446,24 +446,63 @@
 
                 <!-- 🔹 Modal Detalhes -->
                 <div class="modal" id="modal-{{ cons.id }}">
-                    <div class="modal-conteudo">
-                        <h3>Detalhes da Consulta</h3>
-                        <p><strong>Status:</strong> {{ cons.get_status_display }}</p>
-                        <p><strong>Clínica:</strong> {{ cons.clinica.nome }}</p>
-                        <p><strong>Médico:</strong> {{ cons.medico.nome }}</p>
-                        <p><strong>Data:</strong> {{ cons.data_hora|date:"d/m/Y" }}</p>
-                        <p><strong>Hora:</strong> {{ cons.data_hora|time:"H:i" }}</p>
-                        {% if cons.especialidade %}
-                            <p><strong>Especialidade:</strong> {{ cons.especialidade }}</p>
-                        {% endif %}
-                        {% if cons.observacoes %}
-                            <p><strong>Observações:</strong> {{ cons.observacoes }}</p>
-                        {% endif %}
-                        <div class="acoes-modal">
-                            <button class="btn-fechar" onclick="fecharDetalhes('{{ cons.id }}')">Fechar</button>
+                    <div class="modal-content">
+
+                        <span class="tag-online">🦷 Detalhes da Consulta</span>
+
+                        <h3>{{ cons.clinica.nome }}</h3>
+
+                        <div class="info-detalhes">
+
+                            <p>
+                                <strong>Status:</strong>
+                                <span class="status-badge {{ cons.status }}">
+                                    {{ cons.get_status_display }}
+                                </span>
+                            </p>
+
+                            <p>
+                                <strong>Profissional:</strong>
+                                {{ cons.medico.nome }}
+                            </p>
+
+                            <p>
+                                <strong>Data:</strong>
+                                {{ cons.data_hora|date:"d/m/Y" }}
+                            </p>
+
+                            <p>
+                                <strong>Horário:</strong>
+                                {{ cons.data_hora|time:"H:i" }}
+                            </p>
+
+                            {% if cons.especialidade %}
+                            <p>
+                                <strong>Especialidade:</strong>
+                                {{ cons.especialidade }}
+                            </p>
+                            {% endif %}
+
+                            {% if cons.observacoes %}
+                            <div class="observacoes-box">
+                                <strong>Observações:</strong>
+                                <p>{{ cons.observacoes }}</p>
+                            </div>
+                            {% endif %}
+
                         </div>
+
+                        <button class="btn-cyan" onclick="fecharDetalhes('{{ cons.id }}')">
+                            Fechar
+                        </button>
+
+                        <div class="security-banner">
+                            🛡️ Informações da consulta protegidas
+                        </div>
+
                     </div>
                 </div>
+
 
             </div>
             {% endfor %}

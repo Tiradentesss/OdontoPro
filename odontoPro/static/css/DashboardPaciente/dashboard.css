@@ -662,16 +662,35 @@ body {
 }
 
 .status-badge {
-    padding: 5px 12px;
+    padding: 6px 12px;
     border-radius: 20px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
+
+    border: 2px solid transparent;   /* ← AQUI ESTÁ A BORDA */
+    letter-spacing: .3px;
 }
 
-.status-badge.agendado {
-    background: #e8f5e9;
-    color: var(--verde-sucesso);
+/* ===== CORES COM BORDA ===== */
+
+.status-badge.agendada {
+    background: #e8f5ff;
+    color: #4db8ff;
+    border-color: #4db8ff;
 }
+
+.status-badge.realizada {
+    background: #e3fcef;
+    color: #2ecc71;
+    border-color: #2ecc71;
+}
+
+.status-badge.cancelada {
+    background: #ffecec;
+    color: #e74c3c;
+    border-color: #e74c3c;
+}
+
 
 .corpo-agendamento h3 {
     font-size: 18px;
@@ -856,17 +875,60 @@ body {
     margin-bottom: 15px;
 }
 
-.status-badge {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
+/* ==========================================
+   CORES POR STATUS DAS CONSULTAS
+   ========================================== */
+
+/* borda lateral padrão */
+.card-agendamento {
+    border-left: 6px solid #4db8ff; /* padrão = agendado */
+    transition: all .3s ease;
 }
 
-.status-badge.agendado {
-    background: #e8f5e9;
-    color: var(--verde-sucesso);
+
+/* ===== CARD POR STATUS ===== */
+
+.card-agendamento[data-status="agendado"] {
+    border-left-color: #4db8ff;
 }
+
+.realizado-card {
+    border-left-color: #2ecc71 !important;
+    opacity: .95;
+}
+
+.cancelado-card {
+    border-left-color: #e74c3c !important;
+    opacity: .85;
+}
+
+/* deixa texto mais apagado quando cancelado */
+.cancelado-card .corpo-agendamento h3,
+.cancelado-card .corpo-agendamento p {
+    color: #a0aec0;
+}
+
+/* botão muda conforme status */
+.realizado-card .btn-detalhes {
+    border-color: #2ecc71;
+    color: #2ecc71;
+}
+
+.realizado-card .btn-detalhes:hover {
+    background: #2ecc71;
+    color: white;
+}
+
+.cancelado-card .btn-detalhes {
+    border-color: #e74c3c;
+    color: #e74c3c;
+}
+
+.cancelado-card .btn-detalhes:hover {
+    background: #e74c3c;
+    color: white;
+}
+
 
 .corpo-agendamento h3 {
     font-size: 18px;
