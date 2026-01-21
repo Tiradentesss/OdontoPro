@@ -57,3 +57,16 @@ def tela_login():
     def autenticar():
         user = usuario.get()
         pwd = senha.get()
+
+        if user in usuarios and usuarios[user]["senha"] == pwd:
+            abrir_dashboard(usuarios[user]["tipo"])
+        else:
+            erro.configure(text="Usuario ou senha invalidos")
+    
+    ctk.CTkButton(right, text="Entrar", width=280, height=45, font=("Arial", 16), command=autenticar).pack(pady=30)
+
+    erro = ctk.CTkLabel(right, text="", text_color="red")
+    erro.pack()
+
+    def abrir_dashboard(tipo):
+        limpar_tela()
