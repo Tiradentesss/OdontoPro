@@ -43,8 +43,10 @@ ctk.CTkLabel(frame_img, text="", image=img_dentista).place(relwidth=1, relheight
 frame_login = ctk.CTkFrame(app, fg_color="#F2F3F5", corner_radius=0)
 frame_login.grid(row=0, column=1, sticky="nsew")
 
-# >>> CONTEÚDO TODO À ESQUERDA E NO TOPO <<<
-conteudo = ctk.CTkFrame(frame_login, fg_color="transparent")
+centralizado = ctk.CTkFrame(frame_login, fg_color="transparent")
+centralizado.pack(padx=70, pady=100)
+
+conteudo = ctk.CTkFrame(centralizado, fg_color="transparent")
 conteudo.pack(anchor="nw", padx=70, pady=40)
 
 # ----- LOGO -----
@@ -117,7 +119,7 @@ ctk.CTkLabel(
     conteudo,
     text="────────────  ou continue com  ────────────",
     text_color="#999"
-).pack(pady=10, anchor="w")
+).pack(pady=40, anchor="w")
 
 # ----- BOTÕES SOCIAIS (MESMA COR CORRETA) -----
 ctk.CTkButton(
