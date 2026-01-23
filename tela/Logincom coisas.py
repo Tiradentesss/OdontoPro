@@ -102,13 +102,13 @@ def tela_login():
         def botao(texto, comando):
             ctk.CTkButton(sidebar, text=texto, fg_color="#1f6aa5", hover_color="#174f7d", text_color="white", font=("Arial", 16), height=45, command=lambda: trocar_tela(comando)).pack(fill="x", padx=20, pady=6)
 
-            botao("Inicio", inicio)
+            botao("Inicio", inicio())
 
             if tipo == "admin":
-                botao("Usuarios", usuarios)
+                botao("Usuarios", usuarios())
 
-            botao("Produtos", produtos)
-            botao("Sair", tela_login)
+            botao("Produtos", produtos())
+            botao("Sair", tela_login())
 
             inicio()
 tela_login()
