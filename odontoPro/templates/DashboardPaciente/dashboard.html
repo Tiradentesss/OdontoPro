@@ -44,10 +44,14 @@
         </div>
     </div>
 
-    <div id="btnLogout" class="botao-sair" onclick="window.location.href='{% url 'logout' %}'">
-        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-        <span class="legenda">Sair</span>
-    </div>
+    <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="botao-sair">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span class="legenda">Sair</span>
+        </button>
+    </form>
+
 </nav>
 
 <!-- CONTEÚDO -->

@@ -139,12 +139,29 @@ body {
 }
 
 .botao-sair {
-    color: #ff4d4d;
-    margin-top: auto;
+    all: unset;
     display: flex;
-    justify-content: center;
+
+    align-items: center;
+    justify-content: center; /* CENTRALIZA CONTEÚDO */
+
+    gap: 10px;
     cursor: pointer;
-    padding-bottom: 10px;
+
+    padding: 12px 18px;
+    border-radius: 8px;
+
+    color: #fff;
+    background-color: #e74c3c;
+
+    margin: 0 auto; /* CENTRALIZA O BOTÃO NO CONTAINER */
+
+    transition: background-color 0.3s ease;
+}
+
+
+.botao-sair:hover {
+    background-color: #c0392b;
 }
 
 .menu-lateral.aberto .botao-sair {
