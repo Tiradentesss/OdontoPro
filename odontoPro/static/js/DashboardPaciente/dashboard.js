@@ -649,30 +649,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* ================= PERFIL DA CLÍNICA ================= */
 function carregarPerfilClinica(clinicaId) {
-    // Função para carregar dados da clínica dinamicamente
-    console.log('Perfil da clínica carregado:', clinicaId);
-    
-    // Buscar o card da clínica para preencher informações
-    const clinicaCard = document.querySelector(`[data-clinica-id="${clinicaId}"]`);
-    if (clinicaCard) {
-        const nome = clinicaCard.querySelector("h3")?.textContent || "Clínica";
-        const endereco = clinicaCard.getAttribute("data-endereco") || "Endereço não disponível";
-        const telefone = clinicaCard.getAttribute("data-telefone") || "Telefone não disponível";
-        
-        // Atualizar as informações no perfil (se houver elementos)
-        const nomeElemento = document.querySelector("#perfil-clinica .nome-clinica");
-        const enderecoElemento = document.querySelector("#perfil-clinica .endereco-clinica");
-        const telefoneElemento = document.querySelector("#perfil-clinica .telefone-clinica");
-        
-        if (nomeElemento) nomeElemento.textContent = nome;
-        if (enderecoElemento) enderecoElemento.textContent = endereco;
-        if (telefoneElemento) telefoneElemento.textContent = telefone;
-    }
+    // Buscar dados completos da clínica via AJAX
+    fetch(`/clinica/${clinicaId}/perfil/`)
+        .then(response => response.json())
+        .then(data => {
+            // Atualizar informações gerais
+            document.getElementById('detalheNomeClinica').textContent = data.nome;
+            
+            // Atualizar logo
+            const logoClinica = document.querySelector('.logo-clinica-detalhe');
+            if (logoClinica && data.logo) {
+                logoClinica.src = data.logo;
+            }
+            
+            // Atualizar descrição
+            const descricaoElemento = document.querySelector('#aba-sobre p.descricao-texto');
+            if (descricaoElemento) {
+                descricaoElemento.textContent = data.descricao || 'Descrição não disponível';
+            }
+            
+            // Atualizar telefone
+            const telefoneTexto = document.querySelector('.clinica-textos p:nth-child(3)');
+            if (telefoneTexto) {
+                telefoneTexto.innerHTML = `<i class="fa-solid fa-phone-volume"></i> ${data.telefone}`;
+            }
+            
+            // Atualizar endereço
+            const enderecoTexto = document.querySelector('.endereco-detalhes p:first-child');
+            if (enderecoTexto) {
+                const endereco = data.endereco;
+                enderecoTexto.innerHTML = `<strong>${endereco.rua}, ${endereco.numero} - ${endereco.bairro}, ${endereco.cidade} - ${endereco.estado}, ${endereco.cep}</strong>`;
+            }
+            
+            // Armazenar clinicaSelecionada globalmente para uso posterior
+            window.clinicaSelecionadaDados = data;
+        })
+        .catch(error => {
+            console.error('Erro ao carregar perfil da clínica:', error);
+        });
 }
 
 function carregarMedicosClinica(clinicaId) {
-    // Buscar médicos da clínica via AJAX
-    fetch(`/clinica/${clinicaId}/detalhes/`)
+    // Buscar dados completos da clínica via AJAX
+    fetch(`/clinica/${clinicaId}/perfil/`)
         .then(response => response.json())
         .then(data => {
             const listaMedicos = document.getElementById('lista-medicos');
@@ -684,10 +703,23 @@ function carregarMedicosClinica(clinicaId) {
                 data.medicos.forEach(medico => {
                     const medicoCard = document.createElement('div');
                     medicoCard.style.cssText = 'background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center;';
+                    
+                    const fotoHtml = medico.foto 
+                        ? `<img src="${medico.foto}" alt="${medico.nome}" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px; object-fit: cover;">`
+                        : `<div style="font-size: 3rem; margin-bottom: 10px;"><i class="fa-solid fa-user-doctor"></i></div>`;
+                    
+                    const especialidadesHtml = medico.especialidades && medico.especialidades.length > 0
+                        ? `<p style="font-size: 0.85rem; color: #0066cc; margin: 8px 0;">${medico.especialidades.join(', ')}</p>`
+                        : '';
+                    
+                    const avaliacaoHtml = `<p style="font-size: 0.9rem; color: #f39c12;">⭐ ${medico.avaliacao} (${medico.num_avaliacoes} avaliações)</p>`;
+                    
                     medicoCard.innerHTML = `
-                        <div style="font-size: 3rem; margin-bottom: 10px;"><i class="fa-solid fa-user-doctor"></i></div>
-                        <h4>${medico[1]}</h4>
-                        <p style="font-size: 0.9rem; color: #666;">ID: ${medico[0]}</p>
+                        ${fotoHtml}
+                        <h4 style="margin: 10px 0;">${medico.nome}</h4>
+                        <p style="font-size: 0.85rem; color: #666; margin: 5px 0;">CRM/CRO: ${medico.crm_cro}</p>
+                        ${especialidadesHtml}
+                        ${avaliacaoHtml}
                     `;
                     listaMedicos.appendChild(medicoCard);
                 });

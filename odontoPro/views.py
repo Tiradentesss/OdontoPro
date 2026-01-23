@@ -195,6 +195,59 @@ def filtrar_consultas(request):
     return JsonResponse({"html": html})
 
 
+# 🔹 RETORNA DADOS COMPLETOS DA CLÍNICA
+@require_GET
+def clinica_perfil(request, clinica_id):
+    """Retorna todos os dados da clínica para preenchimento do perfil"""
+    try:
+        clinica = Clinica.objects.get(id=clinica_id)
+    except Clinica.DoesNotExist:
+        return JsonResponse({"error": "Clínica não encontrada"}, status=404)
+
+    # Obter medicos com suas especialidades
+    medicos_data = []
+    for medico in clinica.medico_set.all():
+        especialidades = [esp.nome for esp in medico.especialidades.all()]
+        medicos_data.append({
+            "id": medico.id,
+            "nome": medico.nome,
+            "crm_cro": medico.crm_cro,
+            "especialidades": especialidades,
+            "foto": medico.foto.url if medico.foto else None,
+            "avaliacao": float(medico.avaliacao) if medico.avaliacao else 5.0,
+            "num_avaliacoes": medico.num_avaliacoes
+        })
+
+    # Obter endereço
+    endereco = clinica.endereco
+    endereco_data = {
+        "rua": endereco.rua,
+        "numero": endereco.numero,
+        "bairro": endereco.bairro,
+        "cidade": endereco.cidade,
+        "estado": endereco.estado,
+        "cep": endereco.cep
+    }
+
+    # Obter imagens da clínica
+    imagens = [img.imagem.url for img in clinica.imagens.all()]
+
+    return JsonResponse({
+        "id": clinica.id,
+        "nome": clinica.nome,
+        "descricao": clinica.descricao or "",
+        "telefone": clinica.telefone,
+        "logo": clinica.logo.url if clinica.logo else None,
+        "imagem": clinica.imagem.url if clinica.imagem else None,
+        "imagens": imagens,
+        "preco_consulta": float(clinica.preco_consulta) if clinica.preco_consulta else 0,
+        "avaliacao": float(clinica.avaliacao) if clinica.avaliacao else 5.0,
+        "num_avaliacoes": clinica.num_avaliacoes,
+        "endereco": endereco_data,
+        "medicos": medicos_data
+    })
+
+
 # 🔹 RETORNA especialidades e médicos da clínica
 @require_GET
 def clinica_detalhes(request, clinica_id):

@@ -20,15 +20,7 @@ urlpatterns = [
 
     # CLÍNICA
     path("clinica/<int:clinica_id>/", views.perfil_clinica, name="perfilClinica"),
-
-    # CONSULTAS
-    path("consulta/<int:consulta_id>/cancelar/", views.cancelar_consulta, name="cancelar_consulta"),
-    path("consulta/<int:consulta_id>/reagendar/", views.reagendar_consulta, name="reagendar_consulta"),
-
-    # 🔹 NOVO — FILTRO SEM RECARREGAR PÁGINA
-    path("consultas/filtrar/", views.filtrar_consultas, name="filtrar_consultas"),
-
-    # 🔹 Retorna especialidades e médicos da clínica
+    path("clinica/<int:clinica_id>/perfil/", views.clinica_perfil, name="clinica_perfil"),
     path("clinica/<int:clinica_id>/detalhes/", views.clinica_detalhes, name="clinica_detalhes"),
 
     # 🔹 Agendar consulta

@@ -162,7 +162,13 @@
 
     <div class="grid-clinicas" id="listaClinicas">
         {% for clinica in clinicas %}
-        <div class="card-clinica" data-avaliacao="{{ clinica.avaliacao|default:0 }}" data-estado="{{ clinica.endereco.estado|default:'' }}" data-cidade="{{ clinica.endereco.cidade|default:'' }}">
+        <div class="card-clinica" 
+             data-clinica-id="{{ clinica.id }}"
+             data-avaliacao="{{ clinica.avaliacao|default:0 }}" 
+             data-estado="{{ clinica.endereco.estado|default:'' }}" 
+             data-cidade="{{ clinica.endereco.cidade|default:'' }}"
+             data-endereco="{{ clinica.endereco.rua }}, {{ clinica.endereco.numero }} - {{ clinica.endereco.bairro }}"
+             data-telefone="{{ clinica.telefone }}">
 
             <!-- BANNER -->
             <div class="banner-card">
