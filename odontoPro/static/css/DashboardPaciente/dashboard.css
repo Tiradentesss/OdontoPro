@@ -1578,16 +1578,12 @@ body {
     color: #333 !important;
     font-weight: 600 !important;
 }
-}
 
 .acoes-modal{
     margin-top: 20px;
     display: flex;
     gap: 10px;
     justify-content: center;
-}
-    justify-content:space-between;
-    gap:10px;
 }
 
 .btn-cancelar{
@@ -2178,6 +2174,62 @@ body {
 .btn-voltar-perfil:hover {
     background: #e2e8f0;
     color: #2d3748;
+}
+
+.card-agendamento {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 18px;
+    border-left: 6px solid #cbd5e1; /* padrão */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: 0.3s ease;
+}
+
+.card-agendamento[data-status="agendada"] {
+    border-left-color: #facc15; /* amarelo */
+}
+
+.status-badge.agendada {
+    background: #fef9c3;
+    color: #a16207;
+}
+
+.card-agendamento[data-status="cancelada"],
+.cancelado-card {
+    border-left-color: #ef4444;
+}
+
+.status-badge.cancelada {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.card-agendamento[data-status="cancelada"],
+.cancelado-card {
+    border-left-color: #ef4444;
+}
+
+.status-badge.cancelada {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.card-agendamento[data-status="realizada"],
+.realizado-card {
+    border-left-color: #22c55e;
+}
+
+.status-badge.realizada {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 
