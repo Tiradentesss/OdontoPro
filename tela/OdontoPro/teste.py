@@ -1,6 +1,9 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from PIL import Image
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 # =============================
 # CONFIGURAÇÕES GERAIS
@@ -94,7 +97,17 @@ class OdontoProApp(ctk.CTk):
         right = ctk.CTkFrame(self, fg_color="#F2F2F2", corner_radius=0)
         right.grid(row=0, column=1, sticky="nsew", padx=60)
 
-        ctk.CTkLabel(right, text="[ LOGO AQUI ]", font=("Arial", 14, "bold"), text_color="#0056b3").pack(anchor="w", pady=(60, 30))
+        logo_img = ctk.CTkImage(
+            Image.open(os.path.join(BASE_DIR, "logo.png")),
+            size=(160, 60)
+        )
+
+        ctk.CTkLabel(
+            right,
+            image=logo_img,
+            text=""
+        ).pack(anchor="w", pady=(60, 30))
+
         ctk.CTkLabel(right, text="Faça Login com sua conta", font=("Inter", 28, "bold")).pack(anchor="w")
         ctk.CTkLabel(right, text="Digite seu usuário e senha", font=("Inter", 14), text_color="#666").pack(anchor="w", pady=(0, 30))
 
