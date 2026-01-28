@@ -32,11 +32,11 @@ linha = 1
 coluna = 0
 
 for card in cards:
-    frame = ctk.CTkFrame(container, heigth=120)
+    frame = ctk.CTkFrame(container, height=120)
     frame.grid(row=linha, column=coluna, padx=15, pady=15, sticky="nsew")
     frame.grid_propagate(False)
 
-    ctk.CTkLabel(frame, text=card, font=("Arial", 18)).pack(expando=True)
+    ctk.CTkLabel(frame, text=card, font=("Arial", 18)).pack(expand=True)
 
     coluna += 1
     if coluna > 2:
