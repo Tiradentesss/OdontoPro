@@ -20,8 +20,9 @@ proporcao = logo_original.width / logo_original.height
 
 img_logo = ctk.CTkImage(
     logo_original,
-    size=(int(75 * proporcao), 75)   # LOGO MENOR E CORRETA
+    size=(int(50 * proporcao), 50)   # LOGO MENOR E CORRETA
 )
+
 
 img_dentista = ctk.CTkImage(
     Image.open(os.path.join(caminho, "dentistalogin.png")),
@@ -44,13 +45,13 @@ frame_login = ctk.CTkFrame(app, fg_color="#F2F3F5", corner_radius=0)
 frame_login.grid(row=0, column=1, sticky="nsew")
 
 centralizado = ctk.CTkFrame(frame_login, fg_color="transparent")
-centralizado.pack(padx=70, pady=100)
+centralizado.pack(padx=20, pady=100)
 
 conteudo = ctk.CTkFrame(centralizado, fg_color="transparent")
 conteudo.pack(anchor="nw", padx=70, pady=40)
 
 # ----- LOGO -----
-ctk.CTkLabel(conteudo, text="", image=img_logo).pack(anchor="w", pady=(0, 10))
+ctk.CTkLabel(conteudo, text="", image=img_logo).pack(anchor="w", pady=(0, 80))
 
 # ----- TITULOS -----
 ctk.CTkLabel(
