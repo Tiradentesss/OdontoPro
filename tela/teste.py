@@ -125,6 +125,7 @@ class OdontoProApp(ctk.CTk):
     # DASHBOARD
     # =============================
     def abrir_dashboard(self, nome):
+
         self.limpar_tela()
 
         self.grid_columnconfigure(0, weight=0)
@@ -207,7 +208,104 @@ class OdontoProApp(ctk.CTk):
 
 
     def render_painel(self):
-        ctk.CTkLabel(self.content_frame, text="Painel Geral", font=("Arial", 28, "bold")).pack(anchor="w")
+        # Container principal do painel
+        painel = ctk.CTkFrame(self.content_frame, fg_color="transparent")
+        painel.pack(fill="both", expand=True)
+
+        painel.grid_columnconfigure((0, 1, 2), weight=1)
+        painel.grid_rowconfigure((1, 2), weight=1)
+
+        # ===== HEADER =====
+        ctk.CTkLabel(
+            painel,
+            text="Olá, Lucas 👋",
+            font=("Arial", 24, "bold"),
+            text_color=COLOR_ACCENT
+        ).grid(row=0, column=0, sticky="w", pady=(0, 20))
+
+        # ===== FUNÇÕES AUXILIARES =====
+        def criar_card(parent, titulo, row, col, colspan=1):
+            card = ctk.CTkFrame(parent, fg_color="white", corner_radius=20)
+            card.grid(row=row, column=col, columnspan=colspan, padx=10, pady=10, sticky="nsew")
+
+            ctk.CTkLabel(
+                card,
+                text=titulo,
+                font=("Arial", 16, "bold"),
+                text_color=COLOR_TEXT
+            ).pack(anchor="w", padx=20, pady=15)
+
+            return card
+
+        def placeholder_grafico(parent, texto):
+            box = ctk.CTkFrame(parent, fg_color="#F9F9F9", corner_radius=10)
+            box.pack(expand=True, fill="both", padx=20, pady=(0, 20))
+
+            ctk.CTkLabel(
+                box,
+                text=texto,
+                text_color=COLOR_TEXT_MUTED,
+                font=("Arial", 12, "italic")
+            ).place(relx=0.5, rely=0.5, anchor="center")
+
+        def item_consulta(parent, nome, horario):
+            linha = ctk.CTkFrame(parent, fg_color="transparent")
+            linha.pack(fill="x", padx=20, pady=6)
+
+            avatar = ctk.CTkFrame(linha, width=36, height=36, corner_radius=18, fg_color=COLOR_ACCENT)
+            avatar.pack(side="left", padx=(0, 10))
+
+            info = ctk.CTkFrame(linha, fg_color="transparent")
+            info.pack(side="left")
+
+            ctk.CTkLabel(info, text=nome, font=("Arial", 13, "bold"), text_color=COLOR_ACCENT).pack(anchor="w")
+            ctk.CTkLabel(info, text=horario, font=("Arial", 11), text_color=COLOR_TEXT_MUTED).pack(anchor="w")
+
+        def item_paciente(parent, nome, email):
+            linha = ctk.CTkFrame(parent, fg_color="transparent")
+            linha.pack(fill="x", padx=20, pady=4)
+
+            avatar = ctk.CTkFrame(linha, width=30, height=30, corner_radius=15, fg_color="#E0E0E0")
+            avatar.pack(side="left", padx=(0, 10))
+
+            info = ctk.CTkFrame(linha, fg_color="transparent")
+            info.pack(side="left")
+
+            ctk.CTkLabel(info, text=nome, font=("Arial", 12, "bold"), text_color=COLOR_ACCENT).pack(anchor="w")
+            ctk.CTkLabel(info, text=email, font=("Arial", 10), text_color=COLOR_TEXT_MUTED).pack(anchor="w")
+
+        # ===== LINHA 1 =====
+        card_consultas = criar_card(painel, "Próximas Consultas", 1, 0, colspan=2)
+        item_consulta(card_consultas, "Victor Araújo", "Hoje às 09:00 - 09:30")
+        item_consulta(card_consultas, "Natália Silva", "Hoje às 12:00 - 12:30")
+        item_consulta(card_consultas, "Hugo Pontes", "Hoje às 14:00 - 14:30")
+
+        card_relatorio = criar_card(painel, "Relatório", 1, 2)
+        placeholder_grafico(card_relatorio, "Espaço para Gráfico de Rosca (92%)")
+
+        # ===== LINHA 2 =====
+        card_agendadas = criar_card(painel, "Consultas Agendadas", 2, 0)
+        ctk.CTkLabel(
+            card_agendadas,
+            text="12",
+            font=("Arial", 48, "bold"),
+            text_color=COLOR_ACCENT
+        ).pack(pady=(20, 0))
+        ctk.CTkLabel(
+            card_agendadas,
+            text="Somente este mês",
+            font=("Arial", 12),
+            text_color=COLOR_TEXT_MUTED
+        ).pack()
+
+        card_pacientes = criar_card(painel, "Pacientes Recentes", 2, 1)
+        item_paciente(card_pacientes, "Bruno Martins", "bruno@gmail.com")
+        item_paciente(card_pacientes, "Camila Rocha", "camila@gmail.com")
+        item_paciente(card_pacientes, "Felipe Andrade", "felipe@gmail.com")
+
+        card_faturamento = criar_card(painel, "Faturamento", 2, 2)
+        placeholder_grafico(card_faturamento, "Espaço para Gráfico de Linhas")
+
 
     def render_agendamento(self):
         card = ctk.CTkFrame(self.content_frame, fg_color="white", corner_radius=20)
