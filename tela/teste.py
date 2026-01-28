@@ -141,7 +141,6 @@ class OdontoProApp(ctk.CTk):
         self.menu = [
             ("Painel", "🏠"),
             ("Agendamento", "📅"),
-            ("Meus Pacientes", "👥"),
             ("Relatório", "📊"),
             ("Mensagens", "💬"),
             ("Configuração", "⚙️"),
@@ -193,7 +192,6 @@ class OdontoProApp(ctk.CTk):
         {
             "Painel": self.render_painel,
             "Agendamento": self.render_agendamento,
-            "Meus Pacientes": self.render_pacientes,
             "Relatório": self.render_relatorio,
             "Mensagens": self.render_mensagens,
             "Configuração": self.render_config
