@@ -27,6 +27,15 @@ function mostrarTela(id, btn) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // DEBUG: Verificar valores de avaliação das clínicas
+    const clinicas = document.querySelectorAll(".card-clinica");
+    console.log(`Total de clínicas carregadas: ${clinicas.length}`);
+    clinicas.forEach(card => {
+        const avaliacao = card.getAttribute("data-avaliacao");
+        const nome = card.querySelector("h3")?.textContent || "Desconhecida";
+        console.log(`Clínica: ${nome} | Avaliação: ${avaliacao}`);
+    });
+    
     const inputBusca = document.getElementById("inputBuscaClinica");
 
     if (inputBusca) {
@@ -58,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+    
     
     // Adicionar listener para validação de email em tempo real
     const emailInput = document.getElementById('inputEmail');
@@ -473,7 +483,8 @@ function initFiltroLocalizacao(btnId, dropdownId) {
 
 /* ================= FUNÇÃO PARA APLICAR TODOS OS FILTROS ================= */
 function aplicarFiltros() {
-    const cards = document.querySelectorAll(".card-clinica");
+    const listaClinicas = document.getElementById("listaClinicas");
+    const cards = Array.from(document.querySelectorAll(".card-clinica"));
     
     // Obter filtros com verificação de nulidade
     const filtroEstrelas = parseInt(obterFiltroEstrelas()) || 0;
@@ -485,6 +496,9 @@ function aplicarFiltros() {
     
     console.log(`Aplicando filtros: estrelas=${filtroEstrelas}, estado=${filtroEstado}, cidade=${filtroCidade}`);
     
+    // Array para armazenar cards visíveis ordenados
+    const cardsVisiveis = [];
+    
     cards.forEach(card => {
         const avaliacao = parseFloat(card.getAttribute("data-avaliacao") || 0);
         const estado = card.getAttribute("data-estado") || "";
@@ -492,9 +506,11 @@ function aplicarFiltros() {
         
         let mostrar = true;
         
-        // Filtro de estrelas
-        if (filtroEstrelas > 0 && avaliacao < filtroEstrelas) {
-            mostrar = false;
+        // Filtro de estrelas - mostra clínicas com avaliação >= filtroEstrelas
+        if (filtroEstrelas > 0) {
+            if (avaliacao < filtroEstrelas) {
+                mostrar = false;
+            }
         }
         
         // Filtro de estado
@@ -507,8 +523,23 @@ function aplicarFiltros() {
             mostrar = false;
         }
         
-        card.style.display = mostrar ? "flex" : "none";
+        if (mostrar) {
+            cardsVisiveis.push({ card: card, avaliacao: avaliacao });
+            card.style.display = "flex";
+        } else {
+            card.style.display = "none";
+        }
     });
+    
+    // Ordenar por avaliação (ordem crescente: menor para maior)
+    cardsVisiveis.sort((a, b) => a.avaliacao - b.avaliacao);
+    
+    // Reordenar cards no DOM
+    cardsVisiveis.forEach(item => {
+        listaClinicas.appendChild(item.card);
+    });
+    
+    console.log(`Clínicas visíveis após filtro: ${cardsVisiveis.length}`);
 }
 
 /* ================= FUNÇÃO AUXILIAR PARA OBTER FILTRO DE ESTRELAS ================= */

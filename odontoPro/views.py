@@ -9,10 +9,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 
 from .models import Paciente, Clinica, Consulta, Medico
+from .models import DiaSemanaDisponivel, HorarioAberto
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
-from .models import DiaSemanaDisponivel, HorarioAberto
-
 @require_GET
 def horarios_clinica(request, clinica_id):
     data = request.GET.get("data")  # yyyy-mm-dd
@@ -53,6 +52,9 @@ def horarios_clinica(request, clinica_id):
             hora += timedelta(minutes=30)
 
     return JsonResponse({"horarios": horarios})
+
+
+
 
 
 # -------- CANCELAR CONSULTA --------
@@ -143,6 +145,9 @@ def dashboard_paciente(request):
     }
 
     return render(request, "DashboardPaciente/dashboard.html", context)
+ 
+
+
 
 
 # ---------- LOGOUT ----------
