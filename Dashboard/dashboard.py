@@ -1,5 +1,11 @@
 import customtkinter as ctk
 
+# ================= MOCK LOGIN =================
+
+USUARIOS = {
+    "admin": {"senha": "123", "nome": "Lucas"},
+}
+
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
 
@@ -29,8 +35,11 @@ STATUS_COLORS = {
 
 
 class App(ctk.CTk):
-    def __init__(self):
+    def __init__(self, usuario_nome="Usuário"):
         super().__init__()
+
+        self.usuario_nome = usuario_nome
+
 
         self.title("OdontoPro - Sistema de Gerenciamento")
         self.geometry("1150x750")
@@ -400,7 +409,95 @@ class Configuracoes(BaseScreen):
         super().__init__(parent, "Configurações")
         ctk.CTkLabel(self.content_card, text="Configurações do sistema.", font=ctk.CTkFont(size=14)).pack(pady=40)
 
+class Login(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+
+        self.title("Login - OdontoPro")
+        self.geometry("1100x650")
+        self.minsize(900, 550)
+        self.configure(fg_color="#F5F6FA")
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        # ---------- LADO ESQUERDO ----------
+        left = ctk.CTkFrame(self, fg_color="#0d99c7", corner_radius=0)
+        left.grid(row=0, column=0, sticky="nsew")
+
+        ctk.CTkLabel(
+            left,
+            text="OdontoPro",
+            font=ctk.CTkFont(size=36, weight="bold"),
+            text_color="white"
+        ).pack(expand=True)
+
+        # ---------- LADO DIREITO ----------
+        right = ctk.CTkFrame(self, fg_color="white", corner_radius=0)
+        right.grid(row=0, column=1, sticky="nsew", padx=60)
+
+        ctk.CTkLabel(
+            right,
+            text="Bem-vindo 👋",
+            font=ctk.CTkFont(size=28, weight="bold"),
+            text_color="#1F2937"
+        ).pack(anchor="w", pady=(80, 10))
+
+        ctk.CTkLabel(
+            right,
+            text="Entre com sua conta para continuar",
+            font=ctk.CTkFont(size=14),
+            text_color="#6B7280"
+        ).pack(anchor="w", pady=(0, 30))
+
+        ctk.CTkLabel(right, text="Usuário").pack(anchor="w")
+        self.ent_user = ctk.CTkEntry(
+            right,
+            height=45,
+            fg_color="#FFFFFF",
+            border_color="#E5E7EB"
+        )
+        self.ent_user.pack(fill="x", pady=(5, 15))
+
+        ctk.CTkLabel(right, text="Senha").pack(anchor="w")
+        self.ent_pass = ctk.CTkEntry(
+            right,
+            height=45,
+            show="*",
+            fg_color="#FFFFFF",
+            border_color="#E5E7EB"
+        )
+        self.ent_pass.pack(fill="x", pady=(5, 25))
+
+        ctk.CTkButton(
+            right,
+            text="Entrar",
+            height=46,
+            fg_color="#0d99c7",
+            hover_color="#0b86af",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            command=self.autenticar
+        ).pack(fill="x")
+
+        self.bind("<Return>", lambda e: self.autenticar())
+
+    def autenticar(self):
+        user = self.ent_user.get()
+        senha = self.ent_pass.get()
+
+        if user in USUARIOS and USUARIOS[user]["senha"] == senha:
+            self.destroy()
+            app = App(usuario_nome=USUARIOS[user]["nome"])
+            app.mainloop()
+        else:
+            ctk.CTkMessagebox(
+                title="Erro",
+                message="Usuário ou senha inválidos",
+                icon="cancel"
+            )
+
 
 if __name__ == "__main__":
-    app = App()
-    app.mainloop()
+    login = Login()
+    login.mainloop()
