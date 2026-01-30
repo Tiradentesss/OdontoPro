@@ -450,28 +450,15 @@ def criar_avaliacao(request):
             }, status=404)
         
         # Verificar se já existe avaliação para este médico e clínica pelo paciente
-        avaliacao_existente = Avaliacao.objects.filter(
+        Avaliacao.objects.create(
             paciente=paciente,
+            clinica=clinica,
             medico=medico,
-            clinica=clinica
-        ).first()
-        
-        if avaliacao_existente:
-            # Atualizar avaliação existente
-            avaliacao_existente.nota = nota
-            avaliacao_existente.comentario = comentario
-            avaliacao_existente.save()
-            logger.info(f"Avaliação atualizada: {avaliacao_existente.id}")
-        else:
-            # Criar nova avaliação
-            avaliacao = Avaliacao.objects.create(
-                paciente=paciente,
-                clinica=clinica,
-                medico=medico,
-                nota=nota,
-                comentario=comentario
-            )
-            logger.info(f"Avaliação criada: {avaliacao.id}")
+            nota=nota,
+            comentario=comentario
+        )
+
+        logger.info(f"Avaliação criada: {avaliacao.id}")
         
         return JsonResponse({
             "success": True,
