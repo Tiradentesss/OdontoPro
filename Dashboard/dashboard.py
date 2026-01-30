@@ -1,4 +1,6 @@
 import customtkinter as ctk
+from PIL import Image
+import os
 
 # ================= MOCK LOGIN =================
 
@@ -414,71 +416,126 @@ class Login(ctk.CTk):
         super().__init__()
 
         self.title("Login - OdontoPro")
-        self.geometry("1100x650")
-        self.minsize(900, 550)
-        self.configure(fg_color="#F5F6FA")
+        self._set_appearance_mode("light")
+        self.configure(fg_color="#FFFFFF")
 
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
+        largura = self.winfo_screenwidth()
+        altura = self.winfo_screenheight()
+        self.geometry(f"{largura}x{altura}")
+        self.minsize(1100, 650)
+
+        caminho = os.path.dirname(__file__)
+
+        # ===== IMAGENS =====
+        logo_original = Image.open(os.path.join(caminho, "logo.png"))
+        proporcao_logo = logo_original.width / logo_original.height
+        self.img_logo = ctk.CTkImage(
+            logo_original,
+            size=(int(50 * proporcao_logo), 50)
+        )
+
+        dentista_img = Image.open(os.path.join(caminho, "dentistalogin.png"))
+        proporcao_dentista = dentista_img.width / dentista_img.height
+        largura_img = int(largura * 0.45)
+        altura_img = int((largura_img / proporcao_dentista) * 0.75)
+
+        self.img_dentista = ctk.CTkImage(
+            dentista_img,
+            size=(largura_img, altura_img)
+        )
+
+        # ===== GRID =====
+        self.grid_columnconfigure(0, weight=1, uniform="a")
+        self.grid_columnconfigure(1, weight=1, uniform="a")
         self.grid_rowconfigure(0, weight=1)
 
-        # ---------- LADO ESQUERDO ----------
-        left = ctk.CTkFrame(self, fg_color="#0d99c7", corner_radius=0)
-        left.grid(row=0, column=0, sticky="nsew")
+        # ===== ESQUERDA =====
+        frame_img = ctk.CTkFrame(self, fg_color="#F2F3F5", corner_radius=0)
+        frame_img.grid(row=0, column=0, sticky="nsew")
 
         ctk.CTkLabel(
-            left,
-            text="OdontoPro",
-            font=ctk.CTkFont(size=36, weight="bold"),
-            text_color="white"
-        ).pack(expand=True)
+            frame_img,
+            text="",
+            image=self.img_dentista,
+            fg_color="transparent"
+        ).place(relx=0.5, rely=0.5, anchor="center")
 
-        # ---------- LADO DIREITO ----------
-        right = ctk.CTkFrame(self, fg_color="white", corner_radius=0)
-        right.grid(row=0, column=1, sticky="nsew", padx=60)
+        # ===== DIREITA =====
+        frame_login = ctk.CTkFrame(self, fg_color="#F2F3F5", corner_radius=0)
+        frame_login.grid(row=0, column=1, sticky="nsew")
+
+        central = ctk.CTkFrame(frame_login, fg_color="transparent")
+        central.pack(padx=20, pady=100)
+
+        conteudo = ctk.CTkFrame(central, fg_color="transparent")
+        conteudo.pack(anchor="nw", padx=200, pady=40)
+
+        # LOGO
+        ctk.CTkLabel(conteudo, text="", image=self.img_logo).pack(anchor="w", pady=(0, 80))
+
+        # TÍTULOS
+        ctk.CTkLabel(
+            conteudo,
+            text="Acesse sua conta",
+            font=("Arial", 28, "bold"),
+            text_color="#1C1C1C"
+        ).pack(anchor="w")
 
         ctk.CTkLabel(
-            right,
-            text="Bem-vindo 👋",
-            font=ctk.CTkFont(size=28, weight="bold"),
-            text_color="#1F2937"
-        ).pack(anchor="w", pady=(80, 10))
+            conteudo,
+            text="Bem-vindo de volta! Entre com seus dados.",
+            font=("Arial", 14),
+            text_color="#666666"
+        ).pack(anchor="w", pady=(0, 20))
 
-        ctk.CTkLabel(
-            right,
-            text="Entre com sua conta para continuar",
-            font=ctk.CTkFont(size=14),
-            text_color="#6B7280"
-        ).pack(anchor="w", pady=(0, 30))
-
-        ctk.CTkLabel(right, text="Usuário").pack(anchor="w")
+        # CAMPOS
         self.ent_user = ctk.CTkEntry(
-            right,
-            height=45,
-            fg_color="#FFFFFF",
-            border_color="#E5E7EB"
+            conteudo,
+            width=420,
+            height=50,
+            placeholder_text="Usuário",
+            fg_color="white",
+            border_width=0
         )
-        self.ent_user.pack(fill="x", pady=(5, 15))
+        self.ent_user.pack(pady=15, anchor="w")
 
-        ctk.CTkLabel(right, text="Senha").pack(anchor="w")
         self.ent_pass = ctk.CTkEntry(
-            right,
-            height=45,
+            conteudo,
+            width=420,
+            height=50,
+            placeholder_text="Senha",
             show="*",
-            fg_color="#FFFFFF",
-            border_color="#E5E7EB"
+            fg_color="white",
+            border_width=0
         )
-        self.ent_pass.pack(fill="x", pady=(5, 25))
+        self.ent_pass.pack(pady=15, anchor="w")
 
+        # OPÇÕES
+        linha = ctk.CTkFrame(conteudo, fg_color="transparent")
+        linha.pack(fill="x", pady=5)
+
+        ctk.CTkCheckBox(linha, text="Lembrar-me").grid(row=0, column=0)
+
+        ctk.CTkLabel(
+            linha,
+            text="Esqueci minha senha",
+            text_color="#0A66C2"
+        ).grid(row=0, column=1, sticky="e")
+
+        linha.grid_columnconfigure(1, weight=1)
+
+        # BOTÃO ENTRAR
         ctk.CTkButton(
-            right,
-            text="Entrar",
-            height=46,
-            fg_color="#0d99c7",
-            hover_color="#0b86af",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            conteudo,
+            text="ENTRAR",
+            width=420,
+            height=50,
+            font=("Arial", 12, "bold"),
+            fg_color="#0A66C2",
+            hover_color="#0959A8",
+            corner_radius=8,
             command=self.autenticar
-        ).pack(fill="x")
+        ).pack(pady=15, anchor="w")
 
         self.bind("<Return>", lambda e: self.autenticar())
 
