@@ -107,6 +107,33 @@ class HorarioAberto(models.Model):
     def __str__(self):
         return f"{self.dia.get_dia_display()} {self.hora_inicio.strftime('%H:%M')} - {self.hora_fim.strftime('%H:%M')}"
 
+# -------------------------
+# GERENCIAMENTO
+# -------------------------
+class Permissao(models.Model):
+    codigo = models.CharField(max_length=50, unique=True)
+    descricao = models.CharField(max_length=150)
+
+    def __str__(self):
+        return self.descricao
+
+
+class Gerenciamento(models.Model):
+    nome = models.CharField(max_length=85)
+    email = models.EmailField(max_length=100, unique=True)
+    senha = models.CharField(max_length=255)  # hash
+    permissoes = models.ManyToManyField(
+        Permissao,
+        related_name="usuarios_gerenciamento",
+        blank=True
+    )
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    ativo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.nome
+
 
 # -------------------------
 # PACIENTE
