@@ -84,7 +84,6 @@ class App(ctk.CTk):
         self.menu_items = [
             ("▣  Painel", "painel"),
             ("🗓  Agenda", "agenda"),
-            ("👤  Pacientes", "pacientes"),
             ("💰  Financeiro", "financeiro"),
             ("⚙  Configurações", "config"),
         ]
@@ -110,7 +109,6 @@ class App(ctk.CTk):
         self.frames = {
             "painel": Painel(self.container),
             "agenda": Agenda(self.container),
-            "pacientes": Pacientes(self.container),
             "financeiro": Financeiro(self.container),
             "config": Configuracoes(self.container),
         }
@@ -388,23 +386,6 @@ class Agenda(BaseScreen):
     def trocar_pagina(self, pagina):
         self.pagina_atual = pagina
         self.render()
-
-class Pacientes(BaseScreen):
-    def __init__(self, parent):
-        super().__init__(parent, "Pacientes")
-
-        top = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        top.pack(fill="x", padx=25, pady=25)
-
-        ctk.CTkEntry(top, placeholder_text="Buscar paciente...", width=350, height=42).pack(side="left")
-        ctk.CTkButton(
-            top,
-            text="Novo Paciente +",
-            fg_color="#22C55E",
-            hover_color="#16A34A",
-            height=42
-        ).pack(side="right")
-
 
 class Configuracoes(BaseScreen):
     def __init__(self, parent):
