@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from views.painel import Painel
+from views.Painel import Painel
 from views.agenda import Agenda
 from views.financeiro import Financeiro
 from views.cadastro import Cadastro

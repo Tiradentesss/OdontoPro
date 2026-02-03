@@ -1,7 +1,8 @@
 # views/app.py
 
 import customtkinter as ctk
-from views.painel import Painel
+from SistemaDesktop.views import permissao
+from views.Painel import Painel
 from views.agenda import Agenda
 from views.financeiro import Financeiro
 from views.cadastro import Cadastro
@@ -17,12 +18,16 @@ class App(ctk.CTk):
         self.container = ctk.CTkFrame(self)
         self.container.pack(fill="both", expand=True)
 
+# ================= Frames =================
+# frames para cada seção do aplicativo
+# cada seção é uma instância de uma classe diferente
         self.frames = {
             "painel": Painel(self.container),
             "agenda": Agenda(self.container),
             "financeiro": Financeiro(self.container),
             "cadastro": Cadastro(self.container),
             "config": Configuracoes(self.container),
+            "permissao": permissao(self.container)
         }
 
         self.show_frame("painel")

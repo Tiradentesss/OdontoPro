@@ -1,11 +1,12 @@
 import customtkinter as ctk
 
-from views.painel import Painel
+from views.Painel import Painel
 from views.agenda import Agenda
 from views.financeiro import Financeiro
 from views.cadastro import Cadastro
 from views.configuracoes import Configuracoes
 from views.login import Login
+from views.permissao import Permissoes
 
 from PIL import Image
 import customtkinter as ctk
@@ -63,6 +64,7 @@ class App(ctk.CTk):
             ("💰  Financeiro", "financeiro"),
             ("⚙  Configurações", "config"),
             ("👤  Cadastro", "cadastro"),
+            ("🔒  Permissões", "permissao"),
         ]
 
         for text, name in self.menu_items:
@@ -89,6 +91,7 @@ class App(ctk.CTk):
             "financeiro": Financeiro(self.container),
             "config": Configuracoes(self.container),
             "cadastro": Cadastro(self.container),
+            "permissao": Permissoes(self.container),
         }
 
         self.current_frame = None
