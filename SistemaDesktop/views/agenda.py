@@ -1,6 +1,14 @@
 from .base import BaseScreen
 import customtkinter as ctk
 
+# 🔽 IMPORTA DO MODELS
+from models.data import (
+    LIMITE_CONSULTAS,
+    CONSULTAS_DATA,
+    STATUS_COLORS
+)
+
+
 class Agenda(BaseScreen):
     def __init__(self, parent):
         super().__init__(parent, "Agenda")

@@ -184,7 +184,11 @@ class Login(ctk.CTk):
 
         if user in USUARIOS and USUARIOS[user]["senha"] == senha:
             self.destroy()
-            app = App(usuario_nome=USUARIOS[user]["nome"])
+
+            # ✅ import local para evitar circular import
+            from app import App
+
+            app = App(USUARIOS[user]["nome"])
             app.mainloop()
         else:
             ctk.CTkMessagebox(
@@ -192,6 +196,7 @@ class Login(ctk.CTk):
                 message="Usuário ou senha inválidos",
                 icon="cancel"
             )
+
 
             app = App(USUARIOS[user]["nome"])
             app.mainloop()
