@@ -2,9 +2,10 @@ import customtkinter as ctk
 import os
 from PIL import Image
 
-USUARIOS = {
-    "admin": {"senha": "123", "nome": "Lucas"}
-}
+
+from models.data import (
+    USUARIOS,
+)
 
 class Login(ctk.CTk):
     def __init__(self):
