@@ -53,7 +53,7 @@ class Agenda(BaseScreen):
         left_panel.grid_columnconfigure(0, weight=1)
         left_panel.grid_rowconfigure(1, weight=1)
 
-        # 1. Cabeçalho da Tabela (Agora usando GRID para alinhar com as linhas)
+        # 1. Cabeçalho da Tabela
         header_frame = ctk.CTkFrame(left_panel, fg_color="transparent", height=45)
         header_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(20, 5))
         
@@ -63,12 +63,15 @@ class Agenda(BaseScreen):
         for col_idx, weight in enumerate(self.col_weights):
             header_frame.grid_columnconfigure(col_idx, weight=weight)
             
+            # Lógica de Alinhamento: Nome (Esq), Resto (Centro)
+            align = "w" if col_idx == 0 else "center"
+            
             lbl = ctk.CTkLabel(
                 header_frame, 
                 text=headers[col_idx], 
                 font=ctk.CTkFont(size=13, weight="bold"),
                 text_color=self.colors["text_secondary"],
-                anchor="w" if col_idx < 3 else "center" # Status centralizado
+                anchor=align 
             )
             lbl.grid(row=0, column=col_idx, sticky="ew", padx=5)
 
@@ -92,44 +95,57 @@ class Agenda(BaseScreen):
             row = ctk.CTkFrame(rows_container, fg_color=bg_color, corner_radius=8, height=55)
             row.pack(fill="x", pady=3)
             
-            # Configura Grid da Linha (Idêntico ao Header)
+            # Configura Grid da Linha
             for col_idx, weight in enumerate(self.col_weights):
                 row.grid_columnconfigure(col_idx, weight=weight)
 
-            # Eventos
+            # Eventos (Hover e Click)
             row.bind("<Button-1>", lambda e, d=item: self.selecionar_paciente(d))
             if not is_selected:
                 row.bind("<Enter>", lambda e, f=row: f.configure(fg_color=self.colors["hover"]))
                 row.bind("<Leave>", lambda e, f=row: f.configure(fg_color="transparent"))
 
-            # --- Coluna 0: Nome ---
+            # --- Coluna 0: Nome (Alinhado à Esquerda) ---
             l_nome = ctk.CTkLabel(row, text=nome, font=ctk.CTkFont(size=14, weight="bold"), 
                                   text_color=self.colors["text_primary"], anchor="w")
             l_nome.grid(row=0, column=0, sticky="ew", padx=(15, 5))
             
-            # --- Coluna 1: Data ---
+            # --- Coluna 1: Data (Centralizado) ---
             l_data = ctk.CTkLabel(row, text=data, font=ctk.CTkFont(size=13),
-                                  text_color=self.colors["text_primary"], anchor="w")
+                                  text_color=self.colors["text_primary"], anchor="center")
             l_data.grid(row=0, column=1, sticky="ew", padx=5)
             
-            # --- Coluna 2: Hora ---
+            # --- Coluna 2: Hora (Centralizado) ---
             l_hora = ctk.CTkLabel(row, text=hora, font=ctk.CTkFont(size=13),
-                                  text_color=self.colors["text_primary"], anchor="w")
+                                  text_color=self.colors["text_primary"], anchor="center")
             l_hora.grid(row=0, column=2, sticky="ew", padx=5)
 
-            # --- Coluna 3: Status Badge ---
+            # --- Coluna 3: Status Badge (Tamanho Fixo) ---
             info_status = STATUS_COLORS.get(status, {"bg": "#eee", "text": "#333"})
             
-            # Frame wrapper para centralizar o badge na célula da grid
+            # Wrapper para centralizar o badge na célula da grid
             badge_wrapper = ctk.CTkFrame(row, fg_color="transparent")
             badge_wrapper.grid(row=0, column=3, sticky="ew", padx=5)
             
-            badge = ctk.CTkFrame(badge_wrapper, fg_color=info_status["bg"], corner_radius=6)
-            badge.pack(anchor="center") # Centraliza visualmente
+            # Badge com Tamanho Fixo (width=110)
+            badge = ctk.CTkFrame(
+                badge_wrapper, 
+                fg_color=info_status["bg"], 
+                corner_radius=6,
+                width=110,  # Largura fixa para todos os status
+                height=26   # Altura fixa
+            )
+            badge.pack(anchor="center") 
+            badge.pack_propagate(False) # Impede que o frame encolha para o tamanho do texto
             
-            l_status = ctk.CTkLabel(badge, text=status, text_color=info_status["text"], 
-                                    font=ctk.CTkFont(size=11, weight="bold"), padx=10, pady=3)
-            l_status.pack()
+            # Texto centralizado dentro do Badge fixo
+            l_status = ctk.CTkLabel(
+                badge, 
+                text=status, 
+                text_color=info_status["text"], 
+                font=ctk.CTkFont(size=11, weight="bold")
+            )
+            l_status.place(relx=0.5, rely=0.5, anchor="center") # Place garante centralização absoluta
 
             # Propagar cliques dos filhos para o pai
             for widget in [l_nome, l_data, l_hora, badge_wrapper, badge, l_status]:
@@ -190,39 +206,32 @@ class Agenda(BaseScreen):
         content.pack(fill="both", expand=True, padx=20, pady=20)
 
         # --- HEADER DO DETALHE ---
-        # Avatar
         ctk.CTkLabel(content, text="", width=90, height=90, fg_color="#E5E7EB", corner_radius=45).pack(pady=(10, 15))
         
-        # Nome (Fonte Aumentada)
         ctk.CTkLabel(content, text=nome, font=ctk.CTkFont(size=24, weight="bold"), 
                      text_color=self.colors["text_primary"]).pack()
         
-        # Subtítulo (Email)
         ctk.CTkLabel(content, text=detalhes_extras["Email"], font=ctk.CTkFont(size=14), 
                      text_color=self.colors["text_secondary"]).pack(pady=(0, 20))
 
-        # Divisória
         ctk.CTkFrame(content, height=1, fg_color=self.colors["border"]).pack(fill="x", pady=10)
 
-        # --- INFO PESSOAL (Layout Grade) ---
+        # --- INFO PESSOAL ---
         info_grid = ctk.CTkFrame(content, fg_color="transparent")
         info_grid.pack(fill="x", pady=10)
         info_grid.grid_columnconfigure(1, weight=1)
 
         row_idx = 0
         for label, value in detalhes_extras.items():
-            if label == "Email": continue # Já mostramos no topo
+            if label == "Email": continue 
             
-            # Label (ex: Idade)
             ctk.CTkLabel(info_grid, text=label, font=ctk.CTkFont(size=14, weight="bold"), 
                          text_color=self.colors["text_secondary"], anchor="w").grid(row=row_idx, column=0, sticky="w", pady=4)
             
-            # Value (ex: 25 anos) - Fonte Aumentada
             ctk.CTkLabel(info_grid, text=value, font=ctk.CTkFont(size=15), 
                          text_color=self.colors["text_primary"], anchor="e").grid(row=row_idx, column=1, sticky="e", pady=4)
             row_idx += 1
 
-        # Divisória
         ctk.CTkFrame(content, height=1, fg_color=self.colors["border"]).pack(fill="x", pady=20)
 
         # --- DADOS DA CONSULTA ---
@@ -232,13 +241,11 @@ class Agenda(BaseScreen):
         consulta_box = ctk.CTkFrame(content, fg_color=self.colors["bg_main"], corner_radius=8)
         consulta_box.pack(fill="x")
 
-        # Texto da consulta maior e com espaçamento
         texto_consulta = f"Data: {data}\nHorário: {hora}\nStatus: {status}\n\nObs: Paciente relatou leve desconforto. Retorno agendado."
         
         ctk.CTkLabel(consulta_box, text=texto_consulta, justify="left", anchor="w",
                      font=ctk.CTkFont(size=15), text_color=self.colors["text_primary"]).pack(fill="x", padx=15, pady=15)
 
-        # Botão de Ação
         ctk.CTkButton(content, text="Editar Paciente", fg_color=self.colors["primary"], 
                       height=40, corner_radius=8, font=ctk.CTkFont(size=14, weight="bold")).pack(fill="x", pady=30)
 
