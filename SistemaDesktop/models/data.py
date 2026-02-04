@@ -10,11 +10,28 @@ CONSULTAS_DATA = [
     ("Fernanda Rocha", "11/02/2026", "13:00", "Confirmado"),
     ("Lucas Pereira", "12/02/2026", "14:00", "Pendente"),
     ("Juliana Alves", "12/02/2026", "15:00", "Confirmado"),
+    ("Rafa nes", "14/02/2026", "15:00", "Cancelado"),
     ("Rafael Nunes", "13/02/2026", "16:00", "Cancelado"),
+    ("Rafael Nunes", "13/02/2026", "16:00", "Cancelado"),
+    ("Rafael Nunes", "13/02/2026", "16:00", "Cancelado"),
+    ("Rafael Nunes", "13/02/2026", "16:00", "Cancelado"),
+    ("Rafael Nunes", "13/02/2026", "16:00", "Cancelado"),
+    ("Rafael Nunes", "13/02/2026", "16:00", "Cancelado"),
+    ("Rafael Nunes", "13/02/2026", "16:00", "Cancelado"),
+    ("Rafael Nunes", "13/02/2026", "16:00", "Cancelado"),
+    ("Rafael Nunes", "13/02/2026", "16:00", "Cancelado"),
+    ("Rafael Nunes", "15/02/2026", "19:00", "Cancelado"),
+    ("Lucas Pereira", "12/02/2026", "14:00", "Pendente"),
+    ("Lucas Pereira", "12/02/2026", "14:00", "Pendente"),
+    ("Lucas Tereira", "12/02/2026", "14:00", "Pendente"),
+    ("Lucas Pereira", "12/02/2026", "14:00", "Pendente"),
+    ("Lubas Pereira", "12/02/2026", "14:00", "Pendente"),
+    ("Lucas Pereira", "12/02/2026", "14:00", "Pendente"),
+    ("João Antos", "10/02/2026", "09:00", "Pendente"),
 ]
 # ================== CONFIGURAÇÕES ==================
 
-LIMITE_CONSULTAS = 8
+LIMITE_CONSULTAS = 20
 
 STATUS_COLORS = {
     "Confirmado": {
