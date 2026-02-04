@@ -15,7 +15,7 @@ class Agenda(BaseScreen):
         self.pagina_atual = 0
         self.paciente_selecionado = None 
         
-        # Cores e Fontes (Vibe Design)
+        # Cores e Fontes (Vibe Design Moderno)
         self.colors = {
             "bg_card": "#FFFFFF",
             "bg_main": "#F9FAFB",
@@ -27,11 +27,25 @@ class Agenda(BaseScreen):
             "border": "#E5E7EB"
         }
         
-        # Configurações de layout da tabela (Pesos das colunas)
-        # 0: Nome (maior), 1: Data, 2: Hora, 3: Status
-        self.col_weights = [4, 2, 2, 2] 
+        # DEFINIÇÃO RÍGIDA DE LARGURA DAS COLUNAS (Em Pixels)
+        # Isso garante que o layout nunca seja "empurrado"
+        self.col_widths = {
+            "nome": 280,   # Grande o suficiente para nomes completos
+            "data": 100,
+            "hora": 80,
+            "status": 120
+        }
 
         self.render()
+
+    def truncate_text(self, text, limit=35):
+        """
+        Corta o texto visualmente para caber esteticamente, 
+        mas o container físico (Frame) é quem garante o limite real.
+        """
+        if len(text) > limit:
+            return text[:limit] + "..."
+        return text
 
     def render(self):
         # Limpa a tela anterior
@@ -57,28 +71,38 @@ class Agenda(BaseScreen):
         header_frame = ctk.CTkFrame(left_panel, fg_color="transparent", height=45)
         header_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(20, 5))
         
-        headers = ["Paciente", "Data", "Horário", "Status"]
+        # Configuração do Grid do Cabeçalho (Baseado em pesos fixos para alinhar com as linhas)
+        # Col 0 (Nome) pega o espaço extra (weight=1), as outras são fixas (weight=0)
+        header_frame.grid_columnconfigure(0, weight=1) 
+        header_frame.grid_columnconfigure(1, weight=0)
+        header_frame.grid_columnconfigure(2, weight=0)
+        header_frame.grid_columnconfigure(3, weight=0)
+
+        headers = [
+            ("Paciente", self.col_widths["nome"], "w"),
+            ("Data", self.col_widths["data"], "center"),
+            ("Horário", self.col_widths["hora"], "center"),
+            ("Status", self.col_widths["status"], "center")
+        ]
         
-        # Configura grid do cabeçalho
-        for col_idx, weight in enumerate(self.col_weights):
-            header_frame.grid_columnconfigure(col_idx, weight=weight)
-            
-            # Lógica de Alinhamento: Nome (Esq), Resto (Centro)
-            align = "w" if col_idx == 0 else "center"
-            
+        for idx, (text, width, anchor) in enumerate(headers):
+            # Usamos um Frame interno para garantir a largura mínima no header também
+            h_container = ctk.CTkFrame(header_frame, fg_color="transparent", width=width, height=30)
+            h_container.grid(row=0, column=idx, sticky="ew" if idx == 0 else "e", padx=5)
+            if idx > 0: h_container.pack_propagate(False) # Trava largura das colunas menores
+
             lbl = ctk.CTkLabel(
-                header_frame, 
-                text=headers[col_idx], 
+                h_container, 
+                text=text, 
                 font=ctk.CTkFont(size=13, weight="bold"),
-                text_color=self.colors["text_secondary"],
-                anchor=align 
+                text_color=self.colors["text_secondary"]
             )
-            lbl.grid(row=0, column=col_idx, sticky="ew", padx=5)
+            lbl.place(relx=0 if anchor=="w" else 0.5, rely=0.5, anchor=anchor if anchor=="w" else "center")
 
         # 2. Container das Linhas
         rows_container = ctk.CTkFrame(left_panel, fg_color="transparent")
-        rows_container.grid(row=1, column=0, sticky="nsew", padx=10)
-        rows_container.grid_columnconfigure(0, weight=1)
+        rows_container.grid(row=1, column=0, sticky="nsew", padx=15)
+        rows_container.grid_columnconfigure(0, weight=1) # Permite scroll se necessário
 
         # Lógica de Paginação
         inicio = self.pagina_atual * LIMITE_CONSULTAS
@@ -95,9 +119,11 @@ class Agenda(BaseScreen):
             row = ctk.CTkFrame(rows_container, fg_color=bg_color, corner_radius=8, height=55)
             row.pack(fill="x", pady=3)
             
-            # Configura Grid da Linha
-            for col_idx, weight in enumerate(self.col_weights):
-                row.grid_columnconfigure(col_idx, weight=weight)
+            # Configura Grid da Linha (Sincronia Exata com Header)
+            row.grid_columnconfigure(0, weight=1) # Nome expande
+            row.grid_columnconfigure(1, weight=0)
+            row.grid_columnconfigure(2, weight=0)
+            row.grid_columnconfigure(3, weight=0)
 
             # Eventos (Hover e Click)
             row.bind("<Button-1>", lambda e, d=item: self.selecionar_paciente(d))
@@ -105,50 +131,64 @@ class Agenda(BaseScreen):
                 row.bind("<Enter>", lambda e, f=row: f.configure(fg_color=self.colors["hover"]))
                 row.bind("<Leave>", lambda e, f=row: f.configure(fg_color="transparent"))
 
-            # --- Coluna 0: Nome (Alinhado à Esquerda) ---
-            l_nome = ctk.CTkLabel(row, text=nome, font=ctk.CTkFont(size=14, weight="bold"), 
-                                  text_color=self.colors["text_primary"], anchor="w")
-            l_nome.grid(row=0, column=0, sticky="ew", padx=(15, 5))
-            
-            # --- Coluna 1: Data (Centralizado) ---
-            l_data = ctk.CTkLabel(row, text=data, font=ctk.CTkFont(size=13),
-                                  text_color=self.colors["text_primary"], anchor="center")
-            l_data.grid(row=0, column=1, sticky="ew", padx=5)
-            
-            # --- Coluna 2: Hora (Centralizado) ---
-            l_hora = ctk.CTkLabel(row, text=hora, font=ctk.CTkFont(size=13),
-                                  text_color=self.colors["text_primary"], anchor="center")
-            l_hora.grid(row=0, column=2, sticky="ew", padx=5)
+            # --- Coluna 0: Nome (FIXO E RÍGIDO) ---
+            # Criamos um container que NÃO muda de tamanho (pack_propagate False)
+            nome_container = ctk.CTkFrame(row, fg_color="transparent", height=40, width=self.col_widths["nome"])
+            nome_container.grid(row=0, column=0, sticky="w", padx=(10, 5))
+            nome_container.pack_propagate(False) # O SEGREDO: Impede que texto empurre a largura
 
-            # --- Coluna 3: Status Badge (Tamanho Fixo) ---
+            nome_exibicao = self.truncate_text(nome, limit=35) # Truncagem estética
+            
+            l_nome = ctk.CTkLabel(nome_container, text=nome_exibicao, font=ctk.CTkFont(size=14, weight="bold"), 
+                                  text_color=self.colors["text_primary"])
+            l_nome.pack(side="left", anchor="w") # Alinhado à esquerda dentro do container fixo
+            
+            # --- Coluna 1: Data ---
+            data_container = ctk.CTkFrame(row, fg_color="transparent", height=40, width=self.col_widths["data"])
+            data_container.grid(row=0, column=1, padx=5)
+            data_container.pack_propagate(False)
+
+            l_data = ctk.CTkLabel(data_container, text=data, font=ctk.CTkFont(size=13),
+                                  text_color=self.colors["text_primary"])
+            l_data.place(relx=0.5, rely=0.5, anchor="center")
+            
+            # --- Coluna 2: Hora ---
+            hora_container = ctk.CTkFrame(row, fg_color="transparent", height=40, width=self.col_widths["hora"])
+            hora_container.grid(row=0, column=2, padx=5)
+            hora_container.pack_propagate(False)
+
+            l_hora = ctk.CTkLabel(hora_container, text=hora, font=ctk.CTkFont(size=13),
+                                  text_color=self.colors["text_primary"])
+            l_hora.place(relx=0.5, rely=0.5, anchor="center")
+
+            # --- Coluna 3: Status Badge ---
+            status_container = ctk.CTkFrame(row, fg_color="transparent", height=40, width=self.col_widths["status"])
+            status_container.grid(row=0, column=3, padx=5)
+            status_container.pack_propagate(False) # Garante que status longo não quebre
+
             info_status = STATUS_COLORS.get(status, {"bg": "#eee", "text": "#333"})
             
-            # Wrapper para centralizar o badge na célula da grid
-            badge_wrapper = ctk.CTkFrame(row, fg_color="transparent")
-            badge_wrapper.grid(row=0, column=3, sticky="ew", padx=5)
-            
-            # Badge com Tamanho Fixo (width=110)
             badge = ctk.CTkFrame(
-                badge_wrapper, 
+                status_container, 
                 fg_color=info_status["bg"], 
                 corner_radius=6,
-                width=110,  # Largura fixa para todos os status
-                height=26   # Altura fixa
+                width=100,  
+                height=26   
             )
-            badge.pack(anchor="center") 
-            badge.pack_propagate(False) # Impede que o frame encolha para o tamanho do texto
+            badge.place(relx=0.5, rely=0.5, anchor="center")
             
-            # Texto centralizado dentro do Badge fixo
             l_status = ctk.CTkLabel(
                 badge, 
                 text=status, 
                 text_color=info_status["text"], 
                 font=ctk.CTkFont(size=11, weight="bold")
             )
-            l_status.place(relx=0.5, rely=0.5, anchor="center") # Place garante centralização absoluta
+            l_status.place(relx=0.5, rely=0.5, anchor="center")
 
-            # Propagar cliques dos filhos para o pai
-            for widget in [l_nome, l_data, l_hora, badge_wrapper, badge, l_status]:
+            # Propagar cliques dos filhos para o pai (UX Improvement)
+            widgets_clicaveis = [l_nome, nome_container, l_data, data_container, 
+                                 l_hora, hora_container, status_container, badge, l_status]
+            for widget in widgets_clicaveis:
                 widget.bind("<Button-1>", lambda e, d=item: self.selecionar_paciente(d))
 
         self.render_pagination(left_panel)
@@ -191,9 +231,9 @@ class Agenda(BaseScreen):
                          text_color=self.colors["text_secondary"]).place(relx=0.5, rely=0.5, anchor="center")
             return
 
+        # Recupera o nome completo do objeto selecionado
         nome, data, hora, status = self.paciente_selecionado
         
-        # Mock Data Expandida
         detalhes_extras = {
             "Idade": "25 anos",
             "Sexo": "Feminino",
@@ -208,7 +248,9 @@ class Agenda(BaseScreen):
         # --- HEADER DO DETALHE ---
         ctk.CTkLabel(content, text="", width=90, height=90, fg_color="#E5E7EB", corner_radius=45).pack(pady=(10, 15))
         
+        # Nome completo com quebra de linha inteligente
         ctk.CTkLabel(content, text=nome, font=ctk.CTkFont(size=24, weight="bold"), 
+                     wraplength=250, 
                      text_color=self.colors["text_primary"]).pack()
         
         ctk.CTkLabel(content, text=detalhes_extras["Email"], font=ctk.CTkFont(size=14), 
