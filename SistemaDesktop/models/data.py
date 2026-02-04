@@ -14,7 +14,7 @@ CONSULTAS_DATA = [
 ]
 # ================== CONFIGURAÇÕES ==================
 
-LIMITE_CONSULTAS = 6
+LIMITE_CONSULTAS = 8
 
 STATUS_COLORS = {
     "Confirmado": {
