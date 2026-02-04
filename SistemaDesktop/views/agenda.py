@@ -242,7 +242,7 @@ class Agenda(BaseScreen):
             "CPF": "121.***.***-34"
         }
 
-        content = ctk.CTkScrollableFrame(details_frame, fg_color="transparent")
+        content = ctk.CTkFrame(details_frame, fg_color="transparent")
         content.pack(fill="both", expand=True, padx=20, pady=20)
 
         # --- HEADER DO DETALHE ---
