@@ -14,6 +14,16 @@ import os
 
 
 class App(ctk.CTk):
+    def logout(self):
+        self.withdraw()  # esconde a janela sem matar o Tk
+
+        def abrir_login():
+            self.destroy()  # agora sim, depois que o loop esvaziar
+            login = Login()
+            login.mainloop()
+
+        self.after(100, abrir_login)
+            
     def __init__(self, usuario_nome="Usuário"):
         super().__init__()
 
@@ -78,7 +88,7 @@ class App(ctk.CTk):
             text_color="#EF4444",
             hover_color="#FEE2E2",
             font=ctk.CTkFont(size=13, weight="bold"),
-            command=self.quit
+            command=self.logout
         ).pack(side="bottom", fill="x", padx=20, pady=30)
 
         # ================= Área Principal =================
