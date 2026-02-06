@@ -16,8 +16,10 @@
             "Communication Tools": false,
             "Staff Mgmt": false,
             "Event Management": false,
-            "Communication Teals": false
-        }
+            "Communication Teals": false,
+            "Painel": true
+        },
+        "photo_path": "C:/Users/58143406/Downloads/avatar-male-pessoa-morena.png"
     },
     "Jane Smith": {
         "level": "Billing",
