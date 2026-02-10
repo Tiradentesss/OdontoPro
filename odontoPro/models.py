@@ -28,6 +28,17 @@ class Clinica(models.Model):
     conta_bancaria_juridica = models.CharField(max_length=45)
     endereco = models.ForeignKey('Endereco', on_delete=models.PROTECT)
 
+    email = models.EmailField(
+        unique=True,
+        null=True,
+        blank=True
+    )
+    senha = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
     # 🔹 NOVO: logo da clínica (perfil)
     logo = models.ImageField(
         upload_to='clinicas/logo/',
