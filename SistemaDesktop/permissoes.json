@@ -1,0 +1,84 @@
+{
+    "John Doe": {
+        "level": "Admin",
+        "color": "#9CA3AF",
+        "perms": {
+            "Schedule Access": true,
+            "Patient Records": false,
+            "Patient Meds": false,
+            "Staff Records": false,
+            "Patient Management": false,
+            "Documentation Tools": false,
+            "Patient Trials": false,
+            "Inventory Tools": false,
+            "Financial Navigens": false,
+            "Insurance Tools": false,
+            "Communication Tools": false,
+            "Staff Mgmt": false,
+            "Event Management": false,
+            "Communication Teals": false,
+            "Painel": true
+        },
+        "photo_path": "C:/Users/58143406/Downloads/avatar-male-pessoa-morena.png"
+    },
+    "Jane Smith": {
+        "level": "Billing",
+        "color": "#9CA3AF",
+        "perms": {
+            "Schedule Access": true,
+            "Patient Records": true,
+            "Patient Meds": true,
+            "Staff Records": true,
+            "Patient Management": true,
+            "Documentation Tools": true,
+            "Patient Trials": true,
+            "Inventory Tools": true,
+            "Financial Navigens": true,
+            "Insurance Tools": true,
+            "Communication Tools": true,
+            "Staff Mgmt": true,
+            "Event Management": true,
+            "Communication Teals": true
+        }
+    },
+    "Alice Brown": {
+        "level": "Reporting",
+        "color": "#10B981",
+        "perms": {
+            "Schedule Access": true,
+            "Patient Records": false,
+            "Patient Meds": true,
+            "Staff Records": false,
+            "Patient Management": true,
+            "Documentation Tools": false,
+            "Patient Trials": true,
+            "Inventory Tools": false,
+            "Financial Navigens": true,
+            "Insurance Tools": false,
+            "Communication Tools": true,
+            "Staff Mgmt": false,
+            "Event Management": true,
+            "Communication Teals": false
+        }
+    },
+    "Locaritn Ltrntan": {
+        "level": "Read-Only",
+        "color": "#10B981",
+        "perms": {
+            "Schedule Access": false,
+            "Patient Records": false,
+            "Patient Meds": false,
+            "Staff Records": false,
+            "Patient Management": false,
+            "Documentation Tools": false,
+            "Patient Trials": false,
+            "Inventory Tools": false,
+            "Financial Navigens": false,
+            "Insurance Tools": false,
+            "Communication Tools": false,
+            "Staff Mgmt": false,
+            "Event Management": false,
+            "Communication Teals": false
+        }
+    }
+}
