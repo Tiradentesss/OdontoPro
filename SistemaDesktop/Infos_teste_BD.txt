@@ -1,0 +1,124 @@
+-- ===============================
+-- 1) ENDEREÇOS
+-- ===============================
+INSERT INTO odontopro_endereco (cep, numero, quadra, rua, bairro, cidade, estado)
+VALUES  
+('66000000', '100', 'A', 'Rua das Flores', 'Centro', 'Belém', 'PA'),
+('66001000', '200', 'B', 'Av. Brasil', 'Cidade Nova', 'Belém', 'PA');
+
+-- ===============================
+-- 2) CLÍNICAS
+-- ===============================
+INSERT INTO odontopro_clinica 
+(cnpj, nome, descricao, telefone, email, senha, conta_bancaria_juridica, endereco_id, imagem, preco_consulta, avaliacao, num_avaliacoes)
+VALUES
+('11111111000100', 'Clínica Odonto Flores', 'Clínica especializada em estética dental.', '(91) 90000-0001', 'flores@odontopro.com', '123456', '0011223344', 1, NULL, 150.00, 5.0, 12),
+('22222222000100', 'Centro Odonto Brasil', 'Tratamentos completos em odontologia.', '(91) 90000-0002', 'brasil@odontopro.com', '123456', '5566778899', 2, NULL, 120.00, 4.7, 30);
+
+
+-- ===============================
+-- 3) DIAS DA SEMANA DISPONÍVEIS
+-- ===============================
+INSERT INTO odontopro_diasemanadisponivel (clinica_id, dia)
+VALUES
+(1, 'domingo'), (1, 'segunda'), (1, 'terca'), (1, 'quarta'),
+(1, 'quinta'), (1, 'sexta'), (1, 'sabado'),
+
+(2, 'domingo'), (2, 'segunda'), (2, 'terca'), (2, 'quarta'),
+(2, 'quinta'), (2, 'sexta'), (2, 'sabado');
+
+-- ===============================
+-- 4) HORÁRIOS (08:00–12:00 e 14:00–18:00)
+-- Clínica 1 → dias 1 a 7
+-- Clínica 2 → dias 8 a 14
+-- ===============================
+INSERT INTO odontopro_horarioaberto (dia_id, hora_inicio, hora_fim)
+VALUES
+(1, '08:00', '12:00'), (1, '14:00', '18:00'),
+(2, '08:00', '12:00'), (2, '14:00', '18:00'),
+(3, '08:00', '12:00'), (3, '14:00', '18:00'),
+(4, '08:00', '12:00'), (4, '14:00', '18:00'),
+(5, '08:00', '12:00'), (5, '14:00', '18:00'),
+(6, '08:00', '12:00'), (6, '14:00', '18:00'),
+(7, '08:00', '12:00'), (7, '14:00', '18:00'),
+
+(8, '08:00', '12:00'), (8, '14:00', '18:00'),
+(9, '08:00', '12:00'), (9, '14:00', '18:00'),
+(10, '08:00', '12:00'), (10, '14:00', '18:00'),
+(11, '08:00', '12:00'), (11, '14:00', '18:00'),
+(12, '08:00', '12:00'), (12, '14:00', '18:00'),
+(13, '08:00', '12:00'), (13, '14:00', '18:00'),
+(14, '08:00', '12:00'), (14, '14:00', '18:00');
+
+-- ===============================
+-- 5) ESPECIALIDADES
+-- ===============================
+INSERT INTO odontopro_especialidade (nome) VALUES
+('Clínico Geral'),
+('Ortodontista'),
+('Implantodontista'),
+('Endodontista'),
+('Periodontista'),
+('Odontopediatra');
+
+-- ===============================
+-- 6) MÉDICOS
+-- ===============================
+INSERT INTO odontopro_medico
+    (nome, cpf, sexo, email, data_nascimento, senha, crm_cro, telefone, clinica_id)
+VALUES
+-- Clínica 1
+('Dr. João Silva', '12345678901', 'm', 'joao@exemplo.com', '1980-05-12',
+ 'hash123', 'CRO-12345', '(91)90000-0001', 1),
+
+('Dra. Maria Oliveira', '98765432100', 'f', 'maria@exemplo.com', '1985-11-23',
+ 'hash123', 'CRO-54321', '(91)90000-0002', 1),
+
+('Dra. Ana Souza', '22233344455', 'f', 'ana@exemplo.com', '1990-02-14',
+ 'hash123', 'CRO-99999', '(91)90000-0003', 1),
+
+-- Clínica 2
+('Dr. Pedro Gomes', '55566677788', 'm', 'pedro@exemplo.com', '1979-09-01',
+ 'hash123', 'CRO-22222', '(91)90000-0004', 2),
+
+('Dra. Luiza Fernandes', '44455566677', 'f', 'luiza@exemplo.com', '1992-07-19',
+ 'hash123', 'CRO-33333', '(91)90000-0005', 2);
+
+-- ===============================
+-- 8) GERENCIAMENTOS
+-- ===============================
+
+INSERT INTO odontopro_gerenciamento
+(nome, email, senha, clinica_id)
+VALUES
+
+-- Clínica 1 (Clínica Odonto Flores)
+('Carlos Almeida', 'carlos@flores.com', '123456', 1),
+('Fernanda Lima', 'fernanda@flores.com', '123456', 1),
+
+-- Clínica 2 (Centro Odonto Brasil)
+('Ricardo Mendes', 'ricardo@brasil.com', '123456', 2),
+('Juliana Castro', 'juliana@brasil.com', '123456', 2);
+
+
+-- ===============================
+-- 7) RELAÇÃO MEDICO–ESPECIALIDADES
+-- ===============================
+INSERT INTO odontopro_medico_especialidades (medico_id, especialidade_id) VALUES
+-- Dr João (ID 1)
+(1, 1),
+(1, 4),
+
+-- Dra Maria (ID 2)
+(2, 2),
+
+-- Dra Ana (ID 3)
+(3, 6),
+(3, 1),
+
+-- Dr Pedro (ID 4)
+(4, 3),
+
+-- Dra Luiza (ID 5)
+(5, 5),
+(5, 1);
