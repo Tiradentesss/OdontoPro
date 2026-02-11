@@ -1,4 +1,6 @@
 import customtkinter as ctk
+import sys
+print("PYTHON EXECUTÁVEL:", sys.executable)
 
 from views.painel import Painel
 from views.agenda import Agenda
@@ -22,10 +24,23 @@ class App(ctk.CTk):
             login = Login()
             login.mainloop()
 
-        self.after(100, abrir_login)
-            
-    def __init__(self, usuario_nome="Usuário"):
+        self.after(100, abrir_login)    
+
+    def __init__(self, usuario_nome="Usuário", tipo_usuario=None):
         super().__init__()
+
+        self.usuario_nome = usuario_nome
+        self.tipo_usuario = tipo_usuario
+
+        self.title("OdontoPro - Sistema de Gerenciamento")
+        self.geometry("1150x750")
+        self.minsize(1000, 650)
+        self.configure(fg_color="#F5F6FA")
+
+        # Grid principal
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
 
         self.usuario_nome = usuario_nome
 
@@ -68,14 +83,22 @@ class App(ctk.CTk):
 
         # Menu
         self.buttons = {}
-        self.menu_items = [
-            ("▣  Painel", "painel"),
-            ("🗓  Agenda", "agenda"),
-            ("💰  Financeiro", "financeiro"),
-            ("⚙  Configurações", "config"),
-            ("👤  Cadastro", "cadastro"),
-            ("🔒  Permissões", "permissao"),
+        if self.tipo_usuario == "gerenciamento":
+            self.menu_items = [
+                ("▣  Painel", "painel"),
+                ("⚙  Configurações", "config"),
+                ("🔒  Permissões", "permissao"),
+            ]
+        else:  # clinica
+            self.menu_items = [
+                ("▣  Painel", "painel"),
+                ("🗓  Agenda", "agenda"),
+                ("💰  Financeiro", "financeiro"),
+                ("⚙  Configurações", "config"),
+                ("👤  Cadastro", "cadastro"),
+                ("🔒  Permissões", "permissao"),
         ]
+
 
         for text, name in self.menu_items:
             self.buttons[name] = self.create_menu_button(text, name)

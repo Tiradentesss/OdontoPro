@@ -1,11 +1,10 @@
 import customtkinter as ctk
 import os
 from PIL import Image
+from tkinter import messagebox
 
+from controllers.auth_controller import AuthController
 
-from models.data import (
-    USUARIOS,
-)
 
 class Login(ctk.CTk):
     def __init__(self):
@@ -180,24 +179,26 @@ class Login(ctk.CTk):
         ).grid(row=0, column=1)
 
     def autenticar(self):
-        user = self.ent_user.get()
-        senha = self.ent_pass.get()
+        email = self.ent_user.get().strip()
+        senha = self.ent_pass.get().strip()
 
-        if user in USUARIOS and USUARIOS[user]["senha"] == senha:
-            self.destroy()
+        if not email or not senha:
+            messagebox.showwarning("Atenção", "Preencha e-mail e senha")
+            return
 
-            # ✅ import local para evitar circular import
-            from app import App
+        resultado = AuthController.autenticar(email, senha)
 
-            app = App(USUARIOS[user]["nome"])
-            app.mainloop()
-        else:
-            ctk.CTkMessagebox(
-                title="Erro",
-                message="Usuário ou senha inválidos",
-                icon="cancel"
-            )
+        if not resultado:
+            messagebox.showwarning("Atenção", "E-mail ou senha inválidos")
+            return
 
+        usuario = resultado["usuario"]
 
-            app = App(USUARIOS[user]["nome"])
-            app.mainloop()
+        self.destroy()
+
+        from app import App
+        app = App(
+            usuario_nome=usuario["nome"],
+            tipo_usuario=usuario["tipo"]
+        )
+        app.mainloop()

@@ -1,6 +1,6 @@
 # controllers/clinica_controller.py
 
-from models.model import CONSULTAS_DATA, LIMITE_CONSULTAS
+from models.data import CONSULTAS_DATA, LIMITE_CONSULTAS
 
 class ClinicaController:
 
