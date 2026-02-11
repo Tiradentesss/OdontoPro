@@ -86,8 +86,9 @@ class App(ctk.CTk):
         if self.tipo_usuario == "gerenciamento":
             self.menu_items = [
                 ("▣  Painel", "painel"),
+                ("🗓  Agenda", "agenda"),
+                ("💰  Financeiro", "financeiro"),
                 ("⚙  Configurações", "config"),
-                ("🔒  Permissões", "permissao"),
             ]
         else:  # clinica
             self.menu_items = [
