@@ -42,7 +42,8 @@ def autenticar_usuario(email, senha):
         return {
             "tipo": "gerenciamento",
             "id": gerenciamento["id"],
-            "nome": gerenciamento["nome"]
+            "nome": gerenciamento["nome"],
+            "clinica_id": gerenciamento["clinica_id"]
         }
 
     return None

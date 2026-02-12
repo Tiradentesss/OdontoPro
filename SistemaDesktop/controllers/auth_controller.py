@@ -1,4 +1,4 @@
-from models.data import autenticar_usuario
+from models.auth import autenticar_usuario
 
 
 class AuthController:

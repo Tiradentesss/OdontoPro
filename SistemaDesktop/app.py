@@ -26,7 +26,8 @@ class App(ctk.CTk):
 
         self.after(100, abrir_login)    
 
-    def __init__(self, usuario_nome="Usuário", tipo_usuario=None):
+    def __init__(self, usuario_nome="Usuário", tipo_usuario=None, clinica_id=None):
+        self.clinica_id = clinica_id
         super().__init__()
 
         self.usuario_nome = usuario_nome
@@ -121,7 +122,7 @@ class App(ctk.CTk):
 
         self.frames = {
             "painel": Painel(self.container),
-            "agenda": Agenda(self.container),
+            "agenda": Agenda(self.container, self.clinica_id),
             "financeiro": Financeiro(self.container),
             "config": Configuracoes(self.container),
             "cadastro": Cadastro(self.container),

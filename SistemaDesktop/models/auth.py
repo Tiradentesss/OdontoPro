@@ -25,12 +25,13 @@ def autenticar_usuario(email, senha):
         return {
             "tipo": "clinica",
             "id": clinica["id"],
-            "nome": clinica["nome"]
+            "nome": clinica["nome"],
+            "clinica_id": clinica["id"]  # ✅ AQUI ESTAVA FALTANDO
         }
 
     # ================= GERENCIAMENTO =================
     cursor.execute("""
-        SELECT id, nome
+        SELECT id, nome, clinica_id
         FROM odontopro_gerenciamento
         WHERE email = %s
           AND senha = %s
@@ -45,7 +46,8 @@ def autenticar_usuario(email, senha):
         return {
             "tipo": "gerenciamento",
             "id": gerenciamento["id"],
-            "nome": gerenciamento["nome"]
+            "nome": gerenciamento["nome"],
+            "clinica_id": gerenciamento["clinica_id"]
         }
 
     return None

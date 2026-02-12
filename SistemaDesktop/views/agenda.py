@@ -2,18 +2,19 @@ from .base import BaseScreen
 import customtkinter as ctk
 
 # 🔽 IMPORTA DO MODELS (Mantido)
-from models.data import (
-    LIMITE_CONSULTAS,
-    CONSULTAS_DATA,
-    STATUS_COLORS
-)
+
+from models.data import LIMITE_CONSULTAS, STATUS_COLORS
+from controllers.consulta_controller import ConsultaController
+
 
 class Agenda(BaseScreen):
-    def __init__(self, parent):
+    def __init__(self, parent, clinica_id):
         super().__init__(parent, "Agenda")
 
+        self.clinica_id = clinica_id  # ← ESSENCIAL
         self.pagina_atual = 0
         self.paciente_selecionado = None 
+
         
         # Cores e Fontes (Vibe Design Moderno)
         self.colors = {
@@ -55,14 +56,15 @@ class Agenda(BaseScreen):
         self.content_card.configure(fg_color=self.colors["bg_main"])
         
         # Grid Principal: Lista (70%) | Detalhes (30%)
-        main_layout = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        main_layout.pack(fill="both", expand=True, padx=20, pady=20)
-        main_layout.grid_columnconfigure(0, weight=7)
-        main_layout.grid_columnconfigure(1, weight=3)
-        main_layout.grid_rowconfigure(0, weight=1)
+        self.main_layout = ctk.CTkFrame(self.content_card, fg_color="transparent")
+        self.main_layout.pack(fill="both", expand=True, padx=20, pady=20)
+        self.main_layout.grid_columnconfigure(0, weight=7)
+        self.main_layout.grid_columnconfigure(1, weight=3)
+        self.main_layout.grid_rowconfigure(0, weight=1)
+
 
         # ---------- ESQUERDA: LISTA DE PACIENTES ----------
-        left_panel = ctk.CTkFrame(main_layout, fg_color=self.colors["bg_card"], corner_radius=12)
+        left_panel = ctk.CTkFrame(self.main_layout, fg_color=self.colors["bg_card"], corner_radius=12)
         left_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 15))
         left_panel.grid_columnconfigure(0, weight=1)
         left_panel.grid_rowconfigure(1, weight=1)
@@ -105,14 +107,33 @@ class Agenda(BaseScreen):
         rows_container.grid_columnconfigure(0, weight=1) # Permite scroll se necessário
 
         # Lógica de Paginação
+        todas_consultas = ConsultaController.listar_por_clinica(self.clinica_id)
+
         inicio = self.pagina_atual * LIMITE_CONSULTAS
         fim = inicio + LIMITE_CONSULTAS
-        dados_pagina = CONSULTAS_DATA[inicio:fim]
+        dados_pagina = todas_consultas[inicio:fim]
+
 
         # 3. Renderiza Linhas
         for idx, item in enumerate(dados_pagina):
-            nome, data, hora, status = item
-            is_selected = self.paciente_selecionado == item
+            (
+                consulta_id,
+                nome,
+                data_hora,
+                status,
+                telefone,
+                email,
+                sexo,
+                data_nascimento,
+                cpf,
+                observacoes
+            ) = item
+
+            data = data_hora.strftime("%d/%m/%Y")
+            hora = data_hora.strftime("%H:%M")
+
+            is_selected = self.paciente_selecionado == consulta_id
+
             bg_color = self.colors["selected"] if is_selected else "transparent"
             
             # Linha como Frame
@@ -126,7 +147,7 @@ class Agenda(BaseScreen):
             row.grid_columnconfigure(3, weight=0)
 
             # Eventos (Hover e Click)
-            row.bind("<Button-1>", lambda e, d=item: self.selecionar_paciente(d))
+            row.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
             if not is_selected:
                 row.bind("<Enter>", lambda e, f=row: f.configure(fg_color=self.colors["hover"]))
                 row.bind("<Leave>", lambda e, f=row: f.configure(fg_color="transparent"))
@@ -189,16 +210,19 @@ class Agenda(BaseScreen):
             widgets_clicaveis = [l_nome, nome_container, l_data, data_container, 
                                  l_hora, hora_container, status_container, badge, l_status]
             for widget in widgets_clicaveis:
-                widget.bind("<Button-1>", lambda e, d=item: self.selecionar_paciente(d))
+                widget.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
+
 
         self.render_pagination(left_panel)
-        self.render_details_panel(main_layout)
+        self.render_details_panel(self.main_layout)
 
     def render_pagination(self, parent):
         pag_frame = ctk.CTkFrame(parent, fg_color="transparent")
         pag_frame.grid(row=2, column=0, sticky="e", padx=20, pady=20)
 
-        total_paginas = (len(CONSULTAS_DATA) + LIMITE_CONSULTAS - 1) // LIMITE_CONSULTAS
+        todas_consultas = ConsultaController.listar_por_clinica(self.clinica_id)
+        total_paginas = (len(todas_consultas) + LIMITE_CONSULTAS - 1) // LIMITE_CONSULTAS
+
 
         def create_btn(text, cmd, active=False):
             return ctk.CTkButton(
@@ -222,39 +246,90 @@ class Agenda(BaseScreen):
             create_btn("›", lambda: self.mudar_pagina(self.pagina_atual + 1)).pack(side="left", padx=4)
 
     def render_details_panel(self, parent):
+        from datetime import date
+
         details_frame = ctk.CTkFrame(parent, fg_color=self.colors["bg_card"], corner_radius=12)
         details_frame.grid(row=0, column=1, sticky="nsew")
 
+        # Se nada estiver selecionado
         if not self.paciente_selecionado:
-            ctk.CTkLabel(details_frame, text="Selecione um paciente\npara ver os detalhes.", 
-                         font=ctk.CTkFont(size=16),
-                         text_color=self.colors["text_secondary"]).place(relx=0.5, rely=0.5, anchor="center")
+            ctk.CTkLabel(
+                details_frame,
+                text="Selecione um paciente\npara ver os detalhes.",
+                font=ctk.CTkFont(size=16),
+                text_color=self.colors["text_secondary"]
+            ).place(relx=0.5, rely=0.5, anchor="center")
             return
 
-        # Recupera o nome completo do objeto selecionado
-        nome, data, hora, status = self.paciente_selecionado
-        
+        # 🔹 Buscar novamente todas as consultas
+        todas_consultas = ConsultaController.listar_por_clinica(self.clinica_id)
+
+        # 🔹 Encontrar a consulta pelo ID
+        consulta = next(
+            (c for c in todas_consultas if c[0] == self.paciente_selecionado),
+            None
+        )
+
+        if not consulta:
+            return
+
+        (
+            consulta_id,
+            nome,
+            data_hora,
+            status,
+            telefone,
+            email,
+            sexo,
+            data_nascimento,
+            cpf,
+            observacoes
+        ) = consulta
+
+        # 🔹 Formatar data e hora corretamente
+        data = data_hora.strftime("%d/%m/%Y")
+        hora = data_hora.strftime("%H:%M")
+
+        # 🔹 Calcular idade
+        idade = None
+        if data_nascimento:
+            idade = date.today().year - data_nascimento.year
+
         detalhes_extras = {
-            "Idade": "25 anos",
-            "Sexo": "Feminino",
-            "Telefone": "(11) 99321-7982",
-            "Email": f"{nome.split()[0].lower()}@gmail.com",
-            "CPF": "121.***.***-34"
+            "Idade": f"{idade} anos" if idade else "Não informado",
+            "Sexo": sexo or "Não informado",
+            "Telefone": telefone or "Não informado",
+            "Email": email or "Não informado",
+            "CPF": cpf or "Não informado"
         }
 
         content = ctk.CTkFrame(details_frame, fg_color="transparent")
         content.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # --- HEADER DO DETALHE ---
-        ctk.CTkLabel(content, text="", width=90, height=90, fg_color="#E5E7EB", corner_radius=45).pack(pady=(10, 15))
-        
-        # Nome completo com quebra de linha inteligente
-        ctk.CTkLabel(content, text=nome, font=ctk.CTkFont(size=24, weight="bold"), 
-                     wraplength=250, 
-                     text_color=self.colors["text_primary"]).pack()
-        
-        ctk.CTkLabel(content, text=detalhes_extras["Email"], font=ctk.CTkFont(size=14), 
-                     text_color=self.colors["text_secondary"]).pack(pady=(0, 20))
+        # --- HEADER ---
+        ctk.CTkLabel(
+            content,
+            text="",
+            width=90,
+            height=90,
+            fg_color="#E5E7EB",
+            corner_radius=45
+        ).pack(pady=(10, 15))
+
+        ctk.CTkLabel(
+            content,
+            text=nome,
+            font=ctk.CTkFont(size=24, weight="bold"),
+            wraplength=250,
+            text_color=self.colors["text_primary"]
+        ).pack()
+
+        ctk.CTkLabel(
+            content,
+            text=detalhes_extras["Email"],
+            font=ctk.CTkFont(size=14),
+            text_color=self.colors["text_secondary"]
+        ).pack(pady=(0, 20))
 
         ctk.CTkFrame(content, height=1, fg_color=self.colors["border"]).pack(fill="x", pady=10)
 
@@ -265,36 +340,72 @@ class Agenda(BaseScreen):
 
         row_idx = 0
         for label, value in detalhes_extras.items():
-            if label == "Email": continue 
-            
-            ctk.CTkLabel(info_grid, text=label, font=ctk.CTkFont(size=14, weight="bold"), 
-                         text_color=self.colors["text_secondary"], anchor="w").grid(row=row_idx, column=0, sticky="w", pady=4)
-            
-            ctk.CTkLabel(info_grid, text=value, font=ctk.CTkFont(size=15), 
-                         text_color=self.colors["text_primary"], anchor="e").grid(row=row_idx, column=1, sticky="e", pady=4)
+            if label == "Email":
+                continue
+
+            ctk.CTkLabel(
+                info_grid,
+                text=label,
+                font=ctk.CTkFont(size=14, weight="bold"),
+                text_color=self.colors["text_secondary"],
+                anchor="w"
+            ).grid(row=row_idx, column=0, sticky="w", pady=4)
+
+            ctk.CTkLabel(
+                info_grid,
+                text=value,
+                font=ctk.CTkFont(size=15),
+                text_color=self.colors["text_primary"],
+                anchor="e"
+            ).grid(row=row_idx, column=1, sticky="e", pady=4)
+
             row_idx += 1
 
         ctk.CTkFrame(content, height=1, fg_color=self.colors["border"]).pack(fill="x", pady=20)
 
         # --- DADOS DA CONSULTA ---
-        ctk.CTkLabel(content, text="Detalhes da Consulta", font=ctk.CTkFont(size=18, weight="bold"), 
-                     text_color=self.colors["text_primary"], anchor="w").pack(fill="x", pady=(0, 10))
+        ctk.CTkLabel(
+            content,
+            text="Detalhes da Consulta",
+            font=ctk.CTkFont(size=18, weight="bold"),
+            text_color=self.colors["text_primary"],
+            anchor="w"
+        ).pack(fill="x", pady=(0, 10))
 
         consulta_box = ctk.CTkFrame(content, fg_color=self.colors["bg_main"], corner_radius=8)
         consulta_box.pack(fill="x")
 
-        texto_consulta = f"Data: {data}\nHorário: {hora}\nStatus: {status}\n\nObs: Paciente relatou leve desconforto. Retorno agendado."
-        
-        ctk.CTkLabel(consulta_box, text=texto_consulta, justify="left", anchor="w",
-                     font=ctk.CTkFont(size=15), text_color=self.colors["text_primary"]).pack(fill="x", padx=15, pady=15)
+        texto_consulta = (
+            f"Data: {data}\n"
+            f"Horário: {hora}\n"
+            f"Status: {status}\n\n"
+            f"Observações: {observacoes or 'Nenhuma observação registrada.'}"
+        )
 
-        ctk.CTkButton(content, text="Editar Paciente", fg_color=self.colors["primary"], 
-                      height=40, corner_radius=8, font=ctk.CTkFont(size=14, weight="bold")).pack(fill="x", pady=30)
+        ctk.CTkLabel(
+            consulta_box,
+            text=texto_consulta,
+            justify="left",
+            anchor="w",
+            font=ctk.CTkFont(size=15),
+            text_color=self.colors["text_primary"]
+        ).pack(fill="x", padx=15, pady=15)
+
+        ctk.CTkButton(
+            content,
+            text="Editar Paciente",
+            fg_color=self.colors["primary"],
+            height=40,
+            corner_radius=8,
+            font=ctk.CTkFont(size=14, weight="bold")
+        ).pack(fill="x", pady=30)
+
 
     # ---------- LÓGICA ----------
-    def selecionar_paciente(self, dados_paciente):
-        self.paciente_selecionado = dados_paciente
-        self.render()
+    def selecionar_paciente(self, consulta_id):
+        self.paciente_selecionado = consulta_id
+        self.render()  # redesenha tudo corretamente
+
 
     def mudar_pagina(self, nova_pagina):
         self.pagina_atual = nova_pagina

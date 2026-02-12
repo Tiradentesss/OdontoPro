@@ -199,6 +199,7 @@ class Login(ctk.CTk):
         from app import App
         app = App(
             usuario_nome=usuario["nome"],
-            tipo_usuario=usuario["tipo"]
+            tipo_usuario=usuario["tipo"],
+            clinica_id=usuario["clinica_id"]  # ← ESSENCIAL
         )
         app.mainloop()
