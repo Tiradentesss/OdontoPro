@@ -39,7 +39,7 @@
             "Staff Mgmt": true,
             "Event Management": false,
             "Communication Teals": true,
-            "Painel": false,
+            "Painel": true,
             "Configurações": false
         }
     },
