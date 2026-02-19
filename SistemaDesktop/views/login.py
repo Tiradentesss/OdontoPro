@@ -12,9 +12,13 @@ class Login(ctk.CTk):
 
         self.title("Login - OdontoPro")
 
+        self.update_idletasks()
+
         largura = self.winfo_screenwidth()
         altura = self.winfo_screenheight()
-        self.geometry(f"{largura}x{altura}")
+
+        self.geometry(f"{largura}x{altura}+0+0")
+
         self.configure(fg_color="#F2F3F5")
 
         BASE_DIR = os.path.dirname(os.path.dirname(__file__))
