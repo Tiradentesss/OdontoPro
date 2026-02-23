@@ -84,15 +84,15 @@ CONSULTAS_DATA = [
 LIMITE_CONSULTAS = 20
 
 STATUS_COLORS = {
-    "Confirmado": {
+    "realizada": {
         "bg": "#DCFCE7",
         "text": "#166534"
     },
-    "Pendente": {
+    "agendada": {
         "bg": "#FEF9C3",
         "text": "#854D0E"
     },
-    "Cancelado": {
+    "cancelada": {
         "bg": "#FEE2E2",
         "text": "#991B1B"
     }
