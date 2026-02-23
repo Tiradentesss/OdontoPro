@@ -2,7 +2,7 @@ import customtkinter as ctk
 import sys
 print("PYTHON EXECUTÁVEL:", sys.executable)
 
-from views.painel import Painel
+from views.Painel import Painel
 from views.agenda import Agenda
 from views.financeiro import Financeiro
 from views.cadastro import Cadastro
