@@ -264,28 +264,139 @@ class Cadastro(BaseScreen):
         e1, e2 = self._campo_duplo(frame, "Nome completo", "Email")
         entries.extend([e1, e2])
 
-        # Função/Tipo
-        ctk.CTkLabel(frame, text="Função", font=("Poppins", 12), text_color="#4B5563").pack(anchor="w", padx=self.padding_lateral, pady=(8, 4))
-        ctk.CTkOptionMenu(
-            frame,
-            values=["Selecione", "Dentista", "Auxiliar", "Recepcionista"],
+        # Função/Tipo - Armazenar referência para o OptionMenu
+        self._secao_titulo(frame, "Tipo de Profissional")
+        tipo_container = ctk.CTkFrame(frame, fg_color="transparent")
+        tipo_container.pack(fill="x", padx=self.padding_lateral, pady=(0, 12))
+        
+        ctk.CTkLabel(
+            tipo_container, 
+            text="Selecione o tipo", 
+            font=("Poppins", 12), 
+            text_color="#4B5563"
+        ).pack(anchor="w", pady=(0, 4))
+        
+        self.tipo_profissional = ctk.CTkOptionMenu(
+            tipo_container,
+            values=["Dentista", "Auxiliar", "Recepcionista"],
             height=40,
-            fg_color="#F9FAFB", button_color="#E5E7EB", button_hover_color="#D1D5DB",
-            text_color="#111827", dropdown_fg_color="#FFFFFF", dropdown_text_color="#111827"
-        ).pack(fill="x", padx=self.padding_lateral, pady=(0, 12))
+            fg_color="#F9FAFB", 
+            button_color="#E5E7EB", 
+            button_hover_color="#D1D5DB",
+            text_color="#111827", 
+            dropdown_fg_color="#FFFFFF", 
+            dropdown_text_color="#111827",
+            command=self._ao_mudar_tipo_profissional
+        )
+        self.tipo_profissional.pack(fill="x")
 
-        # CRO e Telefone lado a lado
-        e1, e2 = self._campo_duplo(frame, "CRO", "Telefone")
-        entries.extend([e1, e2])
+        # Container dinâmico para campos específicos por tipo
+        self.campos_dinamicos_container = ctk.CTkFrame(frame, fg_color="transparent")
+        self.campos_dinamicos_container.pack(fill="x", pady=(0, 12))
+
+        # CRO e Telefone lado a lado (inicialmente invisível)
+        self.frame_cro_telefone = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
+        self.cro_entry, self.telefone_entry = self._campo_duplo(
+            self.frame_cro_telefone, "CRO", "Telefone"
+        )
+        entries.extend([self.cro_entry, self.telefone_entry])
+        
+        # Frame para dados específicos de recepcionista
+        self.frame_recepcionista = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
+        self.recep_entry1, self.recep_entry2 = self._campo_duplo(
+            self.frame_recepcionista, "Turno (Manhã/Tarde)", "Telefone"
+        )
+        entries.extend([self.recep_entry1, self.recep_entry2])
+        
+        # Frame para dados específicos de auxiliar
+        self.frame_auxiliar = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
+        self.aux_entry = self._entry_unico(
+            self.frame_auxiliar, "Especialização em auxílio"
+        )
+        entries.append(self.aux_entry)
 
         # Acesso
         self._secao_titulo(frame, "Acesso ao Sistema")
-        self._campo_duplo(frame, "Senha", "Confirme a Senha", show1="*", show2="*")
+        self.senha_entry, self.confirma_senha_entry = self._campo_duplo(
+            frame, "Senha", "Confirme a Senha", show1="*", show2="*"
+        )
+        entries.extend([self.senha_entry, self.confirma_senha_entry])
+
+        # Inicializar com o primeiro tipo
+        self._ao_mudar_tipo_profissional("Dentista")
 
         # Ações
         self.profissional_entries = entries
         self._botoes_acao(frame, "Salvar Profissional", target_entries=self.profissional_entries)
         return frame
+
+    def _entry_unico(self, parent, placeholder, show=None):
+        """Campo único para formulários"""
+        container = ctk.CTkFrame(parent, fg_color="transparent")
+        container.pack(fill="x", padx=self.padding_lateral, pady=6)
+        
+        ctk.CTkLabel(
+            container,
+            text=placeholder,
+            font=("Poppins", 12),
+            text_color="#4B5563",
+            anchor="w"
+        ).pack(anchor="w", pady=(0, 4))
+        
+        entry = ctk.CTkEntry(
+            container,
+            placeholder_text=f"Digite {placeholder.lower()}",
+            height=42, show=show,
+            fg_color="#F9FAFB",
+            border_color="#E5E7EB",
+            border_width=1.5,
+            corner_radius=8,
+            text_color="#111827",
+            placeholder_text_color="#9CA3AF"
+        )
+        entry.pack(fill="x")
+        
+        return entry
+
+    def _ao_mudar_tipo_profissional(self, choice):
+        """Atualiza os campos conforme o tipo de profissional selecionado"""
+        
+        # Esconder todos os frames dinâmicos
+        try:
+            self.frame_cro_telefone.pack_forget()
+            self.frame_recepcionista.pack_forget()
+            self.frame_auxiliar.pack_forget()
+        except Exception:
+            pass
+        
+        # Mostrar campos específicos baseado no tipo
+        if choice == "Dentista":
+            self.frame_cro_telefone.pack(fill="x")
+            # Opcional: atualizar labels específicos
+            self._atualizar_labels_cro_telefone("CRO", "Telefone")
+            
+        elif choice == "Auxiliar":
+            self.frame_auxiliar.pack(fill="x")
+            # Opcional: mostrar campo adicional
+            self._atualizar_label_auxiliar("Especialização em auxílio")
+            
+        elif choice == "Recepcionista":
+            self.frame_recepcionista.pack(fill="x")
+            self._atualizar_labels_recepcionista("Turno (Manhã/Tarde)", "Telefone")
+
+    def _atualizar_labels_cro_telefone(self, label1, label2):
+        """Atualiza os labels do frame CRO/Telefone"""
+        # Se quiser atualizar dinamicamente os textos dos labels
+        # Isso requer manter referência aos labels ou recriar os campos
+        pass
+
+    def _atualizar_label_auxiliar(self, label):
+        """Atualiza label do auxiliar"""
+        pass
+
+    def _atualizar_labels_recepcionista(self, label1, label2):
+        """Atualiza labels do recepcionista"""
+        pass
 
     def _botoes_acao(self, parent, texto_principal, target_entries=None):
         """Container para botões de ação"""
