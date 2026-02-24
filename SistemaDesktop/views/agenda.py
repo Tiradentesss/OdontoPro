@@ -18,6 +18,23 @@ class Agenda(BaseScreen):
     def __init__(self, parent, clinica_id):
         super().__init__(parent, "Agenda")
 
+        # -------------------------
+        # VARIÁVEIS DE FILTRO
+        # -------------------------
+        self.data_var = ctk.StringVar(value="Data")
+        self.medico_var = ctk.StringVar(value="Médico")
+        self.status_var = ctk.StringVar(value="Status")
+
+        self.filtro_data = "Data"
+        self.filtro_medico = "Médico"
+        self.filtro_status = "Status"
+
+        self.data_var.trace_add("write", self.aplicar_filtros)
+        self.medico_var.trace_add("write", self.aplicar_filtros)
+        self.status_var.trace_add("write", self.aplicar_filtros)
+
+        # -----
+
         self.clinica_id = clinica_id 
         self.pagina_atual = 0
         self.paciente_selecionado = None 
@@ -101,15 +118,30 @@ class Agenda(BaseScreen):
         filter_frame.grid_columnconfigure(4, weight=1)
 
         ctk.CTkLabel(filter_frame, text="Filtros", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_primary"]).grid(row=0, column=0, padx=(10, 20))
-
-        self.filtro_data = ctk.CTkOptionMenu(filter_frame, values=["XX/XX/XXXX"], width=130, fg_color=self.colors["primary"])
-        self.filtro_data.grid(row=0, column=1, padx=5)
-
-        self.filtro_medico = ctk.CTkOptionMenu(filter_frame, values=["Todos Medicos"], width=130, fg_color=self.colors["primary"])
-        self.filtro_medico.grid(row=0, column=2, padx=5)
         
-        self.filtro_status = ctk.CTkOptionMenu(filter_frame, values=["Todos"], width=100, fg_color=self.colors["primary"])
-        self.filtro_status.grid(row=0, column=3, padx=5)
+        # Filtro Data
+        self.data_option = ctk.CTkOptionMenu(
+            filter_frame,
+            values=["Data"],
+            variable=self.data_var
+        )
+        self.data_option.grid(row=0, column=1, padx=5)
+
+        # Filtro Médico
+        self.medico_option = ctk.CTkOptionMenu(
+            filter_frame,
+            values=["Médico"],
+            variable=self.medico_var
+        )
+        self.medico_option.grid(row=0, column=2, padx=5)
+
+        # Filtro Status
+        self.status_option = ctk.CTkOptionMenu(
+            filter_frame,
+            values=["Status", "Agendada", "Realizada", "Cancelada"],
+            variable=self.status_var
+        )
+        self.status_option.grid(row=0, column=3, padx=5)
 
         # 2. Cabeçalho da Tabela
         header_frame = ctk.CTkFrame(left_panel, fg_color="#F9FAFB", height=40, corner_radius=8)
@@ -138,6 +170,48 @@ class Agenda(BaseScreen):
 
         # Paginação Lógica
         todas_consultas = ConsultaController.listar_por_clinica(self.clinica_id)
+
+        # =========================
+        # GERAR DATAS DISPONÍVEIS
+        # =========================
+        datas_unicas = sorted(
+            {c[2].strftime("%d/%m/%Y") for c in todas_consultas}
+        )
+
+        valores_data = ["Data"] + datas_unicas
+
+        # =========================
+        # GERAR MÉDICOS DISPONÍVEIS
+        # =========================
+        medicos_unicos = sorted(
+            {c[10] for c in todas_consultas if c[10]}
+        )
+
+        valores_medico = ["Médico"] + medicos_unicos
+
+        # Atualiza OptionMenus dinamicamente
+        self.data_option.configure(values=valores_data)
+        self.medico_option.configure(values=valores_medico)
+
+        # Aplicar filtros
+        if self.filtro_data != "Data":
+            todas_consultas = [
+                c for c in todas_consultas
+                if c[2].strftime("%d/%m/%Y") == self.filtro_data
+            ]
+
+        if self.filtro_status != "Status":
+            todas_consultas = [
+                c for c in todas_consultas
+                if c[3].lower() == self.filtro_status.lower()
+            ]
+
+        if self.filtro_medico != "Médico":
+            todas_consultas = [
+                c for c in todas_consultas
+                if c[10] == self.filtro_medico
+            ]
+
         inicio = self.pagina_atual * LIMITE_CONSULTAS
         fim = inicio + LIMITE_CONSULTAS
         dados_pagina = todas_consultas[inicio:fim]
@@ -272,7 +346,7 @@ class Agenda(BaseScreen):
         hora = data_hora.strftime("%H:%M")
         medico_nome = medico_nome or "Não informado"
 
-        idade = f"{date.today().year - data_nascimento.year}" if data_nascimento else "Não informado"
+        idade = self.calcular_idade(data_nascimento)
 
         content = ctk.CTkFrame(details_frame, fg_color="transparent")
         content.pack(fill="both", expand=True, padx=30, pady=40)
@@ -308,7 +382,7 @@ class Agenda(BaseScreen):
             row_f = ctk.CTkFrame(col_esq, fg_color="transparent")
             row_f.pack(fill="x", pady=4)
             ctk.CTkLabel(row_f, text=lbl, font=ctk.CTkFont(size=12), text_color=self.colors["text_secondary"]).pack(side="left")
-            ctk.CTkLabel(row_f, text=val, font=ctk.CTkFont(size=12), text_color=self.colors["text_primary"]).pack(side="right")
+            ctk.CTkLabel(row_f, text=val, font=ctk.CTkFont(size=12, weight="bold"), text_color=self.colors["text_primary"]).pack(side="right")
 
         # Coluna Direita: Consulta
         col_dir = ctk.CTkFrame(info_grid, fg_color="transparent")
@@ -324,7 +398,7 @@ class Agenda(BaseScreen):
             row_f = ctk.CTkFrame(col_dir, fg_color="transparent")
             row_f.pack(fill="x", pady=4)
             ctk.CTkLabel(row_f, text=lbl, font=ctk.CTkFont(size=12), text_color=self.colors["text_primary" if lbl=="Medico:" else "text_secondary"]).pack(side="left")
-            ctk.CTkLabel(row_f, text=val, font=ctk.CTkFont(size=12), text_color=self.colors["text_primary"]).pack(side="right")
+            ctk.CTkLabel(row_f, text=val, font=ctk.CTkFont(size=12, weight="bold"), text_color=self.colors["text_primary"]).pack(side="right")
 
         # -----------------------------
         # OBSERVAÇÕES
@@ -366,3 +440,32 @@ class Agenda(BaseScreen):
         self.pagina_atual = nova_pagina
         self.paciente_selecionado = None
         self.render()
+
+    def aplicar_filtros(self, *_):
+        self.filtro_data = self.data_var.get()
+        self.filtro_medico = self.medico_var.get()
+        self.filtro_status = self.status_var.get()
+
+        self.pagina_atual = 0
+        self.paciente_selecionado = None
+
+        self.render()
+
+    def calcular_idade(self, data_nascimento):
+        if not data_nascimento:
+            return ""
+
+        # Se vier string do MySQL, converte
+        if isinstance(data_nascimento, str):
+            from datetime import datetime
+            data_nascimento = datetime.strptime(data_nascimento, "%Y-%m-%d").date()
+
+        hoje = date.today()
+        idade = hoje.year - data_nascimento.year
+
+        if (hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day):
+            idade -= 1
+
+        return f"{idade} anos"
+
+from datetime import date
