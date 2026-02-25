@@ -255,8 +255,7 @@ body {
 
 .close-btn:hover {
     background: #e0e0e0;
-    transform: rotate(90deg);
-}
+}/* Alteração no hover, tirei a transição */
 
 .modal-header {
     text-align: center;

@@ -132,7 +132,15 @@ class Permissao(models.Model):
 class Gerenciamento(models.Model):
     nome = models.CharField(max_length=85)
     email = models.EmailField(max_length=100, unique=True)
-    senha = models.CharField(max_length=255)  # hash
+    senha = models.CharField(max_length=255)
+
+    # 🔹 VINCULAÇÃO COM A CLÍNICA
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name="gerentes"
+    )
+
     permissoes = models.ManyToManyField(
         Permissao,
         related_name="usuarios_gerenciamento",
@@ -143,7 +151,8 @@ class Gerenciamento(models.Model):
     ativo = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.nome
+        return f"{self.nome} - {self.clinica.nome}"
+
 
 
 # -------------------------
@@ -283,24 +292,32 @@ class Avaliacao(models.Model):
         ]
     )
 
-    comentario = models.TextField()
+    comentario = models.TextField(blank=True, null=True)
 
     paciente = models.ForeignKey(
         Paciente,
         on_delete=models.CASCADE,
-        related_name="avaliacoes"
+        related_name="avaliacoes_paciente"
     )
 
     medico = models.ForeignKey(
         Medico,
         on_delete=models.CASCADE,
-        related_name="avaliacoes"
+        related_name="avaliacoes_medico"
     )
 
     clinica = models.ForeignKey(
         Clinica,
         on_delete=models.CASCADE,
-        related_name="avaliacoes"
+        related_name="avaliacoes_clinica"
+    )
+
+    consulta = models.OneToOneField(
+    Consulta,
+    on_delete=models.CASCADE,
+    related_name="avaliacao",
+    null=True,
+    blank=True,
     )
 
     data_postagem = models.DateTimeField(auto_now_add=True)
