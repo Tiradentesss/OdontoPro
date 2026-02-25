@@ -17,7 +17,7 @@
             "Staff Mgmt": false,
             "Event Management": false,
             "Communication Teals": false,
-            "Painel": false,
+            "Painel": true,
             "Configurações": false
         }
     },
@@ -39,7 +39,7 @@
             "Staff Mgmt": true,
             "Event Management": false,
             "Communication Teals": true,
-            "Painel": true,
+            "Painel": false,
             "Configurações": false
         }
     },
