@@ -12,6 +12,8 @@ from .models import Paciente, Clinica, Consulta, Medico, Avaliacao
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
+from PIL import Image
+from django.core.exceptions import ValidationError
 
 import logging
 logger = logging.getLogger(__name__)
@@ -319,10 +321,12 @@ def configuracoes_conta(request):
                     return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
                 
                 # Validar tipo
-                tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif']
-                if arquivo.content_type not in tipos_permitidos:
-                    messages.error(request, 'Tipo de arquivo não permitido. Use JPG, PNG ou GIF.')
-                    return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
+                try:
+                    img = Image.open(arquivo)
+                    img.verify()
+                except Exception:
+                    messages.error(request, 'Arquivo de imagem inválido.')
+                    return redirect('configuracoes_conta')
                 
                 paciente.foto = arquivo
 
