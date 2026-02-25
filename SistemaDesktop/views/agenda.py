@@ -25,9 +25,9 @@ class Agenda(BaseScreen):
         self.medico_var = ctk.StringVar(value="Médico")
         self.status_var = ctk.StringVar(value="Status")
 
-        self.filtro_data = "Data"
-        self.filtro_medico = "Médico"
-        self.filtro_status = "Status"
+        self.filtro_data = None
+        self.filtro_medico = None
+        self.filtro_status = None
 
         self.data_var.trace_add("write", self.aplicar_filtros)
         self.medico_var.trace_add("write", self.aplicar_filtros)
@@ -138,7 +138,7 @@ class Agenda(BaseScreen):
         # Filtro Status
         self.status_option = ctk.CTkOptionMenu(
             filter_frame,
-            values=["Status", "Agendada", "Realizada", "Cancelada"],
+            values=["Todos", "Agendada", "Realizada", "Cancelada"],
             variable=self.status_var
         )
         self.status_option.grid(row=0, column=3, padx=5)
@@ -178,7 +178,7 @@ class Agenda(BaseScreen):
             {c[2].strftime("%d/%m/%Y") for c in todas_consultas}
         )
 
-        valores_data = ["Data"] + datas_unicas
+        valores_data = ["Todos"] + datas_unicas
 
         # =========================
         # GERAR MÉDICOS DISPONÍVEIS
@@ -187,26 +187,26 @@ class Agenda(BaseScreen):
             {c[10] for c in todas_consultas if c[10]}
         )
 
-        valores_medico = ["Médico"] + medicos_unicos
+        valores_medico = ["Todos"] + medicos_unicos
 
         # Atualiza OptionMenus dinamicamente
         self.data_option.configure(values=valores_data)
         self.medico_option.configure(values=valores_medico)
 
         # Aplicar filtros
-        if self.filtro_data != "Data":
+        if self.filtro_data:
             todas_consultas = [
                 c for c in todas_consultas
                 if c[2].strftime("%d/%m/%Y") == self.filtro_data
             ]
 
-        if self.filtro_status != "Status":
+        if self.filtro_status:
             todas_consultas = [
                 c for c in todas_consultas
                 if c[3].lower() == self.filtro_status.lower()
             ]
 
-        if self.filtro_medico != "Médico":
+        if self.filtro_medico:
             todas_consultas = [
                 c for c in todas_consultas
                 if c[10] == self.filtro_medico
@@ -442,9 +442,27 @@ class Agenda(BaseScreen):
         self.render()
 
     def aplicar_filtros(self, *_):
-        self.filtro_data = self.data_var.get()
-        self.filtro_medico = self.medico_var.get()
-        self.filtro_status = self.status_var.get()
+        valor_data = self.data_var.get()
+        valor_medico = self.medico_var.get()
+        valor_status = self.status_var.get()
+
+        # DATA
+        if valor_data in ["Data", "Todos"]:
+            self.filtro_data = None
+        else:
+            self.filtro_data = valor_data
+
+        # MÉDICO
+        if valor_medico in ["Médico", "Todos"]:
+            self.filtro_medico = None
+        else:
+            self.filtro_medico = valor_medico
+
+        # STATUS
+        if valor_status in ["Status", "Todos"]:
+            self.filtro_status = None
+        else:
+            self.filtro_status = valor_status
 
         self.pagina_atual = 0
         self.paciente_selecionado = None
