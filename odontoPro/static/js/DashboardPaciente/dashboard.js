@@ -992,3 +992,30 @@ function irParaMeusAgendamentos() {
     mostrarTela('consultas', document.querySelectorAll(".item-menu")[1]);
     fecharModalAgendamento();
 }
+
+function irParaAjustes() {
+    mostrarTela('ajustes');
+}
+
+function abrirNotificacoes() {
+    const modal = document.getElementById("modal-notificacoes");
+    const ponto = document.querySelector(".ponto-alerta");
+
+    modal.classList.add("ativo");
+
+    if (ponto) {
+        ponto.style.display = "none";
+    }
+}
+
+function fecharNotificacoes() {
+    document.getElementById("modal-notificacoes")
+            .classList.remove("ativo");
+}
+
+document.getElementById("modal-notificacoes")
+    .addEventListener("click", function(e) {
+        if (e.target.id === "modal-notificacoes") {
+            fecharNotificacoes();
+        }
+});
