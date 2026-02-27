@@ -155,7 +155,6 @@ class Agenda(BaseScreen):
         
         # Configuração das Colunas do Header
         headers = [
-            ("Avatar", self.col_widths["avatar"], "nsew"),
             ("Nome", self.col_widths["nome"], "w"),
             ("Medico", self.col_widths["medico"], "nsew"),
             ("Data", self.col_widths["data"], "nsew"),
@@ -233,6 +232,7 @@ class Agenda(BaseScreen):
                 sexo,
                 data_nascimento,
                 cpf,
+                foto,
                 observacoes,
                 medico_nome
             ) = item
@@ -259,14 +259,60 @@ class Agenda(BaseScreen):
                 row.bind("<Enter>", lambda e, f=row: f.configure(fg_color=self.colors["hover"]))
                 row.bind("<Leave>", lambda e, f=row: f.configure(fg_color="transparent"))
 
-            # --- Col 0: Avatar Gerado ---
-            av_color = self.colors["avatar_colors"][hash(nome) % len(self.colors["avatar_colors"])]
-            av_img = self.create_letter_avatar(nome[0].upper(), av_color, 26)
-            ctk_av_img = ctk.CTkImage(light_image=av_img, dark_image=av_img, size=(26, 26))
-            self.image_cache.append(ctk_av_img)
-            
-            l_avatar = ctk.CTkLabel(row, image=ctk_av_img, text="")
-            l_avatar.grid(row=0, column=0, pady=12)
+            # --- Col 0: Avatar (Imagem ou Letra) ---
+            avatar_label = ctk.CTkLabel(
+                row,
+                width=32,
+                height=32,
+                corner_radius=16,
+                fg_color="transparent",
+                text=""
+            )
+            avatar_label.grid(row=0, column=0, pady=9)
+            avatar_label.grid_propagate(False)
+
+            # BUSCAR FOTO
+            consulta_full = ConsultaController.buscar_por_id(consulta_id)
+            foto = consulta_full[9] if consulta_full else None
+
+            if foto:
+                try:
+                    url = f"{BASE_URL}/media/{foto}"
+                    response = requests.get(url, timeout=5)
+
+                    if response.status_code == 200:
+                        img = Image.open(BytesIO(response.content)).convert("RGB")
+
+                        min_dim = min(img.size)
+                        left = (img.width - min_dim) // 2
+                        top = (img.height - min_dim) // 2
+                        right = left + min_dim
+                        bottom = top + min_dim
+                        img = img.crop((left, top, right, bottom))
+
+                        img = img.resize((32, 32), Image.Resampling.LANCZOS)
+
+                        mask = Image.new("L", (32, 32), 0)
+                        draw = ImageDraw.Draw(mask)
+                        draw.ellipse((0, 0, 32, 32), fill=255)
+
+                        img.putalpha(mask)
+
+                        img_ctk = ctk.CTkImage(light_image=img, size=(32, 32))
+
+                        avatar_label.configure(image=img_ctk, text="")
+                        avatar_label.image = img_ctk
+                        self.image_cache.append(img_ctk)
+                except:
+                    pass
+
+            else:
+                av_color = self.colors["avatar_colors"][hash(nome) % len(self.colors["avatar_colors"])]
+                av_img = self.create_letter_avatar(nome[0].upper(), av_color, 32)
+                img_ctk = ctk.CTkImage(light_image=av_img, size=(32, 32))
+                avatar_label.configure(image=img_ctk)
+                avatar_label.image = img_ctk
+                self.image_cache.append(img_ctk)
 
             # --- Col 1: Nome ---
             l_nome = ctk.CTkLabel(row, text=self.truncate_text(nome, 30), font=ctk.CTkFont(size=13, weight="bold"), text_color=self.colors["text_primary"])
@@ -294,7 +340,7 @@ class Agenda(BaseScreen):
             l_status.place(relx=0.5, rely=0.5, anchor="center")
 
             # Bind clicks nos filhos
-            for widget in [l_avatar, l_nome, l_medico, l_data, l_hora, badge, l_status]:
+            for widget in [avatar_label, l_nome, l_medico, l_data, l_hora, badge, l_status]:
                 widget.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
 
         self.render_pagination(left_panel, len(todas_consultas))
@@ -371,6 +417,7 @@ class Agenda(BaseScreen):
             text=""
         )
         avatar_label.pack(pady=(0, 10))
+        avatar_label.pack_propagate(False)
 
         if foto:
             try:
@@ -379,7 +426,22 @@ class Agenda(BaseScreen):
 
                 if response.status_code == 200:
                     img = Image.open(BytesIO(response.content))
+                    img = Image.open(BytesIO(response.content))
+                    img = Image.open(BytesIO(response.content)).convert("RGBA")
+
+                    min_dim = min(img.size)
+                    left = (img.width - min_dim) // 2
+                    top = (img.height - min_dim) // 2
+                    right = left + min_dim
+                    bottom = top + min_dim
+                    img = img.crop((left, top, right, bottom))
                     img = img.resize((90, 90))
+
+                    mask = Image.new("L", (90, 90), 0)
+                    draw = ImageDraw.Draw(mask)
+                    draw.ellipse((0, 0, 90, 90), fill=255)
+
+                    img.putalpha(mask)
 
                     img_ctk = ctk.CTkImage(light_image=img, size=(90, 90))
                     avatar_label.configure(image=img_ctk, text="")
