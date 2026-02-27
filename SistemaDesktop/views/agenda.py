@@ -1,7 +1,12 @@
+BASE_URL = "http://127.0.0.1:8000"
+import requests
+from io import BytesIO
+
 from .base import BaseScreen
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont
 from datetime import date
+import os
 
 # 🔽 IMPORTA DO MODELS (Mantido)
 from models.data import LIMITE_CONSULTAS
@@ -338,6 +343,7 @@ class Agenda(BaseScreen):
             sexo,
             data_nascimento,
             cpf,
+            foto,
             observacoes,
             medico_nome
         ) = consulta
@@ -355,8 +361,33 @@ class Agenda(BaseScreen):
         header_det = ctk.CTkFrame(content, fg_color="transparent")
         header_det.pack(fill="x", pady=(0, 30))
         
-        # Avatar Grande Cinza (conforme imagem)
-        ctk.CTkLabel(header_det, text="", width=90, height=90, fg_color="#E5E7EB", corner_radius=45).pack(pady=(0, 15))
+        # Avatar Grande (imagem ou círculo padrão)
+        avatar_label = ctk.CTkLabel(
+            header_det,
+            width=90,
+            height=90,
+            corner_radius=45,
+            fg_color="#E5E7EB",
+            text=""
+        )
+        avatar_label.pack(pady=(0, 10))
+
+        if foto:
+            try:
+                url = f"{BASE_URL}/media/{foto}"
+                response = requests.get(url, timeout=5)
+
+                if response.status_code == 200:
+                    img = Image.open(BytesIO(response.content))
+                    img = img.resize((90, 90))
+
+                    img_ctk = ctk.CTkImage(light_image=img, size=(90, 90))
+                    avatar_label.configure(image=img_ctk, text="")
+                    avatar_label.image = img_ctk
+
+            except Exception:
+                pass
+
         ctk.CTkLabel(header_det, text=nome, font=ctk.CTkFont(size=20, weight="bold"), text_color=self.colors["text_primary"]).pack()
         ctk.CTkLabel(header_det, text=email or "sem@email.com", font=ctk.CTkFont(size=13), text_color=self.colors["primary"]).pack(pady=(0, 10))
 

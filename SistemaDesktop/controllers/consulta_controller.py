@@ -46,6 +46,7 @@ class ConsultaController:
                 p.sexo,
                 p.data_nascimento,
                 p.cpf,
+                p.foto,
                 c.observacoes,
                 m.nome
             FROM odontopro_consulta c
