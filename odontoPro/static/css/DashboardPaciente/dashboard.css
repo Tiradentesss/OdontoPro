@@ -48,7 +48,7 @@ body {
 .botao-seta {
     position: absolute;
     right: -15px;
-    top: 45px;
+    top: 25px;
     width: 30px;
     height: 30px;
     background: var(--azul-claro);

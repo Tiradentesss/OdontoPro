@@ -8,10 +8,15 @@ from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 
-from .models import Paciente, Clinica, Consulta, Medico
+from .models import Paciente, Clinica, Consulta, Medico, Avaliacao
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
+from PIL import Image
+from django.core.exceptions import ValidationError
+
+import logging
+logger = logging.getLogger(__name__)
 
 @require_GET
 def horarios_clinica(request, clinica_id):
@@ -91,10 +96,15 @@ def perfil_clinica(request, clinica_id):
     medicos = Medico.objects.filter(clinica=clinica)
     consultas = Consulta.objects.filter(clinica=clinica).order_by("-data_hora")[:5]
 
+    avaliacoes = Avaliacao.objects.filter(
+        clinica=clinica
+    ).select_related("paciente").order_by("-data_postagem")
+
     return render(request, "Clinica/perfil_clinica.html", {
         "clinica": clinica,
         "medicos": medicos,
         "consultas": consultas,
+        "avaliacoes": avaliacoes,
     })
 
 
@@ -135,10 +145,13 @@ def dashboard_paciente(request):
     if filtro_status and filtro_status != "todas":
         consultas = consultas.filter(status=filtro_status)
 
+    avaliacoes = Avaliacao.objects.all().select_related("paciente", "clinica", "medico")
+
     context = {
         "paciente": paciente,
         "clinicas": clinicas,
         "consultas": consultas,
+        "avaliacoes": avaliacoes,
         "filtro_status": filtro_status or "todas",
     }
 
@@ -308,10 +321,12 @@ def configuracoes_conta(request):
                     return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
                 
                 # Validar tipo
-                tipos_permitidos = ['image/jpeg', 'image/png', 'image/gif']
-                if arquivo.content_type not in tipos_permitidos:
-                    messages.error(request, 'Tipo de arquivo não permitido. Use JPG, PNG ou GIF.')
-                    return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
+                try:
+                    img = Image.open(arquivo)
+                    img.verify()
+                except Exception:
+                    messages.error(request, 'Arquivo de imagem inválido.')
+                    return redirect('configuracoes_conta')
                 
                 paciente.foto = arquivo
 
@@ -391,83 +406,98 @@ def cadastrar_paciente(request):
 @require_POST
 def criar_avaliacao(request):
     """
-    View para criar uma avaliação de consulta.
-    Espera os dados: consulta_id, clinica_id, medico_id, nota, comentario (opcional)
+    Cria ou atualiza a avaliação de uma consulta.
+    Espera: consulta_id, nota, comentario (opcional)
     """
-    from .models import Avaliacao
+
     import logging
-    
+    from django.http import JsonResponse
+    from django.shortcuts import get_object_or_404
+    from .models import Avaliacao, Consulta
+
     logger = logging.getLogger(__name__)
-    
+
     try:
         consulta_id = request.POST.get("consulta_id")
-        clinica_id = request.POST.get("clinica_id")
-        medico_id = request.POST.get("medico_id")
         nota_str = request.POST.get("nota", "5")
         comentario = request.POST.get("comentario", "").strip()
-        
-        logger.info(f"Avaliação recebida: consulta={consulta_id}, clínica={clinica_id}, médico={medico_id}, nota={nota_str}")
-        
-        # Converter nota para inteiro
+
+        logger.info(f"Tentativa de avaliação - consulta={consulta_id}, nota={nota_str}")
+
+        # =============================
+        # Validação de sessão
+        # =============================
+        paciente_id = request.session.get("paciente_id")
+        if not paciente_id:
+            return JsonResponse({
+                "success": False,
+                "message": "Você precisa estar logado."
+            }, status=401)
+
+        # =============================
+        # Validar nota
+        # =============================
         try:
             nota = int(nota_str)
         except ValueError:
             return JsonResponse({
                 "success": False,
-                "message": "Nota deve ser um número inteiro"
+                "message": "Nota inválida."
             }, status=400)
-        
-        # Validações
-        if not all([clinica_id, medico_id]):
-            return JsonResponse({
-                "success": False,
-                "message": "Dados incompletos: clínica_id e medico_id são obrigatórios"
-            }, status=400)
-        
+
         if nota < 1 or nota > 5:
             return JsonResponse({
                 "success": False,
-                "message": "Classificação inválida (deve ser entre 1 e 5)"
+                "message": "A nota deve ser entre 1 e 5."
             }, status=400)
-        
-        # Obter paciente da sessão
-        paciente_id = request.session.get("paciente_id")
-        if not paciente_id:
+
+        # =============================
+        # Buscar consulta
+        # =============================
+        consulta = get_object_or_404(Consulta, id=consulta_id)
+
+        # Segurança: garantir que a consulta pertence ao paciente logado
+        if consulta.paciente.id != paciente_id:
             return JsonResponse({
                 "success": False,
-                "message": "Você não está logado"
-            }, status=401)
-        
-        # Obter objetos
-        try:
-            clinica = Clinica.objects.get(id=clinica_id)
-            medico = Medico.objects.get(id=medico_id)
-            paciente = Paciente.objects.get(id=paciente_id)
-        except (Clinica.DoesNotExist, Medico.DoesNotExist, Paciente.DoesNotExist) as e:
+                "message": "Você não pode avaliar essa consulta."
+            }, status=403)
+
+        # Segurança extra: só pode avaliar consulta realizada
+        if consulta.status != "realizada":
             return JsonResponse({
                 "success": False,
-                "message": f"Objeto não encontrado: {str(e)}"
-            }, status=404)
-        
-        # Verificar se já existe avaliação para este médico e clínica pelo paciente
-        Avaliacao.objects.create(
-            paciente=paciente,
-            clinica=clinica,
-            medico=medico,
-            nota=nota,
-            comentario=comentario
+                "message": "Só é possível avaliar consultas realizadas."
+            }, status=400)
+
+        # =============================
+        # Criar ou atualizar avaliação
+        # =============================
+        avaliacao, created = Avaliacao.objects.update_or_create(
+            consulta=consulta,
+            defaults={
+                "paciente": consulta.paciente,
+                "clinica": consulta.clinica,
+                "medico": consulta.medico,
+                "nota": int(nota),
+                "comentario": comentario
+            }
         )
 
-        logger.info(f"Avaliação criada: {avaliacao.id}")
-        
+        logger.info(
+            f"Avaliação {'criada' if created else 'atualizada'} "
+            f"(ID={avaliacao.id}) para consulta {consulta.id}"
+        )
+
         return JsonResponse({
             "success": True,
-            "message": "Avaliação registrada com sucesso!"
+            "message": "Avaliação salva com sucesso!",
+            "created": created
         })
-        
+
     except Exception as e:
-        logger.error(f"Erro ao processar avaliação: {str(e)}", exc_info=True)
+        logger.error("Erro ao criar avaliação", exc_info=True)
         return JsonResponse({
             "success": False,
-            "message": f"Erro ao processar avaliação: {str(e)}"
+            "message": "Erro interno ao processar avaliação."
         }, status=500)

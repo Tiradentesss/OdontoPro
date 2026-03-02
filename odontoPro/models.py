@@ -292,24 +292,32 @@ class Avaliacao(models.Model):
         ]
     )
 
-    comentario = models.TextField()
+    comentario = models.TextField(blank=True, null=True)
 
     paciente = models.ForeignKey(
         Paciente,
         on_delete=models.CASCADE,
-        related_name="avaliacoes"
+        related_name="avaliacoes_paciente"
     )
 
     medico = models.ForeignKey(
         Medico,
         on_delete=models.CASCADE,
-        related_name="avaliacoes"
+        related_name="avaliacoes_medico"
     )
 
     clinica = models.ForeignKey(
         Clinica,
         on_delete=models.CASCADE,
-        related_name="avaliacoes"
+        related_name="avaliacoes_clinica"
+    )
+
+    consulta = models.OneToOneField(
+    Consulta,
+    on_delete=models.CASCADE,
+    related_name="avaliacao",
+    null=True,
+    blank=True,
     )
 
     data_postagem = models.DateTimeField(auto_now_add=True)
