@@ -641,5 +641,29 @@
     </div>
 </div>
 
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const params = new URLSearchParams(window.location.search);
+
+    const tela = params.get("open");
+    const tab = params.get("tab");
+
+    if (tela) {
+        // ativa tela principal
+        const btnMenu = document.querySelector(`.item-menu[onclick*="${tela}"]`);
+        mostrarTela(tela, btnMenu || null);
+    }
+
+    if (tab) {
+        // ativa aba interna (sem depender de clique real)
+        trocarAba(null, tab);
+
+        // ativa botão visualmente
+        const btnAba = document.querySelector(`.aba-item[onclick*="${tab}"]`);
+        if (btnAba) btnAba.classList.add("ativa");
+    }
+});
+</script>
+
 </body>
 </html>

@@ -1019,3 +1019,4 @@ document.getElementById("modal-notificacoes")
             fecharNotificacoes();
         }
 });
+

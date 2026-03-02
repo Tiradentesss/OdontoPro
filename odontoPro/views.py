@@ -142,6 +142,7 @@ def dashboard_paciente(request):
     clinicas = Clinica.objects.all().order_by("nome")
 
     filtro_status = request.GET.get("status")
+    aba_ativa = request.GET.get("aba", "principal")
     consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
     agora = timezone.now()
 
@@ -166,6 +167,7 @@ def dashboard_paciente(request):
         "filtro_status": filtro_status or "todas",
         "consultas_futuras": consultas_futuras,
         "tem_notificacao": tem_notificacao,
+        "aba_ativa": aba_ativa,
     }
 
     return render(request, "DashboardPaciente/dashboard.html", context)
@@ -331,7 +333,7 @@ def configuracoes_conta(request):
                 # Validar tamanho (máx 5MB)
                 if arquivo.size > 5 * 1024 * 1024:
                     messages.error(request, 'Arquivo muito grande. Máximo 5MB.')
-                    return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
+                    return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
                 
                 # Validar tipo
                 try:
@@ -339,18 +341,18 @@ def configuracoes_conta(request):
                     img.verify()
                 except Exception:
                     messages.error(request, 'Arquivo de imagem inválido.')
-                    return redirect('configuracoes_conta')
+                    return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
                 
                 paciente.foto = arquivo
 
             paciente.save()
             messages.success(request, 'Dados atualizados com sucesso!')
-            return redirect('dashboard_paciente')
+            return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
         except Exception as e:
             messages.error(request, f'Erro ao salvar: {str(e)}')
-            return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
+            return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
 
-    return render(request, 'DashboardPaciente/configuracoes.html', {'paciente': paciente})
+    return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
 
 
 
@@ -413,7 +415,7 @@ def cadastrar_paciente(request):
 
     request.session["paciente_id"] = paciente.id
     messages.success(request, "Conta criada com sucesso!")
-    return redirect("dashboard_paciente")
+    return redirect("configuracoes_conta")
 
 
 @require_POST
