@@ -645,23 +645,28 @@
 document.addEventListener("DOMContentLoaded", function() {
     const params = new URLSearchParams(window.location.search);
 
+    // 🔥 só executa se existir o parâmetro "open"
+    if (!params.has("open")) return;
+
     const tela = params.get("open");
     const tab = params.get("tab");
 
-    if (tela) {
-        // ativa tela principal
-        const btnMenu = document.querySelector(`.item-menu[onclick*="${tela}"]`);
-        mostrarTela(tela, btnMenu || null);
+    // ativa tela principal
+    const btnMenu = document.querySelector(`.item-menu[onclick*="${tela}"]`);
+    if (btnMenu) {
+        mostrarTela(tela, btnMenu);
     }
 
+    // ativa aba interna
     if (tab) {
-        // ativa aba interna (sem depender de clique real)
         trocarAba(null, tab);
 
-        // ativa botão visualmente
         const btnAba = document.querySelector(`.aba-item[onclick*="${tab}"]`);
         if (btnAba) btnAba.classList.add("ativa");
     }
+
+    // 🔥 remove os parâmetros da URL depois de usar
+    window.history.replaceState({}, document.title, window.location.pathname);
 });
 </script>
 
