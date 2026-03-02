@@ -219,11 +219,15 @@
         <h1 class="titulo-sessao">Sobre a Clinica</h1>
         <div class="card-branco header-clinica-detalhe">
             <div class="clinica-info-principal">
-                <img src="/img/logo Lumina.png" alt="Logo Clínica" class="logo-clinica-detalhe">
+                <img id="detalheLogoClinica" src="{% static 'img/default-banner.jpg' %}" class="logo-clinica-detalhe">
                 <div class="clinica-textos">
-                    <h2 id="detalheNomeClinica">Clinica Lumina</h2>
-                    <p><i class="fa-regular fa-envelope"></i> clinicalumina@gmail.com</p>
-                    <p><i class="fa-solid fa-phone-volume"></i> +55 (91) 9999-9999</p>
+                    <h2 id="detalheNomeClinica">Nome da Clínica</h2>
+                    <p><i class="fa-regular fa-envelope"></i>
+                        <span id="detalheEmailClinica">email@clinica.com</span>
+                    </p>
+                    <p><i class="fa-solid fa-phone-volume"></i>
+                        <span id="detalheTelefoneClinica">(00) 00000-0000</span>
+                    </p>
                 </div>
             </div>
             <button id="btn-abrir-agendamento" class="agendar-btn" onclick="abrirModalAgendamentoClinica()">Agendar Consulta</button>
@@ -240,13 +244,9 @@
         <div id="aba-sobre" class="aba-conteudo ativa">
             <div class="card-branco">
                 <div class="tag-secao"><i class="fa-solid fa-tooth"></i> Descrição da Clínica</div>
-                <p class="descricao-texto">A Clínica Lumina é uma clínica odontológica que atende diversas especialidades, focando em odontologia geral com uma equipe ampla...</p>
+                <p id="detalheDescricaoClinica" class="descricao-texto">Descrição da clínica...</p>
                 <div class="tag-secao" style="margin-top: 25px;"><i class="fa-solid fa-clipboard-list"></i> Serviços Disponíveis</div>
-                <ul class="lista-servicos-bullets">
-                    <li>Prótese Fixa</li>
-                    <li>Overdenture</li>
-                    <li>Cirurgia Guiada</li>
-                </ul>
+                <ul id="detalheServicosClinica" class="lista-servicos-bullets"></ul>
             </div>
         </div>
 
@@ -292,7 +292,12 @@
             <div class="card-branco">
                 <div class="tag-secao"><i class="fa-solid fa-location-dot"></i> Localização</div>
                 <div class="endereco-detalhes">
-                    <p><strong>Unidade Belém:</strong> Av. Visc. de Souza Franco, 600 - Reduto, Belém - PA, 66053-000</p>
+                    <p>
+                        <strong>Endereço:</strong>
+                        <span id="detalheEnderecoClinica">
+                            Carregando endereço...
+                        </span>
+                    </p>
                     <p><i class="fa-solid fa-clock"></i> Segunda a Sexta: 08h às 18h | Sábado: 08h às 12h</p>
                 </div>
                 <div class="mapa-google">

@@ -239,6 +239,17 @@ def clinica_detalhes(request, clinica_id):
     medicos = [(m.id, m.nome) for m in clinica.medico_set.all()]
 
     return JsonResponse({
+        "nome": clinica.nome,
+        "email": clinica.email,
+        "telefone": clinica.telefone,
+        "descricao": clinica.descricao,
+        "logo_url": clinica.logo.url if clinica.logo else None,
+        "rua": clinica.endereco.rua,
+        "numero": clinica.endereco.numero,
+        "bairro": clinica.endereco.bairro,
+        "cidade": clinica.endereco.cidade,
+        "estado": clinica.endereco.estado,
+        "cep": clinica.endereco.cep,
         "especialidades": list(especialidades),
         "medicos": medicos
     })

@@ -156,10 +156,71 @@ function fecharDetalhes(id) {
 let clinicaSelecionada = null;
 
 function abrirModalAgendamento(clinicaId) {
+
+    console.log("CLINICA CLICADA:", clinicaId);
     clinicaSelecionada = clinicaId;
+
+    // Vai para tela perfil da clínica
     mostrarTela('perfil-clinica', null);
-    carregarPerfilClinica(clinicaId);
-    carregarMedicosClinica(clinicaId);
+
+    // Carrega dados da clínica via Django
+    fetch(`/clinica/${clinicaId}/detalhes/`)
+        .then(response => response.json())
+        .then(data => {
+
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            document.getElementById("detalheNomeClinica").innerText = data.nome;
+            document.getElementById("detalheEmailClinica").innerText = data.email;
+            document.getElementById("detalheTelefoneClinica").innerText = data.telefone;
+            document.getElementById("detalheDescricaoClinica").innerText = data.descricao;
+
+            document.getElementById("detalheEnderecoClinica").innerText =
+                `${data.rua}, ${data.numero} - ${data.bairro}, ${data.cidade} - ${data.estado}, CEP: ${data.cep}`;
+
+            const logoImg = document.getElementById("detalheLogoClinica");
+            if (logoImg) {
+                if (data.logo_url) {
+                    logoImg.src = data.logo_url;
+                } else {
+                    logoImg.src = "/static/img/default-banner.jpg";
+                }
+            }
+
+
+            // ===== ESPECIALIDADES =====
+            const selectEspecialidade = document.getElementById("especialidade");
+            if (selectEspecialidade) {
+                selectEspecialidade.innerHTML = "<option value=''>Selecione</option>";
+
+                data.especialidades.forEach(function(esp) {
+                    const option = document.createElement("option");
+                    option.value = esp[1];
+                    option.textContent = esp[1];
+                    selectEspecialidade.appendChild(option);
+                });
+            }
+
+            // ===== MÉDICOS =====
+            const selectProfissional = document.getElementById("selectProfissional");
+            if (selectProfissional) {
+                selectProfissional.innerHTML = "<option value=''>Escolha um Profissional</option>";
+
+                data.medicos.forEach(function(med) {
+                    const option = document.createElement("option");
+                    option.value = med[0];
+                    option.textContent = med[1];
+                    selectProfissional.appendChild(option);
+                });
+            }
+
+        })
+        .catch(error => {
+            console.error("Erro ao carregar clínica:", error);
+        });
 }
 
 /* Função para abrir o modal de agendamento na página de perfil da clínica */
