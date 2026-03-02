@@ -14,6 +14,8 @@ from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
 from PIL import Image
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import timedelta
 
 import logging
 logger = logging.getLogger(__name__)
@@ -141,6 +143,15 @@ def dashboard_paciente(request):
 
     filtro_status = request.GET.get("status")
     consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
+    agora = timezone.now()
+
+    consultas_futuras = Consulta.objects.filter(
+        paciente=paciente,
+        data_hora__gte=agora,
+        status__in=["agendada", "confirmada"]
+    ).order_by("data_hora")
+
+    tem_notificacao = consultas_futuras.exists()
 
     if filtro_status and filtro_status != "todas":
         consultas = consultas.filter(status=filtro_status)
@@ -153,6 +164,8 @@ def dashboard_paciente(request):
         "consultas": consultas,
         "avaliacoes": avaliacoes,
         "filtro_status": filtro_status or "todas",
+        "consultas_futuras": consultas_futuras,
+        "tem_notificacao": tem_notificacao,
     }
 
     return render(request, "DashboardPaciente/dashboard.html", context)

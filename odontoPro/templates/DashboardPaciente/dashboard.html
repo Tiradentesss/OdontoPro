@@ -63,12 +63,18 @@
     </div>
 
     <div class="controles-usuario">
-        <button class="botao-notificacao">
+        <button type="button"
+                class="botao-notificacao"
+                onclick="abrirNotificacoes()">
+
             <i class="fa-regular fa-bell"></i>
-            <span class="ponto-alerta"></span>
+
+            {% if tem_notificacao %}
+                <span class="ponto-alerta"></span>
+            {% endif %}
         </button>
 
-        <div class="bloco-usuario">
+        <button type="button" class="bloco-usuario" onclick="mostrarTela('ajustes', this)">
             <div class="icone-usuario-avatar">
                 {% if paciente.foto %}
                     <img src="{{ paciente.foto.url }}" class="avatar-header">
@@ -82,7 +88,7 @@
                 <span class="nome-usuario">{{ paciente.nome }}</span>
                 <span class="email-usuario">{{ paciente.email }}</span>
             </div>
-        </div>
+        </button>
     </div>
 </header>
 
@@ -430,15 +436,16 @@
 
                 <!-- Botão de Avaliar (só para consultas realizadas) -->
                 {% if cons.status == 'realizada' and not cons.avaliacao %}
-    <button class="btn-avaliar"
-        onclick="mostrarEstrelas('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
-        Avaliar Consulta
-    </button>
-{% elif cons.avaliacao %}
-    <span style="color: green; font-weight: 600;">
-        ✔ Já avaliada
-    </span>
-{% endif %}
+                    <button class="btn-avaliar"
+                        onclick="mostrarEstrelas('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
+                        Avaliar Consulta
+                    </button>
+
+                {% elif cons.avaliacao %}
+                    <button class="btn-avaliado" disabled>
+                        ✔ Avaliado
+                    </button>
+                {% endif %}
 
                 <!-- 🔹 Seção de Avaliação com Estrelas (inicialmente oculta) -->
                 <div class="avaliacao-section" id="avaliacao-{{ cons.id }}" style="display: none; margin-top: 15px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
@@ -608,6 +615,30 @@
 </section>
 
 </main>
+</div>
+
+<div id="modal-notificacoes" class="modal-notificacoes">
+    <div class="modal-box">
+
+        <div class="modal-header">
+            <h3>Consultas Agendadas</h3>
+            <button onclick="fecharNotificacoes()" class="fechar-modal">×</button>
+        </div>
+
+        <div class="modal-body">
+            {% for consulta in consultas_futuras %}
+                <div class="item-notificacao">
+                    <strong>{{ consulta.clinica.nome }}</strong><br>
+                    {{ consulta.data_hora|date:"d/m/Y H:i" }}
+                </div>
+            {% empty %}
+                <div class="item-notificacao">
+                    Nenhuma consulta futura.
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
 </div>
 
 </body>
