@@ -1170,10 +1170,10 @@ body {
 
 /* Grid de Inputs */
 .grid-inputs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 25px;
-    margin-bottom: 30px;
+    display: flex;
+    gap: 5px;
+    margin-bottom: -5px;
+    flex-direction: column;
 }
 
 .input-grupo {
@@ -2310,4 +2310,28 @@ body {
     }
 }
 
+.btn-avaliado {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--verde-sucesso);
+    background: var(--verde-sucesso); /* 🔥 AQUI ESTÁ O SEGREDO */
+    color: white;
+    font-weight: 600;
+    cursor: default;
+    transition: 0.3s;
+    font-size: 14px;
+}
 
+.btn-avaliado:hover {
+    background: var(--verde-sucesso);
+    color: white;
+}
+
+button.btn-avaliado:disabled {
+    background-color: var(--verde-sucesso);
+    border-color: var(--verde-sucesso);
+    color: #fff;
+    opacity: 1;
+}
