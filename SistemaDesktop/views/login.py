@@ -4,12 +4,12 @@ from PIL import Image
 from tkinter import messagebox
 
 from controllers.auth_controller import AuthController
+from .theme import font, ICON_SIZE
 
 
 class Login(ctk.CTk):
     def __init__(self):
         super().__init__()
-
         self.title("Login - OdontoPro")
 
         largura = self.winfo_screenwidth()
@@ -87,14 +87,14 @@ class Login(ctk.CTk):
         ctk.CTkLabel(
             conteudo,
             text="Acesse sua conta",
-            font=("Arial", 28, "bold"),
+            font=font("title", "bold"),
             text_color="#1C1C1C"
         ).pack(anchor="w")
 
         ctk.CTkLabel(
             conteudo,
             text="Bem-vindo de volta! Entre com seus dados.",
-            font=("Arial", 14),
+            font=font("subtitle"),
             text_color="#666666"
         ).pack(anchor="w", pady=(0, 25))
 
@@ -137,7 +137,7 @@ class Login(ctk.CTk):
             height=50,
             fg_color="#0A66C2",
             hover_color="#0959A8",
-            font=("Arial", 12, "bold"),
+            font=font("button", "bold"),
             command=self.autenticar
         ).pack(pady=15, anchor="w")
 
@@ -154,7 +154,7 @@ class Login(ctk.CTk):
             height=48,
             fg_color="#0A66C2",
             hover_color="#0959A8",
-            font=("Arial", 12, "bold")
+            font=font("button", "bold")
         ).pack(pady=5)
 
         ctk.CTkButton(
@@ -164,7 +164,7 @@ class Login(ctk.CTk):
             height=48,
             fg_color="#0A66C2",
             hover_color="#0959A8",
-            font=("Arial", 12, "bold")
+            font=font("button", "bold")
         ).pack(pady=5)
 
         rodape = ctk.CTkFrame(conteudo, fg_color="transparent")

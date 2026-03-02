@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from .theme import font
 
 class BaseScreen(ctk.CTkFrame):
     def __init__(self, parent, title):
@@ -7,7 +8,7 @@ class BaseScreen(ctk.CTkFrame):
         ctk.CTkLabel(
             self,
             text=title,
-            font=ctk.CTkFont(size=28, weight="bold"),
+            font=font("title", "bold"),
             text_color="#1F2937"
         ).pack(anchor="w", pady=(0, 20))
 

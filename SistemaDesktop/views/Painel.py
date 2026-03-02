@@ -1,5 +1,6 @@
 from .base import BaseScreen
 import customtkinter as ctk
+from .theme import font, ICON_SIZE
 
 class Painel(BaseScreen):
     def __init__(self, parent):
@@ -23,7 +24,7 @@ class Painel(BaseScreen):
         ctk.CTkLabel(
             consultas,
             text="Próximas Consultas",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=font("subtitle", "bold")
         ).pack(anchor="w", padx=20, pady=15)
 
         dados = [
@@ -36,8 +37,8 @@ class Painel(BaseScreen):
             row = ctk.CTkFrame(consultas, fg_color="transparent")
             row.pack(fill="x", padx=20, pady=8)
 
-            ctk.CTkLabel(row, text=nome, font=ctk.CTkFont(weight="bold")).pack(anchor="w")
-            ctk.CTkLabel(row, text=horario, text_color="#6B7280", font=ctk.CTkFont(size=12)).pack(anchor="w")
+            ctk.CTkLabel(row, text=nome, font=font("text", "bold")).pack(anchor="w")
+            ctk.CTkLabel(row, text=horario, text_color="#6B7280", font=font("small")).pack(anchor="w")
 
         # ---- Relatório ----
         relatorio = ctk.CTkFrame(
@@ -52,7 +53,7 @@ class Painel(BaseScreen):
         ctk.CTkLabel(
             relatorio,
             text="Relatório",
-            font=ctk.CTkFont(size=16, weight="bold")
+            font=font("subtitle", "bold")
         ).pack(anchor="w", padx=20, pady=15)
 
         progresso = ctk.CTkProgressBar(
@@ -67,7 +68,7 @@ class Painel(BaseScreen):
         ctk.CTkLabel(
             relatorio,
             text="92% de comparecimento",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=font("text", "bold")
         ).pack(pady=(0, 10))
 
         legendas = [
@@ -81,6 +82,6 @@ class Painel(BaseScreen):
             item = ctk.CTkFrame(relatorio, fg_color="transparent")
             item.pack(anchor="w", padx=20, pady=4)
 
-            ctk.CTkLabel(item, text="●", text_color=cor).pack(side="left")
-            ctk.CTkLabel(item, text=f" {texto}", text_color="#374151").pack(side="left")
+            ctk.CTkLabel(item, text="●", text_color=cor, font=font("text")).pack(side="left")
+            ctk.CTkLabel(item, text=f" {texto}", text_color="#374151", font=font("text")).pack(side="left")
     pass

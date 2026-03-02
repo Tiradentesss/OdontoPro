@@ -1,4 +1,5 @@
 from .base import BaseScreen
+from .theme import font, ICON_SIZE
 import customtkinter as ctk
 
 class Cadastro(BaseScreen):
@@ -32,14 +33,14 @@ class Cadastro(BaseScreen):
         self.tab_bar.pack(fill="x", padx=20, pady=(10, 0), anchor="nw")
 
         self.btn_pacientes = ctk.CTkButton(
-            self.tab_bar, text="👤 Pacientes", font=("Poppins", 14, "bold"),
+            self.tab_bar, text="👤 Pacientes", font=font("text", "bold"),
             width=150, height=40, corner_radius=10,
             command=lambda: self._trocar_aba("Pacientes")
         )
         self.btn_pacientes.pack(side="left", padx=(0, 5))
 
         self.btn_profissionais = ctk.CTkButton(
-            self.tab_bar, text="📋 Profissionais", font=("Poppins", 14, "bold"),
+            self.tab_bar, text="📋 Profissionais", font=font("text", "bold"),
             width=150, height=40, corner_radius=10,
             command=lambda: self._trocar_aba("Profissionais")
         )
@@ -154,7 +155,7 @@ class Cadastro(BaseScreen):
         ctk.CTkLabel(
             container,
             text=texto,
-            font=("Poppins", 16, "bold"),
+            font=font("subtitle", "bold"),
             text_color="#374151"
         ).pack(anchor="w")
 
