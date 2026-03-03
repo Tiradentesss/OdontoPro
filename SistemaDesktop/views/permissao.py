@@ -452,7 +452,8 @@ class Permissoes(ctk.CTkFrame):
 
         self.grid_columnconfigure(0, weight=4)
         self.grid_columnconfigure(1, weight=5)
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
 
         self.selected_admin_name = None
         self.switch_widgets = {}
@@ -495,6 +496,15 @@ class Permissoes(ctk.CTkFrame):
         }
 
     def setup_ui(self):
+        # Título da Página
+        page_title = ctk.CTkLabel(
+            self,
+            text="Gerenciamento de Permissões",
+            font=ctk.CTkFont(size=24, weight="bold"),
+            text_color="#0F172A"
+        )
+        page_title.grid(row=0, column=0, columnspan=2, sticky="w", padx=20, pady=(25, 0))
+
         # COLUNA ESQUERDA
         self.admin_list_panel = AdminListFrame(
             self, 
@@ -503,11 +513,11 @@ class Permissoes(ctk.CTkFrame):
             fg_color="white", 
             corner_radius=20
         )
-        self.admin_list_panel.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+        self.admin_list_panel.grid(row=1, column=0, sticky="nsew", padx=20, pady=20)
 
         # COLUNA DIREITA
         self.right_card = ctk.CTkFrame(self, fg_color="white", corner_radius=20)
-        self.right_card.grid(row=0, column=1, sticky="nsew", padx=(0, 20), pady=20)
+        self.right_card.grid(row=1, column=1, sticky="nsew", padx=(0, 20), pady=20)
         self.right_card.grid_rowconfigure(2, weight=1)
         self.right_card.grid_columnconfigure(0, weight=1)
 
