@@ -211,10 +211,43 @@ function abrirModalAgendamento(clinicaId) {
 
                 data.medicos.forEach(function(med) {
                     const option = document.createElement("option");
-                    option.value = med[0];
-                    option.textContent = med[1];
+                    option.value = med.id;
+                    option.textContent = med.nome;
                     selectProfissional.appendChild(option);
                 });
+            }
+
+            // ===== LISTA DE MÉDICOS (ABA PERFIL) =====
+            const listaMedicos = document.getElementById("lista-medicos");
+
+            if (listaMedicos) {
+                listaMedicos.innerHTML = "";
+
+                if (data.medicos.length === 0) {
+                    listaMedicos.innerHTML = "<p>Nenhum médico cadastrado nesta clínica.</p>";
+                } else {
+                    data.medicos.forEach(function(med) {
+
+                        const card = document.createElement("div");
+                        card.style.cssText = `
+                            background: #f8fafc;
+                            padding: 20px;
+                            border-radius: 12px;
+                            text-align: center;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                        `;
+
+                        const foto = med.foto_url ? med.foto_url : "/static/img/default-user.png";
+
+                        card.innerHTML = `
+                            <img src="${foto}" 
+                                style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;">
+                            <h4 style="margin-bottom: 5px;">Dr(a). ${med.nome}</h4>
+                        `;
+
+                        listaMedicos.appendChild(card);
+                    });
+                }
             }
 
         })
@@ -222,6 +255,7 @@ function abrirModalAgendamento(clinicaId) {
             console.error("Erro ao carregar clínica:", error);
         });
 }
+
 
 /* Função para abrir o modal de agendamento na página de perfil da clínica */
 function abrirModalAgendamentoClinica() {
@@ -314,32 +348,7 @@ function trocarAba(event, abaId) {
     }
 }
 
-/* ================= UPLOAD DE FOTO ================= */
-const fileInput = document.getElementById("fileInput");
-const preview = document.getElementById("previewFoto");
-const container = document.querySelector(".upload-foto-container");
 
-// Apenas um listener para fileInput
-if (fileInput) {
-    fileInput.addEventListener("change", function (e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-
-        reader.onload = () => {
-            if (preview) {
-                preview.src = reader.result;
-                preview.style.display = "block";
-            }
-            if (container) {
-                container.classList.add("has-image");
-            }
-        };
-
-        reader.readAsDataURL(file);
-    });
-}
 
 /* ================= FILTRO DE ESTRELAS ================= */
 function initFiltroEstrelas(btnId, dropdownId) {
@@ -709,27 +718,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* ================= PERFIL DA CLÍNICA ================= */
-function carregarPerfilClinica(clinicaId) {
-    // Função para carregar dados da clínica dinamicamente
-    console.log('Perfil da clínica carregado:', clinicaId);
-    
-    // Buscar o card da clínica para preencher informações
-    const clinicaCard = document.querySelector(`[data-clinica-id="${clinicaId}"]`);
-    if (clinicaCard) {
-        const nome = clinicaCard.querySelector("h3")?.textContent || "Clínica";
-        const endereco = clinicaCard.getAttribute("data-endereco") || "Endereço não disponível";
-        const telefone = clinicaCard.getAttribute("data-telefone") || "Telefone não disponível";
-        
-        // Atualizar as informações no perfil (se houver elementos)
-        const nomeElemento = document.querySelector("#perfil-clinica .nome-clinica");
-        const enderecoElemento = document.querySelector("#perfil-clinica .endereco-clinica");
-        const telefoneElemento = document.querySelector("#perfil-clinica .telefone-clinica");
-        
-        if (nomeElemento) nomeElemento.textContent = nome;
-        if (enderecoElemento) enderecoElemento.textContent = endereco;
-        if (telefoneElemento) telefoneElemento.textContent = telefone;
-    }
-}
 
 function carregarMedicosClinica(clinicaId) {
     // Buscar médicos da clínica via AJAX
@@ -743,13 +731,13 @@ function carregarMedicosClinica(clinicaId) {
             
             if (data.medicos && data.medicos.length > 0) {
                 data.medicos.forEach(medico => {
-                    const medicoCard = document.createElement('div');
-                    medicoCard.style.cssText = 'background: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center;';
+                    const foto = medico.foto_url ? medico.foto_url : "/static/img/default-user.png";
                     medicoCard.innerHTML = `
-                        <div style="font-size: 3rem; margin-bottom: 10px;"><i class="fa-solid fa-user-doctor"></i></div>
-                        <h4>${medico[1]}</h4>
-                        <p style="font-size: 0.9rem; color: #666;">ID: ${medico[0]}</p>
+                        <img src="${foto}" 
+                            style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;">
+                        <h4>${medico.nome}</h4>
                     `;
+
                     listaMedicos.appendChild(medicoCard);
                 });
             } else {
@@ -788,8 +776,8 @@ function carregarEspecialidadesEMedicos(clinicaId) {
                 selectProfissional.innerHTML = '<option value="">Escolha um Profissional</option>';
                 data.medicos.forEach(medico => {
                     const option = document.createElement('option');
-                    option.value = medico[0]; // ID
-                    option.textContent = medico[1]; // Nome
+                    option.value = medico.id;
+                    option.textContent = medico.nome;
                     selectProfissional.appendChild(option);
                 });
             }

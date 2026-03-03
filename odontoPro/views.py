@@ -236,7 +236,14 @@ def clinica_detalhes(request, clinica_id):
         for esp in medico.especialidades.all():
             especialidades.add((esp.id, esp.nome))
 
-    medicos = [(m.id, m.nome) for m in clinica.medico_set.all()]
+    medicos = [
+        {
+            "id": m.id,
+            "nome": m.nome,
+            "foto_url": m.foto.url if m.foto else None
+        }
+        for m in clinica.medico_set.all()
+    ]
 
     return JsonResponse({
         "nome": clinica.nome,
