@@ -639,7 +639,7 @@ class Permissoes(ctk.CTkFrame):
             height=48, 
             width=260, 
             corner_radius=12,
-            hover_color="#1D4ED8",
+            hover_color="#0EA5E9",
             command=self.save_to_database
         )
         self.save_btn.pack()
