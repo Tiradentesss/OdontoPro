@@ -2,7 +2,7 @@ import customtkinter as ctk
 import sys
 print("PYTHON EXECUTÁVEL:", sys.executable)
 
-from views.Painel import Painel
+from views.painel import Painel
 from views.agenda import Agenda
 from views.financeiro import Financeiro
 from views.cadastro import Cadastro
@@ -34,20 +34,10 @@ class App(ctk.CTk):
         self.tipo_usuario = tipo_usuario
 
         self.title("OdontoPro - Sistema de Gerenciamento")
-        self.geometry("1150x750")
-        self.minsize(1000, 650)
-        self.configure(fg_color="#F5F6FA")
+        largura = self.winfo_screenwidth()
+        altura = self.winfo_screenheight()
 
-        # Grid principal
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-
-
-        self.usuario_nome = usuario_nome
-
-
-        self.title("OdontoPro - Sistema de Gerenciamento")
-        self.geometry("1150x750")
+        self.geometry(f"{largura}x{altura}+0+0")
         self.minsize(1000, 650)
         self.configure(fg_color="#F5F6FA")
 

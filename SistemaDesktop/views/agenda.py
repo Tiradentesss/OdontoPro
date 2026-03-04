@@ -1,3 +1,7 @@
+BASE_URL = "http://127.0.0.1:8000"
+import requests
+from io import BytesIO
+
 from .base import BaseScreen
 import customtkinter as ctk
 from .theme import font, ICON_SIZE
@@ -7,6 +11,12 @@ from datetime import date
 from models.data import LIMITE_CONSULTAS, STATUS_COLORS
 from controllers.consulta_controller import ConsultaController
 
+# Cores de status baseadas na paleta pastel da imagem
+LOCAL_STATUS_COLORS = {
+    "realizada": {"bg": "#D1FAE5", "text": "#065F46"},
+    "agendada": {"bg": "#FEF3C7", "text": "#92400E"},
+    "cancelada": {"bg": "#FEE2E2", "text": "#991B1B"}
+}
 
 class Agenda(BaseScreen):
     """
@@ -20,13 +30,14 @@ class Agenda(BaseScreen):
         self.clinica_id = clinica_id
         self.pagina_atual = 0
         self.paciente_selecionado = None 
+        self.image_cache = [] # Evita que as imagens dos avatares sumam por Garbage Collection
 
         # DEFINIÇÃO DE LARGURA DAS COLUNAS (em pixels)
         self.col_widths = {
             "nome": 280,
             "data": 100,
             "hora": 80,
-            "status": 120
+            "status": 100
         }
 
         self.render()
@@ -36,6 +47,28 @@ class Agenda(BaseScreen):
         if len(text) > limit:
             return text[:limit] + "..."
         return text
+
+    # --- LÓGICA DE AVATARES INCORPORADA DO CÓDIGO ADICIONAL ---
+    def create_letter_avatar(self, letter, color_hex, size):
+        color_rgb = tuple(int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+        img = Image.new("RGBA", (size, size), color=color_rgb)
+        draw = ImageDraw.Draw(img)
+        try:
+            font = ImageFont.truetype("arial.ttf", int(size * 0.55))
+        except:
+            font = ImageFont.load_default()
+
+        draw.text((size // 2, size // 2), letter, fill="white", font=font, anchor="mm")
+
+        # Máscara circular para bordas perfeitas
+        scale = 4
+        big_size = (size * scale, size * scale)
+        mask = Image.new("L", big_size, 0)
+        mask_draw = ImageDraw.Draw(mask)
+        mask_draw.ellipse((0, 0, big_size[0] - 1, big_size[1] - 1), fill=255)
+        mask = mask.resize((size, size), Image.Resampling.LANCZOS)
+        img.putalpha(mask)
+        return img
 
     def render(self):
         """Renderiza a tela principal"""
@@ -69,7 +102,7 @@ class Agenda(BaseScreen):
         )
         left_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 15))
         left_panel.grid_columnconfigure(0, weight=1)
-        left_panel.grid_rowconfigure(1, weight=1)
+        left_panel.grid_rowconfigure(2, weight=1) # A linha 2 (lista) expande
 
         # Cabeçalho da Tabela
         self._render_tabela_cabecalho(left_panel)
@@ -102,11 +135,34 @@ class Agenda(BaseScreen):
         header_frame.grid_columnconfigure(2, weight=0)
         header_frame.grid_columnconfigure(3, weight=0)
 
+        # Filtro Médico
+        self.medico_option = ctk.CTkOptionMenu(
+            filter_frame,
+            values=["Médico"],
+            variable=self.medico_var
+        )
+        self.medico_option.grid(row=0, column=2, padx=5)
+
+        # Filtro Status
+        self.status_option = ctk.CTkOptionMenu(
+            filter_frame,
+            values=["Todos", "Agendada", "Realizada", "Cancelada"],
+            variable=self.status_var
+        )
+        self.status_option.grid(row=0, column=3, padx=5)
+
+        # 2. Cabeçalho da Tabela
+        header_frame = ctk.CTkFrame(left_panel, fg_color="#F9FAFB", height=40, corner_radius=8)
+        header_frame.grid(row=1, column=0, sticky="ew", padx=15, pady=(10, 5))
+        header_frame.grid_propagate(False)
+        
+        # Configuração das Colunas do Header
         headers = [
-            ("Paciente", self.col_widths["nome"], "w"),
-            ("Data", self.col_widths["data"], "center"),
-            ("Horário", self.col_widths["hora"], "center"),
-            ("Status", self.col_widths["status"], "center")
+            ("Nome", self.col_widths["nome"], "w"),
+            ("Medico", self.col_widths["medico"], "nsew"),
+            ("Data", self.col_widths["data"], "nsew"),
+            ("Hora", self.col_widths["hora"], "nsew"),
+            ("Status", self.col_widths["status"], "nsew")
         ]
         
         for idx, (text, width, anchor) in enumerate(headers):
@@ -302,7 +358,6 @@ class Agenda(BaseScreen):
         )
         details_frame.grid(row=0, column=1, sticky="nsew")
 
-        # Se nada estiver selecionado
         if not self.paciente_selecionado:
             ctk.CTkLabel(
                 details_frame,
@@ -336,11 +391,14 @@ class Agenda(BaseScreen):
             sexo,
             data_nascimento,
             cpf,
-            observacoes
+            foto,
+            observacoes,
+            medico_nome
         ) = consulta
 
         data = data_hora.strftime("%d/%m/%Y")
         hora = data_hora.strftime("%H:%M")
+        medico_nome = medico_nome or "Não informado"
 
         # Calcular idade
         idade = None
