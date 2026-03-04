@@ -4,11 +4,12 @@ from io import BytesIO
 
 from .base import BaseScreen
 import customtkinter as ctk
-from .theme import font, ICON_SIZE
+from PIL import Image, ImageDraw, ImageFont
 from datetime import date
+import os
 
 # 🔽 IMPORTA DO MODELS (Mantido)
-from models.data import LIMITE_CONSULTAS, STATUS_COLORS
+from models.data import LIMITE_CONSULTAS
 from controllers.consulta_controller import ConsultaController
 
 # Cores de status baseadas na paleta pastel da imagem
@@ -19,22 +20,49 @@ LOCAL_STATUS_COLORS = {
 }
 
 class Agenda(BaseScreen):
-    """
-    Tela de Agenda - Gerenciamento de consultas
-    Segue o padrão visual estabelecido no Painel
-    """
-    
     def __init__(self, parent, clinica_id):
         super().__init__(parent, "Agenda")
 
-        self.clinica_id = clinica_id
+        # -------------------------
+        # VARIÁVEIS DE FILTRO
+        # -------------------------
+        self.data_var = ctk.StringVar(value="Data")
+        self.medico_var = ctk.StringVar(value="Médico")
+        self.status_var = ctk.StringVar(value="Status")
+
+        self.filtro_data = None
+        self.filtro_medico = None
+        self.filtro_status = None
+
+        self.data_var.trace_add("write", self.aplicar_filtros)
+        self.medico_var.trace_add("write", self.aplicar_filtros)
+        self.status_var.trace_add("write", self.aplicar_filtros)
+
+        # -----
+
+        self.clinica_id = clinica_id 
         self.pagina_atual = 0
         self.paciente_selecionado = None 
         self.image_cache = [] # Evita que as imagens dos avatares sumam por Garbage Collection
 
-        # DEFINIÇÃO DE LARGURA DAS COLUNAS (em pixels)
+        # Cores e Fontes alinhadas com a imagem
+        self.colors = {
+            "bg_card": "#FFFFFF",
+            "bg_main": "#F3F4F6",
+            "text_primary": "#111827",
+            "text_secondary": "#6B7280",
+            "primary": "#00AEEF", # Azul ciano da imagem
+            "hover": "#F9FAFB",
+            "selected": "#E0F2FE",
+            "border": "#E5E7EB",
+            "avatar_colors": ["#F59E0B", "#EF4444", "#EC4899", "#10B981", "#3B82F6"] # Cores dinâmicas para avatares
+        }
+        
+        # DEFINIÇÃO RÍGIDA DE LARGURA DAS COLUNAS (Ajustado para a Imagem)
         self.col_widths = {
-            "nome": 280,
+            "avatar": 60,
+            "nome": 180,
+            "medico": 150,
             "data": 100,
             "hora": 80,
             "status": 100
@@ -43,7 +71,6 @@ class Agenda(BaseScreen):
         self.render()
 
     def truncate_text(self, text, limit=35):
-        """Corta o texto visualmente para caber esteticamente"""
         if len(text) > limit:
             return text[:limit] + "..."
         return text
@@ -71,69 +98,39 @@ class Agenda(BaseScreen):
         return img
 
     def render(self):
-        """Renderiza a tela principal"""
-        # Limpa a tela anterior
+        self.image_cache.clear() # Limpa cache de imagens na re-renderização
         for w in self.content_card.winfo_children():
             w.destroy()
 
-        # Container principal dentro do card
-        main_container = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        main_container.pack(expand=True, fill="both", padx=25, pady=25)
+        self.content_card.configure(fg_color="transparent")
         
-        # Grid Principal: Lista (70%) | Detalhes (30%)
-        main_container.grid_columnconfigure(0, weight=7)
-        main_container.grid_columnconfigure(1, weight=3)
-        main_container.grid_rowconfigure(0, weight=1)
+        # Grid Principal: Lista (65%) | Detalhes (35%)
+        self.main_layout = ctk.CTkFrame(self.content_card, fg_color="transparent")
+        self.main_layout.pack(fill="both", expand=True)
+        self.main_layout.grid_columnconfigure(0, weight=65)
+        self.main_layout.grid_columnconfigure(1, weight=35)
+        self.main_layout.grid_rowconfigure(0, weight=1)
 
         # ---------- ESQUERDA: LISTA DE PACIENTES ----------
-        self._render_lista_pacientes(main_container)
-        
-        # ---------- DIREITA: DETALHES ----------
-        self._render_detalhes_paciente(main_container)
-
-    def _render_lista_pacientes(self, parent):
-        """Renderiza a lista de pacientes à esquerda"""
-        left_panel = ctk.CTkFrame(
-            parent,
-            fg_color="white",
-            corner_radius=15,
-            border_width=1,
-            border_color="#E5E7EB"
-        )
+        left_panel = ctk.CTkFrame(self.main_layout, fg_color="white", corner_radius=15)
         left_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 15))
         left_panel.grid_columnconfigure(0, weight=1)
         left_panel.grid_rowconfigure(2, weight=1) # A linha 2 (lista) expande
 
-        # Cabeçalho da Tabela
-        self._render_tabela_cabecalho(left_panel)
+        # 1. Filtros (Topo) - Estilo da Imagem
+        filter_frame = ctk.CTkFrame(left_panel, fg_color="transparent", height=60)
+        filter_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(15, 5))
+        filter_frame.grid_columnconfigure(4, weight=1)
 
-        # Container das Linhas
-        rows_container = ctk.CTkFrame(left_panel, fg_color="transparent")
-        rows_container.grid(row=1, column=0, sticky="nsew", padx=15, pady=(0, 10))
-        rows_container.grid_columnconfigure(0, weight=1)
-
-        # Buscar consultas
-        todas_consultas = ConsultaController.listar_por_clinica(self.clinica_id)
-        inicio = self.pagina_atual * LIMITE_CONSULTAS
-        fim = inicio + LIMITE_CONSULTAS
-        dados_pagina = todas_consultas[inicio:fim]
-
-        # Renderiza linhas
-        for item in dados_pagina:
-            self._render_linha_consulta(rows_container, item)
-
-        # Paginação
-        self._render_paginacao(left_panel, todas_consultas)
-
-    def _render_tabela_cabecalho(self, parent):
-        """Renderiza o cabeçalho da tabela"""
-        header_frame = ctk.CTkFrame(parent, fg_color="transparent", height=40)
-        header_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(15, 5))
+        ctk.CTkLabel(filter_frame, text="Filtros", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_primary"]).grid(row=0, column=0, padx=(10, 20))
         
-        header_frame.grid_columnconfigure(0, weight=1)
-        header_frame.grid_columnconfigure(1, weight=0)
-        header_frame.grid_columnconfigure(2, weight=0)
-        header_frame.grid_columnconfigure(3, weight=0)
+        # Filtro Data
+        self.data_option = ctk.CTkOptionMenu(
+            filter_frame,
+            values=["Data"],
+            variable=self.data_var
+        )
+        self.data_option.grid(row=0, column=1, padx=5)
 
         # Filtro Médico
         self.medico_option = ctk.CTkOptionMenu(
@@ -166,221 +163,222 @@ class Agenda(BaseScreen):
         ]
         
         for idx, (text, width, anchor) in enumerate(headers):
-            h_container = ctk.CTkFrame(header_frame, fg_color="transparent", width=width, height=30)
-            h_container.grid(row=0, column=idx, sticky="ew" if idx == 0 else "e", padx=5)
-            if idx > 0:
-                h_container.pack_propagate(False)
+            header_frame.grid_columnconfigure(idx, weight=1 if text in ["Nome", "Medico"] else 0, minsize=width)
+            lbl = ctk.CTkLabel(header_frame, text=text, font=ctk.CTkFont(size=12, weight="bold"), text_color=self.colors["text_secondary"])
+            lbl.grid(row=0, column=idx, sticky="ew" if anchor=="w" else "nsew", padx=10, pady=10)
 
-            ctk.CTkLabel(
-                h_container,
-                text=text,
-                font=font("small", "bold"),
-                text_color="#6B7280"  # ✅ Cor secundária padronizada
-            ).place(relx=0 if anchor == "w" else 0.5, rely=0.5, anchor=anchor if anchor == "w" else "center")
+        # 3. Container das Linhas
+        rows_container = ctk.CTkFrame(left_panel, fg_color="transparent")
+        rows_container.grid(row=2, column=0, sticky="nsew", padx=15)
+        rows_container.grid_columnconfigure(0, weight=1)
 
-    def _render_linha_consulta(self, parent, consulta):
-        """Renderiza uma linha de consulta na tabela"""
-        (
-            consulta_id,
-            nome,
-            data_hora,
-            status,
-            telefone,
-            email,
-            sexo,
-            data_nascimento,
-            cpf,
-            observacoes
-        ) = consulta
+        # Paginação Lógica
+        todas_consultas = ConsultaController.listar_por_clinica(self.clinica_id)
 
-        data = data_hora.strftime("%d/%m/%Y")
-        hora = data_hora.strftime("%H:%M")
-
-        is_selected = self.paciente_selecionado == consulta_id
-        bg_color = "#EFF6FF" if is_selected else "transparent"
-        
-        # Linha
-        row = ctk.CTkFrame(parent, fg_color=bg_color, corner_radius=8, height=50)
-        row.pack(fill="x", pady=2)
-        row.pack_propagate(False)
-        
-        row.grid_columnconfigure(0, weight=1)
-        row.grid_columnconfigure(1, weight=0)
-        row.grid_columnconfigure(2, weight=0)
-        row.grid_columnconfigure(3, weight=0)
-
-        # Eventos
-        row.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
-        if not is_selected:
-            row.bind("<Enter>", lambda e, f=row: f.configure(fg_color="#F9FAFB"))
-            row.bind("<Leave>", lambda e, f=row: f.configure(fg_color="transparent"))
-
-        # Coluna 0: Nome
-        nome_container = ctk.CTkFrame(row, fg_color="transparent", height=40, width=self.col_widths["nome"])
-        nome_container.grid(row=0, column=0, sticky="w", padx=(10, 5))
-        nome_container.pack_propagate(False)
-
-        nome_exibicao = self.truncate_text(nome, limit=35)
-        l_nome = ctk.CTkLabel(
-            nome_container,
-            text=nome_exibicao,
-            font=font("text", "bold"),  # ✅ Negrito padronizado
-            text_color="#111827"  # ✅ Cor principal padronizada
+        # =========================
+        # GERAR DATAS DISPONÍVEIS
+        # =========================
+        datas_unicas = sorted(
+            {c[2].strftime("%d/%m/%Y") for c in todas_consultas}
         )
-        l_nome.pack(side="left", anchor="w")
-        
-        # Coluna 1: Data
-        data_container = ctk.CTkFrame(row, fg_color="transparent", height=40, width=self.col_widths["data"])
-        data_container.grid(row=0, column=1, padx=5)
-        data_container.pack_propagate(False)
 
-        l_data = ctk.CTkLabel(
-            data_container,
-            text=data,
-            font=font("text"),  # ✅ Fonte padronizada
-            text_color="#111827"  # ✅ Cor principal padronizada
+        valores_data = ["Todos"] + datas_unicas
+
+        # =========================
+        # GERAR MÉDICOS DISPONÍVEIS
+        # =========================
+        medicos_unicos = sorted(
+            {c[10] for c in todas_consultas if c[10]}
         )
-        l_data.place(relx=0.5, rely=0.5, anchor="center")
-        
-        # Coluna 2: Hora
-        hora_container = ctk.CTkFrame(row, fg_color="transparent", height=40, width=self.col_widths["hora"])
-        hora_container.grid(row=0, column=2, padx=5)
-        hora_container.pack_propagate(False)
 
-        l_hora = ctk.CTkLabel(
-            hora_container,
-            text=hora,
-            font=font("text"),  # ✅ Fonte padronizada
-            text_color="#111827"  # ✅ Cor principal padronizada
-        )
-        l_hora.place(relx=0.5, rely=0.5, anchor="center")
+        valores_medico = ["Todos"] + medicos_unicos
 
-        # Coluna 3: Status Badge
-        status_container = ctk.CTkFrame(row, fg_color="transparent", height=40, width=self.col_widths["status"])
-        status_container.grid(row=0, column=3, padx=5)
-        status_container.pack_propagate(False)
+        # Atualiza OptionMenus dinamicamente
+        self.data_option.configure(values=valores_data)
+        self.medico_option.configure(values=valores_medico)
 
-        info_status = STATUS_COLORS.get(status, {"bg": "#F3F4F6", "text": "#374151"})
-        
-        badge = ctk.CTkFrame(
-            status_container,
-            fg_color=info_status["bg"],
-            corner_radius=12,
-            width=90,
-            height=24
-        )
-        badge.place(relx=0.5, rely=0.5, anchor="center")
-        
-        l_status = ctk.CTkLabel(
-            badge,
-            text=status,
-            text_color=info_status["text"],
-            font=font("small", "bold")  # ✅ Fonte pequena negrito padronizada
-        )
-        l_status.place(relx=0.5, rely=0.5, anchor="center")
+        # Aplicar filtros
+        if self.filtro_data:
+            todas_consultas = [
+                c for c in todas_consultas
+                if c[2].strftime("%d/%m/%Y") == self.filtro_data
+            ]
 
-        # Propagar cliques
-        widgets_clicaveis = [l_nome, nome_container, l_data, data_container,
-                             l_hora, hora_container, status_container, badge, l_status]
-        for widget in widgets_clicaveis:
-            widget.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
+        if self.filtro_status:
+            todas_consultas = [
+                c for c in todas_consultas
+                if c[3].lower() == self.filtro_status.lower()
+            ]
 
-    def _render_paginacao(self, parent, todas_consultas):
-        """Renderiza os controles de paginação"""
-        total_paginas = (len(todas_consultas) + LIMITE_CONSULTAS - 1) // LIMITE_CONSULTAS
-        
-        if total_paginas <= 1:
-            return
+        if self.filtro_medico:
+            todas_consultas = [
+                c for c in todas_consultas
+                if c[10] == self.filtro_medico
+            ]
 
+        inicio = self.pagina_atual * LIMITE_CONSULTAS
+        fim = inicio + LIMITE_CONSULTAS
+        dados_pagina = todas_consultas[inicio:fim]
+
+        # Renderiza Linhas
+        for idx, item in enumerate(dados_pagina):
+            (
+                consulta_id,
+                nome,
+                data_hora,
+                status,
+                telefone,
+                email,
+                sexo,
+                data_nascimento,
+                cpf,
+                foto,
+                observacoes,
+                medico_nome
+            ) = item
+
+            medico_nome = medico_nome or "Não informado"
+            
+            status = status.lower() # Normaliza para buscar na paleta pastel
+            data = data_hora.strftime("%d/%m/%Y")
+            hora = data_hora.strftime("%H:%M")
+            is_selected = self.paciente_selecionado == consulta_id
+
+            bg_color = self.colors["selected"] if is_selected else "transparent"
+            
+            row = ctk.CTkFrame(rows_container, fg_color=bg_color, corner_radius=8, height=50)
+            row.pack(fill="x", pady=2)
+            row.pack_propagate(False)
+
+            for col_idx, (_, width, _) in enumerate(headers):
+                row.grid_columnconfigure(col_idx, weight=1 if col_idx in [1, 2] else 0, minsize=width)
+
+            # Eventos (Hover e Click) replicados do código adicional
+            row.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
+            if not is_selected:
+                row.bind("<Enter>", lambda e, f=row: f.configure(fg_color=self.colors["hover"]))
+                row.bind("<Leave>", lambda e, f=row: f.configure(fg_color="transparent"))
+
+            # --- Col 0: Avatar (Imagem ou Letra) ---
+            avatar_label = ctk.CTkLabel(
+                row,
+                width=32,
+                height=32,
+                corner_radius=16,
+                fg_color="transparent",
+                text=""
+            )
+            avatar_label.grid(row=0, column=0, pady=9)
+            avatar_label.grid_propagate(False)
+
+            # BUSCAR FOTO
+            consulta_full = ConsultaController.buscar_por_id(consulta_id)
+            foto = consulta_full[9] if consulta_full else None
+
+            if foto:
+                try:
+                    url = f"{BASE_URL}/media/{foto}"
+                    response = requests.get(url, timeout=5)
+
+                    if response.status_code == 200:
+                        img = Image.open(BytesIO(response.content)).convert("RGB")
+
+                        min_dim = min(img.size)
+                        left = (img.width - min_dim) // 2
+                        top = (img.height - min_dim) // 2
+                        right = left + min_dim
+                        bottom = top + min_dim
+                        img = img.crop((left, top, right, bottom))
+
+                        img = img.resize((32, 32), Image.Resampling.LANCZOS)
+
+                        mask = Image.new("L", (32, 32), 0)
+                        draw = ImageDraw.Draw(mask)
+                        draw.ellipse((0, 0, 32, 32), fill=255)
+
+                        img.putalpha(mask)
+
+                        img_ctk = ctk.CTkImage(light_image=img, size=(32, 32))
+
+                        avatar_label.configure(image=img_ctk, text="")
+                        avatar_label.image = img_ctk
+                        self.image_cache.append(img_ctk)
+                except:
+                    pass
+
+            else:
+                av_color = self.colors["avatar_colors"][hash(nome) % len(self.colors["avatar_colors"])]
+                av_img = self.create_letter_avatar(nome[0].upper(), av_color, 32)
+                img_ctk = ctk.CTkImage(light_image=av_img, size=(32, 32))
+                avatar_label.configure(image=img_ctk)
+                avatar_label.image = img_ctk
+                self.image_cache.append(img_ctk)
+
+            # --- Col 1: Nome ---
+            l_nome = ctk.CTkLabel(row, text=self.truncate_text(nome, 30), font=ctk.CTkFont(size=13, weight="bold"), text_color=self.colors["text_primary"])
+            l_nome.grid(row=0, column=1, sticky="w", padx=10)
+            
+            # --- Col 2: Médico ---
+            l_medico = ctk.CTkLabel(row, text=medico_nome, font=ctk.CTkFont(size=13), text_color=self.colors["text_primary"])
+            l_medico.grid(row=0, column=2, sticky="nsew")
+
+            # --- Col 3: Data ---
+            l_data = ctk.CTkLabel(row, text=data, font=ctk.CTkFont(size=12), text_color=self.colors["text_primary"])
+            l_data.grid(row=0, column=3, sticky="nsew")
+            
+            # --- Col 4: Hora ---
+            l_hora = ctk.CTkLabel(row, text=hora, font=ctk.CTkFont(size=12), text_color=self.colors["text_primary"])
+            l_hora.grid(row=0, column=4, sticky="nsew")
+
+            # --- Col 5: Status Badge ---
+            info_status = LOCAL_STATUS_COLORS.get(status, {"bg": "#E5E7EB", "text": "#374151"})
+            badge = ctk.CTkFrame(row, fg_color=info_status["bg"], corner_radius=12, width=80, height=24)
+            badge.grid(row=0, column=5, sticky="nsew", pady=13)
+            badge.pack_propagate(False)
+            
+            l_status = ctk.CTkLabel(badge, text=status, text_color=info_status["text"], font=ctk.CTkFont(size=11, weight="bold"))
+            l_status.place(relx=0.5, rely=0.5, anchor="center")
+
+            # Bind clicks nos filhos
+            for widget in [avatar_label, l_nome, l_medico, l_data, l_hora, badge, l_status]:
+                widget.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
+
+        self.render_pagination(left_panel, len(todas_consultas))
+        self.render_details_panel(self.main_layout)
+
+    def render_pagination(self, parent, total_items):
         pag_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        pag_frame.grid(row=2, column=0, sticky="e", padx=15, pady=15)
+        pag_frame.grid(row=3, column=0, sticky="e", padx=20, pady=15)
 
-        # Botão anterior
-        if self.pagina_atual > 0:
-            ctk.CTkButton(
-                pag_frame,
-                text="←",
-                width=36,
-                height=36,
-                corner_radius=8,  # ✅ Cantos padronizados
-                fg_color="#F9FAFB",
-                border_width=1,
-                border_color="#E5E7EB",
-                text_color="#374151",
-                hover_color="#F3F4F6",
-                font=font("text", "bold"),  # ✅ Fonte padronizada
-                command=lambda: self.mudar_pagina(self.pagina_atual - 1)
-            ).pack(side="left", padx=2)
+        total_paginas = max(1, (total_items + LIMITE_CONSULTAS - 1) // LIMITE_CONSULTAS)
 
-        # Números das páginas
+        def create_btn(text, cmd, active=False):
+            return ctk.CTkButton(
+                pag_frame, text=text, width=32, height=32, corner_radius=6,
+                fg_color=self.colors["primary"] if active else "transparent",
+                border_width=0 if active else 1,
+                border_color=self.colors["border"],
+                text_color="white" if active else self.colors["text_secondary"],
+                hover_color=self.colors["primary"] if not active else "#F3F4F6",
+                font=ctk.CTkFont(weight="bold"),
+                command=cmd
+            )
+
+        # Renderiza botões parecidos com a imagem (Quadrados azuis)
         for i in range(total_paginas):
-            is_active = (i == self.pagina_atual)
-            ctk.CTkButton(
-                pag_frame,
-                text=str(i + 1),
-                width=36,
-                height=36,
-                corner_radius=8,  # ✅ Cantos padronizados
-                fg_color="#0EA5E9" if is_active else "#F9FAFB",  # ✅ Azul padronizado
-                text_color="white" if is_active else "#374151",
-                border_width=0 if is_active else 1,
-                border_color="#E5E7EB" if not is_active else None,
-                hover_color="#0284C7" if is_active else "#F3F4F6",  # ✅ Hover padronizado
-                font=font("text", "bold"),  # ✅ Fonte padronizada
-                command=lambda idx=i: self.mudar_pagina(idx)
-            ).pack(side="left", padx=2)
+            create_btn(str(i + 1), lambda idx=i: self.mudar_pagina(idx), active=(i == self.pagina_atual)).pack(side="left", padx=2)
 
-        # Botão próximo
-        if self.pagina_atual < total_paginas - 1:
-            ctk.CTkButton(
-                pag_frame,
-                text="→",
-                width=36,
-                height=36,
-                corner_radius=8,  # ✅ Cantos padronizados
-                fg_color="#F9FAFB",
-                border_width=1,
-                border_color="#E5E7EB",
-                text_color="#374151",
-                hover_color="#F3F4F6",
-                font=font("text", "bold"),  # ✅ Fonte padronizada
-                command=lambda: self.mudar_pagina(self.pagina_atual + 1)
-            ).pack(side="left", padx=2)
-
-    def _render_detalhes_paciente(self, parent):
-        """Renderiza o painel de detalhes do paciente à direita"""
-        details_frame = ctk.CTkFrame(
-            parent,
-            fg_color="white",
-            corner_radius=15,
-            border_width=1,
-            border_color="#E5E7EB"
-        )
+    def render_details_panel(self, parent):
+        details_frame = ctk.CTkFrame(parent, fg_color=self.colors["bg_card"], corner_radius=15)
         details_frame.grid(row=0, column=1, sticky="nsew")
 
         if not self.paciente_selecionado:
-            ctk.CTkLabel(
-                details_frame,
-                text="Selecione um paciente\npara ver os detalhes.",
-                font=font("text"),  # ✅ Fonte padronizada
-                text_color="#6B7280"  # ✅ Cor secundária padronizada
-            ).place(relx=0.5, rely=0.5, anchor="center")
+            ctk.CTkLabel(details_frame, text="Selecione um paciente.", font=ctk.CTkFont(size=14), text_color=self.colors["text_secondary"]).place(relx=0.5, rely=0.5, anchor="center")
             return
 
-        # Buscar consulta selecionada
-        todas_consultas = ConsultaController.listar_por_clinica(self.clinica_id)
-        consulta = next(
-            (c for c in todas_consultas if c[0] == self.paciente_selecionado),
-            None
-        )
+        consulta = ConsultaController.buscar_por_id(self.paciente_selecionado)
+        if not consulta: return
 
-        if not consulta:
-            return
-
-        self._render_conteudo_detalhes(details_frame, consulta)
-
-    def _render_conteudo_detalhes(self, parent, consulta):
-        """Renderiza o conteúdo detalhado do paciente"""
         (
             consulta_id,
             nome,
@@ -395,181 +393,190 @@ class Agenda(BaseScreen):
             observacoes,
             medico_nome
         ) = consulta
-
+        status = status.lower()
         data = data_hora.strftime("%d/%m/%Y")
         hora = data_hora.strftime("%H:%M")
         medico_nome = medico_nome or "Não informado"
 
-        # Calcular idade
-        idade = None
-        if data_nascimento:
-            idade = date.today().year - data_nascimento.year
+        idade = self.calcular_idade(data_nascimento)
 
-        # Container com scroll
-        scroll = ctk.CTkScrollableFrame(
-            parent,
-            fg_color="transparent",
-            scrollbar_button_color="#0EA5E9",  # ✅ Azul padronizado
-            scrollbar_button_hover_color="#0284C7"  # ✅ Hover padronizado
-        )
-        scroll.pack(fill="both", expand=True, padx=20, pady=20)
+        content = ctk.CTkFrame(details_frame, fg_color="transparent")
+        content.pack(fill="both", expand=True, padx=30, pady=40)
 
-        # Avatar
-        avatar_frame = ctk.CTkFrame(
-            scroll,
-            fg_color="#F3F4F6",
-            width=80,
-            height=80,
-            corner_radius=40
-        )
-        avatar_frame.pack(pady=(0, 15))
-        avatar_frame.pack_propagate(False)
+        # --- HEADER DETALHES (Avatar Gigante, Nome, Status) ---
+        header_det = ctk.CTkFrame(content, fg_color="transparent")
+        header_det.pack(fill="x", pady=(0, 30))
         
-        ctk.CTkLabel(
-            avatar_frame,
-            text="👤",
-            font=font("title")  # ✅ Fonte título padronizada
-        ).place(relx=0.5, rely=0.5, anchor="center")
-
-        # Nome
-        ctk.CTkLabel(
-            scroll,
-            text=nome,
-            font=font("subtitle", "bold"),  # ✅ Fonte subtitle negrito padronizada
-            text_color="#111827"  # ✅ Cor principal padronizada
-        ).pack()
-
-        # Email
-        ctk.CTkLabel(
-            scroll,
-            text=email or "Email não informado",
-            font=font("small"),  # ✅ Fonte pequena padronizada
-            text_color="#6B7280"  # ✅ Cor secundária padronizada
-        ).pack(pady=(0, 15))
-
-        # Status badge
-        info_status = STATUS_COLORS.get(status, {"bg": "#F3F4F6", "text": "#374151"})
-        status_badge = ctk.CTkFrame(
-            scroll,
-            fg_color=info_status["bg"],
-            corner_radius=12,
-            height=26
+        # Avatar Grande (imagem ou círculo padrão)
+        avatar_label = ctk.CTkLabel(
+            header_det,
+            width=90,
+            height=90,
+            corner_radius=45,
+            fg_color="#E5E7EB",
+            text=""
         )
-        status_badge.pack(pady=(0, 20))
+        avatar_label.pack(pady=(0, 10))
+        avatar_label.pack_propagate(False)
+
+        if foto:
+            try:
+                url = f"{BASE_URL}/media/{foto}"
+                response = requests.get(url, timeout=5)
+
+                if response.status_code == 200:
+                    img = Image.open(BytesIO(response.content))
+                    img = Image.open(BytesIO(response.content))
+                    img = Image.open(BytesIO(response.content)).convert("RGBA")
+
+                    min_dim = min(img.size)
+                    left = (img.width - min_dim) // 2
+                    top = (img.height - min_dim) // 2
+                    right = left + min_dim
+                    bottom = top + min_dim
+                    img = img.crop((left, top, right, bottom))
+                    img = img.resize((90, 90))
+
+                    mask = Image.new("L", (90, 90), 0)
+                    draw = ImageDraw.Draw(mask)
+                    draw.ellipse((0, 0, 90, 90), fill=255)
+
+                    img.putalpha(mask)
+
+                    img_ctk = ctk.CTkImage(light_image=img, size=(90, 90))
+                    avatar_label.configure(image=img_ctk, text="")
+                    avatar_label.image = img_ctk
+
+            except Exception:
+                pass
+
+        ctk.CTkLabel(header_det, text=nome, font=ctk.CTkFont(size=20, weight="bold"), text_color=self.colors["text_primary"]).pack()
+        ctk.CTkLabel(header_det, text=email or "sem@email.com", font=ctk.CTkFont(size=13), text_color=self.colors["primary"]).pack(pady=(0, 10))
+
+        # Badge de Status centralizado abaixo do email
+        info_status = LOCAL_STATUS_COLORS.get(status, {"bg": "#E5E7EB", "text": "#374151"})
+        badge_det = ctk.CTkFrame(header_det, fg_color=info_status["bg"], corner_radius=6, height=28)
+        badge_det.pack(ipadx=15)
+        ctk.CTkLabel(badge_det, text=status, text_color=info_status["text"], font=ctk.CTkFont(size=12, weight="bold")).pack(padx=20, pady=4)
+
+        # --- CORPO: DUAS COLUNAS (Paciente | Consulta) ---
+        info_grid = ctk.CTkFrame(content, fg_color="transparent")
+        info_grid.pack(fill="both", expand=False, pady=10)
+        info_grid.grid_columnconfigure(0, weight=1)
+        info_grid.grid_columnconfigure(1, weight=1)
+
+        # Coluna Esquerda: Paciente
+        col_esq = ctk.CTkFrame(info_grid, fg_color="transparent")
+        col_esq.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        ctk.CTkLabel(col_esq, text="Paciente", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_secondary"]).pack(anchor="w", pady=(0,10))
         
-        ctk.CTkLabel(
-            status_badge,
-            text=status,
-            text_color=info_status["text"],
-            font=font("small", "bold"),  # ✅ Fonte pequena negrito padronizada
-            padx=12
-        ).pack(pady=4)
+        paciente_info = [("Idade", idade), ("Sexo", sexo or "Não informado"), ("Telefone", telefone or "Não informado"), ("CPF", cpf or "Não informado")]
+        for lbl, val in paciente_info:
+            row_f = ctk.CTkFrame(col_esq, fg_color="transparent")
+            row_f.pack(fill="x", pady=4)
+            ctk.CTkLabel(row_f, text=lbl, font=ctk.CTkFont(size=12), text_color=self.colors["text_secondary"]).pack(side="left")
+            ctk.CTkLabel(row_f, text=val, font=ctk.CTkFont(size=12, weight="bold"), text_color=self.colors["text_primary"]).pack(side="right")
 
-        # Divisor
-        ctk.CTkFrame(scroll, height=1, fg_color="#E5E7EB").pack(fill="x", pady=10)
-
-        # Informações pessoais
-        self._secao_titulo(scroll, "Informações Pessoais")
-
-        info_grid = ctk.CTkFrame(scroll, fg_color="transparent")
-        info_grid.pack(fill="x", pady=(0, 15))
-
-        info_items = [
-            ("📞 Telefone", telefone or "Não informado"),
-            ("🎂 Idade", f"{idade} anos" if idade else "Não informado"),
-            ("⚥ Sexo", sexo or "Não informado"),
-            ("🆔 CPF", cpf or "Não informado"),
+        # Coluna Direita: Consulta
+        col_dir = ctk.CTkFrame(info_grid, fg_color="transparent")
+        col_dir.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
+        ctk.CTkLabel(col_dir, text="Consulta", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_secondary"]).pack(anchor="w", pady=(0,10))
+        
+        consulta_info = [
+            ("Medico:", medico_nome),
+            ("Data:", data),
+            ("Horário:", hora)
         ]
+        for lbl, val in consulta_info:
+            row_f = ctk.CTkFrame(col_dir, fg_color="transparent")
+            row_f.pack(fill="x", pady=4)
+            ctk.CTkLabel(row_f, text=lbl, font=ctk.CTkFont(size=12), text_color=self.colors["text_primary" if lbl=="Medico:" else "text_secondary"]).pack(side="left")
+            ctk.CTkLabel(row_f, text=val, font=ctk.CTkFont(size=12, weight="bold"), text_color=self.colors["text_primary"]).pack(side="right")
 
-        for i, (label, value) in enumerate(info_items):
-            row_frame = ctk.CTkFrame(info_grid, fg_color="transparent")
-            row_frame.pack(fill="x", pady=4)
-            
-            ctk.CTkLabel(
-                row_frame,
-                text=label,
-                font=font("small", "bold"),  # ✅ Fonte pequena negrito padronizada
-                text_color="#6B7280",  # ✅ Cor secundária padronizada
-                width=80
-            ).pack(side="left")
-            
-            ctk.CTkLabel(
-                row_frame,
-                text=value,
-                font=font("small"),  # ✅ Fonte pequena padronizada
-                text_color="#111827"  # ✅ Cor principal padronizada
-            ).pack(side="left", padx=(10, 0))
+        # -----------------------------
+        # OBSERVAÇÕES
+        # -----------------------------
+        obs_frame = ctk.CTkFrame(content, fg_color="transparent")
+        obs_frame.pack(fill="both", expand=False, pady=(20, 0))
 
-        # Divisor
-        ctk.CTkFrame(scroll, height=1, fg_color="#E5E7EB").pack(fill="x", pady=15)
+        ctk.CTkLabel(
+            obs_frame,
+            text="Observações",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color=self.colors["text_secondary"]
+        ).pack(anchor="w", pady=(0, 5))
 
-        # Detalhes da consulta
-        self._secao_titulo(scroll, "Detalhes da Consulta")
-
-        consulta_box = ctk.CTkFrame(
-            scroll,
-            fg_color="#F9FAFB",
-            corner_radius=8,
-            border_width=1,
-            border_color="#E5E7EB"
+        self.obs_text = ctk.CTkTextbox(
+            obs_frame,
+            height=100
         )
-        consulta_box.pack(fill="x", pady=(0, 20))
+        self.obs_text.pack(fill="x")
 
-        consulta_info = f"📅 Data: {data}\n⏰ Horário: {hora}\n📝 Observações: {observacoes or 'Nenhuma'}"
+        # Inserir texto vindo do banco
+        self.obs_text.delete("1.0", "end")
+        self.obs_text.insert("1.0", observacoes or "")
 
-        ctk.CTkLabel(
-            consulta_box,
-            text=consulta_info,
-            justify="left",
-            font=font("text"),  # ✅ Fonte padronizada
-            text_color="#374151"
-        ).pack(anchor="w", padx=15, pady=15)
-
-        # Botões de ação
-        button_frame = ctk.CTkFrame(scroll, fg_color="transparent")
-        button_frame.pack(fill="x", pady=(0, 10))
-
+        # --- BOTÃO EDITAR ---
+        btn_frame = ctk.CTkFrame(content, fg_color="transparent")
+        btn_frame.pack(fill="x", pady=(20, 0))
         ctk.CTkButton(
-            button_frame,
-            text="✏️ Editar Paciente",
-            fg_color="#F9FAFB",
-            text_color="#374151",
-            border_width=1,
-            border_color="#E5E7EB",
-            hover_color="#F3F4F6",
-            height=40,  # ✅ Altura padronizada
-            corner_radius=8,  # ✅ Cantos padronizados
-            font=font("text")  # ✅ Fonte padronizada
-        ).pack(side="left", expand=True, fill="x", padx=(0, 5))
-
-        ctk.CTkButton(
-            button_frame,
-            text="📋 Nova Consulta",
-            fg_color="#0EA5E9",  # ✅ Azul padronizado
-            text_color="white",
-            hover_color="#0284C7",  # ✅ Hover padronizado
-            height=40,  # ✅ Altura padronizada
-            corner_radius=8,  # ✅ Cantos padronizados
-            font=font("text", "bold")  # ✅ Fonte negrito padronizada
-        ).pack(side="left", expand=True, fill="x", padx=(5, 0))
-
-    def _secao_titulo(self, parent, texto):
-        """Título de seção padronizado"""
-        ctk.CTkLabel(
-            parent,
-            text=texto,
-            font=font("text", "bold"),  # ✅ Fonte text negrito padronizada
-            text_color="#111827"  # ✅ Cor principal padronizada
-        ).pack(anchor="w", pady=(0, 10))
+            btn_frame, text="Editar Paciente", fg_color=self.colors["primary"], 
+            height=35, width=150, corner_radius=4, font=ctk.CTkFont(size=12, weight="bold")
+        ).pack()
 
     # ---------- LÓGICA ----------
     def selecionar_paciente(self, consulta_id):
-        """Seleciona um paciente para ver detalhes"""
         self.paciente_selecionado = consulta_id
         self.render()
 
     def mudar_pagina(self, nova_pagina):
-        """Muda a página da lista de consultas"""
         self.pagina_atual = nova_pagina
         self.paciente_selecionado = None
         self.render()
+
+    def aplicar_filtros(self, *_):
+        valor_data = self.data_var.get()
+        valor_medico = self.medico_var.get()
+        valor_status = self.status_var.get()
+
+        # DATA
+        if valor_data in ["Data", "Todos"]:
+            self.filtro_data = None
+        else:
+            self.filtro_data = valor_data
+
+        # MÉDICO
+        if valor_medico in ["Médico", "Todos"]:
+            self.filtro_medico = None
+        else:
+            self.filtro_medico = valor_medico
+
+        # STATUS
+        if valor_status in ["Status", "Todos"]:
+            self.filtro_status = None
+        else:
+            self.filtro_status = valor_status
+
+        self.pagina_atual = 0
+        self.paciente_selecionado = None
+
+        self.render()
+
+    def calcular_idade(self, data_nascimento):
+        if not data_nascimento:
+            return ""
+
+        # Se vier string do MySQL, converte
+        if isinstance(data_nascimento, str):
+            from datetime import datetime
+            data_nascimento = datetime.strptime(data_nascimento, "%Y-%m-%d").date()
+
+        hoje = date.today()
+        idade = hoje.year - data_nascimento.year
+
+        if (hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day):
+            idade -= 1
+
+        return f"{idade} anos"
+
+from datetime import date
