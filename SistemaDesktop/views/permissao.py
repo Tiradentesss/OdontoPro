@@ -2,6 +2,7 @@ import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
 from tkinter import messagebox, filedialog
+from .theme import font, ICON_SIZE
 
 # Certifique-se que este import existe no seu projeto, senão comente as linhas de salvar/carregar
 try:
@@ -140,11 +141,11 @@ class AdminListFrame(ctk.CTkFrame):
         title_frame = ctk.CTkFrame(header_content, fg_color="transparent")
         title_frame.pack(side="left")
         
-        ctk.CTkLabel(title_frame, text="👥", font=("Segoe UI", 24)).pack(side="left", padx=(0, 10))
+        ctk.CTkLabel(title_frame, text="👥", font=font(ICON_SIZE)).pack(side="left", padx=(0, 10))
         self.lbl_title = ctk.CTkLabel(
             title_frame, 
             text="Administradores", 
-            font=("Segoe UI", 20, "bold"), 
+            font=font("subtitle", "bold"), 
             text_color="#1E293B"
         )
         self.lbl_title.pack(side="left")
@@ -153,7 +154,7 @@ class AdminListFrame(ctk.CTkFrame):
             header_content, 
             text=f"{len(self.admins_data)} ativos", 
             text_color="#64748B", 
-            font=("Segoe UI", 12)
+            font=font("small")
         )
         self.lbl_count.pack(side="left", padx=15)
 
@@ -163,7 +164,7 @@ class AdminListFrame(ctk.CTkFrame):
             text="↻",
             width=36,
             height=36,
-            font=("Segoe UI", 16),
+            font=font("text"),
             fg_color="transparent",
             text_color="#64748B",
             hover_color="#F1F5F9",
@@ -199,7 +200,7 @@ class AdminListFrame(ctk.CTkFrame):
             ctk.CTkLabel(
                 header_bg, 
                 text=text, 
-                font=("Segoe UI", 11, "bold"), 
+                font=font("small", "bold"), 
                 text_color="#475569",
                 anchor=anchors[i]
             ).grid(row=0, column=i, sticky="ew", padx=(15 if i == 0 else 10, 10), pady=12)
@@ -220,7 +221,7 @@ class AdminListFrame(ctk.CTkFrame):
         self.lbl_pagination = ctk.CTkLabel(
             footer_content, 
             text="", 
-            font=("Segoe UI", 12), 
+            font=font("small"), 
             text_color="#475569"
         )
         self.lbl_pagination.pack(side="left")
@@ -234,7 +235,7 @@ class AdminListFrame(ctk.CTkFrame):
             text="← Anterior", 
             width=100, 
             height=36, 
-            font=("Segoe UI", 12), 
+            font=font("small"), 
             fg_color="white", 
             border_width=1, 
             border_color="#E2E8F0", 
@@ -250,7 +251,7 @@ class AdminListFrame(ctk.CTkFrame):
             text="Próximo →", 
             width=100, 
             height=36, 
-            font=("Segoe UI", 12), 
+            font=font("small"), 
             fg_color="white", 
             border_width=1, 
             border_color="#E2E8F0", 
@@ -345,7 +346,7 @@ class AdminListFrame(ctk.CTkFrame):
         nome_label = ctk.CTkLabel(
             row_frame, 
             text=nome, 
-            font=("Segoe UI", 12, "bold"), 
+            font=font("text", "bold"), 
             text_color="#0F172A", 
             anchor="w"
         )
@@ -356,7 +357,7 @@ class AdminListFrame(ctk.CTkFrame):
         email_label = ctk.CTkLabel(
             row_frame, 
             text=email, 
-            font=("Segoe UI", 11), 
+            font=font("small"), 
             text_color="#475569", 
             anchor="w"
         )
@@ -367,7 +368,7 @@ class AdminListFrame(ctk.CTkFrame):
         nivel_label = ctk.CTkLabel(
             row_frame, 
             text=level, 
-            font=("Segoe UI", 11), 
+            font=font("small"), 
             text_color="#475569", 
             anchor="w"
         )
@@ -395,7 +396,7 @@ class AdminListFrame(ctk.CTkFrame):
         status_label = ctk.CTkLabel(
             status_frame, 
             text=f"{config['icon']} {status}", 
-            font=("Segoe UI", 11, "bold"), 
+            font=font("small", "bold"), 
             text_color=config["color"],
             padx=10
         )
@@ -451,7 +452,8 @@ class Permissoes(ctk.CTkFrame):
 
         self.grid_columnconfigure(0, weight=4)
         self.grid_columnconfigure(1, weight=5)
-        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=0)
+        self.grid_rowconfigure(1, weight=1)
 
         self.selected_admin_name = None
         self.switch_widgets = {}
@@ -494,6 +496,15 @@ class Permissoes(ctk.CTkFrame):
         }
 
     def setup_ui(self):
+        # Título da Página
+        page_title = ctk.CTkLabel(
+            self,
+            text="Gerenciamento de Permissões",
+            font=ctk.CTkFont(size=24, weight="bold"),
+            text_color="#0F172A"
+        )
+        page_title.grid(row=0, column=0, columnspan=2, sticky="w", padx=20, pady=(25, 0))
+
         # COLUNA ESQUERDA
         self.admin_list_panel = AdminListFrame(
             self, 
@@ -502,11 +513,11 @@ class Permissoes(ctk.CTkFrame):
             fg_color="white", 
             corner_radius=20
         )
-        self.admin_list_panel.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
+        self.admin_list_panel.grid(row=1, column=0, sticky="nsew", padx=20, pady=20)
 
         # COLUNA DIREITA
         self.right_card = ctk.CTkFrame(self, fg_color="white", corner_radius=20)
-        self.right_card.grid(row=0, column=1, sticky="nsew", padx=(0, 20), pady=20)
+        self.right_card.grid(row=1, column=1, sticky="nsew", padx=(0, 20), pady=20)
         self.right_card.grid_rowconfigure(2, weight=1)
         self.right_card.grid_columnconfigure(0, weight=1)
 
@@ -517,7 +528,7 @@ class Permissoes(ctk.CTkFrame):
         ctk.CTkLabel(
             header_frame, 
             text="🔐", 
-            font=("Segoe UI", 28)
+            font=font(28)
         ).pack(side="left", padx=(0, 15))
         
         title_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
@@ -526,7 +537,7 @@ class Permissoes(ctk.CTkFrame):
         ctk.CTkLabel(
             title_frame, 
             text="Permissões", 
-            font=("Segoe UI", 20, "bold"), 
+            font=font("subtitle", "bold"), 
             text_color="#0F172A",
             anchor="w"
         ).pack(anchor="w")
@@ -534,7 +545,7 @@ class Permissoes(ctk.CTkFrame):
         self.selected_admin_label = ctk.CTkLabel(
             title_frame, 
             text="Nenhum administrador selecionado", 
-            font=("Segoe UI", 11), 
+            font=font("small"), 
             text_color="#64748B",
             anchor="w"
         )
@@ -592,7 +603,7 @@ class Permissoes(ctk.CTkFrame):
             ctk.CTkLabel(
                 icon_frame, 
                 text=config["icon"], 
-                font=("Segoe UI", 18),
+                font=font(ICON_SIZE),
                 text_color=config['color']
             ).place(relx=0.5, rely=0.5, anchor="center")
 
@@ -600,7 +611,7 @@ class Permissoes(ctk.CTkFrame):
             ctk.CTkLabel(
                 card, 
                 text=perm_name, 
-                font=("Segoe UI", 12, "bold"), 
+                font=font("text", "bold"), 
                 text_color="#0F172A"
             ).grid(row=0, column=1, sticky="w", padx=(0, 5), pady=(10, 0))
 
@@ -608,7 +619,7 @@ class Permissoes(ctk.CTkFrame):
             ctk.CTkLabel(
                 card, 
                 text=config["desc"], 
-                font=("Segoe UI", 9), 
+                font=font("small"), 
                 text_color="#64748B"
             ).grid(row=1, column=1, sticky="w", padx=(0, 5), pady=(0, 10))
 
@@ -633,12 +644,12 @@ class Permissoes(ctk.CTkFrame):
         self.save_btn = ctk.CTkButton(
             button_frame, 
             text="💾 Salvar Alterações", 
-            font=("Segoe UI", 14, "bold"), 
+            font=font("text", "bold"), 
             fg_color="#2563EB", 
             height=48, 
             width=260, 
             corner_radius=12,
-            hover_color="#1D4ED8",
+            hover_color="#0EA5E9",
             command=self.save_to_database
         )
         self.save_btn.pack()
