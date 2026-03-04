@@ -262,28 +262,8 @@
         <div id="aba-avaliacoes" class="aba-conteudo">
             <div class="card-branco">
                 <div class="tag-secao"><i class="fa-solid fa-star"></i> O que dizem nossos pacientes</div>
-                <div class="container-avaliacoes">
-                    {% for avaliacao in avaliacoes %}
-                        <div class="card-feedback">
-                            <div class="user-feedback">
-                                <div>
-                                    <strong>{{ avaliacao.paciente.nome }}</strong>
-                                    <div class="estrelas">
-                                        {% for i in "12345" %}
-                                            {% if forloop.counter <= avaliacao.nota %}
-                                                ★
-                                            {% else %}
-                                                ☆
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </div>
-                            <p>{{ avaliacao.comentario }}</p>
-                        </div>
-                    {% empty %}
-                        <p>Nenhuma avaliação ainda.</p>
-                    {% endfor %}
+                <div class="container-avaliacoes" id="lista-avaliacoes">
+
                 </div>
             </div>
         </div>

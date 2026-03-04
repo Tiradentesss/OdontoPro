@@ -249,6 +249,43 @@ function abrirModalAgendamento(clinicaId) {
                     });
                 }
             }
+            // ===== AVALIAÇÕES =====
+            const listaAvaliacoes = document.getElementById("lista-avaliacoes");
+
+            if (listaAvaliacoes) {
+                listaAvaliacoes.innerHTML = "";
+
+                if (data.avaliacoes && data.avaliacoes.length > 0) {
+                    data.avaliacoes.forEach(function(av) {
+
+                        const card = document.createElement("div");
+                        card.className = "card-feedback";
+
+                        // ⭐ Estrelas simples (SEM FontAwesome)
+                        let estrelas = "";
+                        for (let i = 1; i <= 5; i++) {
+                            estrelas += i <= av.nota ? "★" : "☆";
+                        }
+
+                        card.innerHTML = `
+                            <div class="linha-nomes">
+                                <span class="nome-paciente">${av.paciente}</span>
+                                <span class="separador"> - </span>
+                                <span class="nome-medico">${av.medico}</span>
+                            </div>
+
+                            <div class="estrelas">${estrelas}</div>
+
+                            ${av.comentario ? `<p>${av.comentario}</p>` : ""}
+                            <small class="data-avaliacao">${av.data}</small>
+                        `;
+
+                        listaAvaliacoes.appendChild(card);
+                    });
+                } else {
+                    listaAvaliacoes.innerHTML = "<p>Esta clínica ainda não possui avaliações.</p>";
+                }
+            }
 
         })
         .catch(error => {

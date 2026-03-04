@@ -22,7 +22,9 @@ logger = logging.getLogger(__name__)
 
 @require_GET
 def horarios_clinica(request, clinica_id):
-    data = request.GET.get("data")  # yyyy-mm-dd
+    data = request.GET.get("data")
+    
+      # yyyy-mm-dd
     if not data:
         return JsonResponse({"error": "Data não informada"}, status=400)
 
@@ -157,13 +159,10 @@ def dashboard_paciente(request):
     if filtro_status and filtro_status != "todas":
         consultas = consultas.filter(status=filtro_status)
 
-    avaliacoes = Avaliacao.objects.all().select_related("paciente", "clinica", "medico")
-
     context = {
         "paciente": paciente,
         "clinicas": clinicas,
         "consultas": consultas,
-        "avaliacoes": avaliacoes,
         "filtro_status": filtro_status or "todas",
         "consultas_futuras": consultas_futuras,
         "tem_notificacao": tem_notificacao,
@@ -245,21 +244,40 @@ def clinica_detalhes(request, clinica_id):
         for m in clinica.medico_set.all()
     ]
 
+
+    # 🔹 BUSCAR AVALIAÇÕES APENAS DESSA CLÍNICA
+    avaliacoes = Avaliacao.objects.filter(
+        clinica=clinica
+    ).select_related("paciente").order_by("-data_postagem")
+
+    avaliacoes_json = [
+        {
+            "paciente": av.paciente.nome,
+            "medico": av.medico.nome if av.medico else "",
+            "nota": av.nota,
+            "comentario": av.comentario,
+            "data": av.data_postagem.strftime("%d/%m/%Y")
+        }
+        for av in avaliacoes
+    ]
+
     return JsonResponse({
-        "nome": clinica.nome,
-        "email": clinica.email,
-        "telefone": clinica.telefone,
-        "descricao": clinica.descricao,
-        "logo_url": clinica.logo.url if clinica.logo else None,
-        "rua": clinica.endereco.rua,
-        "numero": clinica.endereco.numero,
-        "bairro": clinica.endereco.bairro,
-        "cidade": clinica.endereco.cidade,
-        "estado": clinica.endereco.estado,
-        "cep": clinica.endereco.cep,
-        "especialidades": list(especialidades),
-        "medicos": medicos
+    "nome": clinica.nome,
+    "email": clinica.email,
+    "telefone": clinica.telefone,
+    "descricao": clinica.descricao,
+    "logo_url": clinica.logo.url if clinica.logo else None,
+    "rua": clinica.endereco.rua,
+    "numero": clinica.endereco.numero,
+    "bairro": clinica.endereco.bairro,
+    "cidade": clinica.endereco.cidade,
+    "estado": clinica.endereco.estado,
+    "cep": clinica.endereco.cep,
+    "especialidades": list(especialidades),
+    "medicos": medicos,
+    "avaliacoes": avaliacoes_json
     })
+
 
 
 def agendar_consulta(request):
