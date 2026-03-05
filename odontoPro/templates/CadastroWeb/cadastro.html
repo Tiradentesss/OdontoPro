@@ -1,0 +1,92 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro Clínica Odontológica</title>
+<link rel="stylesheet" href="{% static 'css/CadastroWeb/cadastro.css' %}">
+</head>
+
+<body>
+
+<div class="container">
+    <div class="logo">
+        <img src="{% static 'img/logo icon.png' %}" alt="OdontoPro Logo" class="logo">
+    </div>
+    <h1>Cadastro da Clínica</h1>
+    <p class="subtitle">Preencha os dados para registrar sua clínica odontológica</p>
+
+    <form method="POST" action="{% url 'cadastro_clinica' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+        <div class="form-grid">
+
+            <!-- COLUNA 1 -->
+            <div class="column">
+                <h2>Detalhes da Clínica</h2>
+
+                <label>Nome da Clínica</label>
+                <input type="text" required>
+
+                <label>Descrição</label>
+                <textarea rows="3"></textarea>
+
+                <label>Serviços Oferecidos</label>
+                <textarea rows="3" placeholder="Ex: Limpeza, Clareamento, Implantes..."></textarea>
+
+                <label>Foto da Clínica</label>
+                <input type="file" accept="image/*" required>
+            </div>
+
+            <!-- COLUNA 2 -->
+            <div class="column">
+                <h2>Endereço</h2>
+
+                <label>Estado</label>
+                <input type="text" required>
+
+                <label>Cidade</label>
+                <input type="text" required>
+
+                <label>CEP</label>
+                <input type="text" required>
+
+                <label>Bairro</label>
+                <input type="text">
+
+                <label>Rua</label>
+                <input type="text">
+            </div>
+
+            <!-- COLUNA 3 -->
+            <div class="column">
+                <h2>Informações Pessoais</h2>
+
+                <label>CNPJ</label>
+                <input type="text" required>
+
+                <label>Telefone</label>
+                <input type="text" required>
+
+                <label>E-mail</label>
+                <input type="email" required>
+
+                <label>Senha</label>
+                <input type="password" required>
+
+                <label>Confirmar Senha</label>
+                <input type="password" required>
+            </div>
+
+        </div>
+
+        <button type="submit" class="btn">Cadastrar Clínica</button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

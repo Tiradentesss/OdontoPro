@@ -552,3 +552,6 @@ def criar_avaliacao(request):
             "success": False,
             "message": "Erro interno ao processar avaliação."
         }, status=500)
+    
+def cadastro_clinica(request):
+    return render(request, "CadastroWeb/cadastro.html")
