@@ -28,16 +28,16 @@
                 <h2>Detalhes da Clínica</h2>
 
                 <label>Nome da Clínica</label>
-                <input type="text" required>
+                <input type="text" name="nome" required>
 
                 <label>Descrição</label>
-                <textarea rows="3"></textarea>
+                <textarea name="descricao" rows="3"></textarea>
 
                 <label>Serviços Oferecidos</label>
-                <textarea rows="3" placeholder="Ex: Limpeza, Clareamento, Implantes..."></textarea>
+                <textarea name="servicos" rows="3"></textarea>
 
                 <label>Foto da Clínica</label>
-                <input type="file" accept="image/*" required>
+                <input type="file" name="logo" accept="image/*" required>
             </div>
 
             <!-- COLUNA 2 -->
@@ -45,19 +45,22 @@
                 <h2>Endereço</h2>
 
                 <label>Estado</label>
-                <input type="text" required>
+                <input type="text" name="estado" required>
 
                 <label>Cidade</label>
-                <input type="text" required>
+                <input type="text" name="cidade" required>
 
                 <label>CEP</label>
-                <input type="text" required>
+                <input type="text" name="cep" required>
 
                 <label>Bairro</label>
-                <input type="text">
+                <input type="text" name="bairro">
 
                 <label>Rua</label>
-                <input type="text">
+                <input type="text" name="rua">
+
+                <label>Número</label>
+                <input type="text" name="numero">
             </div>
 
             <!-- COLUNA 3 -->
@@ -65,19 +68,19 @@
                 <h2>Informações Pessoais</h2>
 
                 <label>CNPJ</label>
-                <input type="text" required>
+                <input type="text" name="cnpj" required>
 
                 <label>Telefone</label>
-                <input type="text" required>
+                <input type="text" name="telefone" required>
 
                 <label>E-mail</label>
-                <input type="email" required>
+                <input type="email" name="email" required>
 
                 <label>Senha</label>
-                <input type="password" required>
+                <input type="password" name="senha" required>
 
                 <label>Confirmar Senha</label>
-                <input type="password" required>
+                <input type="password" name="confirmar_senha" required>
             </div>
 
         </div>

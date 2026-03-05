@@ -8,7 +8,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 
-from .models import Paciente, Clinica, Consulta, Medico, Avaliacao
+from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
@@ -554,4 +554,59 @@ def criar_avaliacao(request):
         }, status=500)
     
 def cadastro_clinica(request):
+
+    if request.method == "POST":
+
+        nome = request.POST.get("nome")
+        descricao = request.POST.get("descricao")
+        telefone = request.POST.get("telefone")
+        email = request.POST.get("email")
+        senha = request.POST.get("senha")
+        confirmar = request.POST.get("confirmar_senha")
+        cnpj = request.POST.get("cnpj")
+
+        cep = request.POST.get("cep")
+        estado = request.POST.get("estado")
+        cidade = request.POST.get("cidade")
+        bairro = request.POST.get("bairro")
+        rua = request.POST.get("rua")
+        numero = request.POST.get("numero")
+
+        logo = request.FILES.get("logo")
+
+        if senha != confirmar:
+            messages.error(request, "As senhas não coincidem")
+            return redirect("cadastro_clinica")
+
+        if Clinica.objects.filter(email=email).exists():
+            messages.error(request, "Este email já está cadastrado")
+            return redirect("cadastro_clinica")
+
+        # criar endereço
+        endereco = Endereco.objects.create(
+            cep=cep,
+            numero=numero,
+            rua=rua,
+            bairro=bairro,
+            cidade=cidade,
+            estado=estado,
+            quadra=""
+        )
+
+        # criar clínica
+        Clinica.objects.create(
+            nome=nome,
+            descricao=descricao,
+            telefone=telefone,
+            email=email,
+            senha=make_password(senha),
+            cnpj=cnpj,
+            endereco=endereco,
+            logo=logo,
+            conta_bancaria_juridica=""
+        )
+
+        messages.success(request, "Clínica cadastrada com sucesso!")
+        return redirect("login_clinica")
+
     return render(request, "CadastroWeb/cadastro.html")
