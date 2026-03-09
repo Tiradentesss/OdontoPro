@@ -34,3 +34,4 @@ EXPOSE 8000
 
 # Comando final
 CMD ["/app/start.sh"]
+
