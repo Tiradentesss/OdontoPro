@@ -1,0 +1,136 @@
+@media (max-width: 1024px) {
+    /* Impede que os cards fiquem espremidos em tablets */
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column !important;
+        overflow-x: hidden;
+    }
+
+    .sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        height: auto !important;
+        position: relative !important;
+        padding: 10px 15px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        background: #fff !important;
+        border-bottom: 1px solid #e9edef;
+    }
+
+    /* BARRA SUPERIOR: Logo à esquerda e Sair à direita */
+    .logo-container {
+        display: flex !important; 
+        flex-direction: row !important; /* Força linha única */
+        justify-content: space-between !important; /* Afasta os itens */
+        align-items: center !important;
+        width: 100% !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* Garante que o botão de sair suba para a linha da logo */
+    .sidebar-footer {
+        display: block !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-footer .nav-link {
+        flex-direction: row !important;
+        padding: 6px 12px !important;
+        background: #f8f9fa !important; /* Cor neutra */
+        color: #333 !important;
+        border-radius: 6px;
+        font-size: 13px;
+        border: 1px solid #ddd !important;
+    }
+
+    /* MENU COM ROLAGEM */
+    .nav-menu {
+        width: 100% !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        display: block !important;
+    }
+
+    .nav-menu::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-menu ul {
+        display: inline-flex !important;
+        flex-direction: row !important;
+        gap: 10px;
+        padding: 5px 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    .nav-link {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        min-width: 85px !important;
+        padding: 8px 0 !important;
+        font-size: 11px;
+        border-left: none !important;
+        color: #666;
+    }
+
+    /* COR AZUL PARA O ITEM ATIVO (Removido o Verde) */
+    .nav-link.active {
+        color: var(--primary-color, #007bff) !important;
+        border-bottom: 3px solid var(--primary-color, #007bff) !important;
+        background: transparent !important;
+    }
+
+    .nav-link i {
+        font-size: 20px !important;
+        margin-bottom: 4px;
+        display: block !important;
+    }
+
+    /* Esconde o que não é necessário */
+    .nav-title, .nav-badge {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px !important;
+    }
+
+    /* Formulários e Perfil */
+    .grade-inputs {
+        grid-template-columns: 1fr !important;
+    }
+
+    .largura-total {
+        grid-column: span 1 !important;
+    }
+
+    .caixa-avatar-perfil {
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        bottom: -25px !important;
+    }
+
+    .download-visual {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 { font-size: 18px; }
+    .appointment-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+}
