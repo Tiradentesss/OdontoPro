@@ -34,7 +34,3 @@ EXPOSE 8000
 
 # Comando final
 CMD ["/app/start.sh"]
-<<<<<<< HEAD:dockerfile
-
-=======
->>>>>>> 4ab3ee79427cf7e84554cacb62e878dc14875834:Dockerfile
