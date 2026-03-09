@@ -11,7 +11,6 @@ from django.utils.dateparse import parse_datetime
 from . import models
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
-from .models import DiaSemanaDisponivel, HorarioAberto
 from PIL import Image
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -46,11 +45,11 @@ def horarios_clinica(request, clinica_id):
     dia_str = dia_semana_map[data_dt.weekday()]
 
     try:
-        dia = DiaSemanaDisponivel.objects.get(
+        dia = models.OdontoproDiasemanadisponivel.objects.get(
             clinica_id=clinica_id,
             dia=dia_str
         )
-    except DiaSemanaDisponivel.DoesNotExist:
+    except models.OdontoproDiasemanadisponivel.DoesNotExist:
         return JsonResponse({"horarios": []})
 
     horarios = []
