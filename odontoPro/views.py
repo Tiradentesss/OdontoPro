@@ -8,7 +8,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 
-from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
+from . import models
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
@@ -66,7 +66,7 @@ def horarios_clinica(request, clinica_id):
 
 # -------- CANCELAR CONSULTA --------
 def cancelar_consulta(request, consulta_id):
-    consulta = get_object_or_404(Consulta, id=consulta_id)
+    consulta = get_object_or_404(models.OdontoproConsulta, id=consulta_id)
     consulta.status = "cancelada"
     consulta.save()
     messages.success(request, "Consulta cancelada com sucesso!")
@@ -75,7 +75,7 @@ def cancelar_consulta(request, consulta_id):
 
 # -------- REAGENDAR CONSULTA --------
 def reagendar_consulta(request, consulta_id):
-    consulta = get_object_or_404(Consulta, id=consulta_id)
+    consulta = get_object_or_404(models.OdontoproConsulta, id=consulta_id)
 
     if request.method == "POST":
         nova_data = request.POST.get("data")
@@ -96,11 +96,11 @@ def reagendar_consulta(request, consulta_id):
 
 # -------- PERFIL CLÍNICA --------
 def perfil_clinica(request, clinica_id):
-    clinica = get_object_or_404(Clinica, id=clinica_id)
-    medicos = Medico.objects.filter(clinica=clinica)
-    consultas = Consulta.objects.filter(clinica=clinica).order_by("-data_hora")[:5]
+    clinica = get_object_or_404(clinica, id=clinica_id)
+    medicos = models.OdontoproMedico.objects.filter(clinica=clinica)
+    consultas = models.OdontoproConsulta.objects.filter(clinica=clinica).order_by("-data_hora")[:5]
 
-    avaliacoes = Avaliacao.objects.filter(
+    avaliacoes = models.OdontoproAvaliacao.objects.filter(
         clinica=clinica
     ).select_related("paciente").order_by("-data_postagem")
 
@@ -119,8 +119,8 @@ def login_paciente(request):
         senha = request.POST.get("senha")
 
         try:
-            paciente = Paciente.objects.get(email=email)
-        except Paciente.DoesNotExist:
+            paciente = models.OdontoproPaciente.objects.get(email=email)
+        except models.OdontoproPaciente.DoesNotExist:
             messages.error(request, "Conta não encontrada. Cadastre-se primeiro.")
             return render(request, "LoginCadastro/login.html")
 
@@ -140,15 +140,15 @@ def dashboard_paciente(request):
     if not paciente_id:
         return redirect("login_paciente")
 
-    paciente = Paciente.objects.get(id=paciente_id)
-    clinicas = Clinica.objects.all().order_by("nome")
+    paciente = models.OdontoproPaciente.objects.get(id=paciente_id)
+    clinicas = models.OdontoproClinica.objects.all().order_by("nome")
 
     filtro_status = request.GET.get("status")
     aba_ativa = request.GET.get("aba", "principal")
-    consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
+    consultas = models.OdontoproConsulta.objects.filter(paciente=paciente).order_by("-data_hora")
     agora = timezone.now()
 
-    consultas_futuras = Consulta.objects.filter(
+    consultas_futuras = models.OdontoproConsulta.objects.filter(
         paciente=paciente,
         data_hora__gte=agora,
         status__in=["agendada", "confirmada"]
@@ -186,8 +186,8 @@ def login_clinica(request):
         senha = request.POST.get("senha")
 
         try:
-            medico = Medico.objects.get(email=email)
-        except Medico.DoesNotExist:
+            medico = models.OdontoproMedico.objects.get(email=email)
+        except models.OdontoproMedico.DoesNotExist:
             messages.error(request, "Conta não encontrada.")
             return render(request, "LoginCadastro/login.html")
 
@@ -205,11 +205,11 @@ def login_clinica(request):
 # 🔹 NOVO — RETORNA APENAS A LISTA FILTRADA (SEM RELOAD)
 def filtrar_consultas(request):
     paciente_id = request.session.get("paciente_id")
-    paciente = get_object_or_404(Paciente, id=paciente_id)
+    paciente = get_object_or_404(models.OdontoproPaciente, id=paciente_id)
 
     status = request.GET.get("status", "todas")
 
-    consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
+    consultas = models.OdontoproConsulta.objects.filter(paciente=paciente).order_by("-data_hora")
     if status != "todas":
         consultas = consultas.filter(status=status)
 
@@ -226,8 +226,8 @@ def filtrar_consultas(request):
 @require_GET
 def clinica_detalhes(request, clinica_id):
     try:
-        clinica = Clinica.objects.get(id=clinica_id)
-    except Clinica.DoesNotExist:
+        clinica = models.OdontoproClinica.objects.get(id=clinica_id)
+    except models.OdontoproClinica.DoesNotExist:
         return JsonResponse({"error": "Clínica não encontrada"}, status=404)
 
     especialidades = set()
@@ -246,7 +246,7 @@ def clinica_detalhes(request, clinica_id):
 
 
     # 🔹 BUSCAR AVALIAÇÕES APENAS DESSA CLÍNICA
-    avaliacoes = Avaliacao.objects.filter(
+    avaliacoes = models.OdontoproAvaliacao.objects.filter(
         clinica=clinica
     ).select_related("paciente").order_by("-data_postagem")
 
@@ -298,13 +298,13 @@ def agendar_consulta(request):
         return JsonResponse({"success": False, "error": "Data inválida"})
 
     try:
-        clinica = Clinica.objects.get(id=clinica_id)
-        medico = Medico.objects.get(id=medico_id)
-    except (Clinica.DoesNotExist, Medico.DoesNotExist):
+        clinica = models.OdontoproClinica.objects.get(id=clinica_id)
+        medico = models.OdontoproMedico.objects.get(id=medico_id)
+    except (models.OdontoproClinica.DoesNotExist, models.OdontoproClinica.DoesNotExist):
         return JsonResponse({"success": False, "error": "Clínica ou médico não encontrado"}, status=404)
 
     # 🔒 evita conflito de horário
-    if Consulta.objects.filter(medico=medico, data_hora=data_hora).exists():
+    if models.OdontoproConsulta.objects.filter(medico=medico, data_hora=data_hora).exists():
         return JsonResponse({"success": False, "error": "Horário indisponível"})
 
     paciente = None
@@ -314,11 +314,11 @@ def agendar_consulta(request):
     paciente_id = request.session.get("paciente_id")
     if paciente_id:
         try:
-            paciente = Paciente.objects.get(id=paciente_id)
+            paciente = models.OdontoproPaciente.objects.get(id=paciente_id)
             nome = paciente.nome
             email = paciente.email
             telefone = paciente.telefone
-        except Paciente.DoesNotExist:
+        except models.OdontoproPaciente.DoesNotExist:
             return JsonResponse({"success": False, "error": "Paciente não encontrado"}, status=404)
     else:
         # visitante (mantém compatibilidade)
@@ -329,7 +329,7 @@ def agendar_consulta(request):
         if not all([nome, email, telefone]):
             return JsonResponse({"success": False, "error": "Dados do paciente ausentes"})
 
-    Consulta.objects.create(
+    models.OdontoproConsulta.objects.create(
         paciente=paciente,
         nome=nome,
         email=email,
