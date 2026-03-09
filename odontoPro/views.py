@@ -350,8 +350,8 @@ def configuracoes_conta(request):
         return redirect('login_paciente')
 
     try:
-        paciente = Paciente.objects.get(id=paciente_id)
-    except Paciente.DoesNotExist:
+        paciente = models.OdontoproPaciente.objects.get(id=paciente_id)
+    except models.OdontoproPaciente.DoesNotExist:
         request.session.flush()
         messages.error(request, 'Sua conta foi removida.')
         return redirect('login_paciente')
@@ -398,7 +398,7 @@ def alterar_senha_paciente(request):
     if not paciente_id:
         return redirect('login_paciente')
 
-    paciente = Paciente.objects.get(id=paciente_id)
+    paciente = models.OdontoproPaciente.objects.get(id=paciente_id)
 
     if request.method == 'POST':
         senha_atual = request.POST.get('senha_atual')
@@ -438,11 +438,11 @@ def cadastrar_paciente(request):
         messages.error(request, "As senhas não coincidem.")
         return redirect("login_paciente")
 
-    if Paciente.objects.filter(email=email).exists():
+    if models.OdontoproPaciente.objects.filter(email=email).exists():
         messages.error(request, "Este e-mail já está cadastrado.")
         return redirect("login_paciente")
 
-    paciente = Paciente.objects.create(
+    paciente = models.OdontoproPaciente.objects.create(
         nome=nome,
         email=email,
         senha=make_password(senha),
@@ -578,12 +578,12 @@ def cadastro_clinica(request):
             messages.error(request, "As senhas não coincidem")
             return redirect("cadastro_clinica")
 
-        if Clinica.objects.filter(email=email).exists():
+        if models.OdontoproClinica.objects.filter(email=email).exists():
             messages.error(request, "Este email já está cadastrado")
             return redirect("cadastro_clinica")
 
         # criar endereço
-        endereco = Endereco.objects.create(
+        endereco = models.OdontoproEndereco.objects.create(
             cep=cep,
             numero=numero,
             rua=rua,
@@ -594,7 +594,7 @@ def cadastro_clinica(request):
         )
 
         # criar clínica
-        Clinica.objects.create(
+        models.OdontoproClinica.objects.create(
             nome=nome,
             descricao=descricao,
             telefone=telefone,
