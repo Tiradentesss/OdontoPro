@@ -1,29 +1,36 @@
+# Imagem base slim (leve e segura)
 FROM python:3.12-slim
 
+# Evita arquivos .pyc e melhora logs
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Diretório de trabalho
 WORKDIR /app
 
-# Dependências do sistema para mysqlclient
-RUN apt-get update && apt-get install -y \
-    default-libmysqlclient-dev \
-    gcc \
-    pkg-config \
+# Instala dependências do sistema (para MySQL/MariaDB e build)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmariadb-dev-compat build-essential pkg-config \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala dependências Python
+# Copia requirements.txt e instala pacotes Python
 COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Copia projeto
+# Remove pacotes de build para reduzir tamanho da imagem
+RUN apt-get purge -y --auto-remove build-essential pkg-config
+
+# Copia o projeto inteiro
 COPY . .
 
-# Permissão para start.sh
+# Copia o start.sh (arquivo separado para evitar erros de sintaxe)
+COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-# Porta usada pelo Railway
+# Expõe porta (Railway usa $PORT, mas 8000 como fallback)
 EXPOSE 8000
 
+# Comando final
 CMD ["/app/start.sh"]
