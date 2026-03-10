@@ -28,12 +28,12 @@ IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = [
-    ".railway.app",
-    "https://*.railway.app", "https://*.up.railway.app",
-    "localhost",
-    "127.0.0.1"
-]
+# Adicione isso (para Railway domains)
+ALLOWED_HOSTS = ['.railway.app', '.up.railway.app', 'localhost', '127.0.0.1']
+
+# Se usar HTTPS (Railway força)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_TRUSTED_ORIGINS = ['https://*.railway.app', 'https://*.up.railway.app']
 
 
 # =========================
