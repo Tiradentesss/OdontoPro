@@ -30,6 +30,7 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
     ".railway.app",
+    "https://*.railway.app", "https://*.up.railway.app",
     "localhost",
     "127.0.0.1"
 ]
