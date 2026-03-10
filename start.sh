@@ -1,4 +1,4 @@
-#!/usr/bin/env bash   # Mude para bash (melhor expansão de vars) - Railway tem bash disponível
+#!/usr/bin/env bash
 
 set -e
 
