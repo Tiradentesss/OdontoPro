@@ -120,6 +120,11 @@ DATABASES['default']['OPTIONS'] = {
     'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
 }
 
+import logging
+logger = logging.getLogger(__name__)
+
+logger.info(f"Usando DATABASE_URL: {os.getenv('DATABASE_URL')}")
+logger.info(f"Parsed DB config: {DATABASES['default']}")
 
 # =========================
 # PASSWORD
