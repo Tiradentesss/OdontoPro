@@ -263,23 +263,26 @@ def clinica_detalhes(request, clinica_id):
         for av in avaliacoes
     ]
 
+    endereco = clinica.endereco
+
     return JsonResponse({
     "nome": clinica.nome,
     "email": clinica.email,
     "telefone": clinica.telefone,
     "descricao": clinica.descricao,
     "logo_url": clinica.logo.url if clinica.logo else None,
-    "rua": clinica.endereco.rua,
-    "numero": clinica.endereco.numero,
-    "bairro": clinica.endereco.bairro,
-    "cidade": clinica.endereco.cidade,
-    "estado": clinica.endereco.estado,
-    "cep": clinica.endereco.cep,
+    "rua": endereco.rua if endereco else "",
+    "numero": endereco.numero if endereco else "",
+    "bairro": endereco.bairro if endereco else "",
+    "cidade": endereco.cidade if endereco else "",
+    "estado": endereco.estado if endereco else "",
+    "cep": endereco.cep if endereco else "",
     "especialidades": list(especialidades),
     "medicos": medicos,
     "avaliacoes": avaliacoes_json
     })
 
+    
 
 
 def agendar_consulta(request):
