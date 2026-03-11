@@ -345,51 +345,80 @@ def agendar_consulta(request):
 
 def configuracoes_conta(request):
     paciente_id = request.session.get('paciente_id')
+    logger.info(f"[CONFIG] paciente_id: {paciente_id}, method: {request.method}")
 
     if not paciente_id:
+        logger.error("[CONFIG] paciente_id ausente")
         return redirect('login_paciente')
 
     try:
         paciente = Paciente.objects.get(id=paciente_id)
     except Paciente.DoesNotExist:
+        logger.error(f"[CONFIG] Paciente {paciente_id} não existe")
         request.session.flush()
-        messages.error(request, 'Sua conta foi removida.')
         return redirect('login_paciente')
 
     if request.method == 'POST':
         try:
+            logger.info("[CONFIG] Processando POST")
+            
+            # Atualizar dados básicos
             paciente.nome = request.POST.get('nome', paciente.nome)
             paciente.email = request.POST.get('email', paciente.email)
             paciente.cpf = request.POST.get('cpf', paciente.cpf)
             paciente.telefone = request.POST.get('telefone', paciente.telefone)
 
-            # 🔥 SALVAR FOTO
+            # Processar foto
             if 'foto' in request.FILES:
                 arquivo = request.FILES['foto']
-                # Validar tamanho (máx 5MB)
+                logger.info(f"[CONFIG] Arquivo: {arquivo.name}, tamanho: {arquivo.size}")
+                
+                # Validar tamanho
                 if arquivo.size > 5 * 1024 * 1024:
-                    messages.error(request, 'Arquivo muito grande. Máximo 5MB.')
-                    return redirect('dashboard_paciente')
-                
-                # Validar tipo
-                try:
-                    img = Image.open(arquivo)
-                    img.verify()
-                    arquivo.seek(0)  # Reset do ponteiro após validação
-                except Exception:
-                    messages.error(request, 'Arquivo de imagem inválido.')
-                    return redirect('dashboard_paciente')
-                
-                paciente.foto = arquivo
+                    messages.error(request, 'Arquivo muito grande (máx 5MB).')
+                    logger.error("[CONFIG] Arquivo > 5MB")
+                else:
+                    # Validar tipo
+                    try:
+                        img = Image.open(arquivo)
+                        img.verify()
+                        arquivo.seek(0)
+                        paciente.foto = arquivo
+                        logger.info("[CONFIG] Foto validada e atribuída")
+                    except Exception as ve:
+                        messages.error(request, f'Imagem inválida: {str(ve)}')
+                        logger.error(f"[CONFIG] Erro na validação: {str(ve)}")
 
+            # Salvar
             paciente.save()
             messages.success(request, 'Dados atualizados com sucesso!')
-            return redirect('dashboard_paciente')
+            logger.info(f"[CONFIG] Paciente {paciente_id} salvo")
+            
         except Exception as e:
+            logger.error(f"[CONFIG] Erro: {str(e)}", exc_info=True)
             messages.error(request, f'Erro ao salvar: {str(e)}')
-            return redirect('dashboard_paciente')
 
-    return redirect('dashboard_paciente')
+        # Retornar para dashboard em ambos casos
+        return redirect('dashboard_paciente')
+
+    # Para GET, renderizar o dashboard com a aba de ajustes aberta
+    clinicas = Clinica.objects.all().order_by("nome")
+    consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
+    agora = timezone.now()
+    consultas_futuras = Consulta.objects.filter(
+        paciente=paciente,
+        data_hora__gte=agora,
+        status__in=["agendada", "confirmada"]
+    ).order_by("data_hora")
+
+    context = {
+        "paciente": paciente,
+        "clinicas": clinicas,
+        "consultas": consultas,
+        "consultas_futuras": consultas_futuras,
+        "aba_ativa": "ajustes"
+    }
+    return render(request, "DashboardPaciente/dashboard.html", context)
 
 
 
