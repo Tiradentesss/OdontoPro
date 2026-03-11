@@ -47,7 +47,10 @@ function finishReset() {
     modalForgot.style.display = "none";
 }
 
-document.getElementById("btnEntrarDashboard").addEventListener("click", function() {
-    // Caminho baseado na sua estrutura: Nova_OdontoPro > Dasboard_paciente > html > dasboard.html
-    window.location.href = "../../Dasboard_paciente/html/dasboard.html";
-});
+const btnDashboard = document.getElementById("btnEntrarDashboard");
+
+if (btnDashboard) {
+    btnDashboard.addEventListener("click", function() {
+        window.location.href = "../../Dasboard_paciente/html/dasboard.html";
+    });
+}

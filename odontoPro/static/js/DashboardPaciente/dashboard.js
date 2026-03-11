@@ -351,13 +351,18 @@ function getCookie(name) {
 }
 
 /* ================= LOGOUT ================= */
-const btnLogout = document.getElementById("btnLogout");
-if (btnLogout) {
-    btnLogout.addEventListener("click", e => {
-        e.preventDefault();
-        window.location.href = "../../Login_e_Cadastro/html/login.html";
-    });
-}
+document.addEventListener("DOMContentLoaded", () => {
+
+    const btnLogout = document.getElementById("btnLogout");
+
+    if (btnLogout) {
+        btnLogout.addEventListener("click", e => {
+            e.preventDefault();
+            window.location.href = "../../Login_e_Cadastro/html/login.html";
+        });
+    }
+
+});
 
 /* ================= CONFIGURAÇÕES / ABAS ================= */
 function trocarAba(event, abaId) {
@@ -713,7 +718,7 @@ function enviarAvaliacao(consultaId, clinicaId, medicoId) {
             alert("Avaliação enviada com sucesso!");
             ocultarEstrelas(consultaId);
             // Desabilitar botão de avaliação
-            const btnAvaliar = document.querySelector(`button.btn-avaliar[onclick*="mostrarEstrelas('${consultaId}"]`);
+            const btnAvaliar = document.querySelector(`button[data-consulta-id="${consultaId}"]`);
             if (btnAvaliar) {
                 btnAvaliar.disabled = true;
                 btnAvaliar.textContent = "✅ Avaliado";
@@ -768,7 +773,11 @@ function carregarMedicosClinica(clinicaId) {
             
             if (data.medicos && data.medicos.length > 0) {
                 data.medicos.forEach(medico => {
+
+                    const medicoCard = document.createElement("div");
+
                     const foto = medico.foto_url ? medico.foto_url : "/static/img/default-user.png";
+
                     medicoCard.innerHTML = `
                         <img src="${foto}" 
                             style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;">
