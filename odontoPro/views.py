@@ -375,6 +375,7 @@ def configuracoes_conta(request):
                 try:
                     img = Image.open(arquivo)
                     img.verify()
+                    arquivo.seek(0)  # Reset do ponteiro após validação
                 except Exception:
                     messages.error(request, 'Arquivo de imagem inválido.')
                     return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
