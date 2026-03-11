@@ -14,7 +14,6 @@ from django.utils.timezone import make_aware
 from PIL import Image
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from datetime import timedelta
 
 import logging
 logger = logging.getLogger(__name__)
@@ -83,7 +82,8 @@ def reagendar_consulta(request, consulta_id):
         if not nova_data or not novo_horario:
             messages.error(request, "Informe a nova data e horário.")
         else:
-            consulta.data_hora = f"{nova_data} {novo_horario}"
+            nova_data_hora = datetime.strptime(f"{nova_data} {novo_horario}", "%Y-%m-%d %H:%M")
+            consulta.data_hora = make_aware(nova_data_hora)
             consulta.status = "agendada"
             consulta.save()
 
@@ -95,7 +95,7 @@ def reagendar_consulta(request, consulta_id):
 
 # -------- PERFIL CLÍNICA --------
 def perfil_clinica(request, clinica_id):
-    clinica = get_object_or_404(clinica, id=clinica_id)
+    clinica = get_object_or_404(models.OdontoproClinica, id=clinica_id)
     medicos = models.OdontoproMedico.objects.filter(clinica=clinica)
     consultas = models.OdontoproConsulta.objects.filter(clinica=clinica).order_by("-data_hora")[:5]
 
@@ -204,6 +204,9 @@ def login_clinica(request):
 # 🔹 NOVO — RETORNA APENAS A LISTA FILTRADA (SEM RELOAD)
 def filtrar_consultas(request):
     paciente_id = request.session.get("paciente_id")
+    if not paciente_id:
+        return JsonResponse({"error": "Não autenticado"}, status=401)
+
     paciente = get_object_or_404(models.OdontoproPaciente, id=paciente_id)
 
     status = request.GET.get("status", "todas")
@@ -299,7 +302,7 @@ def agendar_consulta(request):
     try:
         clinica = models.OdontoproClinica.objects.get(id=clinica_id)
         medico = models.OdontoproMedico.objects.get(id=medico_id)
-    except (models.OdontoproClinica.DoesNotExist, models.OdontoproClinica.DoesNotExist):
+    except (models.OdontoproClinica.DoesNotExist, models.OdontoproMedico.DoesNotExist):
         return JsonResponse({"success": False, "error": "Clínica ou médico não encontrado"}, status=404)
 
     # 🔒 evita conflito de horário
@@ -463,7 +466,8 @@ def criar_avaliacao(request):
     import logging
     from django.http import JsonResponse
     from django.shortcuts import get_object_or_404
-    from .models import Avaliacao, Consulta
+    from .models import OdontoproAvaliacao as Avaliacao
+    from .models import OdontoproConsulta as Consulta
 
     logger = logging.getLogger(__name__)
 
