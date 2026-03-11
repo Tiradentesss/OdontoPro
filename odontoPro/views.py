@@ -360,6 +360,7 @@ def configuracoes_conta(request):
 
     if request.method == 'POST':
         try:
+            print("[CONFIG-PRINT] Entrou POST")
             logger.info("[CONFIG] Processando POST")
             
             # Atualizar dados básicos
@@ -368,9 +369,13 @@ def configuracoes_conta(request):
             paciente.cpf = request.POST.get('cpf', paciente.cpf)
             paciente.telefone = request.POST.get('telefone', paciente.telefone)
 
+            # Dump FIELDS
+            print(f"[CONFIG-PRINT] request.FILES keys: {list(request.FILES.keys())}")
+
             # Processar foto
             if 'foto' in request.FILES:
                 arquivo = request.FILES['foto']
+                print(f"[CONFIG-PRINT] got arquivo type: {type(arquivo)} name: {arquivo.name} size: {arquivo.size}")
                 logger.info(f"[CONFIG] Arquivo: {arquivo.name}, tamanho: {arquivo.size}")
                 
                 # Validar tamanho
@@ -384,10 +389,14 @@ def configuracoes_conta(request):
                         img.verify()
                         arquivo.seek(0)
                         paciente.foto = arquivo
+                        print("[CONFIG-PRINT] foto atribuida")
                         logger.info("[CONFIG] Foto validada e atribuída")
                     except Exception as ve:
+                        print(f"[CONFIG-PRINT] validação falhou {ve}")
                         messages.error(request, f'Imagem inválida: {str(ve)}')
                         logger.error(f"[CONFIG] Erro na validação: {str(ve)}")
+            else:
+                print("[CONFIG-PRINT] não havia chave foto em request.FILES")
 
             # Salvar
             paciente.save()
@@ -395,6 +404,7 @@ def configuracoes_conta(request):
             logger.info(f"[CONFIG] Paciente {paciente_id} salvo")
             
         except Exception as e:
+            print(f"[CONFIG-PRINT] exceção salva: {e}")
             logger.error(f"[CONFIG] Erro: {str(e)}", exc_info=True)
             messages.error(request, f'Erro ao salvar: {str(e)}')
 
