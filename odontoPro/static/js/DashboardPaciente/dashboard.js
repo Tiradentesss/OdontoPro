@@ -192,7 +192,7 @@ function abrirModalAgendamento(clinicaId) {
 
 
             // ===== ESPECIALIDADES =====
-            const selectEspecialidade = document.getElementById("especialidade");
+            const selectEspecialidade = document.getElementById("selectEspecialidade");
             if (selectEspecialidade) {
                 selectEspecialidade.innerHTML = "<option value=''>Selecione</option>";
 
@@ -769,10 +769,12 @@ function carregarMedicosClinica(clinicaId) {
             if (data.medicos && data.medicos.length > 0) {
                 data.medicos.forEach(medico => {
                     const foto = medico.foto_url ? medico.foto_url : "/static/img/default-user.png";
+                    const medicoCard = document.createElement("div");
+
                     medicoCard.innerHTML = `
-                        <img src="${foto}" 
-                            style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;">
-                        <h4>${medico.nome}</h4>
+                    <img src="${foto}" 
+                    style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;">
+                    <h4>${medico.nome}</h4>
                     `;
 
                     listaMedicos.appendChild(medicoCard);
