@@ -14,6 +14,14 @@ OPTIONS = {
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
 # =========================
 # SEGURANÇA
 # =========================
