@@ -369,7 +369,7 @@ def configuracoes_conta(request):
                 # Validar tamanho (máx 5MB)
                 if arquivo.size > 5 * 1024 * 1024:
                     messages.error(request, 'Arquivo muito grande. Máximo 5MB.')
-                    return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
+                    return redirect('dashboard_paciente')
                 
                 # Validar tipo
                 try:
@@ -378,18 +378,18 @@ def configuracoes_conta(request):
                     arquivo.seek(0)  # Reset do ponteiro após validação
                 except Exception:
                     messages.error(request, 'Arquivo de imagem inválido.')
-                    return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
+                    return redirect('dashboard_paciente')
                 
                 paciente.foto = arquivo
 
             paciente.save()
             messages.success(request, 'Dados atualizados com sucesso!')
-            return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
+            return redirect('dashboard_paciente')
         except Exception as e:
             messages.error(request, f'Erro ao salvar: {str(e)}')
-            return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
+            return redirect('dashboard_paciente')
 
-    return redirect('/dashboard-paciente/?open=ajustes&tab=aba-perfil')
+    return redirect('dashboard_paciente')
 
 
 
