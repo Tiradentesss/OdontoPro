@@ -93,17 +93,27 @@ class LoginViewTests(TestCase):
     def test_config_restores_session_from_signed_uid(self):
         # login normally first to generate signed uid
         self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
-        uid = signing.dumps(self.paciente.id)
+        # fetch dashboard to obtain generated uid in the page
+        resp_page = self.client.get(reverse('dashboard_paciente'))
+        self.assertEqual(resp_page.status_code, 200)
+        self.assertIn('name="uid"', resp_page.content.decode())
+        # extract the value from hidden field
+        import re
+        m = re.search(r'name="uid" value="([^"]+)"', resp_page.content.decode())
+        self.assertIsNotNone(m, "UID hidden input missing")
+        uid_from_page = m.group(1)
+
         # clear session as if expired
         self.client.session.flush()
         self.assertIsNone(self.client.session.get('paciente_id'))
-        # post with signed uid
+
+        # post with signed uid obtained from dashboard
         resp = self.client.post(reverse('configuracoes_conta'), {
             'nome': 'Outra Coisa',
             'email': 'user@example.com',
             'cpf': '',
             'telefone': '',
-            'uid': uid,
+            'uid': uid_from_page,
         })
         self.assertEqual(resp.status_code, 302)
         self.assertRedirects(resp, reverse('dashboard_paciente') + '?open=ajustes')

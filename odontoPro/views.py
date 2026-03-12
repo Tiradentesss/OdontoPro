@@ -186,6 +186,9 @@ def dashboard_paciente(request):
     paciente = Paciente.objects.get(id=paciente_id)
     clinicas = Clinica.objects.all().order_by("nome")
 
+    # prepare signed uid for settings forms so it is always available
+    uid_signed = signing.dumps(paciente.id)
+
     filtro_status = request.GET.get("status")
     aba_ativa = request.GET.get("aba", "principal")
     consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
@@ -210,6 +213,7 @@ def dashboard_paciente(request):
         "consultas_futuras": consultas_futuras,
         "tem_notificacao": tem_notificacao,
         "aba_ativa": aba_ativa,
+        "uid_signed": uid_signed,
     }
 
     return render(request, "DashboardPaciente/dashboard.html", context)
@@ -374,6 +378,8 @@ def configuracoes_conta(request):
     # carregamento inicial de sessão
     paciente_id = request.session.get('paciente_id')
     logger.info(f"[CONFIG] initial paciente_id: {paciente_id}, method: {request.method}")
+    # extras para investigação
+    logger.debug("[CONFIG] cookies=%s POST-keys=%s", request.META.get('HTTP_COOKIE'), list(request.POST.keys()))
 
     # fallback: se a sessão tiver sido perdida (ex: logout acidental/cookie expirado),
     # tentamos restaurar a partir de um identificador assinado enviado pelo formulário.
@@ -384,6 +390,10 @@ def configuracoes_conta(request):
                 restored = signing.loads(signed)
                 paciente_id = restored
                 request.session['paciente_id'] = paciente_id
+                try:
+                    request.session.save()
+                except Exception as ex:
+                    logger.error("[CONFIG] erro salvando sessão restaurada: %s", ex, exc_info=True)
                 logger.warning("[CONFIG] sessão perdida, restaurada via uid assinada: %s", paciente_id)
             except signing.BadSignature:
                 logger.warning("[CONFIG] uid inválido fornecido")
@@ -443,6 +453,11 @@ def configuracoes_conta(request):
 
             # Salvar
             paciente.save()
+            # manter sessão viva explicita
+            try:
+                request.session.save()
+            except Exception as ex:
+                logger.error("[CONFIG] erro salvando sessão após update: %s", ex, exc_info=True)
             messages.success(request, 'Dados atualizados com sucesso!')
             logger.info(f"[CONFIG] Paciente {paciente_id} salvo")
             
