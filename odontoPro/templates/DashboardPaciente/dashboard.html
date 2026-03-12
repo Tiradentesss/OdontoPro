@@ -187,18 +187,17 @@
             <!-- BANNER -->
             <div class="banner-card">
                 <img
-                    src="{% if clinica.imagem %}{{ clinica.imagem.url }}{% else %}{% static 'img/default-banner.jpg' %}{% endif %}"
+                    src='{% static 'img/Odontoprime2.png' %}'
                     class="fundo-banner">
+
 
                 <!-- LOGO SOBREPOSTA -->
                 <div class="logo-sobreposta">
-                    {% if clinica.logo %}
-                        <img src="{{ clinica.logo.url }}" alt="Logo da clínica">
-                    {% else %}
-                        <div class="logo-placeholder">
-                            <i class="fa-solid fa-hospital"></i>
-                        </div>
-                    {% endif %}
+                    <img
+                        src=src='{% static 'img/Odontoprime1.png' %}'
+                        alt="Logo da clínica"
+                    >
+
                 </div>
             </div>
 
