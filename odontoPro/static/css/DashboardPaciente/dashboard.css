@@ -21,8 +21,8 @@
 body {
     background-color: var(--cor-fundo);
     display: flex;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh; /* permite scroll quando barra de endereço some */
+    overflow-x: hidden; /* apenas esconder rolagem horizontal */
     -webkit-font-smoothing: antialiased;
 }
 
