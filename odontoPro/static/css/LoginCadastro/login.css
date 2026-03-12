@@ -207,6 +207,26 @@ body {
     border-radius: 20px;
 }
 
+/* messages styling */
+.messages {
+    margin-bottom: 20px;
+}
+.message {
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.message.error {
+    background-color: #fdecea;
+    color: #e74c3c;
+    border: 1px solid #f5c6cb;
+}
+.message.success {
+    background-color: #e9f7ef;
+    color: #2ecc71;
+    border: 1px solid #c3e6cb;
+}
+
 /* --- MODAL DE CADASTRO (DESIGN MELHORADO) --- */
 .modal {
     display: none; 
