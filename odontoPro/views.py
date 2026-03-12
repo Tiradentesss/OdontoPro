@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.urls import reverse
 from django.contrib.auth import logout
 from django.contrib.auth.hashers import check_password, make_password
 from django.http import JsonResponse
@@ -7,6 +8,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
+from django.core import signing
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
 from datetime import datetime, timedelta
@@ -353,11 +355,27 @@ def agendar_consulta(request):
     return JsonResponse({"success": True})
 
 def configuracoes_conta(request):
+    # carregamento inicial de sessão
     paciente_id = request.session.get('paciente_id')
-    logger.info(f"[CONFIG] paciente_id: {paciente_id}, method: {request.method}")
+    logger.info(f"[CONFIG] initial paciente_id: {paciente_id}, method: {request.method}")
+
+    # fallback: se a sessão tiver sido perdida (ex: logout acidental/cookie expirado),
+    # tentamos restaurar a partir de um identificador assinado enviado pelo formulário.
+    if request.method == 'POST' and not paciente_id:
+        signed = request.POST.get('uid')
+        if signed:
+            try:
+                restored = signing.loads(signed)
+                paciente_id = restored
+                request.session['paciente_id'] = paciente_id
+                logger.warning("[CONFIG] sessão perdida, restaurada via uid assinada: %s", paciente_id)
+            except signing.BadSignature:
+                logger.warning("[CONFIG] uid inválido fornecido")
 
     if not paciente_id:
-        logger.error("[CONFIG] paciente_id ausente")
+        logger.error("[CONFIG] paciente_id ausente após tentativa de restauração")
+        # redirecionar para login explicando sessão expirada
+        messages.error(request, "Sua sessão expirou. Faça login novamente para alterar suas configurações.")
         return redirect('login_paciente')
 
     try:
@@ -417,8 +435,8 @@ def configuracoes_conta(request):
             logger.error(f"[CONFIG] Erro: {str(e)}", exc_info=True)
             messages.error(request, f'Erro ao salvar: {str(e)}')
 
-        # Retornar para dashboard em ambos casos
-        return redirect('dashboard_paciente')
+        # Reexibir página de configurações (mantendo aba aberta)
+        return redirect(f"{reverse('dashboard_paciente')}?open=ajustes")
 
     # Para GET, renderizar o dashboard com a aba de ajustes aberta
     clinicas = Clinica.objects.all().order_by("nome")
@@ -430,12 +448,16 @@ def configuracoes_conta(request):
         status__in=["agendada", "confirmada"]
     ).order_by("data_hora")
 
+    # gerar UID assinado para possibilitar restauração de sessão caso ela se perca
+    uid_signed = signing.dumps(paciente.id)
+
     context = {
         "paciente": paciente,
         "clinicas": clinicas,
         "consultas": consultas,
         "consultas_futuras": consultas_futuras,
-        "aba_ativa": "ajustes"
+        "aba_ativa": "ajustes",
+        "uid_signed": uid_signed,
     }
     return render(request, "DashboardPaciente/dashboard.html", context)
 
@@ -443,6 +465,18 @@ def configuracoes_conta(request):
 
 def alterar_senha_paciente(request):
     paciente_id = request.session.get('paciente_id')
+
+    # tentar recuperar sessão a partir de uid assinado se POST
+    if request.method == 'POST' and not paciente_id:
+        signed = request.POST.get('uid')
+        if signed:
+            try:
+                restored = signing.loads(signed)
+                paciente_id = restored
+                request.session['paciente_id'] = paciente_id
+                logger.warning("[SENHA] sessão perdida, restaurada via uid: %s", paciente_id)
+            except signing.BadSignature:
+                logger.warning("[SENHA] uid inválido")
 
     if not paciente_id:
         return redirect('login_paciente')

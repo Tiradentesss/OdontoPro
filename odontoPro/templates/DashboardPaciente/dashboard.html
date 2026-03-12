@@ -95,6 +95,15 @@
 
 <main class="area-conteudo">
 
+        <!-- mensagens gerais -->
+        {% if messages %}
+          <div class="messages">
+            {% for message in messages %}
+              <p class="message {{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
 <!-- ================= INÍCIO ================= -->
 <section id="inicio" class="tela ativa">
 
@@ -500,10 +509,7 @@
                 action="{% url 'configuracoes_conta' %}"
                 enctype="multipart/form-data">
                 {% csrf_token %}
-
-                <!-- FOTO -->
-                <p class="label-foto">Escolha uma foto de Perfil</p>
-
+                <input type="hidden" name="uid" value="{{ uid_signed }}">
                 <div class="foto-wrapper">
                     <label for="fileInput" class="upload-foto-container">
                         <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
@@ -553,6 +559,7 @@
 
         <form method="POST" action="{% url 'alterar_senha_paciente' %}">
             {% csrf_token %}
+            <input type="hidden" name="uid" value="{{ uid_signed }}">
 
             <div class="grid-inputs">
 

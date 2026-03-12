@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
+from django.core import signing
 from .models import Paciente, Medico, Clinica
 
 
@@ -50,4 +51,72 @@ class LoginViewTests(TestCase):
         resp = self.client.post(reverse('login_paciente'), {'email': 'noone@example.com', 'senha': 'whatever'})
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Conta não encontrada")
+
+    def test_config_update_keeps_session(self):
+        # login first
+        self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
+        # session should now contain paciente_id
+        self.assertEqual(self.client.session.get('paciente_id'), self.paciente.id)
+        # perform POST to config
+        resp = self.client.post(reverse('configuracoes_conta'), {
+            'nome': 'Novo Nome',
+            'email': 'user@example.com',
+            'cpf': '12345678901',
+            'telefone': '999888777',
+        })
+        # should redirect to dashboard
+        self.assertEqual(resp.status_code, 302)
+        self.assertRedirects(resp, reverse('dashboard_paciente'))
+        # ensure paciente updated
+        self.paciente.refresh_from_db()
+        self.assertEqual(self.paciente.nome, 'Novo Nome')
+        self.assertEqual(self.paciente.cpf, '12345678901')
+        self.assertEqual(self.paciente.telefone, '999888777')
+
+    def test_config_requires_login(self):
+        # no login
+        resp = self.client.post(reverse('configuracoes_conta'), {
+            'nome': 'x',
+            'email': 'x',
+        })
+        # should redirect to login page
+        self.assertEqual(resp.status_code, 302)
+        self.assertRedirects(resp, reverse('login_paciente'))
+
+    def test_config_restores_session_from_signed_uid(self):
+        # login normally first to generate signed uid
+        self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
+        uid = signing.dumps(self.paciente.id)
+        # clear session as if expired
+        self.client.session.flush()
+        self.assertIsNone(self.client.session.get('paciente_id'))
+        # post with signed uid
+        resp = self.client.post(reverse('configuracoes_conta'), {
+            'nome': 'Outra Coisa',
+            'email': 'user@example.com',
+            'cpf': '',
+            'telefone': '',
+            'uid': uid,
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertRedirects(resp, reverse('dashboard_paciente') + '?open=ajustes')
+        self.paciente.refresh_from_db()
+        self.assertEqual(self.paciente.nome, 'Outra Coisa')
+
+    def test_change_password_with_fallback(self):
+        # login and flush session to simulate expiration
+        self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
+        uid = signing.dumps(self.paciente.id)
+        self.client.session.flush()
+        resp = self.client.post(reverse('alterar_senha_paciente'), {
+            'senha_atual': 'senha123',
+            'nova_senha': 'novasenha',
+            'confirmar_senha': 'novasenha',
+            'uid': uid,
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertRedirects(resp, reverse('configuracoes_conta'))
+        self.paciente.refresh_from_db()
+        from django.contrib.auth.hashers import check_password
+        self.assertTrue(check_password('novasenha', self.paciente.senha))
 

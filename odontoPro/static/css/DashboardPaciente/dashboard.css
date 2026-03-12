@@ -9,6 +9,26 @@
     --verde-sucesso: #2ecc71;
 }
 
+/* mensagens de feedback */
+.messages {
+    margin: 20px 0;
+}
+.message {
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.message.error {
+    background-color: #fdecea;
+    color: #e74c3c;
+    border: 1px solid #f5c6cb;
+}
+.message.success {
+    background-color: #e9f7ef;
+    color: #2ecc71;
+    border: 1px solid #c3e6cb;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 * {
