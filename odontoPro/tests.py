@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from django.core import signing
-from .models import Paciente, Medico, Clinica
+from .models import Paciente, Medico, Clinica, Consulta
 
 
 class LoginViewTests(TestCase):
@@ -155,4 +155,71 @@ class LoginViewTests(TestCase):
         self.paciente.refresh_from_db()
         from django.contrib.auth.hashers import check_password
         self.assertTrue(check_password('novasenha', self.paciente.senha))
+
+    def helper_create_clinic_and_doctor(self):
+        clinica = Clinica.objects.create(nome="Clinica Y", cnpj="11111111", endereco="Rua Y")
+        medico = Medico.objects.create(
+            nome="Dr. Agendar",
+            email="dia@example.com",
+            senha=make_password("pwd"),
+            telefone="000",
+            crm_cro="999",
+            clinica=clinica
+        )
+        return clinica, medico
+
+    def test_agendar_consulta_assigns_patient_and_keeps_session(self):
+        # prepare clinic and doctor
+        clinica, medico = self.helper_create_clinic_and_doctor()
+        # login
+        self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
+        key_before = self.client.session.session_key
+        # schedule appointment via POST
+        resp = self.client.post(reverse('agendar_consulta'), {
+            'clinica_id': clinica.id,
+            'medico_id': medico.id,
+            'especialidade': '',
+            'data_hora': '2025-01-01T10:00:00',
+            'nome': 'Usuário Teste',
+            'email': 'user@example.com',
+            'telefone': '123456789',
+            'uid': signing.dumps(self.paciente.id),
+        })
+        self.assertEqual(resp.status_code, 200)
+        self.assertJSONEqual(resp.content, {'success': True})
+        # appointment should exist with paciente foreign key set
+        cons = Consulta.objects.get(clinica=clinica, medico=medico)
+        self.assertEqual(cons.paciente, self.paciente)
+        # session key remains unchanged
+        self.assertEqual(self.client.session.session_key, key_before)
+
+    def test_agendar_consulta_with_lost_session_and_signed_uid(self):
+        clinica, medico = self.helper_create_clinic_and_doctor()
+        # login normally
+        self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
+        # fetch dashboard and get signed uid hidden value
+        resp_page = self.client.get(reverse('dashboard_paciente'))
+        import re
+        m = re.search(r'value="([^"]+)".*signedUidForAgendar', resp_page.content.decode())
+        self.assertIsNotNone(m)
+        uid_from_page = m.group(1)
+        # simulate session expiration
+        self.client.session.flush()
+        # send schedule with uid
+        resp = self.client.post(reverse('agendar_consulta'), {
+            'clinica_id': clinica.id,
+            'medico_id': medico.id,
+            'especialidade': '',
+            'data_hora': '2025-01-02T11:00:00',
+            'nome': 'Outro Nome',
+            'email': 'user@example.com',
+            'telefone': '123456789',
+            'uid': uid_from_page,
+        })
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['success'])
+        cons = Consulta.objects.filter(clinica=clinica, medico=medico, nome='Outro Nome').first()
+        self.assertIsNotNone(cons)
+        self.assertEqual(cons.paciente, self.paciente)
 

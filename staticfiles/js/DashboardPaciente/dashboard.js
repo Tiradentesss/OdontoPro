@@ -1010,9 +1010,13 @@ function confirmarAgendamento() {
     formData.append('email', email);
     formData.append('telefone', telefone);
     
+    // include signed uid in case session cookie gets lost
+    formData.append('uid', signedUid || document.getElementById('signedUidForAgendar')?.value || '');
+
     // Enviar para servidor
     fetch('/consulta/agendar/', {
         method: 'POST',
+        credentials: 'same-origin',
         body: formData,
         headers: {
             'X-CSRFToken': getCookie('csrftoken')

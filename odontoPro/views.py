@@ -312,6 +312,29 @@ def clinica_detalhes(request, clinica_id):
 
 
 def agendar_consulta(request):
+    # --- diagnóstico e restauração de sessão semelhante ao que fazemos em configuracoes_conta ---
+    logger.info("[AGENDAR] método=%s cookies=%s POST-keys=%s",
+                request.method,
+                request.META.get('HTTP_COOKIE'),
+                list(request.POST.keys()))
+
+    paciente_id = request.session.get('paciente_id')
+    if request.method == 'POST' and not paciente_id:
+        signed = request.POST.get('uid')
+        logger.debug("[AGENDAR] signed uid from POST: %r", signed)
+        if signed:
+            try:
+                restored = signing.loads(signed)
+                paciente_id = restored
+                request.session['paciente_id'] = paciente_id
+                try:
+                    request.session.save()
+                except Exception as ex:
+                    logger.error("[AGENDAR] erro salvando sessão restaurada: %s", ex, exc_info=True)
+                logger.warning("[AGENDAR] sessão perdida, restaurada via uid assinada: %s", paciente_id)
+            except signing.BadSignature:
+                logger.warning("[AGENDAR] uid inválido fornecido: %r", signed)
+
     if request.method != "POST":
         return JsonResponse({"success": False, "error": "Método inválido"})
 
@@ -342,7 +365,6 @@ def agendar_consulta(request):
     nome = email = telefone = ""
 
     # ✅ PACIENTE LOGADO (via sessão)
-    paciente_id = request.session.get("paciente_id")
     if paciente_id:
         try:
             paciente = Paciente.objects.get(id=paciente_id)
