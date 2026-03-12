@@ -63,18 +63,26 @@ body {
     }
 
     .botao-sair {
-        position: fixed;
-        bottom: 10px;
-        right: 15px;
-        width: 50px;
-        height: 50px;
-        padding: 0;
-        border-radius: 50%;
-        background-color: #e74c3c;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
+        position: fixed !important;
+        bottom: 8px !important;
+        right: 75px !important; /* ao lado do ícone de ajustes, assumindo 3 itens */
+        width: 46px !important;
+        height: 46px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 50% !important;
+        background-color: #e74c3c !important;
+        color: #fff !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 18px !important;
+        border: none !important;
+        z-index: 1001 !important;
+    }
+
+    .botao-sair .legenda {
+        display: none !important;
     }
 
     .itens-navegacao {
