@@ -378,13 +378,14 @@ def configuracoes_conta(request):
     # carregamento inicial de sessão
     paciente_id = request.session.get('paciente_id')
     logger.info(f"[CONFIG] initial paciente_id: {paciente_id}, method: {request.method}")
-    # extras para investigação
-    logger.debug("[CONFIG] cookies=%s POST-keys=%s", request.META.get('HTTP_COOKIE'), list(request.POST.keys()))
+    # extras para investigação (mostradas em INFO para diagnóstico em produção)
+    logger.info("[CONFIG] cookies=%s POST-keys=%s", request.META.get('HTTP_COOKIE'), list(request.POST.keys()))
 
     # fallback: se a sessão tiver sido perdida (ex: logout acidental/cookie expirado),
     # tentamos restaurar a partir de um identificador assinado enviado pelo formulário.
     if request.method == 'POST' and not paciente_id:
         signed = request.POST.get('uid')
+        logger.debug("[CONFIG] signed uid from POST: %r", signed)
         if signed:
             try:
                 restored = signing.loads(signed)
@@ -396,7 +397,8 @@ def configuracoes_conta(request):
                     logger.error("[CONFIG] erro salvando sessão restaurada: %s", ex, exc_info=True)
                 logger.warning("[CONFIG] sessão perdida, restaurada via uid assinada: %s", paciente_id)
             except signing.BadSignature:
-                logger.warning("[CONFIG] uid inválido fornecido")
+                logger.warning("[CONFIG] uid inválido fornecido: %r", signed)
+                # we deliberately do not expose the raw signature to the response, only log it
 
     if not paciente_id:
         logger.error("[CONFIG] paciente_id ausente após tentativa de restauração")
@@ -500,6 +502,7 @@ def alterar_senha_paciente(request):
     # tentar recuperar sessão a partir de uid assinado se POST
     if request.method == 'POST' and not paciente_id:
         signed = request.POST.get('uid')
+        logger.debug("[SENHA] signed uid from POST: %r", signed)
         if signed:
             try:
                 restored = signing.loads(signed)
@@ -507,7 +510,7 @@ def alterar_senha_paciente(request):
                 request.session['paciente_id'] = paciente_id
                 logger.warning("[SENHA] sessão perdida, restaurada via uid: %s", paciente_id)
             except signing.BadSignature:
-                logger.warning("[SENHA] uid inválido")
+                logger.warning("[SENHA] uid inválido fornecido: %r", signed)
 
     if not paciente_id:
         return redirect('login_paciente')

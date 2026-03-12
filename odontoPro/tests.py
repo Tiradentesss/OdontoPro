@@ -120,6 +120,25 @@ class LoginViewTests(TestCase):
         self.paciente.refresh_from_db()
         self.assertEqual(self.paciente.nome, 'Outra Coisa')
 
+    def test_config_invalid_uid_redirects_and_logs(self):
+        # login and then clear session to simulate expiration
+        self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
+        self.client.session.flush()
+        # post with a deliberately bad signature
+        with self.assertLogs('odontoPro.views', level='WARNING') as cm:
+            resp = self.client.post(reverse('configuracoes_conta'), {
+                'nome': 'X',
+                'email': 'user@example.com',
+                'uid': 'not-a-valid-signature',
+            }, follow=True)
+        # should be sent back to login because we could not restore session
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'LoginCadastro/login.html')
+        self.assertContains(resp, 'Sua sessão expirou')
+        # logger should contain our warning about invalid uid
+        self.assertTrue(any('uid inválido' in msg for msg in cm.output),
+                        f"Expected invalid uid warning in logs but got {cm.output}")
+
     def test_change_password_with_fallback(self):
         # login and flush session to simulate expiration
         self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
