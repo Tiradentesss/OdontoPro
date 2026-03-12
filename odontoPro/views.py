@@ -136,7 +136,14 @@ def login_paciente(request):
 
             # successful paciente login
             request.session["paciente_id"] = paciente.id
-            logger.info("login success paciente %s", email)
+            # explicitly save session before redirect and debug
+            try:
+                request.session.save()
+            except Exception as e:
+                logger.error("error saving session: %s", e, exc_info=True)
+            logger.info("login success paciente %s session_key=%s cookies=%s", email,
+                        request.session.session_key,
+                        request.META.get('HTTP_COOKIE'))
             return redirect("dashboard_paciente")
 
         # if no paciente found, attempt to authenticate a medico
@@ -149,7 +156,13 @@ def login_paciente(request):
 
             request.session["medico_id"] = medico.id
             request.session["clinica_id"] = medico.clinica.id
-            logger.info("login success medico %s", email)
+            try:
+                request.session.save()
+            except Exception as e:
+                logger.error("error saving session: %s", e, exc_info=True)
+            logger.info("login success medico %s session_key=%s cookies=%s", email,
+                        request.session.session_key,
+                        request.META.get('HTTP_COOKIE'))
             return redirect("painel_profissional")
 
         # no account found at all
@@ -164,6 +177,9 @@ def login_paciente(request):
 # ---------- DASHBOARD PACIENTE ----------
 def dashboard_paciente(request):
     paciente_id = request.session.get("paciente_id")
+    logger.debug("dashboard access session_key=%s paciente_id=%s cookies=%s",
+                 request.session.session_key, paciente_id,
+                 request.META.get('HTTP_COOKIE'))
     if not paciente_id:
         return redirect("login_paciente")
 

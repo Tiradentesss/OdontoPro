@@ -29,6 +29,13 @@ class LoginViewTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         self.assertRedirects(resp, reverse('dashboard_paciente'))
         self.assertEqual(self.client.session.get('paciente_id'), self.paciente.id)
+        # session key should exist and persist across follow-up GET
+        key = self.client.session.session_key
+        self.assertIsNotNone(key)
+        # follow redirect to dashboard
+        resp2 = self.client.get(reverse('dashboard_paciente'))
+        self.assertEqual(resp2.status_code, 200)
+        self.assertEqual(self.client.session.session_key, key)
 
     def test_login_patient_normalization(self):
         # uppercase and surrounding spaces
