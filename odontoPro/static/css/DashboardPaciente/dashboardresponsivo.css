@@ -1,3 +1,16 @@
+/* ajustes globais para todos os dispositivos */
+
+/* torna imagens e vídeos fluidos */
+img, video, iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+/* evita problemas de 100vh em navegadores móveis que escondem a barra de endereço */
+body {
+    min-height: 100vh;
+}
+
 /* --- AJUSTES PARA TELAS MÉDIAS (TABLETS) --- */
 @media (max-width: 992px) {
     .header-clinicas {
@@ -45,8 +58,23 @@
         background: white;
     }
 
-    .seccao-logo, .botao-seta, .email-usuario, .botao-sair, .info-usuario {
+    .seccao-logo, .botao-seta, .email-usuario, .info-usuario {
         display: none;
+    }
+
+    .botao-sair {
+        position: fixed;
+        bottom: 10px;
+        right: 15px;
+        width: 50px;
+        height: 50px;
+        padding: 0;
+        border-radius: 50%;
+        background-color: #e74c3c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
     }
 
     .itens-navegacao {
@@ -156,6 +184,9 @@
         width: calc(100vw - 30px) !important;
         max-width: 100%;
     }
+
+    /* garante que grids internos, quando usados, se ajustem corretamente */
+    .dropdown-filtro .grid, .dropdown-filtro .row {
         grid-template-columns: 1fr;
     }
 
@@ -167,5 +198,31 @@
         gap: 10px;
         justify-content: flex-start;
         -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* --- AJUSTES PARA CELULARES PEQUENOS (576px e abaixo) --- */
+@media (max-width: 576px) {
+    .barra-topo {
+        padding: 0 10px;
+        height: 55px;
+    }
+
+    .titulo-pagina {
+        font-size: 18px;
+    }
+
+    .item-menu {
+        font-size: 18px;
+        padding: 8px;
+    }
+
+    .btn-agendar-green {
+        max-width: 100% !important;
+    }
+
+    .area-conteudo {
+        padding: 10px;
+        padding-bottom: 90px; /* espaço para o menu inferior */
     }
 }
