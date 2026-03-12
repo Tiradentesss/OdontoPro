@@ -114,23 +114,48 @@ def perfil_clinica(request, clinica_id):
 
 # ---------- LOGIN PACIENTE ----------
 def login_paciente(request):
+    # unified login endpoint for pacientes and profissionais
     if request.method == "POST":
-        email = request.POST.get("email")
-        senha = request.POST.get("senha")
+        raw_email = request.POST.get("email", "") or ""
+        senha = request.POST.get("senha", "") or ""
 
-        try:
-            paciente = Paciente.objects.get(email=email)
-        except Paciente.DoesNotExist:
-            messages.error(request, "Conta não encontrada. Cadastre-se primeiro.")
-            return render(request, "LoginCadastro/login.html")
+        # normalize input to avoid accidental spaces/case issues
+        email = raw_email.strip().lower()
 
-        if not check_password(senha, paciente.senha):
-            messages.error(request, "Senha incorreta.")
-            return render(request, "LoginCadastro/login.html")
+        logger.info(f"login attempt email={email} from {request.META.get('REMOTE_ADDR')}")
 
-        request.session["paciente_id"] = paciente.id
-        return redirect("dashboard_paciente")
+        # first try paciente
+        paciente = Paciente.objects.filter(email__iexact=email).first()
+        if paciente:
+            if not check_password(senha, paciente.senha):
+                messages.error(request, "Senha incorreta.")
+                logger.info("login failed - wrong password for paciente %s", email)
+                return render(request, "LoginCadastro/login.html", {"email": raw_email})
 
+            # successful paciente login
+            request.session["paciente_id"] = paciente.id
+            logger.info("login success paciente %s", email)
+            return redirect("dashboard_paciente")
+
+        # if no paciente found, attempt to authenticate a medico
+        medico = Medico.objects.filter(email__iexact=email).first()
+        if medico:
+            if not check_password(senha, medico.senha):
+                messages.error(request, "Senha incorreta.")
+                logger.info("login failed - wrong password for medico %s", email)
+                return render(request, "LoginCadastro/login.html", {"email": raw_email})
+
+            request.session["medico_id"] = medico.id
+            request.session["clinica_id"] = medico.clinica.id
+            logger.info("login success medico %s", email)
+            return redirect("painel_profissional")
+
+        # no account found at all
+        messages.error(request, "Conta não encontrada. Cadastre-se primeiro.")
+        logger.info("login failed - account not found %s", email)
+        return render(request, "LoginCadastro/login.html", {"email": raw_email})
+
+    # GET
     return render(request, "LoginCadastro/login.html")
 
 
@@ -179,27 +204,11 @@ def logout_view(request):
     return redirect("login_paciente")
 
 
+# kept for backwards compatibility, but the main login logic is now in login_paciente
+# which handles both patients and professionals.
 def login_clinica(request):
-    """Login para clínicas/profissionais"""
-    if request.method == "POST":
-        email = request.POST.get("email")
-        senha = request.POST.get("senha")
-
-        try:
-            medico = Medico.objects.get(email=email)
-        except Medico.DoesNotExist:
-            messages.error(request, "Conta não encontrada.")
-            return render(request, "LoginCadastro/login.html")
-
-        if not check_password(senha, medico.senha):
-            messages.error(request, "Senha incorreta.")
-            return render(request, "LoginCadastro/login.html")
-
-        request.session["medico_id"] = medico.id
-        request.session["clinica_id"] = medico.clinica.id
-        return redirect("painel_profissional")
-
-    return render(request, "LoginCadastro/login.html")
+    # redirect all requests to the unified view
+    return login_paciente(request)
 
 
 # 🔹 NOVO — RETORNA APENAS A LISTA FILTRADA (SEM RELOAD)
