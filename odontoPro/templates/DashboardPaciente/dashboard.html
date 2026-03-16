@@ -513,8 +513,7 @@
         <!-- FOTO -->
             <form id="formConfiguracao" method="POST"
                 action="{% url 'configuracoes_conta' %}"
-                enctype="multipart/form-data"
-                novalidate>
+                enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="uid" value="{{ uid_signed }}">
                 <div class="foto-wrapper">
@@ -539,23 +538,23 @@
 
                 <!-- RESTO DO FORM -->
                 <div class="input-grupo">
-                    <label>Nome *</label>
-                    <input type="text" name="nome" value="{{ paciente.nome }}" required>
+                    <label for="nomePaciente">Nome *</label>
+                    <input type="text" id="nomePaciente" name="nome" value="{{ paciente.nome }}" required>
                 </div>
 
                 <div class="input-grupo">
-                    <label>Email *</label>
-                    <input type="email" name="email" value="{{ paciente.email }}" required>
+                    <label for="emailPaciente">Email *</label>
+                    <input type="email" id="emailPaciente" name="email" value="{{ paciente.email }}" required>
                 </div>
 
                 <div class="input-grupo">
-                    <label>CPF</label>
-                    <input type="text" name="cpf" value="{{ paciente.cpf|default:'' }}">
+                    <label for="cpfPaciente">CPF</label>
+                    <input type="text" id="cpfPaciente" name="cpf" value="{{ paciente.cpf|default:'' }}">
                 </div>
 
                 <div class="input-grupo">
-                    <label>Telefone</label>
-                    <input type="tel" name="telefone" value="{{ paciente.telefone|default:'' }}">
+                    <label for="telefonePaciente">Telefone</label>
+                    <input type="text" id="telefonePaciente" name="telefone" value="{{ paciente.telefone|default:'' }}">
                 </div>
 
                 <button type="submit" class="btn-salvar" id="btnSalvarConfig">
@@ -648,29 +647,12 @@
 </div>
 
 <script>
-// Validação e submissão dos formulários de configuração
 document.addEventListener("DOMContentLoaded", function() {
     // ===== FORMULÁRIO DE CONFIGURAÇÕES =====
     const formConfiguracao = document.getElementById("formConfiguracao");
     
     if (formConfiguracao) {
         formConfiguracao.addEventListener("submit", function(e) {
-            const nome = document.querySelector('input[name="nome"]').value.trim();
-            const email = document.querySelector('input[name="email"]').value.trim();
-            
-            if (!nome) {
-                e.preventDefault();
-                alert("Por favor, preencha o nome!");
-                return false;
-            }
-            
-            if (!email) {
-                e.preventDefault();
-                alert("Por favor, preencha o email!");
-                return false;
-            }
-            
-            // Desativar botão para evitar múltiplos envios
             const btnSalvar = document.getElementById("btnSalvarConfig");
             btnSalvar.disabled = true;
             btnSalvar.textContent = "Salvando...";
@@ -685,15 +667,9 @@ document.addEventListener("DOMContentLoaded", function() {
             const novaSenha = document.getElementById("novaSenha").value.trim();
             const confirmarSenha = document.getElementById("confirmarSenha").value.trim();
             
-            if (!senhaAtual) {
+            if (!senhaAtual || !novaSenha || !confirmarSenha) {
                 e.preventDefault();
-                alert("Por favor, informe sua senha atual!");
-                return false;
-            }
-            
-            if (!novaSenha) {
-                e.preventDefault();
-                alert("Por favor, preencha a nova senha!");
+                alert("Todos os campos de senha são obrigatórios!");
                 return false;
             }
             
@@ -709,7 +685,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 return false;
             }
             
-            // Desativar botão para evitar múltiplos envios
             const btnAlter = document.getElementById("btnAlterarSenha");
             btnAlter.disabled = true;
             btnAlter.textContent = "Atualizando...";
@@ -719,26 +694,23 @@ document.addEventListener("DOMContentLoaded", function() {
     // ===== ATIVAR ABA ESPECÍFICA POR URL =====
     const params = new URLSearchParams(window.location.search);
 
-    // Só executa se existir o parâmetro "open"
     if (params.has("open")) {
         const tela = params.get("open");
         const tab = params.get("tab");
 
-        // Ativa tela principal
         const btnMenu = document.querySelector(`.item-menu[onclick*="${tela}"]`);
         if (btnMenu) {
             mostrarTela(tela, btnMenu);
         }
 
-        // Ativa aba interna
         if (tab) {
-            trocarAba(null, tab);
-
             const btnAba = document.querySelector(`.aba-item[onclick*="${tab}"]`);
-            if (btnAba) btnAba.classList.add("ativa");
+            if (btnAba) {
+                trocarAba(null, tab);
+                btnAba.classList.add("ativa");
+            }
         }
 
-        // Remove os parâmetros da URL depois de usar
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 });

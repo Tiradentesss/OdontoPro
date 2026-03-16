@@ -398,140 +398,143 @@ def agendar_consulta(request):
     return JsonResponse({"success": True})
 
 def configuracoes_conta(request):
-    # carregamento inicial de sessão
+    """View para gerenciar as configurações da conta do paciente"""
+    
+    # ===== VERIFICAR AUTENTICAÇÃO =====
     paciente_id = request.session.get('paciente_id')
-    logger.info(f"[CONFIG] initial paciente_id: {paciente_id}, method: {request.method}")
-    # extras para investigação (mostradas em INFO para diagnóstico em produção)
-    logger.info("[CONFIG] cookies=%s POST-keys=%s", request.META.get('HTTP_COOKIE'), list(request.POST.keys()))
-
-    # fallback: se a sessão tiver sido perdida (ex: logout acidental/cookie expirado),
-    # tentamos restaurar a partir de um identificador assinado enviado pelo formulário.
+    
+    # Se sessão perdida, tentar recuperar via UID assinado
     if request.method == 'POST' and not paciente_id:
         signed = request.POST.get('uid')
-        logger.debug("[CONFIG] signed uid from POST: %r", signed)
         if signed:
             try:
-                restored = signing.loads(signed)
-                paciente_id = restored
+                paciente_id = signing.loads(signed)
                 if Paciente.objects.filter(id=paciente_id).exists():
                     request.session['paciente_id'] = paciente_id
-                    try:
-                        request.session.save()
-                    except Exception as ex:
-                        logger.error("[CONFIG] erro salvando sessão restaurada: %s", ex, exc_info=True)
-                    logger.warning("[CONFIG] sessão perdida, restaurada via uid assinada: %s", paciente_id)
+                    request.session.save()
                 else:
-                    logger.warning("[CONFIG] uid válido mas paciente não existe: %s", paciente_id)
                     paciente_id = None
             except signing.BadSignature:
-                logger.warning("[CONFIG] uid inválido fornecido: %r", signed)
-                # we deliberately do not expose the raw signature to the response, only log it
+                paciente_id = None
 
     if not paciente_id:
-        logger.error("[CONFIG] paciente_id ausente após tentativa de restauração")
-        # redirecionar para login explicando sessão expirada
-        messages.error(request, "Sua sessão expirou. Faça login novamente para alterar suas configurações.")
+        messages.error(request, "Sua sessão expirou. Faça login novamente.")
         return redirect('login_paciente')
 
     try:
         paciente = Paciente.objects.get(id=paciente_id)
     except Paciente.DoesNotExist:
-        logger.error(f"[CONFIG] Paciente {paciente_id} não existe")
+        messages.error(request, "Paciente não encontrado.")
         request.session.flush()
         return redirect('login_paciente')
 
+    # ===== PROCESSAR POST =====
     if request.method == 'POST':
-        try:
-            print("[CONFIG-PRINT] Entrou POST")
-            logger.info("[CONFIG] Processando POST")
-            
-            # Obter valores do formulário
-            novo_nome = request.POST.get('nome', '').strip()
-            novo_email = request.POST.get('email', '').strip().lower()
-            novo_cpf = request.POST.get('cpf', '').strip()
-            novo_telefone = request.POST.get('telefone', '').strip()
-            
-            # Validações básicas
-            if not novo_nome:
-                messages.error(request, 'Nome é obrigatório.')
-                raise ValueError("Nome vazio")
-            
-            if not novo_email:
-                messages.error(request, 'Email é obrigatório.')
-                raise ValueError("Email vazio")
-            
-            # Validar email - verificar se foi mudado e se novo email já existe
-            if novo_email != paciente.email.lower():
-                if Paciente.objects.filter(email__iexact=novo_email).exclude(id=paciente.id).exists():
-                    messages.error(request, 'Este email já está sendo usado por outra conta.')
-                    logger.warning(f"[CONFIG] Email já existe: {novo_email}")
-                    raise ValueError("Email duplicado")
-                else:
-                    paciente.email = novo_email
-            else:
-                paciente.email = novo_email
-            
-            # Atualizar nome (sempre)
-            paciente.nome = novo_nome
-            
-            # Atualizar CPF e Telefone apenas se preenchidos
-            if novo_cpf:
-                paciente.cpf = novo_cpf
-            if novo_telefone:
-                paciente.telefone = novo_telefone
-
-            # Processar foto se fornecida
-            if 'foto' in request.FILES:
-                arquivo = request.FILES['foto']
-                print(f"[CONFIG-PRINT] got arquivo type: {type(arquivo)} name: {arquivo.name} size: {arquivo.size}")
-                logger.info(f"[CONFIG] Arquivo: {arquivo.name}, tamanho: {arquivo.size}")
-                
-                # Validar tamanho (máx 5MB)
-                if arquivo.size > 5 * 1024 * 1024:
-                    messages.error(request, 'Arquivo muito grande (máximo 5MB).')
-                    logger.error("[CONFIG] Arquivo > 5MB")
-                    raise ValueError("Arquivo muito grande")
-                
-                # Validar tipo de arquivo
-                try:
-                    img = Image.open(arquivo)
-                    img.verify()
-                    arquivo.seek(0)
-                    paciente.foto = arquivo
-                    print("[CONFIG-PRINT] foto atribuída com sucesso")
-                    logger.info("[CONFIG] Foto validada e atribuída")
-                except Exception as ve:
-                    print(f"[CONFIG-PRINT] validação de imagem falhou: {ve}")
-                    messages.error(request, f'Imagem inválida ou corrompida.')
-                    logger.error(f"[CONFIG] Erro na validação de imagem: {str(ve)}")
-                    raise ValueError(f"Imagem inválida: {str(ve)}")
-
-            # Salvar paciente no banco
-            paciente.full_clean()  # Validar modelo antes de salvar
-            paciente.save()
-            
-            # Manter sessão viva
+        # Pegar todos os valores do formulário
+        nome = request.POST.get('nome', '').strip()
+        email = request.POST.get('email', '').strip()
+        cpf = request.POST.get('cpf', '').strip()
+        telefone = request.POST.get('telefone', '').strip()
+        
+        # Validar campos obrigatórios
+        if not nome:
+            messages.error(request, 'Nome é obrigatório.')
+        elif not email:
+            messages.error(request, 'Email é obrigatório.')
+        else:
+            # Email válido e preenchido
             try:
-                request.session.save()
-            except Exception as ex:
-                logger.error("[CONFIG] erro salvando sessão após update: %s", ex, exc_info=True)
-            
-            messages.success(request, 'Dados atualizados com sucesso!')
-            logger.info(f"[CONFIG] Paciente {paciente_id} atualizado com sucesso")
-            
-        except ValueError as ve:
-            logger.warning(f"[CONFIG] Erro de validação: {str(ve)}")
-            # Mensagem já foi adicionada acima
-        except ValidationError as ve:
-            print(f"[CONFIG-PRINT] erro de validação Django: {ve}")
-            logger.error(f"[CONFIG] Erro de validação Django: {str(ve)}", exc_info=True)
-            for field, errors in ve.error_dict.items():
-                for error in errors:
-                    messages.error(request, f'{field}: {error.message}')
-        except Exception as e:
-            print(f"[CONFIG-PRINT] exceção inesperada: {e}")
-            logger.error(f"[CONFIG] Erro inesperado: {str(e)}", exc_info=True)
-            messages.error(request, f'Erro ao salvar dados: {str(e)}')
+                # Verificar se email já existe (excluindo o próprio paciente)
+                if email.lower() != paciente.email.lower():
+                    if Paciente.objects.filter(email__iexact=email).exclude(id=paciente.id).exists():
+                        messages.error(request, 'Este email já está registrado por outra conta.')
+                    else:
+                        # Email ok, atualizar dados
+                        paciente.nome = nome
+                        paciente.email = email.lower()
+                        if cpf:
+                            paciente.cpf = cpf
+                        if telefone:
+                            paciente.telefone = telefone
+                        
+                        # Processar foto
+                        if 'foto' in request.FILES and request.FILES['foto'].size > 0:
+                            arquivo = request.FILES['foto']
+                            if arquivo.size > 5 * 1024 * 1024:
+                                messages.error(request, 'Foto muito grande (máximo 5MB).')
+                            else:
+                                try:
+                                    img = Image.open(arquivo)
+                                    img.verify()
+                                    arquivo.seek(0)
+                                    paciente.foto = arquivo
+                                    paciente.save()
+                                    request.session.save()
+                                    messages.success(request, 'Dados atualizados com sucesso (com foto)!')
+                                except Exception:
+                                    messages.error(request, 'Imagem inválida. Tente outra.')
+                        else:
+                            # Salvar sem foto
+                            paciente.save()
+                            request.session.save()
+                            messages.success(request, 'Dados atualizados com sucesso!')
+                else:
+                    # Email não mudou, apenas atualizar outros dados
+                    paciente.nome = nome
+                    paciente.email = email.lower()
+                    if cpf:
+                        paciente.cpf = cpf
+                    if telefone:
+                        paciente.telefone = telefone
+                    
+                    # Processar foto
+                    if 'foto' in request.FILES and request.FILES['foto'].size > 0:
+                        arquivo = request.FILES['foto']
+                        if arquivo.size > 5 * 1024 * 1024:
+                            messages.error(request, 'Foto muito grande (máximo 5MB).')
+                        else:
+                            try:
+                                img = Image.open(arquivo)
+                                img.verify()
+                                arquivo.seek(0)
+                                paciente.foto = arquivo
+                                paciente.save()
+                                request.session.save()
+                                messages.success(request, 'Dados atualizados com sucesso (com foto)!')
+                            except Exception:
+                                messages.error(request, 'Imagem inválida. Tente outra.')
+                    else:
+                        # Salvar sem foto
+                        paciente.save()
+                        request.session.save()
+                        messages.success(request, 'Dados atualizados com sucesso!')
+            except Exception as e:
+                logger.error(f"Erro ao atualizar paciente {paciente_id}: {str(e)}", exc_info=True)
+                messages.error(request, 'Erro ao salvar alterações. Tente novamente.')
+
+    # ===== PREPARAR CONTEXTO =====
+    clinicas = Clinica.objects.all().order_by("nome")
+    consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
+    agora = timezone.now()
+    consultas_futuras = Consulta.objects.filter(
+        paciente=paciente,
+        data_hora__gte=agora,
+        status__in=["agendada", "confirmada"]
+    ).order_by("data_hora")
+    
+    tem_notificacao = consultas_futuras.exists()
+    uid_signed = signing.dumps(paciente.id)
+
+    context = {
+        "paciente": paciente,
+        "clinicas": clinicas,
+        "consultas": consultas,
+        "consultas_futuras": consultas_futuras,
+        "tem_notificacao": tem_notificacao,
+        "uid_signed": uid_signed,
+    }
+    
+    return render(request, "DashboardPaciente/dashboard.html", context)
 
     # Preparar contexto para renderizar a página de configurações
     clinicas = Clinica.objects.all().order_by("nome")
