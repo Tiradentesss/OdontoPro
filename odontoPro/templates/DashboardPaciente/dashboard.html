@@ -108,6 +108,16 @@
           </div>
         {% endif %}
 
+        {% if debug_mode %}
+          <div class="debug-info" style="font-size:12px; padding:10px; border:1px solid #ddd; margin:10px 0; background:#f8f8f8;">
+            <strong>DEBUG:</strong><br>
+            session_key = {{ debug_session_key|default:"(none)" }}<br>
+            cookie session = {{ debug_cookie_session|default:"(none)" }}<br>
+            cookie uid_signed = {{ debug_cookie_uid_signed|default:"(none)" }}<br>
+            hidden uid_signed = {{ uid_signed|default:"(none)" }}
+          </div>
+        {% endif %}
+
 <!-- ================= INÍCIO ================= -->
 <section id="inicio" class="tela ativa">
 

@@ -232,6 +232,10 @@ def dashboard_paciente(request):
         "tem_notificacao": tem_notificacao,
         "aba_ativa": aba_ativa,
         "uid_signed": uid_signed,
+        "debug_mode": settings.DEBUG,
+        "debug_session_key": request.session.session_key,
+        "debug_cookie_session": request.COOKIES.get(settings.SESSION_COOKIE_NAME),
+        "debug_cookie_uid_signed": request.COOKIES.get("uid_signed"),
     }
 
     return render(request, "DashboardPaciente/dashboard.html", context)
@@ -559,6 +563,10 @@ def configuracoes_conta(request):
         "consultas_futuras": consultas_futuras,
         "tem_notificacao": tem_notificacao,
         "uid_signed": uid_signed,
+        "debug_mode": settings.DEBUG,
+        "debug_session_key": request.session.session_key,
+        "debug_cookie_session": request.COOKIES.get(settings.SESSION_COOKIE_NAME),
+        "debug_cookie_uid_signed": request.COOKIES.get("uid_signed"),
     }
 
     return render(request, "DashboardPaciente/dashboard.html", context)
@@ -649,6 +657,10 @@ def alterar_senha_paciente(request):
         "consultas_futuras": consultas_futuras,
         "tem_notificacao": tem_notificacao,
         "uid_signed": uid_signed,
+        "debug_mode": settings.DEBUG,
+        "debug_session_key": request.session.session_key,
+        "debug_cookie_session": request.COOKIES.get(settings.SESSION_COOKIE_NAME),
+        "debug_cookie_uid_signed": request.COOKIES.get("uid_signed"),
     }
     return render(request, "DashboardPaciente/dashboard.html", context)
 
