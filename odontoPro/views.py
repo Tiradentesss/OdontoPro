@@ -195,9 +195,23 @@ def login_paciente(request):
 # ---------- DASHBOARD PACIENTE ----------
 def dashboard_paciente(request):
     paciente_id = request.session.get("paciente_id")
+
+    # Tentar restaurar sessão a partir de UID assinado caso o cookie de sessão tenha sido perdido.
+    if not paciente_id:
+        signed = request.COOKIES.get("uid_signed")
+        if signed:
+            try:
+                paciente_id = signing.loads(signed)
+                if Paciente.objects.filter(id=paciente_id).exists():
+                    request.session["paciente_id"] = paciente_id
+                    request.session.save()
+            except signing.BadSignature:
+                paciente_id = None
+
     logger.debug("dashboard access session_key=%s paciente_id=%s cookies=%s",
                  request.session.session_key, paciente_id,
                  request.META.get('HTTP_COOKIE'))
+
     if not paciente_id:
         return redirect("login_paciente")
 
@@ -539,9 +553,19 @@ def configuracoes_conta(request):
                 logger.error(f"Erro ao atualizar paciente {paciente_id}: {str(e)}", exc_info=True)
                 messages.error(request, 'Erro ao salvar alterações. Tente novamente.')
 
-        # Se salvou com sucesso, redireciona para dashboard
+        # Se salvou com sucesso, reemite o cookie de recuperação e redireciona para dashboard
         if saved:
-            return redirect('dashboard_paciente')
+            uid_signed = signing.dumps(paciente.id)
+            response = redirect('dashboard_paciente')
+            response.set_cookie(
+                "uid_signed",
+                uid_signed,
+                max_age=getattr(settings, "SESSION_COOKIE_AGE", 1209600),
+                httponly=True,
+                samesite=getattr(settings, "SESSION_COOKIE_SAMESITE", "Lax"),
+                secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
+            )
+            return response
 
     # ===== PREPARAR CONTEXTO =====
     clinicas = Clinica.objects.all().order_by("nome")
