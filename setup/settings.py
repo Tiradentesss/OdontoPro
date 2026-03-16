@@ -16,25 +16,36 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# Permissões de cookie de sessão/coleta de CSRF
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 14 dias
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # =========================
 # SEGURANÇA
 # =========================
 
 from django.core.management.utils import get_random_secret_key
+from django.core.exceptions import ImproperlyConfigured
 
-SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
+raw_secret_key = os.getenv("SECRET_KEY")
+if raw_secret_key:
+    SECRET_KEY = raw_secret_key
+elif DEBUG:
+    SECRET_KEY = get_random_secret_key()
+    print("[WARN] SECRET_KEY ausente; gerando chave temporária em DEBUG")
+else:
+    raise ImproperlyConfigured("SECRET_KEY must be set in the environment in non-DEBUG mode")
 
 
 IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
-
-
-DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # Adicione isso (para Railway domains)
 ALLOWED_HOSTS = ['.railway.app', '.up.railway.app', 'localhost', '127.0.0.1']
@@ -188,6 +199,9 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Garantir pasta de upload existe (geralmente apenas local; em container pode ser volume
+# persistente ou storage remoto, não recomendado em disco efêmero de produção).
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 
 # =========================
 # DEFAULT ID
