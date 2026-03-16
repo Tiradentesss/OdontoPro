@@ -445,55 +445,93 @@ def configuracoes_conta(request):
             print("[CONFIG-PRINT] Entrou POST")
             logger.info("[CONFIG] Processando POST")
             
-            # Atualizar dados básicos
-            paciente.nome = request.POST.get('nome', paciente.nome)
-            paciente.email = request.POST.get('email', paciente.email)
-            paciente.cpf = request.POST.get('cpf', paciente.cpf)
-            paciente.telefone = request.POST.get('telefone', paciente.telefone)
+            # Obter valores do formulário
+            novo_nome = request.POST.get('nome', '').strip()
+            novo_email = request.POST.get('email', '').strip().lower()
+            novo_cpf = request.POST.get('cpf', '').strip()
+            novo_telefone = request.POST.get('telefone', '').strip()
+            
+            # Validações básicas
+            if not novo_nome:
+                messages.error(request, 'Nome é obrigatório.')
+                raise ValueError("Nome vazio")
+            
+            if not novo_email:
+                messages.error(request, 'Email é obrigatório.')
+                raise ValueError("Email vazio")
+            
+            # Validar email - verificar se foi mudado e se novo email já existe
+            if novo_email != paciente.email.lower():
+                if Paciente.objects.filter(email__iexact=novo_email).exclude(id=paciente.id).exists():
+                    messages.error(request, 'Este email já está sendo usado por outra conta.')
+                    logger.warning(f"[CONFIG] Email já existe: {novo_email}")
+                    raise ValueError("Email duplicado")
+                else:
+                    paciente.email = novo_email
+            else:
+                paciente.email = novo_email
+            
+            # Atualizar nome (sempre)
+            paciente.nome = novo_nome
+            
+            # Atualizar CPF e Telefone apenas se preenchidos
+            if novo_cpf:
+                paciente.cpf = novo_cpf
+            if novo_telefone:
+                paciente.telefone = novo_telefone
 
-            # Dump FIELDS
-            print(f"[CONFIG-PRINT] request.FILES keys: {list(request.FILES.keys())}")
-
-            # Processar foto
+            # Processar foto se fornecida
             if 'foto' in request.FILES:
                 arquivo = request.FILES['foto']
                 print(f"[CONFIG-PRINT] got arquivo type: {type(arquivo)} name: {arquivo.name} size: {arquivo.size}")
                 logger.info(f"[CONFIG] Arquivo: {arquivo.name}, tamanho: {arquivo.size}")
                 
-                # Validar tamanho
+                # Validar tamanho (máx 5MB)
                 if arquivo.size > 5 * 1024 * 1024:
-                    messages.error(request, 'Arquivo muito grande (máx 5MB).')
+                    messages.error(request, 'Arquivo muito grande (máximo 5MB).')
                     logger.error("[CONFIG] Arquivo > 5MB")
-                else:
-                    # Validar tipo
-                    try:
-                        img = Image.open(arquivo)
-                        img.verify()
-                        arquivo.seek(0)
-                        paciente.foto = arquivo
-                        print("[CONFIG-PRINT] foto atribuida")
-                        logger.info("[CONFIG] Foto validada e atribuída")
-                    except Exception as ve:
-                        print(f"[CONFIG-PRINT] validação falhou {ve}")
-                        messages.error(request, f'Imagem inválida: {str(ve)}')
-                        logger.error(f"[CONFIG] Erro na validação: {str(ve)}")
-            else:
-                print("[CONFIG-PRINT] não havia chave foto em request.FILES")
+                    raise ValueError("Arquivo muito grande")
+                
+                # Validar tipo de arquivo
+                try:
+                    img = Image.open(arquivo)
+                    img.verify()
+                    arquivo.seek(0)
+                    paciente.foto = arquivo
+                    print("[CONFIG-PRINT] foto atribuída com sucesso")
+                    logger.info("[CONFIG] Foto validada e atribuída")
+                except Exception as ve:
+                    print(f"[CONFIG-PRINT] validação de imagem falhou: {ve}")
+                    messages.error(request, f'Imagem inválida ou corrompida.')
+                    logger.error(f"[CONFIG] Erro na validação de imagem: {str(ve)}")
+                    raise ValueError(f"Imagem inválida: {str(ve)}")
 
-            # Salvar
+            # Salvar paciente no banco
+            paciente.full_clean()  # Validar modelo antes de salvar
             paciente.save()
-            # manter sessão viva explicita
+            
+            # Manter sessão viva
             try:
                 request.session.save()
             except Exception as ex:
                 logger.error("[CONFIG] erro salvando sessão após update: %s", ex, exc_info=True)
-            messages.success(request, 'Dados atualizados com sucesso!')
-            logger.info(f"[CONFIG] Paciente {paciente_id} salvo")
             
+            messages.success(request, 'Dados atualizados com sucesso!')
+            logger.info(f"[CONFIG] Paciente {paciente_id} atualizado com sucesso")
+            
+        except ValueError as ve:
+            logger.warning(f"[CONFIG] Erro de validação: {str(ve)}")
+            # Mensagem já foi adicionada acima
+        except ValidationError as ve:
+            print(f"[CONFIG-PRINT] erro de validação Django: {ve}")
+            logger.error(f"[CONFIG] Erro de validação Django: {str(ve)}", exc_info=True)
+            for field, errors in ve.error_dict.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error.message}')
         except Exception as e:
-            print(f"[CONFIG-PRINT] exceção salva: {e}")
-            logger.error(f"[CONFIG] Erro: {str(e)}", exc_info=True)
-            messages.error(request, f'Erro ao salvar: {str(e)}')
+            print(f"[CONFIG-PRINT] exceção inesperada: {e}")
+            logger.error(f"[CONFIG] Erro inesperado: {str(e)}", exc_info=True)
+            messages.error(request, f'Erro ao salvar dados: {str(e)}')
 
     # Preparar contexto para renderizar a página de configurações
     clinicas = Clinica.objects.all().order_by("nome")
@@ -535,33 +573,55 @@ def alterar_senha_paciente(request):
                 restored = signing.loads(signed)
                 paciente_id = restored
                 request.session['paciente_id'] = paciente_id
+                try:
+                    request.session.save()
+                except Exception as ex:
+                    logger.error("[SENHA] erro salvando sessão restaurada: %s", ex, exc_info=True)
                 logger.warning("[SENHA] sessão perdida, restaurada via uid: %s", paciente_id)
             except signing.BadSignature:
                 logger.warning("[SENHA] uid inválido fornecido: %r", signed)
 
     if not paciente_id:
+        messages.error(request, "Sua sessão expirou. Faça login novamente.")
         return redirect('login_paciente')
 
-    paciente = Paciente.objects.get(id=paciente_id)
+    try:
+        paciente = Paciente.objects.get(id=paciente_id)
+    except Paciente.DoesNotExist:
+        messages.error(request, "Paciente não encontrado.")
+        return redirect('login_paciente')
 
     if request.method == 'POST':
-        senha_atual = request.POST.get('senha_atual')
-        nova_senha = request.POST.get('nova_senha')
-        confirmar_senha = request.POST.get('confirmar_senha')
+        senha_atual = request.POST.get('senha_atual', '').strip()
+        nova_senha = request.POST.get('nova_senha', '').strip()
+        confirmar_senha = request.POST.get('confirmar_senha', '').strip()
 
-        if not check_password(senha_atual, paciente.senha):
-            messages.error(request, 'Senha atual incorreta.')
-        elif nova_senha != confirmar_senha:
-            messages.error(request, 'As senhas não coincidem.')
-        else:
-            paciente.senha = make_password(nova_senha)
-            paciente.save()
-            # manter sessão viva explicita
-            try:
-                request.session.save()
-            except Exception as ex:
-                logger.error("[SENHA] erro salvando sessão após update: %s", ex, exc_info=True)
-            messages.success(request, 'Senha alterada com sucesso!')
+        # Validações
+        try:
+            if not senha_atual:
+                messages.error(request, 'Informe sua senha atual.')
+            elif not check_password(senha_atual, paciente.senha):
+                messages.error(request, 'Senha atual incorreta.')
+            elif not nova_senha:
+                messages.error(request, 'Informe a nova senha.')
+            elif nova_senha != confirmar_senha:
+                messages.error(request, 'As senhas não coincidem.')
+            elif len(nova_senha) < 6:
+                messages.error(request, 'A senha deve ter no mínimo 6 caracteres.')
+            else:
+                # Tudo validado, salvar nova senha
+                paciente.senha = make_password(nova_senha)
+                paciente.save()
+                # manter sessão viva explicita
+                try:
+                    request.session.save()
+                except Exception as ex:
+                    logger.error("[SENHA] erro salvando sessão após update: %s", ex, exc_info=True)
+                messages.success(request, 'Senha alterada com sucesso!')
+                logger.info(f"[SENHA] Senha do paciente {paciente_id} alterada")
+        except Exception as e:
+            logger.error(f"[SENHA] Erro: {str(e)}", exc_info=True)
+            messages.error(request, f'Erro ao alterar senha: {str(e)}')
 
     # Preparar contexto para renderizar a página de configurações
     clinicas = Clinica.objects.all().order_by("nome")

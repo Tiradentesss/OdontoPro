@@ -513,45 +513,49 @@
         <!-- FOTO -->
             <form id="formConfiguracao" method="POST"
                 action="{% url 'configuracoes_conta' %}"
-                enctype="multipart/form-data">
+                enctype="multipart/form-data"
+                novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="uid" value="{{ uid_signed }}">
                 <div class="foto-wrapper">
                     <label for="fileInput" class="upload-foto-container">
                         <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-                        <img id="previewFoto" class="preview-foto" alt="Preview">
+                        {% if paciente.foto %}
+                            <img id="previewFoto" class="preview-foto" src="{{ paciente.foto.url }}" alt="Preview">
+                        {% else %}
+                            <img id="previewFoto" class="preview-foto" alt="Preview" style="display:none;">
+                        {% endif %}
                         <span class="upload-text">Upload da foto</span>
                     </label>
 
-                    <!-- 🔥 AGORA DENTRO DO FORM -->
                     <input
                         type="file"
                         id="fileInput"
                         name="foto"
                         accept="image/*"
-                        style="display:none;"  <!-- usa CSS em vez de atributo hidden -->
+                        style="display:none;"
                     >
                 </div>
 
                 <!-- RESTO DO FORM -->
                 <div class="input-grupo">
-                    <label>Nome</label>
+                    <label>Nome *</label>
                     <input type="text" name="nome" value="{{ paciente.nome }}" required>
                 </div>
 
                 <div class="input-grupo">
-                    <label>Email</label>
+                    <label>Email *</label>
                     <input type="email" name="email" value="{{ paciente.email }}" required>
                 </div>
 
                 <div class="input-grupo">
                     <label>CPF</label>
-                    <input type="text" name="cpf" value="{{ paciente.cpf }}">
+                    <input type="text" name="cpf" value="{{ paciente.cpf|default:'' }}">
                 </div>
 
                 <div class="input-grupo">
                     <label>Telefone</label>
-                    <input type="text" name="telefone" value="{{ paciente.telefone }}">
+                    <input type="tel" name="telefone" value="{{ paciente.telefone|default:'' }}">
                 </div>
 
                 <button type="submit" class="btn-salvar" id="btnSalvarConfig">
@@ -646,10 +650,26 @@
 <script>
 // Validação e submissão dos formulários de configuração
 document.addEventListener("DOMContentLoaded", function() {
+    // ===== FORMULÁRIO DE CONFIGURAÇÕES =====
     const formConfiguracao = document.getElementById("formConfiguracao");
     
     if (formConfiguracao) {
         formConfiguracao.addEventListener("submit", function(e) {
+            const nome = document.querySelector('input[name="nome"]').value.trim();
+            const email = document.querySelector('input[name="email"]').value.trim();
+            
+            if (!nome) {
+                e.preventDefault();
+                alert("Por favor, preencha o nome!");
+                return false;
+            }
+            
+            if (!email) {
+                e.preventDefault();
+                alert("Por favor, preencha o email!");
+                return false;
+            }
+            
             // Desativar botão para evitar múltiplos envios
             const btnSalvar = document.getElementById("btnSalvarConfig");
             btnSalvar.disabled = true;
@@ -657,21 +677,35 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    // ===== FORMULÁRIO DE ALTERAR SENHA =====
     const formSenha = document.getElementById("formAlterarSenha");
     if (formSenha) {
         formSenha.addEventListener("submit", function(e) {
-            const novaSenha = document.getElementById("novaSenha").value;
-            const confirmarSenha = document.getElementById("confirmarSenha").value;
+            const senhaAtual = document.getElementById("senhaAtual").value.trim();
+            const novaSenha = document.getElementById("novaSenha").value.trim();
+            const confirmarSenha = document.getElementById("confirmarSenha").value.trim();
             
-            if (novaSenha !== confirmarSenha) {
+            if (!senhaAtual) {
                 e.preventDefault();
-                alert("As senhas não coincidem!");
+                alert("Por favor, informe sua senha atual!");
+                return false;
+            }
+            
+            if (!novaSenha) {
+                e.preventDefault();
+                alert("Por favor, preencha a nova senha!");
                 return false;
             }
             
             if (novaSenha.length < 6) {
                 e.preventDefault();
-                alert("A nova senha deve ter pelo menos 6 caracteres!");
+                alert("A nova senha deve ter no mínimo 6 caracteres!");
+                return false;
+            }
+            
+            if (novaSenha !== confirmarSenha) {
+                e.preventDefault();
+                alert("As senhas não coincidem!");
                 return false;
             }
             
@@ -681,34 +715,32 @@ document.addEventListener("DOMContentLoaded", function() {
             btnAlter.textContent = "Atualizando...";
         });
     }
-});
 
-// Script para URL parameters e abas
-document.addEventListener("DOMContentLoaded", function() {
+    // ===== ATIVAR ABA ESPECÍFICA POR URL =====
     const params = new URLSearchParams(window.location.search);
 
-    // 🔥 só executa se existir o parâmetro "open"
-    if (!params.has("open")) return;
+    // Só executa se existir o parâmetro "open"
+    if (params.has("open")) {
+        const tela = params.get("open");
+        const tab = params.get("tab");
 
-    const tela = params.get("open");
-    const tab = params.get("tab");
+        // Ativa tela principal
+        const btnMenu = document.querySelector(`.item-menu[onclick*="${tela}"]`);
+        if (btnMenu) {
+            mostrarTela(tela, btnMenu);
+        }
 
-    // ativa tela principal
-    const btnMenu = document.querySelector(`.item-menu[onclick*="${tela}"]`);
-    if (btnMenu) {
-        mostrarTela(tela, btnMenu);
+        // Ativa aba interna
+        if (tab) {
+            trocarAba(null, tab);
+
+            const btnAba = document.querySelector(`.aba-item[onclick*="${tab}"]`);
+            if (btnAba) btnAba.classList.add("ativa");
+        }
+
+        // Remove os parâmetros da URL depois de usar
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
-
-    // ativa aba interna
-    if (tab) {
-        trocarAba(null, tab);
-
-        const btnAba = document.querySelector(`.aba-item[onclick*="${tab}"]`);
-        if (btnAba) btnAba.classList.add("ativa");
-    }
-
-    // 🔥 remove os parâmetros da URL depois de usar
-    window.history.replaceState({}, document.title, window.location.pathname);
 });
 </script>
 
