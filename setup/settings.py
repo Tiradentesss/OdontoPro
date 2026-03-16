@@ -20,18 +20,18 @@ SESSION_COOKIE_AGE = 1209600  # 2 weeks
 SESSION_SAVE_EVERY_REQUEST = False
 
 # Configurar cookies de sessão e CSRF dependendo do ambiente
-# Em desenvolvimento local (não em Railway), permitir cookies não seguros para HTTP
-if os.environ.get("RAILWAY_ENVIRONMENT"):
-    # Produção (Railway)
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-else:
+if os.environ.get("DEBUG", "False") == "True":
     # Desenvolvimento local
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
-
-SESSION_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Lax"
+else:
+    # Produção (Railway)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Lax"
 
 # =========================
 # SEGURANÇA
