@@ -7,13 +7,15 @@ def autenticar_usuario(email, senha):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
+    senha_hash = hashlib.sha256(senha.encode()).hexdigest()
+
     # ================= CLÍNICA =================
     cursor.execute("""
         SELECT id, nome
-        FROM odontopro_clinica
+        FROM odontoPro_clinica
         WHERE email = %s
-          AND senha = %s
-    """, (email, senha))
+          AND (senha = %s OR senha = %s)
+    """, (email, senha, senha_hash))
 
     clinica = cursor.fetchone()
 
@@ -27,12 +29,12 @@ def autenticar_usuario(email, senha):
 
     # ================= GERENCIAMENTO =================
     cursor.execute("""
-        SELECT id, nome
-        FROM odontopro_gerenciamento
+        SELECT id, nome, clinica_id
+        FROM odontoPro_gerenciamento
         WHERE email = %s
-          AND senha = %s
+          AND (senha = %s OR senha = %s)
           AND ativo = 1
-    """, (email, senha))
+    """, (email, senha, senha_hash))
 
     gerenciamento = cursor.fetchone()
 

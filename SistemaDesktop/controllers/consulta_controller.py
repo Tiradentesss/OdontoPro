@@ -20,9 +20,9 @@ class ConsultaController:
                 p.foto,
                 c.observacoes,
                 m.nome as medico_nome
-            FROM odontopro_consulta c
-            LEFT JOIN odontopro_paciente p ON c.paciente_id = p.id
-            LEFT JOIN odontopro_medico m ON c.medico_id = m.id
+            FROM odontoPro_consulta c
+            LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
+            LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
             WHERE c.clinica_id = %s
             ORDER BY c.data_hora DESC
         """, (clinica_id,))
@@ -50,9 +50,9 @@ class ConsultaController:
                 p.foto,
                 c.observacoes,
                 m.nome
-            FROM odontopro_consulta c
-            LEFT JOIN odontopro_paciente p ON c.paciente_id = p.id
-            LEFT JOIN odontopro_medico m ON c.medico_id = m.id
+            FROM odontoPro_consulta c
+            LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
+            LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
             WHERE c.id = %s
         """, (consulta_id,))
 

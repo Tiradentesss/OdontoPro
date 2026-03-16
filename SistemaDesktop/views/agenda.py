@@ -237,9 +237,13 @@ class Agenda(BaseScreen):
                 medico_nome
             ) = item
 
+            nome = (nome or "Não informado").strip()
+            if not nome:
+                nome = "Não informado"
+
             medico_nome = medico_nome or "Não informado"
-            
-            status = status.lower() # Normaliza para buscar na paleta pastel
+
+            status = (status or "").lower() # Normaliza para buscar na paleta pastel
             data = data_hora.strftime("%d/%m/%Y")
             hora = data_hora.strftime("%H:%M")
             is_selected = self.paciente_selecionado == consulta_id
@@ -307,8 +311,10 @@ class Agenda(BaseScreen):
                     pass
 
             else:
+                # nome já está garantido não None/''
                 av_color = self.colors["avatar_colors"][hash(nome) % len(self.colors["avatar_colors"])]
-                av_img = self.create_letter_avatar(nome[0].upper(), av_color, 32)
+                avatar_letter = nome[0].upper() if nome else "?"
+                av_img = self.create_letter_avatar(avatar_letter, av_color, 32)
                 img_ctk = ctk.CTkImage(light_image=av_img, size=(32, 32))
                 avatar_label.configure(image=img_ctk)
                 avatar_label.image = img_ctk
