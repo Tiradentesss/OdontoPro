@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # -------------------------
 # ENDERECO
@@ -281,7 +282,6 @@ class Consulta(models.Model):
     # -------------------------
 # AVALIAÇÃO
 # -------------------------
-from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Avaliacao(models.Model):

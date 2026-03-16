@@ -538,19 +538,6 @@ def configuracoes_conta(request):
 
     return render(request, "DashboardPaciente/dashboard.html", context)
 
-    # Aplicar filtro de status se recebido
-    tem_notificacao = consultas_futuras.exists()
-
-    context = {
-        "paciente": paciente,
-        "clinicas": clinicas,
-        "consultas": consultas,
-        "consultas_futuras": consultas_futuras,
-        "tem_notificacao": tem_notificacao,
-        "uid_signed": uid_signed,
-    }
-    return render(request, "DashboardPaciente/dashboard.html", context)
-
 
 
 def alterar_senha_paciente(request):
