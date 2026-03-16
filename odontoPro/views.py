@@ -495,10 +495,7 @@ def configuracoes_conta(request):
             logger.error(f"[CONFIG] Erro: {str(e)}", exc_info=True)
             messages.error(request, f'Erro ao salvar: {str(e)}')
 
-        # Reexibir página de configurações (mantendo aba aberta)
-        return redirect(f"{reverse('dashboard_paciente')}?open=ajustes")
-
-    # Para GET, renderizar o dashboard com a aba de ajustes aberta
+    # Preparar contexto para renderizar a página de configurações
     clinicas = Clinica.objects.all().order_by("nome")
     consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
     agora = timezone.now()
@@ -511,12 +508,15 @@ def configuracoes_conta(request):
     # gerar UID assinado para possibilitar restauração de sessão caso ela se perca
     uid_signed = signing.dumps(paciente.id)
 
+    # Aplicar filtro de status se recebido
+    tem_notificacao = consultas_futuras.exists()
+
     context = {
         "paciente": paciente,
         "clinicas": clinicas,
         "consultas": consultas,
         "consultas_futuras": consultas_futuras,
-        "aba_ativa": "ajustes",
+        "tem_notificacao": tem_notificacao,
         "uid_signed": uid_signed,
     }
     return render(request, "DashboardPaciente/dashboard.html", context)
@@ -551,19 +551,42 @@ def alterar_senha_paciente(request):
 
         if not check_password(senha_atual, paciente.senha):
             messages.error(request, 'Senha atual incorreta.')
-            return redirect('configuracoes_conta')
-
-        if nova_senha != confirmar_senha:
+        elif nova_senha != confirmar_senha:
             messages.error(request, 'As senhas não coincidem.')
-            return redirect('configuracoes_conta')
+        else:
+            paciente.senha = make_password(nova_senha)
+            paciente.save()
+            # manter sessão viva explicita
+            try:
+                request.session.save()
+            except Exception as ex:
+                logger.error("[SENHA] erro salvando sessão após update: %s", ex, exc_info=True)
+            messages.success(request, 'Senha alterada com sucesso!')
 
-        paciente.senha = make_password(nova_senha)
-        paciente.save()
+    # Preparar contexto para renderizar a página de configurações
+    clinicas = Clinica.objects.all().order_by("nome")
+    consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
+    agora = timezone.now()
+    consultas_futuras = Consulta.objects.filter(
+        paciente=paciente,
+        data_hora__gte=agora,
+        status__in=["agendada", "confirmada"]
+    ).order_by("data_hora")
 
-        messages.success(request, 'Senha alterada com sucesso!')
-        return redirect('configuracoes_conta')
+    # gerar UID assinado para possibilitar restauração de sessão caso ela se perca
+    uid_signed = signing.dumps(paciente.id)
 
-    return redirect('configuracoes_conta')
+    tem_notificacao = consultas_futuras.exists()
+
+    context = {
+        "paciente": paciente,
+        "clinicas": clinicas,
+        "consultas": consultas,
+        "consultas_futuras": consultas_futuras,
+        "tem_notificacao": tem_notificacao,
+        "uid_signed": uid_signed,
+    }
+    return render(request, "DashboardPaciente/dashboard.html", context)
 
 def cadastrar_paciente(request):
     if request.method != "POST":

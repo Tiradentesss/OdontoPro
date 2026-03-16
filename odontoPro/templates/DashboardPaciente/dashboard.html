@@ -511,7 +511,7 @@
         <div id="aba-perfil" class="conteudo-aba ativa">
 
         <!-- FOTO -->
-            <form method="POST"
+            <form id="formConfiguracao" method="POST"
                 action="{% url 'configuracoes_conta' %}"
                 enctype="multipart/form-data">
                 {% csrf_token %}
@@ -554,7 +554,7 @@
                     <input type="text" name="telefone" value="{{ paciente.telefone }}">
                 </div>
 
-                <button type="submit" class="btn-salvar">
+                <button type="submit" class="btn-salvar" id="btnSalvarConfig">
                     Salvar alterações
                 </button>
             </form>
@@ -563,7 +563,7 @@
 
     <div id="aba-seguranca" class="conteudo-aba">
 
-        <form method="POST" action="{% url 'alterar_senha_paciente' %}">
+        <form id="formAlterarSenha" method="POST" action="{% url 'alterar_senha_paciente' %}">
             {% csrf_token %}
             <input type="hidden" name="uid" value="{{ uid_signed }}">
 
@@ -577,6 +577,7 @@
                         placeholder="Digite sua senha"
                         required
                         autocomplete="current-password"
+                        id="senhaAtual"
                     >
                 </div>
 
@@ -588,6 +589,7 @@
                         placeholder="Digite a nova senha"
                         required
                         autocomplete="new-password"
+                        id="novaSenha"
                     >
                 </div>
 
@@ -599,12 +601,13 @@
                         placeholder="Confirme a nova senha"
                         required
                         autocomplete="new-password"
+                        id="confirmarSenha"
                     >
                 </div>
 
             </div>
 
-            <button type="submit" class="btn-salvar">
+            <button type="submit" class="btn-salvar" id="btnAlterarSenha">
                 Atualizar Senha
             </button>
         </form>
@@ -641,6 +644,46 @@
 </div>
 
 <script>
+// Validação e submissão dos formulários de configuração
+document.addEventListener("DOMContentLoaded", function() {
+    const formConfiguracao = document.getElementById("formConfiguracao");
+    
+    if (formConfiguracao) {
+        formConfiguracao.addEventListener("submit", function(e) {
+            // Desativar botão para evitar múltiplos envios
+            const btnSalvar = document.getElementById("btnSalvarConfig");
+            btnSalvar.disabled = true;
+            btnSalvar.textContent = "Salvando...";
+        });
+    }
+
+    const formSenha = document.getElementById("formAlterarSenha");
+    if (formSenha) {
+        formSenha.addEventListener("submit", function(e) {
+            const novaSenha = document.getElementById("novaSenha").value;
+            const confirmarSenha = document.getElementById("confirmarSenha").value;
+            
+            if (novaSenha !== confirmarSenha) {
+                e.preventDefault();
+                alert("As senhas não coincidem!");
+                return false;
+            }
+            
+            if (novaSenha.length < 6) {
+                e.preventDefault();
+                alert("A nova senha deve ter pelo menos 6 caracteres!");
+                return false;
+            }
+            
+            // Desativar botão para evitar múltiplos envios
+            const btnAlter = document.getElementById("btnAlterarSenha");
+            btnAlter.disabled = true;
+            btnAlter.textContent = "Atualizando...";
+        });
+    }
+});
+
+// Script para URL parameters e abas
 document.addEventListener("DOMContentLoaded", function() {
     const params = new URLSearchParams(window.location.search);
 
