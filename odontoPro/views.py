@@ -482,6 +482,8 @@ def configuracoes_conta(request):
 
             # Salvar
             paciente.save()
+            if paciente.foto:
+                logger.info("[CONFIG] Paciente foto salva em %s", paciente.foto.path)
             # manter sessão viva explicita
             try:
                 request.session.save()
