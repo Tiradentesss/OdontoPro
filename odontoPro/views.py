@@ -9,6 +9,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 from django.core import signing
+from django.conf import settings
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
 from datetime import datetime, timedelta
@@ -142,11 +143,26 @@ def login_paciente(request):
                 logger.info("session saved successfully for paciente %s", email)
             except Exception as e:
                 logger.error("error saving session: %s", e, exc_info=True)
-            logger.info("login success paciente %s session_key=%s cookies=%s", email,
-                        request.session.session_key,
-                        request.META.get('HTTP_COOKIE'))
+
+            uid_signed = signing.dumps(paciente.id)
+            response = redirect("dashboard_paciente")
+            response.set_cookie(
+                "uid_signed",
+                uid_signed,
+                max_age=getattr(settings, "SESSION_COOKIE_AGE", 1209600),
+                httponly=True,
+                samesite=getattr(settings, "SESSION_COOKIE_SAMESITE", "Lax"),
+                secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
+            )
+
+            logger.info(
+                "login success paciente %s session_key=%s cookies=%s",
+                email,
+                request.session.session_key,
+                request.META.get('HTTP_COOKIE')
+            )
             messages.success(request, f"Bem-vindo, {paciente.nome}!")
-            return redirect("dashboard_paciente")
+            return response
 
         # if no paciente found, attempt to authenticate a medico
         medico = Medico.objects.filter(email__iexact=email).first()
@@ -405,9 +421,9 @@ def configuracoes_conta(request):
     # ===== VERIFICAR AUTENTICAÇÃO =====
     paciente_id = request.session.get('paciente_id')
 
-    # Se sessão perdida, tentar recuperar via UID assinado
+    # Se sessão perdida, tentar recuperar via UID assinado (POST ou cookie)
     if request.method == 'POST' and not paciente_id:
-        signed = request.POST.get('uid')
+        signed = request.POST.get('uid') or request.COOKIES.get('uid_signed')
         if signed:
             try:
                 paciente_id = signing.loads(signed)
@@ -431,6 +447,7 @@ def configuracoes_conta(request):
         return redirect('login_paciente')
 
     # ===== PROCESSAR POST =====
+    saved = False
     if request.method == 'POST':
         # Pegar todos os valores do formulário
         nome = request.POST.get('nome', '').strip()
@@ -472,6 +489,7 @@ def configuracoes_conta(request):
                                     paciente.foto = arquivo
                                     paciente.save()
                                     request.session.save()
+                                    saved = True
                                     messages.success(request, 'Dados atualizados com sucesso (com foto)!')
                                 except Exception:
                                     messages.error(request, 'Imagem inválida. Tente outra.')
@@ -479,6 +497,7 @@ def configuracoes_conta(request):
                             # Salvar sem foto
                             paciente.save()
                             request.session.save()
+                            saved = True
                             messages.success(request, 'Dados atualizados com sucesso!')
                 else:
                     # Email não mudou, apenas atualizar outros dados
@@ -502,6 +521,7 @@ def configuracoes_conta(request):
                                 paciente.foto = arquivo
                                 paciente.save()
                                 request.session.save()
+                                saved = True
                                 messages.success(request, 'Dados atualizados com sucesso (com foto)!')
                             except Exception:
                                 messages.error(request, 'Imagem inválida. Tente outra.')
@@ -509,10 +529,15 @@ def configuracoes_conta(request):
                         # Salvar sem foto
                         paciente.save()
                         request.session.save()
+                        saved = True
                         messages.success(request, 'Dados atualizados com sucesso!')
             except Exception as e:
                 logger.error(f"Erro ao atualizar paciente {paciente_id}: {str(e)}", exc_info=True)
                 messages.error(request, 'Erro ao salvar alterações. Tente novamente.')
+
+        # Se salvou com sucesso, redireciona para dashboard
+        if saved:
+            return redirect('dashboard_paciente')
 
     # ===== PREPARAR CONTEXTO =====
     clinicas = Clinica.objects.all().order_by("nome")

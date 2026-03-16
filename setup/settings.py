@@ -19,19 +19,18 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 SESSION_SAVE_EVERY_REQUEST = False
 
-# Configurar cookies de sessão e CSRF dependendo do ambiente
-if os.environ.get("DEBUG", "False") == "True":
-    # Desenvolvimento local
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-    SESSION_COOKIE_SAMESITE = "Lax"
-    CSRF_COOKIE_SAMESITE = "Lax"
-else:
-    # Produção (Railway)
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_SAMESITE = "Lax"
-    CSRF_COOKIE_SAMESITE = "Lax"
+# DEBUG - default True so local development works without needing env vars
+DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+# Configurar cookies de sessão e CSRF
+# Por padrão não usar 'Secure' para facilitar desenvolvimento local (HTTP).
+# Em produção, defina FORCE_SECURE_COOKIES=True para forçar Secure.
+FORCE_SECURE_COOKIES = os.environ.get("FORCE_SECURE_COOKIES", "False") == "True"
+
+SESSION_COOKIE_SECURE = FORCE_SECURE_COOKIES
+CSRF_COOKIE_SECURE = FORCE_SECURE_COOKIES
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 
 # =========================
 # SEGURANÇA
@@ -43,9 +42,6 @@ SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
 
 
 IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
-
-
-DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # Adicione isso (para Railway domains)
 ALLOWED_HOSTS = ['.railway.app', '.up.railway.app', 'localhost', '127.0.0.1']
