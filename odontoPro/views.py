@@ -1,23 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse
-from django.contrib.auth import logout
+from django.contrib import auth
 from django.contrib.auth.hashers import check_password, make_password
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET, require_POST
-from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 from django.core import signing
+from django.conf import settings
 
-from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
+from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, DiaSemanaDisponivel, HorarioAberto
 from datetime import datetime, timedelta
-from django.utils.timezone import make_aware
-from .models import DiaSemanaDisponivel, HorarioAberto
+from django.utils.timezone import make_aware, timezone
 from PIL import Image
-from django.core.exceptions import ValidationError
-from django.utils import timezone
-from datetime import timedelta
+
+import logging
+logger = logging.getLogger(__name__)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -142,11 +141,24 @@ def login_paciente(request):
                 logger.info("session saved successfully for paciente %s", email)
             except Exception as e:
                 logger.error("error saving session: %s", e, exc_info=True)
+
+            uid_signed = signing.dumps(paciente.id)
+            response = redirect("dashboard_paciente")
+            # store signed token as cookie to recover session if it is lost
+            response.set_cookie(
+                "uid_signed",
+                uid_signed,
+                max_age=getattr(settings, 'SESSION_COOKIE_AGE', 1209600),
+                httponly=True,
+                samesite=getattr(settings, 'SESSION_COOKIE_SAMESITE', 'Lax'),
+                secure=getattr(settings, 'SESSION_COOKIE_SECURE', False),
+            )
+
             logger.info("login success paciente %s session_key=%s cookies=%s", email,
                         request.session.session_key,
                         request.META.get('HTTP_COOKIE'))
             messages.success(request, f"Bem-vindo, {paciente.nome}!")
-            return redirect("dashboard_paciente")
+            return response
 
         # if no paciente found, attempt to authenticate a medico
         medico = Medico.objects.filter(email__iexact=email).first()
@@ -405,9 +417,12 @@ def configuracoes_conta(request):
     # ===== VERIFICAR AUTENTICAÇÃO =====
     paciente_id = request.session.get('paciente_id')
 
-    # Se sessão perdida, tentar recuperar via UID assinado
-    if request.method == 'POST' and not paciente_id:
-        signed = request.POST.get('uid')
+    # Se sessão perdida, tentar recuperar via UID assinado (POST ou cookie)
+    if not paciente_id:
+        signed = (
+            request.POST.get('uid')
+            or request.COOKIES.get('uid_signed')
+        )
         if signed:
             try:
                 paciente_id = signing.loads(signed)
@@ -662,23 +677,16 @@ def cadastrar_paciente(request):
 
 @require_POST
 def criar_avaliacao(request):
-    """
-    Cria ou atualiza a avaliação de uma consulta.
+    """Cria ou atualiza a avaliação de uma consulta.
+
     Espera: consulta_id, nota, comentario (opcional)
     """
 
-    import logging
-    from django.http import JsonResponse
-    from django.shortcuts import get_object_or_404
-    from .models import Avaliacao, Consulta
-
-    logger = logging.getLogger(__name__)
+    consulta_id = request.POST.get("consulta_id")
+    nota_str = request.POST.get("nota", "5")
+    comentario = request.POST.get("comentario", "").strip()
 
     try:
-        consulta_id = request.POST.get("consulta_id")
-        nota_str = request.POST.get("nota", "5")
-        comentario = request.POST.get("comentario", "").strip()
-
         logger.info(f"Tentativa de avaliação - consulta={consulta_id}, nota={nota_str}")
 
         # =============================
