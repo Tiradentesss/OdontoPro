@@ -2,7 +2,6 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
-from django.core.exceptions import ImproperlyConfigured
 load_dotenv()
 
 # =========================
@@ -23,26 +22,13 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
-# manter semestre/session ativa, e renovar sempre enquanto navegar
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 2 semanas
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
 # =========================
 # SEGURANÇA
 # =========================
 
 from django.core.management.utils import get_random_secret_key
 
-raw_secret_key = os.getenv("SECRET_KEY")
-if raw_secret_key:
-    SECRET_KEY = raw_secret_key
-else:
-    if os.environ.get("DEBUG", "False") == "True":
-        SECRET_KEY = get_random_secret_key()
-        print("[WARN] SECRET_KEY not defined; using ephemeral SECRET_KEY in DEBUG")
-    else:
-        raise ImproperlyConfigured("SECRET_KEY must be set in the environment in non-DEBUG mode")
+SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
 
 
 IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
