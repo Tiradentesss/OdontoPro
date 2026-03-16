@@ -413,12 +413,16 @@ def configuracoes_conta(request):
             try:
                 restored = signing.loads(signed)
                 paciente_id = restored
-                request.session['paciente_id'] = paciente_id
-                try:
-                    request.session.save()
-                except Exception as ex:
-                    logger.error("[CONFIG] erro salvando sessão restaurada: %s", ex, exc_info=True)
-                logger.warning("[CONFIG] sessão perdida, restaurada via uid assinada: %s", paciente_id)
+                if Paciente.objects.filter(id=paciente_id).exists():
+                    request.session['paciente_id'] = paciente_id
+                    try:
+                        request.session.save()
+                    except Exception as ex:
+                        logger.error("[CONFIG] erro salvando sessão restaurada: %s", ex, exc_info=True)
+                    logger.warning("[CONFIG] sessão perdida, restaurada via uid assinada: %s", paciente_id)
+                else:
+                    logger.warning("[CONFIG] uid válido mas paciente não existe: %s", paciente_id)
+                    paciente_id = None
             except signing.BadSignature:
                 logger.warning("[CONFIG] uid inválido fornecido: %r", signed)
                 # we deliberately do not expose the raw signature to the response, only log it
@@ -717,36 +721,42 @@ def cadastro_clinica(request):
 
         if senha != confirmar:
             messages.error(request, "As senhas não coincidem")
-            return redirect("cadastro_clinica")
+            return render(request, "CadastroWeb/cadastro.html", status=400)
 
         if Clinica.objects.filter(email=email).exists():
             messages.error(request, "Este email já está cadastrado")
-            return redirect("cadastro_clinica")
+            return render(request, "CadastroWeb/cadastro.html", status=400)
 
-        # criar endereço
-        endereco = Endereco.objects.create(
-            cep=cep,
-            numero=numero,
-            rua=rua,
-            bairro=bairro,
-            cidade=cidade,
-            estado=estado,
-            quadra=""
-        )
+        try:
+            # criar endereço
+            endereco = Endereco.objects.create(
+                cep=cep,
+                numero=numero,
+                rua=rua,
+                bairro=bairro,
+                cidade=cidade,
+                estado=estado,
+                quadra=""
+            )
 
-        # criar clínica
-        Clinica.objects.create(
-            nome=nome,
-            descricao=descricao,
-            telefone=telefone,
-            email=email,
-            senha=make_password(senha),
-            cnpj=cnpj,
-            endereco=endereco,
-            logo=logo,
-            imagem=imagem,
-            conta_bancaria_juridica=""
-        )
+            # criar clínica
+            Clinica.objects.create(
+                nome=nome,
+                descricao=descricao,
+                telefone=telefone,
+                email=email,
+                senha=make_password(senha),
+                cnpj=cnpj,
+                endereco=endereco,
+                logo=logo,
+                imagem=imagem,
+                conta_bancaria_juridica=""
+            )
+
+        except Exception as e:
+            logger.exception("Erro ao cadastrar clínica")
+            messages.error(request, f"Erro ao cadastrar clínica: {str(e)}")
+            return render(request, "CadastroWeb/cadastro.html", status=500)
 
         messages.success(request, "Clínica cadastrada com sucesso!")
         return redirect("login_clinica")
