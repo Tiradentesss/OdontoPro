@@ -298,6 +298,7 @@ def clinica_detalhes(request, clinica_id):
     "telefone": clinica.telefone,
     "descricao": clinica.descricao,
     "logo_url": clinica.logo.url if clinica.logo else None,
+    "imagem_url": clinica.imagem.url if clinica.imagem else None,
     "rua": clinica.endereco.rua,
     "numero": clinica.endereco.numero,
     "bairro": clinica.endereco.bairro,
@@ -712,6 +713,7 @@ def cadastro_clinica(request):
         numero = request.POST.get("numero")
 
         logo = request.FILES.get("logo")
+        imagem = request.FILES.get("imagem")  # suporte para imagem/banner além do logo
 
         if senha != confirmar:
             messages.error(request, "As senhas não coincidem")
@@ -742,6 +744,7 @@ def cadastro_clinica(request):
             cnpj=cnpj,
             endereco=endereco,
             logo=logo,
+            imagem=imagem,
             conta_bancaria_juridica=""
         )
 
