@@ -127,17 +127,27 @@ TEMPLATES = [
 # DATABASE (Aiven / Railway)
 # =========================
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL'),
-        conn_max_age=600,
-    )
-}
+if DEBUG:
+    # Desenvolvimento local - usar SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    # Produção - usar Aiven/Railway
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.getenv('DATABASE_URL'),
+            conn_max_age=600,
+        )
+    }
 
-DATABASES['default']['OPTIONS'] = {
-    'ssl': {},
-    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-}
+    DATABASES['default']['OPTIONS'] = {
+        'ssl': {},
+        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+    }
 
 import logging
 logger = logging.getLogger(__name__)

@@ -139,11 +139,13 @@ def login_paciente(request):
             # explicitly save session before redirect and debug
             try:
                 request.session.save()
+                logger.info("session saved successfully for paciente %s", email)
             except Exception as e:
                 logger.error("error saving session: %s", e, exc_info=True)
             logger.info("login success paciente %s session_key=%s cookies=%s", email,
                         request.session.session_key,
                         request.META.get('HTTP_COOKIE'))
+            messages.success(request, f"Bem-vindo, {paciente.nome}!")
             return redirect("dashboard_paciente")
 
         # if no paciente found, attempt to authenticate a medico
@@ -399,10 +401,10 @@ def agendar_consulta(request):
 
 def configuracoes_conta(request):
     """View para gerenciar as configurações da conta do paciente"""
-    
+
     # ===== VERIFICAR AUTENTICAÇÃO =====
     paciente_id = request.session.get('paciente_id')
-    
+
     # Se sessão perdida, tentar recuperar via UID assinado
     if request.method == 'POST' and not paciente_id:
         signed = request.POST.get('uid')
@@ -435,7 +437,7 @@ def configuracoes_conta(request):
         email = request.POST.get('email', '').strip()
         cpf = request.POST.get('cpf', '').strip()
         telefone = request.POST.get('telefone', '').strip()
-        
+
         # Validar campos obrigatórios
         if not nome:
             messages.error(request, 'Nome é obrigatório.')
@@ -456,7 +458,7 @@ def configuracoes_conta(request):
                             paciente.cpf = cpf
                         if telefone:
                             paciente.telefone = telefone
-                        
+
                         # Processar foto
                         if 'foto' in request.FILES and request.FILES['foto'].size > 0:
                             arquivo = request.FILES['foto']
@@ -486,7 +488,7 @@ def configuracoes_conta(request):
                         paciente.cpf = cpf
                     if telefone:
                         paciente.telefone = telefone
-                    
+
                     # Processar foto
                     if 'foto' in request.FILES and request.FILES['foto'].size > 0:
                         arquivo = request.FILES['foto']
@@ -521,7 +523,7 @@ def configuracoes_conta(request):
         data_hora__gte=agora,
         status__in=["agendada", "confirmada"]
     ).order_by("data_hora")
-    
+
     tem_notificacao = consultas_futuras.exists()
     uid_signed = signing.dumps(paciente.id)
 
@@ -533,21 +535,8 @@ def configuracoes_conta(request):
         "tem_notificacao": tem_notificacao,
         "uid_signed": uid_signed,
     }
-    
+
     return render(request, "DashboardPaciente/dashboard.html", context)
-
-    # Preparar contexto para renderizar a página de configurações
-    clinicas = Clinica.objects.all().order_by("nome")
-    consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
-    agora = timezone.now()
-    consultas_futuras = Consulta.objects.filter(
-        paciente=paciente,
-        data_hora__gte=agora,
-        status__in=["agendada", "confirmada"]
-    ).order_by("data_hora")
-
-    # gerar UID assinado para possibilitar restauração de sessão caso ela se perca
-    uid_signed = signing.dumps(paciente.id)
 
     # Aplicar filtro de status se recebido
     tem_notificacao = consultas_futuras.exists()
