@@ -1,23 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.urls import reverse
 from django.contrib.auth import logout
 from django.contrib.auth.hashers import check_password, make_password
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET, require_POST
-from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 from django.core import signing
 
-from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
+from .models import (
+    Paciente,
+    Clinica,
+    Consulta,
+    Medico,
+    Avaliacao,
+    Endereco,
+    DiaSemanaDisponivel,
+    HorarioAberto,
+)
+
 from datetime import datetime, timedelta
-from django.utils.timezone import make_aware
-from .models import DiaSemanaDisponivel, HorarioAberto
+from django.utils.timezone import make_aware, timezone
 from PIL import Image
-from django.core.exceptions import ValidationError
-from django.utils import timezone
-from datetime import timedelta
 
 import logging
 logger = logging.getLogger(__name__)
@@ -25,8 +29,8 @@ logger = logging.getLogger(__name__)
 @require_GET
 def horarios_clinica(request, clinica_id):
     data = request.GET.get("data")
-    
-      # yyyy-mm-dd
+
+    # yyyy-mm-dd
     if not data:
         return JsonResponse({"error": "Data não informada"}, status=400)
 
@@ -662,83 +666,82 @@ def cadastrar_paciente(request):
 
 @require_POST
 def criar_avaliacao(request):
-    """
-    Cria ou atualiza a avaliação de uma consulta.
+    """Cria ou atualiza a avaliação de uma consulta.
+
     Espera: consulta_id, nota, comentario (opcional)
     """
 
-    import logging
-    from django.http import JsonResponse
-    from django.shortcuts import get_object_or_404
-    from .models import Avaliacao, Consulta
+    consulta_id = request.POST.get("consulta_id")
+    nota_str = request.POST.get("nota", "5")
+    comentario = request.POST.get("comentario", "").strip()
 
-    logger = logging.getLogger(__name__)
+    logger.info(f"Tentativa de avaliação - consulta={consulta_id}, nota={nota_str}")
 
+    # =============================
+    # Validação de sessão
+    # =============================
+    paciente_id = request.session.get("paciente_id")
+    if not paciente_id:
+        return JsonResponse({
+            "success": False,
+            "message": "Você precisa estar logado."
+        }, status=401)
+
+    # =============================
+    # Validar nota
+    # =============================
     try:
-        consulta_id = request.POST.get("consulta_id")
-        nota_str = request.POST.get("nota", "5")
-        comentario = request.POST.get("comentario", "").strip()
+        nota = int(nota_str)
+    except (ValueError, TypeError):
+        return JsonResponse({
+            "success": False,
+            "message": "Nota inválida."
+        }, status=400)
 
-        logger.info(f"Tentativa de avaliação - consulta={consulta_id}, nota={nota_str}")
+    if nota < 1 or nota > 5:
+        return JsonResponse({
+            "success": False,
+            "message": "A nota deve ser entre 1 e 5."
+        }, status=400)
 
-        # =============================
-        # Validação de sessão
-        # =============================
-        paciente_id = request.session.get("paciente_id")
-        if not paciente_id:
-            return JsonResponse({
-                "success": False,
-                "message": "Você precisa estar logado."
-            }, status=401)
+    # =============================
+    # Buscar consulta
+    # =============================
+    try:
+        consulta = Consulta.objects.get(id=consulta_id)
+    except Consulta.DoesNotExist:
+        return JsonResponse({
+            "success": False,
+            "message": "Consulta não encontrada."
+        }, status=404)
 
-        # =============================
-        # Validar nota
-        # =============================
-        try:
-            nota = int(nota_str)
-        except ValueError:
-            return JsonResponse({
-                "success": False,
-                "message": "Nota inválida."
-            }, status=400)
+    # Segurança: garantir que a consulta pertence ao paciente logado
+    if not consulta.paciente or consulta.paciente.id != paciente_id:
+        return JsonResponse({
+            "success": False,
+            "message": "Você não pode avaliar essa consulta."
+        }, status=403)
 
-        if nota < 1 or nota > 5:
-            return JsonResponse({
-                "success": False,
-                "message": "A nota deve ser entre 1 e 5."
-            }, status=400)
+    # Segurança extra: só pode avaliar consulta realizada
+    if consulta.status != "realizada":
+        return JsonResponse({
+            "success": False,
+            "message": "Só é possível avaliar consultas realizadas."
+        }, status=400)
 
-        # =============================
-        # Buscar consulta
-        # =============================
-        consulta = get_object_or_404(Consulta, id=consulta_id)
-
-        # Segurança: garantir que a consulta pertence ao paciente logado
-        if consulta.paciente.id != paciente_id:
-            return JsonResponse({
-                "success": False,
-                "message": "Você não pode avaliar essa consulta."
-            }, status=403)
-
-        # Segurança extra: só pode avaliar consulta realizada
-        if consulta.status != "realizada":
-            return JsonResponse({
-                "success": False,
-                "message": "Só é possível avaliar consultas realizadas."
-            }, status=400)
-
-        # =============================
-        # Criar ou atualizar avaliação
-        # =============================
+    # =============================
+    # Criar ou atualizar avaliação
+    # =============================
+    try:
         avaliacao, created = Avaliacao.objects.update_or_create(
             consulta=consulta,
             defaults={
                 "paciente": consulta.paciente,
                 "clinica": consulta.clinica,
                 "medico": consulta.medico,
-                "nota": int(nota),
-                "comentario": comentario
-            }
+                "nota": nota,
+                "comentario": comentario,
+            },
         )
 
         logger.info(
@@ -749,11 +752,11 @@ def criar_avaliacao(request):
         return JsonResponse({
             "success": True,
             "message": "Avaliação salva com sucesso!",
-            "created": created
+            "created": created,
         })
 
-    except Exception as e:
-        logger.error("Erro ao criar avaliação", exc_info=True)
+    except Exception:
+        logger.exception("Erro ao criar avaliação")
         return JsonResponse({
             "success": False,
             "message": "Erro interno ao processar avaliação."
