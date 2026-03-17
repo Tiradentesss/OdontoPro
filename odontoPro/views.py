@@ -440,23 +440,6 @@ def configuracoes_conta(request):
     # ===== VERIFICAR AUTENTICAÇÃO =====
     paciente_id = request.session.get('paciente_id')
 
-    # Tentar restaurar a sessão caso o cookie ou o POST contenha UID assinado
-    if not paciente_id:
-        signed = request.POST.get('uid') or request.COOKIES.get('uid_signed')
-        if signed:
-            try:
-                paciente_id = signing.loads(signed)
-                if Paciente.objects.filter(id=paciente_id).exists():
-                    request.session['paciente_id'] = paciente_id
-                    try:
-                        request.session.save()
-                    except Exception:
-                        pass
-                else:
-                    paciente_id = None
-            except signing.BadSignature:
-                paciente_id = None
-
     if not paciente_id:
         messages.error(request, "Sua sessão expirou. Faça login novamente.")
         return redirect('login_paciente')
@@ -605,23 +588,6 @@ def configuracoes_conta(request):
 
 def alterar_senha_paciente(request):
     paciente_id = request.session.get('paciente_id')
-
-    # Tentar restaurar sessão a partir de uid assinado (POST ou cookie)
-    if not paciente_id:
-        signed = request.POST.get('uid') or request.COOKIES.get('uid_signed')
-        logger.debug("[SENHA] signed uid: %r", signed)
-        if signed:
-            try:
-                restored = signing.loads(signed)
-                paciente_id = restored
-                request.session['paciente_id'] = paciente_id
-                try:
-                    request.session.save()
-                except Exception as ex:
-                    logger.error("[SENHA] erro salvando sessão restaurada: %s", ex, exc_info=True)
-                logger.warning("[SENHA] sessão perdida, restaurada via uid: %s", paciente_id)
-            except signing.BadSignature:
-                logger.warning("[SENHA] uid inválido fornecido: %r", signed)
 
     if not paciente_id:
         messages.error(request, "Sua sessão expirou. Faça login novamente.")

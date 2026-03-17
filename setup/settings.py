@@ -83,6 +83,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    # Restaurar sessão automaticamente via uid_signed
+    'odontoPro.middleware.RestoreSessionMiddleware',
 ]
 
 
