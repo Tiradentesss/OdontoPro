@@ -222,7 +222,7 @@ def dashboard_paciente(request):
     uid_signed = signing.dumps(paciente.id)
 
     filtro_status = request.GET.get("status")
-    aba_ativa = request.GET.get("aba", "principal")
+    aba_ativa = request.GET.get("aba", "inicio")
     consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
     agora = timezone.now()
 
@@ -553,10 +553,10 @@ def configuracoes_conta(request):
                 logger.error(f"Erro ao atualizar paciente {paciente_id}: {str(e)}", exc_info=True)
                 messages.error(request, 'Erro ao salvar alterações. Tente novamente.')
 
-        # Se salvou com sucesso, reemite o cookie de recuperação e redireciona para dashboard
+        # Se salvou com sucesso, reemite o cookie de recuperação e redireciona para configurações
         if saved:
             uid_signed = signing.dumps(paciente.id)
-            response = redirect('dashboard_paciente')
+            response = redirect('configuracoes_conta')
             response.set_cookie(
                 "uid_signed",
                 uid_signed,
@@ -587,6 +587,7 @@ def configuracoes_conta(request):
         "consultas_futuras": consultas_futuras,
         "tem_notificacao": tem_notificacao,
         "uid_signed": uid_signed,
+        "aba_ativa": "ajustes",
         "debug_mode": settings.DEBUG,
         "debug_session_key": request.session.session_key,
         "debug_cookie_session": request.COOKIES.get(settings.SESSION_COOKIE_NAME),
@@ -681,6 +682,7 @@ def alterar_senha_paciente(request):
         "consultas_futuras": consultas_futuras,
         "tem_notificacao": tem_notificacao,
         "uid_signed": uid_signed,
+        "aba_ativa": "ajustes",
         "debug_mode": settings.DEBUG,
         "debug_session_key": request.session.session_key,
         "debug_cookie_session": request.COOKIES.get(settings.SESSION_COOKIE_NAME),

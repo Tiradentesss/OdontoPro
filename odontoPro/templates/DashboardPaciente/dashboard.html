@@ -119,7 +119,7 @@
         {% endif %}
 
 <!-- ================= INÍCIO ================= -->
-<section id="inicio" class="tela ativa">
+<section id="inicio" class="tela {% if aba_ativa == 'inicio' %}ativa{% endif %}">
 
     <h2 class="titulo-pagina">Página Inicial</h2>
 
@@ -238,7 +238,7 @@
 </section>
 
 <!-- ================= PERFIL DA CLÍNICA ================= -->
-<section id="perfil-clinica" class="tela">
+<section id="perfil-clinica" class="tela {% if aba_ativa == 'perfil-clinica' %}ativa{% endif %}">
     <div class="container-perfil">
         <h1 class="titulo-sessao">Sobre a Clinica</h1>
         <div class="card-branco header-clinica-detalhe">
@@ -407,7 +407,7 @@
 </section>
 
 <!-- ================= CONSULTAS ================= -->
-<section id="consultas" class="tela">
+<section id="consultas" class="tela {% if aba_ativa == 'consultas' %}ativa{% endif %}">
     <h2 class="titulo-pagina">Minhas Consultas</h2>
 
     <div class="filtros-consultas">
@@ -510,7 +510,7 @@
 </section>
 
 <!-- ================= AJUSTES ================= -->
-<section id="ajustes" class="tela">
+<section id="ajustes" class="tela {% if aba_ativa == 'ajustes' %}ativa{% endif %}">
         <h2 class="titulo-pagina">Ajustes</h2>
         <div class="container-config">
             <div class="abas-config">
