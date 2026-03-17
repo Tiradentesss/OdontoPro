@@ -100,11 +100,21 @@
 
         <!-- mensagens gerais -->
         {% if messages %}
-          <div class="messages">
+          <div class="messages" id="app-messages">
             {% for message in messages %}
               <p class="message {{ message.tags }}">{{ message }}</p>
             {% endfor %}
           </div>
+          <script>
+            // Remove mensagem automática após 5 segundos
+            setTimeout(() => {
+              const msg = document.getElementById('app-messages');
+              if (!msg) return;
+              msg.style.transition = 'opacity 0.5s ease';
+              msg.style.opacity = '0';
+              setTimeout(() => { msg.remove(); }, 500);
+            }, 5000);
+          </script>
         {% endif %}
 
         {% if debug_mode %}
