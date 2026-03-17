@@ -93,6 +93,9 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 
+    # Servir arquivos de mídia em produção (deve vir antes do WhiteNoise)
+    'odontoPro.middleware.MediaServeMiddleware',
+
     # servir static no Railway
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
@@ -105,9 +108,6 @@ MIDDLEWARE = [
     
     # Restaurar sessão automaticamente via uid_signed
     'odontoPro.middleware.RestoreSessionMiddleware',
-    
-    # Servir arquivos de mídia em produção
-    'odontoPro.middleware.MediaServeMiddleware',
 ]
 
 
