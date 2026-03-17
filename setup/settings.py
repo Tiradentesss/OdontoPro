@@ -105,6 +105,9 @@ MIDDLEWARE = [
     
     # Restaurar sessão automaticamente via uid_signed
     'odontoPro.middleware.RestoreSessionMiddleware',
+    
+    # Servir arquivos de mídia em produção
+    'odontoPro.middleware.MediaServeMiddleware',
 ]
 
 
@@ -226,6 +229,11 @@ STATICFILES_DIRS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# 🔧 Configurar WhiteNoise para servir também arquivos de mídia
+# Isso é necessário no Railway pois ele não tem nginx/apache para servir mídia
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
 
 
 # =========================
