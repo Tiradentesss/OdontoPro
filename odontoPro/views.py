@@ -483,21 +483,37 @@ def configuracoes_conta(request):
                         # Processar foto
                         if 'foto' in request.FILES and request.FILES['foto'].size > 0:
                             arquivo = request.FILES['foto']
+                            logger.info(f"[FOTO] Arquivo recebido: {arquivo.name}, tamanho: {arquivo.size} bytes")
                             if arquivo.size > 5 * 1024 * 1024:
                                 messages.error(request, 'Foto muito grande (máximo 5MB).')
                             else:
                                 try:
+                                    # Verificar se é uma imagem válida
                                     img = Image.open(arquivo)
                                     img.verify()
                                     arquivo.seek(0)
+                                    
+                                    # Salvar a foto
                                     paciente.foto = arquivo
                                     paciente.save()
+                                    
+                                    # Verificar se o arquivo foi realmente salvo
+                                    if paciente.foto and paciente.foto.url:
+                                        logger.info(f"[FOTO] Foto salva com sucesso para paciente {paciente_id}: {paciente.foto.url}")
+                                        messages.success(request, 'Dados atualizados com sucesso (com foto)!')
+                                    else:
+                                        logger.error(f"[FOTO] Foto não foi salva corretamente para paciente {paciente_id}")
+                                        messages.error(request, 'Erro ao salvar a foto. Tente novamente.')
+                                        return redirect('configuracoes_conta')
+                                    
                                     request.session.save()
                                     saved = True
-                                    messages.success(request, 'Dados atualizados com sucesso (com foto)!')
-                                except Exception:
-                                    messages.error(request, 'Imagem inválida. Tente outra.')
+                                    
+                                except Exception as e:
+                                    logger.error(f"[FOTO] Erro ao processar imagem para paciente {paciente_id}: {str(e)}", exc_info=True)
+                                    messages.error(request, f'Imagem inválida. Tente outra. Erro: {str(e)}')
                         else:
+                            logger.info(f"[FOTO] Nenhum arquivo de foto enviado ou arquivo vazio")
                             # Salvar sem foto
                             paciente.save()
                             request.session.save()
@@ -515,21 +531,37 @@ def configuracoes_conta(request):
                     # Processar foto
                     if 'foto' in request.FILES and request.FILES['foto'].size > 0:
                         arquivo = request.FILES['foto']
+                        logger.info(f"[FOTO] Arquivo recebido: {arquivo.name}, tamanho: {arquivo.size} bytes")
                         if arquivo.size > 5 * 1024 * 1024:
                             messages.error(request, 'Foto muito grande (máximo 5MB).')
                         else:
                             try:
+                                # Verificar se é uma imagem válida
                                 img = Image.open(arquivo)
                                 img.verify()
                                 arquivo.seek(0)
+                                
+                                # Salvar a foto
                                 paciente.foto = arquivo
                                 paciente.save()
+                                
+                                # Verificar se o arquivo foi realmente salvo
+                                if paciente.foto and paciente.foto.url:
+                                    logger.info(f"[FOTO] Foto salva com sucesso para paciente {paciente_id}: {paciente.foto.url}")
+                                    messages.success(request, 'Dados atualizados com sucesso (com foto)!')
+                                else:
+                                    logger.error(f"[FOTO] Foto não foi salva corretamente para paciente {paciente_id}")
+                                    messages.error(request, 'Erro ao salvar a foto. Tente novamente.')
+                                    return redirect('configuracoes_conta')
+                                
                                 request.session.save()
                                 saved = True
-                                messages.success(request, 'Dados atualizados com sucesso (com foto)!')
-                            except Exception:
-                                messages.error(request, 'Imagem inválida. Tente outra.')
+                                
+                            except Exception as e:
+                                logger.error(f"[FOTO] Erro ao processar imagem para paciente {paciente_id}: {str(e)}", exc_info=True)
+                                messages.error(request, f'Imagem inválida. Tente outra. Erro: {str(e)}')
                     else:
+                        logger.info(f"[FOTO] Nenhum arquivo de foto enviado ou arquivo vazio")
                         # Salvar sem foto
                         paciente.save()
                         request.session.save()
