@@ -4,12 +4,11 @@ from models.data import LIMITE_CONSULTAS
 class ConsultaController:
 
     @staticmethod
-    def _build_filters(clinica_id, data=None, status=None, medico=None):
+    def _build_filters(clinica_id, data=None, status=None, medico=None, especialidade=None):
         where = ["c.clinica_id = %s"]
         params = [clinica_id]
 
         if data:
-            # Espera data no formato YYYY-MM-DD
             where.append("DATE(c.data_hora) = %s")
             params.append(data)
 
@@ -21,14 +20,22 @@ class ConsultaController:
             where.append("m.nome = %s")
             params.append(medico)
 
+        if especialidade:
+            where.append("(LOWER(c.especialidade) = %s OR EXISTS ("
+                         "SELECT 1 FROM odontoPro_medico_especialidades me "
+                         "JOIN odontoPro_especialidade e ON me.especialidade_id = e.id "
+                         "WHERE me.medico_id = c.medico_id AND LOWER(e.nome) = %s))")
+            params.append(especialidade.lower())
+            params.append(especialidade.lower())
+
         return " AND ".join(where), params
 
     @staticmethod
-    def listar_por_clinica(clinica_id, pagina=0, limite=LIMITE_CONSULTAS, data=None, status=None, medico=None):
+    def listar_por_clinica(clinica_id, pagina=0, limite=LIMITE_CONSULTAS, data=None, status=None, medico=None, especialidade=None):
         conn = get_connection()
         cursor = conn.cursor()
 
-        where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico)
+        where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico, especialidade)
 
         query = f"""
             SELECT
@@ -43,7 +50,15 @@ class ConsultaController:
                 p.cpf,
                 p.foto,
                 c.observacoes,
-                m.nome as medico_nome
+                m.nome AS medico_nome,
+                COALESCE(NULLIF(c.especialidade, ''), (
+                    SELECT e.nome
+                    FROM odontoPro_medico_especialidades me
+                    JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                    WHERE me.medico_id = m.id
+                    ORDER BY e.nome
+                    LIMIT 1
+                ), '') AS especialidade
             FROM odontoPro_consulta c
             LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
             LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
@@ -59,11 +74,11 @@ class ConsultaController:
         return dados
 
     @staticmethod
-    def contar_por_clinica(clinica_id, data=None, status=None, medico=None):
+    def contar_por_clinica(clinica_id, data=None, status=None, medico=None, especialidade=None):
         conn = get_connection()
         cursor = conn.cursor()
 
-        where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico)
+        where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico, especialidade)
 
         cursor.execute(f"""
             SELECT COUNT(*)
@@ -82,11 +97,13 @@ class ConsultaController:
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT DISTINCT DATE(c.data_hora), m.nome
+            SELECT DISTINCT DATE(c.data_hora), m.nome, COALESCE(NULLIF(c.especialidade, ''), e.nome) AS especialidade
             FROM odontoPro_consulta c
             LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+            LEFT JOIN odontoPro_medico_especialidades me ON me.medico_id = m.id
+            LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
             WHERE c.clinica_id = %s
-            ORDER BY DATE(c.data_hora) DESC, m.nome ASC
+            ORDER BY DATE(c.data_hora) DESC, m.nome ASC, COALESCE(NULLIF(c.especialidade, ''), e.nome) ASC
         """, (clinica_id,))
 
         resultados = cursor.fetchall()
@@ -94,8 +111,9 @@ class ConsultaController:
 
         datas = sorted({r[0] for r in resultados if r[0]}, reverse=True)
         medicos = sorted({r[1] for r in resultados if r[1]})
+        especialidades = sorted({r[2] for r in resultados if r[2]})
 
-        return datas, medicos
+        return datas, medicos, especialidades
 
     @staticmethod
     def buscar_por_id(consulta_id):
@@ -103,7 +121,7 @@ class ConsultaController:
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT 
+            SELECT
                 c.id,
                 p.nome,
                 c.data_hora,
@@ -115,7 +133,15 @@ class ConsultaController:
                 p.cpf,
                 p.foto,
                 c.observacoes,
-                m.nome
+                m.nome AS medico_nome,
+                COALESCE(NULLIF(c.especialidade, ''), (
+                    SELECT e.nome
+                    FROM odontoPro_medico_especialidades me
+                    JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                    WHERE me.medico_id = m.id
+                    ORDER BY e.nome
+                    LIMIT 1
+                ), '') AS especialidade
             FROM odontoPro_consulta c
             LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
             LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
@@ -125,3 +151,21 @@ class ConsultaController:
         dado = cursor.fetchone()
         conn.close()
         return dado
+
+    @staticmethod
+    def snapshot_por_clinica(clinica_id, data=None, status=None, medico=None, especialidade=None):
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico, especialidade)
+
+        cursor.execute(f"""
+            SELECT CONCAT(COUNT(*), '-', IFNULL(MAX(c.id), 0), '-', IFNULL(MIN(c.id), 0), '-', COALESCE(MAX(UNIX_TIMESTAMP(c.data_hora)), 0))
+            FROM odontoPro_consulta c
+            LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+            WHERE {where_clause}
+        """, tuple(params))
+
+        snapshot = cursor.fetchone()[0]
+        conn.close()
+        return snapshot

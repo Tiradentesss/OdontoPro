@@ -1,714 +1,416 @@
-BASE_URL = "http://127.0.0.1:8000"
-import requests
-from io import BytesIO
 import threading
+import os
+from datetime import date
 
-from .base import BaseScreen
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont
-from datetime import date
-import os
 
-# 🔽 IMPORTA DO MODELS (Mantido)
+from .base import BaseScreen
 from models.data import LIMITE_CONSULTAS
 from controllers.consulta_controller import ConsultaController
 
-# Cores de status baseadas na paleta pastel da imagem
 LOCAL_STATUS_COLORS = {
-    "realizada": {"bg": "#D1FAE5", "text": "#065F46"},
-    "agendada": {"bg": "#FEF3C7", "text": "#92400E"},
-    "cancelada": {"bg": "#FEE2E2", "text": "#991B1B"}
+    'realizada': {'bg': '#D1FAE5', 'text': '#065F46'},
+    'agendada': {'bg': '#FEF3C7', 'text': '#92400E'},
+    'cancelada': {'bg': '#FEE2E2', 'text': '#991B1B'},
+    'confirmada': {'bg': '#DBEAFE', 'text': '#1D4ED8'},
 }
+
 
 class Agenda(BaseScreen):
     def __init__(self, parent, clinica_id):
-        super().__init__(parent, "Agenda")
+        super().__init__(parent, 'Agenda')
 
-        # -------------------------
-        # VARIÁVEIS DE FILTRO
-        # -------------------------
-        self.data_var = ctk.StringVar(value="Data")
-        self.medico_var = ctk.StringVar(value="Médico")
-        self.status_var = ctk.StringVar(value="Status")
+        self.clinica_id = clinica_id
+
+        self.data_var = ctk.StringVar(value='Todos')
+        self.medico_var = ctk.StringVar(value='Todos')
+        self.status_var = ctk.StringVar(value='Todos')
+        self.especialidade_var = ctk.StringVar(value='Todos')
+
+        self.data_var.trace_add('write', self.aplicar_filtros)
+        self.medico_var.trace_add('write', self.aplicar_filtros)
+        self.status_var.trace_add('write', self.aplicar_filtros)
+        self.especialidade_var.trace_add('write', self.aplicar_filtros)
 
         self.filtro_data = None
         self.filtro_medico = None
         self.filtro_status = None
+        self.filtro_especialidade = None
 
-        self.data_var.trace_add("write", self.aplicar_filtros)
-        self.medico_var.trace_add("write", self.aplicar_filtros)
-        self.status_var.trace_add("write", self.aplicar_filtros)
-
-        # -----
-
-        self.clinica_id = clinica_id 
         self.pagina_atual = 0
-        self.paciente_selecionado = None 
-        self.image_cache = [] # Evita que as imagens dos avatares sumam por Garbage Collection
-
+        self.paciente_selecionado = None
+        self.current_snapshot = None
         self._loading = False
-        self.current_data = []
-        self.total_consultas = 0
-        self.datas_unicas = []
-        self.medicos_unicos = []
+        self._auto_refresh_ms = 10000
+        self.details_panel = None
+        self.row_widgets = {}
 
-        # Cores e Fontes alinhadas com a imagem
         self.colors = {
-            "bg_card": "#FFFFFF",
-            "bg_main": "#F3F4F6",
-            "text_primary": "#111827",
-            "text_secondary": "#6B7280",
-            "primary": "#00AEEF", # Azul ciano da imagem
-            "hover": "#F9FAFB",
-            "selected": "#E0F2FE",
-            "border": "#E5E7EB",
-            "avatar_colors": ["#F59E0B", "#EF4444", "#EC4899", "#10B981", "#3B82F6"] # Cores dinâmicas para avatares
+            'bg_card': '#FFFFFF',
+            'bg_main': '#F3F4F6',
+            'text_primary': '#111827',
+            'text_secondary': '#6B7280',
+            'primary': '#0EA5E9',
+            'hover': '#F0F9FF',
+            'selected': '#EFF6FF',
+            'border': '#E5E7EB',
+            'avatar_colors': ['#F59E0B', '#EF4444', '#EC4899', '#10B981', '#3B82F6']
         }
-        
-        # DEFINIÇÃO RÍGIDA DE LARGURA DAS COLUNAS (Ajustado para a Imagem)
+
         self.col_widths = {
-            "avatar": 60,
-            "nome": 180,
-            "medico": 150,
-            "data": 100,
-            "hora": 80,
-            "status": 100
+            'avatar': 52,
+            'nome': 180,
+            'especialidade': 150,
+            'medico': 150,
+            'data': 100,
+            'hora': 80,
+            'status': 120,
         }
 
         self.render()
+        self.after(self._auto_refresh_ms, self._auto_check)
 
-    def truncate_text(self, text, limit=35):
-        if len(text) > limit:
-            return text[:limit] + "..."
-        return text
-
-    # --- LÓGICA DE AVATARES INCORPORADA DO CÓDIGO ADICIONAL ---
-    def create_letter_avatar(self, letter, color_hex, size):
-        color_rgb = tuple(int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-        img = Image.new("RGBA", (size, size), color=color_rgb)
-        draw = ImageDraw.Draw(img)
+    def _get_data_sql(self):
+        if not self.filtro_data or self.filtro_data in ['Todos', 'Data']:
+            return None
         try:
-            font = ImageFont.truetype("arial.ttf", int(size * 0.55))
-        except:
-            font = ImageFont.load_default()
+            d, m, y = self.filtro_data.split('/')
+            return f'{y}-{m.zfill(2)}-{d.zfill(2)}'
+        except Exception:
+            return None
 
-        draw.text((size // 2, size // 2), letter, fill="white", font=font, anchor="mm")
+    def aplicar_filtros(self, *_):
+        self.filtro_data = None if self.data_var.get() in ['Todos', 'Data'] else self.data_var.get()
+        self.filtro_medico = None if self.medico_var.get() in ['Todos', 'Médico'] else self.medico_var.get()
+        self.filtro_status = None if self.status_var.get() in ['Todos', 'Status'] else self.status_var.get()
+        self.filtro_especialidade = None if self.especialidade_var.get() in ['Todos', 'Especialidade'] else self.especialidade_var.get()
 
-        # Máscara circular para bordas perfeitas
-        scale = 4
-        big_size = (size * scale, size * scale)
-        mask = Image.new("L", big_size, 0)
-        mask_draw = ImageDraw.Draw(mask)
-        mask_draw.ellipse((0, 0, big_size[0] - 1, big_size[1] - 1), fill=255)
-        mask = mask.resize((size, size), Image.Resampling.LANCZOS)
-        img.putalpha(mask)
-        return img
+        self.pagina_atual = 0
+        # mantemos paciente_selecionado se ainda fizer sentido, para não perder o detalhe visível
+        self.refresh_data()
+
+    def _auto_check(self):
+        try:
+            snapshot = ConsultaController.snapshot_por_clinica(
+                self.clinica_id,
+                data=self._get_data_sql(),
+                status=self.filtro_status,
+                medico=self.filtro_medico,
+                especialidade=self.filtro_especialidade,
+            )
+
+            if snapshot != self.current_snapshot:
+                self.refresh_data()
+        except Exception:
+            pass
+        finally:
+            self.after(self._auto_refresh_ms, self._auto_check)
+
+    def refresh_data(self):
+        if self._loading:
+            return
+        self._loading = True
+        threading.Thread(target=self._load_data_thread, daemon=True).start()
 
     def render(self):
         if self._loading:
             return
 
         self._loading = True
-        self.image_cache.clear()
-
+        # manter a consulta selecionada para exibir detalhes ao atualizar a lista
+        # self.paciente_selecionado = None
         for w in self.content_card.winfo_children():
             w.destroy()
 
-        self.content_card.configure(fg_color="transparent")
-
-        loading_label = ctk.CTkLabel(self.content_card, text="Carregando agenda...", font=ctk.CTkFont(size=16, weight="bold"), text_color=self.colors["text_secondary"])
-        loading_label.pack(expand=True)
+        loading_lbl = ctk.CTkLabel(
+            self.content_card,
+            text='Carregando consultas...',
+            font=ctk.CTkFont(size=16, weight='bold'),
+            text_color=self.colors['text_secondary']
+        )
+        loading_lbl.pack(expand=True)
 
         threading.Thread(target=self._load_data_thread, daemon=True).start()
 
     def _load_data_thread(self):
-        data_sql = None
-        if self.filtro_data:
-            try:
-                d, m, y = self.filtro_data.split("/")
-                data_sql = f"{y}-{m.zfill(2)}-{d.zfill(2)}"
-            except Exception:
-                data_sql = None
+        data_sql = self._get_data_sql()
 
         try:
-            dados_pagina = ConsultaController.listar_por_clinica(
+            consultas = ConsultaController.listar_por_clinica(
                 self.clinica_id,
                 pagina=self.pagina_atual,
                 limite=LIMITE_CONSULTAS,
                 data=data_sql,
                 status=self.filtro_status,
-                medico=self.filtro_medico
+                medico=self.filtro_medico,
+                especialidade=self.filtro_especialidade,
             )
-
-            total_consultas = ConsultaController.contar_por_clinica(
+            total = ConsultaController.contar_por_clinica(
                 self.clinica_id,
                 data=data_sql,
                 status=self.filtro_status,
-                medico=self.filtro_medico
+                medico=self.filtro_medico,
+                especialidade=self.filtro_especialidade,
             )
 
-            datas_unicas, medicos_unicos = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+            datas, medicos, especialidades = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+            snapshot = ConsultaController.snapshot_por_clinica(
+                self.clinica_id,
+                data=data_sql,
+                status=self.filtro_status,
+                medico=self.filtro_medico,
+                especialidade=self.filtro_especialidade,
+            )
 
-            self.after(0, lambda: self._render_after_load(dados_pagina, total_consultas, datas_unicas, medicos_unicos))
+            self.after(0, lambda: self._render_after_load(consultas, total, datas, medicos, especialidades, snapshot))
 
         except Exception as e:
-            self.after(0, lambda: self._render_error(str(e)))
+            print(f"[Agenda] _load_data_thread error: {e}")
+            self.after(0, lambda: self._render_error(f"Erro na carga de dados: {e}"))
 
-    def _render_error(self, msg):
+    def _render_error(self, message):
         self._loading = False
         for w in self.content_card.winfo_children():
             w.destroy()
-        ctk.CTkLabel(self.content_card, text=f"Erro: {msg}", text_color="#EF4444", font=ctk.CTkFont(size=14, weight="bold")).pack(expand=True)
 
-    def _render_after_load(self, dados_pagina, total_consultas, datas_unicas, medicos_unicos):
-        self._loading = False
-        self.current_data = dados_pagina
-        self.total_consultas = total_consultas
-        self.datas_unicas = datas_unicas
-        self.medicos_unicos = medicos_unicos
+        ctk.CTkLabel(
+            self.content_card,
+            text=f'Erro ao carregar agenda: {message}',
+            text_color='#EF4444',
+            font=ctk.CTkFont(size=14, weight='bold')
+        ).pack(expand=True, padx=20, pady=20)
 
-        for w in self.content_card.winfo_children():
-            w.destroy()
+    def _render_after_load(self, consultas, total, datas, medicos, especialidades, snapshot):
+        try:
+            self._loading = False
+            self.current_snapshot = snapshot
 
-        self.content_card.configure(fg_color="transparent")
+            for w in self.content_card.winfo_children():
+                w.destroy()
 
-        # Grid Principal: Lista (65%) | Detalhes (35%)
-        self.main_layout = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        self.main_layout.pack(fill="both", expand=True)
-        self.main_layout.grid_columnconfigure(0, weight=65)
-        self.main_layout.grid_columnconfigure(1, weight=35)
-        self.main_layout.grid_rowconfigure(0, weight=1)
+            self.content_card.configure(fg_color='transparent')
+        except Exception as e:
+            print(f"[Agenda] _render_after_load error: {e}")
+            self._render_error(f"Falha ao renderizar agenda: {e}")
+            return
 
-        # ---------- ESQUERDA: LISTA DE PACIENTES ----------
-        left_panel = ctk.CTkFrame(self.main_layout, fg_color="white", corner_radius=15)
-        left_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 15))
-        left_panel.grid_columnconfigure(0, weight=1)
-        left_panel.grid_rowconfigure(2, weight=1)
+        # Conteúdo em duas colunas
+        panel_main = ctk.CTkFrame(self.content_card, fg_color='transparent')
+        panel_main.pack(fill='both', expand=True)
+        panel_main.grid_columnconfigure(0, weight=2)
+        panel_main.grid_columnconfigure(1, weight=1)
+        panel_main.grid_rowconfigure(0, weight=1)
 
-        # 1. Filtros (Topo) - Estilo da Imagem
-        filter_frame = ctk.CTkFrame(left_panel, fg_color="transparent", height=60)
-        filter_frame.grid(row=0, column=0, sticky="ew", padx=15, pady=(15, 5))
-        filter_frame.grid_columnconfigure(4, weight=1)
+        left = ctk.CTkFrame(panel_main, fg_color='white', corner_radius=18, border_width=1, border_color=self.colors['border'])
+        left.grid(row=0, column=0, sticky='nsew', padx=(0, 12), pady=10)
+        left.grid_columnconfigure(0, weight=1)
+        left.grid_rowconfigure(3, weight=1)
 
-        ctk.CTkLabel(filter_frame, text="Filtros", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_primary"]).grid(row=0, column=0, padx=(10, 20))
-        
-        # Filtro Data
-        self.data_option = ctk.CTkOptionMenu(
-            filter_frame,
-            values=["Todos"] + [d.strftime("%d/%m/%Y") for d in datas_unicas],
-            variable=self.data_var
-        )
-        self.data_option.grid(row=0, column=1, padx=5)
+        right = ctk.CTkFrame(panel_main, fg_color='white', corner_radius=18, border_width=1, border_color=self.colors['border'])
+        right.grid(row=0, column=1, sticky='nsew', pady=10)
+        right.grid_columnconfigure(0, weight=1)
+        self.details_panel = right
 
-        # Filtro Médico
-        self.medico_option = ctk.CTkOptionMenu(
-            filter_frame,
-            values=["Todos"] + medicos_unicos,
-            variable=self.medico_var
-        )
-        self.medico_option.grid(row=0, column=2, padx=5)
+        # Filtros
+        filtros = ctk.CTkFrame(left, fg_color='transparent')
+        filtros.grid(row=0, column=0, sticky='ew', padx=15, pady=(15, 10))
+        filtros.grid_columnconfigure(7, weight=1)
 
-        # Filtro Status
-        self.status_option = ctk.CTkOptionMenu(
-            filter_frame,
-            values=["Todos", "Agendada", "Realizada", "Cancelada"],
-            variable=self.status_var
-        )
-        self.status_option.grid(row=0, column=3, padx=5)
+        ctk.CTkLabel(filtros, text='Filtros', font=ctk.CTkFont(size=15, weight='bold'), text_color=self.colors['text_primary']).grid(row=0, column=0, padx=(0, 10))
 
-        # 2. Cabeçalho da Tabela
-        header_frame = ctk.CTkFrame(left_panel, fg_color="#F9FAFB", height=40, corner_radius=8)
-        header_frame.grid(row=1, column=0, sticky="ew", padx=15, pady=(10, 5))
-        header_frame.grid_propagate(False)
-        
-        headers = [
-            ("Nome", self.col_widths["nome"], "w"),
-            ("Medico", self.col_widths["medico"], "nsew"),
-            ("Data", self.col_widths["data"], "nsew"),
-            ("Hora", self.col_widths["hora"], "nsew"),
-            ("Status", self.col_widths["status"], "nsew")
-        ]
-        
-        for idx, (text, width, anchor) in enumerate(headers):
-            header_frame.grid_columnconfigure(idx, weight=1 if text in ["Nome", "Medico"] else 0, minsize=width)
-            lbl = ctk.CTkLabel(header_frame, text=text, font=ctk.CTkFont(size=12, weight="bold"), text_color=self.colors["text_secondary"])
-            lbl.grid(row=0, column=idx, sticky="ew" if anchor=="w" else "nsew", padx=10, pady=10)
+        self.data_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + [d.strftime('%d/%m/%Y') for d in datas], variable=self.data_var, width=135, fg_color='#FFFFFF', button_color='#E5E7EB', text_color=self.colors['text_primary'])
+        self.data_option.grid(row=0, column=1, padx=4)
 
-        # 3. Container das Linhas
-        rows_container = ctk.CTkFrame(left_panel, fg_color="transparent")
-        rows_container.grid(row=2, column=0, sticky="nsew", padx=15)
-        rows_container.grid_columnconfigure(0, weight=1)
+        self.medico_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + medicos, variable=self.medico_var, width=190, fg_color='#FFFFFF', button_color='#E5E7EB', text_color=self.colors['text_primary'])
+        self.medico_option.grid(row=0, column=2, padx=4)
 
-        # Renderiza Linhas
-        for idx, item in enumerate(dados_pagina):
-            (consulta_id, nome, data_hora, status, telefone, email, sexo, data_nascimento, cpf, foto, observacoes, medico_nome) = item
-            nome = (nome or "Não informado").strip() or "Não informado"
-            medico_nome = medico_nome or "Não informado"
-            status = (status or "").lower()
-            data = data_hora.strftime("%d/%m/%Y")
-            hora = data_hora.strftime("%H:%M")
-            is_selected = self.paciente_selecionado == consulta_id
-            bg_color = self.colors["selected"] if is_selected else "transparent"
-            row = ctk.CTkFrame(rows_container, fg_color=bg_color, corner_radius=8, height=50)
-            row.pack(fill="x", pady=2)
-            row.pack_propagate(False)
-            for col_idx, (_, width, _) in enumerate(headers):
-                row.grid_columnconfigure(col_idx, weight=1 if col_idx in [1, 2] else 0, minsize=width)
-            row.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
-            if not is_selected:
-                row.bind("<Enter>", lambda e, f=row: f.configure(fg_color=self.colors["hover"]))
-                row.bind("<Leave>", lambda e, f=row: f.configure(fg_color="transparent"))
-            avatar_label = ctk.CTkLabel(row, width=32, height=32, corner_radius=16, fg_color="transparent", text="")
-            avatar_label.grid(row=0, column=0, pady=9)
-            avatar_label.grid_propagate(False)
+        self.status_option = ctk.CTkOptionMenu(filtros, values=['Todos', 'Agendada', 'Confirmada', 'Realizada', 'Cancelada'], variable=self.status_var, width=160, fg_color='#FFFFFF', button_color='#E5E7EB', text_color=self.colors['text_primary'])
+        self.status_option.grid(row=0, column=3, padx=4)
 
-            # imagem local
-            img_obj = None
-            if foto:
-                path_media = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'media', foto)
-                if os.path.exists(path_media):
-                    try:
-                        img_obj = Image.open(path_media).convert('RGB')
-                    except:
-                        img_obj = None
+        self.especialidade_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + especialidades, variable=self.especialidade_var, width=170, fg_color='#FFFFFF', button_color='#E5E7EB', text_color=self.colors['text_primary'])
+        self.especialidade_option.grid(row=0, column=4, padx=4)
 
-            if img_obj:
-                min_dim = min(img_obj.size); l=(img_obj.width-min_dim)//2; t=(img_obj.height-min_dim)//2
-                img_obj = img_obj.crop((l, t, l+min_dim, t+min_dim)).resize((32,32), Image.Resampling.LANCZOS)
-                mask = Image.new('L',(32,32),0); d_mask=ImageDraw.Draw(mask); d_mask.ellipse((0,0,32,32),fill=255); img_obj.putalpha(mask)
-                img_ctk = ctk.CTkImage(light_image=img_obj, size=(32,32)); avatar_label.configure(image=img_ctk); avatar_label.image=img_ctk; self.image_cache.append(img_ctk)
-            else:
-                av_color = self.colors['avatar_colors'][hash(nome)%len(self.colors['avatar_colors'])]
-                avatar_letter = nome[0].upper() if nome else '?'
-                av_img = self.create_letter_avatar(avatar_letter, av_color, 32); img_ctk=ctk.CTkImage(light_image=av_img,size=(32,32)); avatar_label.configure(image=img_ctk); avatar_label.image=img_ctk; self.image_cache.append(img_ctk)
+        btn_reload = ctk.CTkButton(filtros, text='↻ Recarregar', command=self.render, width=140, corner_radius=8, fg_color=self.colors['primary'])
+        btn_reload.grid(row=0, column=5, padx=(14, 0))
 
-            # cols
-            l_nome=ctk.CTkLabel(row,text=self.truncate_text(nome,30),font=ctk.CTkFont(size=13,weight='bold'),text_color=self.colors['text_primary']); l_nome.grid(row=0,column=1,sticky='w',padx=10)
-            l_medico=ctk.CTkLabel(row,text=medico_nome,font=ctk.CTkFont(size=13),text_color=self.colors['text_primary']); l_medico.grid(row=0,column=2,sticky='nsew')
-            l_data=ctk.CTkLabel(row,text=data,font=ctk.CTkFont(size=12),text_color=self.colors['text_primary']); l_data.grid(row=0,column=3,sticky='nsew')
-            l_hora=ctk.CTkLabel(row,text=hora,font=ctk.CTkFont(size=12),text_color=self.colors['text_primary']); l_hora.grid(row=0,column=4,sticky='nsew')
-            info_status=LOCAL_STATUS_COLORS.get(status,{'bg':'#E5E7EB','text':'#374151'});
-            badge=ctk.CTkFrame(row,fg_color=info_status['bg'],corner_radius=12,width=80,height=24); badge.grid(row=0,column=5,sticky='nsew',pady=13); badge.pack_propagate(False)
-            l_status=ctk.CTkLabel(badge,text=status,text_color=info_status['text'],font=ctk.CTkFont(size=11,weight='bold')); l_status.place(relx=0.5,rely=0.5,anchor='center')
-            for widget in [avatar_label,l_nome,l_medico,l_data,l_hora,badge,l_status]:
-                widget.bind('<Button-1>', lambda e,d=consulta_id: self.selecionar_paciente(d))
+        ctk.CTkLabel(left, text=f'Total de consultas: {total}', font=ctk.CTkFont(size=13, weight='bold'), text_color=self.colors['text_secondary']).grid(row=1, column=0, sticky='w', padx=15, pady=(0, 8))
 
-        self.render_pagination(left_panel, total_consultas)
-        self.render_details_panel(self.main_layout)
+        # Cabeçalho
+        header = ctk.CTkFrame(left, fg_color='#F9FAFB', corner_radius=8)
+        header.grid(row=2, column=0, sticky='ew', padx=15, pady=(0, 8))
+        cols = [('Nome', 1), ('Especialidade', 1), ('Médico', 1), ('Data', 0), ('Hora', 0), ('Status', 0)]
+        for i, (title, weight) in enumerate(cols):
+            header.grid_columnconfigure(i, weight=weight, minsize=[self.col_widths['nome'], self.col_widths['especialidade'], self.col_widths['medico'], self.col_widths['data'], self.col_widths['hora'], self.col_widths['status']][i])
+            ctk.CTkLabel(header, text=title, font=ctk.CTkFont(size=13, weight='bold'), text_color=self.colors['text_secondary']).grid(row=0, column=i, padx=8, pady=8, sticky='w')
 
-        rows_container = ctk.CTkFrame(left_panel, fg_color="transparent")
-        rows_container.grid(row=2, column=0, sticky="nsew", padx=15)
-        rows_container.grid_columnconfigure(0, weight=1)
+        content_scroll = ctk.CTkScrollableFrame(left, fg_color='transparent')
+        content_scroll.grid(row=3, column=0, sticky='nsew', padx=15, pady=(0, 10))
+        content_scroll.grid_columnconfigure(0, weight=1)
 
-        # ✨ Segurança: transformar filtro_data para data SQL YYYY-MM-DD
-        data_sql = None
-        if self.filtro_data:
-            try:
-                d, m, y = self.filtro_data.split("/")
-                data_sql = f"{y}-{m.zfill(2)}-{d.zfill(2)}"
-            except Exception:
-                data_sql = None
+        if not consultas:
+            ctk.CTkLabel(content_scroll, text='Nenhuma consulta encontrada.', text_color=self.colors['text_secondary']).pack(pady=40)
+        else:
+            self._render_rows(content_scroll, consultas)
 
-        # Buscar dados paginados já filtrados no banco
-        dados_pagina = ConsultaController.listar_por_clinica(
-            self.clinica_id,
-            pagina=self.pagina_atual,
-            limite=LIMITE_CONSULTAS,
-            data=data_sql,
-            status=self.filtro_status,
-            medico=self.filtro_medico
-        )
+        # Exibir detalhes da seleção anterior (se houver)
+        if self.paciente_selecionado and self.details_panel:
+            self.render_details_panel(self.details_panel)
 
-        total_consultas = ConsultaController.contar_por_clinica(
-            self.clinica_id,
-            data=data_sql,
-            status=self.filtro_status,
-            medico=self.filtro_medico
-        )
+        # Paginação
+        self.render_pagination(left, total)
 
-        datas_unicas, medicos_unicos = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+        # Detalhes lateral
+        self.render_details_panel(right)
 
-        valores_data = ["Todos"] + [d.strftime("%d/%m/%Y") for d in datas_unicas]
-        valores_medico = ["Todos"] + medicos_unicos
+    def _render_rows(self, container, consultas):
+        self.image_cache = []
+        self.row_widgets = {}
 
-        # Atualiza OptionMenus dinamicamente
-        self.data_option.configure(values=valores_data)
-        self.medico_option.configure(values=valores_medico)
+        for idx, item in enumerate(consultas):
+            (consulta_id, nome, data_hora, status, telefone, email, sexo, data_nascimento, cpf, foto, observacoes, medico_nome, especialidade) = item
+            status_key = (status or '').lower()
+            row_color = self.colors['selected'] if self.paciente_selecionado == consulta_id else 'transparent'
 
-        # Renderiza Linhas
-        for idx, item in enumerate(dados_pagina):
-            (
-                consulta_id,
-                nome,
-                data_hora,
-                status,
-                telefone,
-                email,
-                sexo,
-                data_nascimento,
-                cpf,
-                foto,
-                observacoes,
-                medico_nome
-            ) = item
+            row = ctk.CTkFrame(container, fg_color=row_color, corner_radius=8, height=42)
+            row.grid(row=idx, column=0, sticky='ew', pady=2)
+            row.grid_propagate(False)
+            row.grid_rowconfigure(0, weight=1)
+            row.grid_columnconfigure(0, minsize=38, weight=0)
+            row.grid_columnconfigure(1, minsize=self.col_widths['nome'], weight=1)
+            row.grid_columnconfigure(2, minsize=self.col_widths['especialidade'], weight=1)
+            row.grid_columnconfigure(3, minsize=self.col_widths['medico'], weight=1)
+            row.grid_columnconfigure(4, minsize=self.col_widths['data'], weight=0)
+            row.grid_columnconfigure(5, minsize=self.col_widths['hora'], weight=0)
+            row.grid_columnconfigure(6, minsize=self.col_widths['status'], weight=0)
 
-            nome = (nome or "Não informado").strip()
-            if not nome:
-                nome = "Não informado"
+            self.row_widgets[consulta_id] = row
 
-            medico_nome = medico_nome or "Não informado"
+            row.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
+            row.bind('<Enter>', lambda e, r=row: r.configure(fg_color=self.colors['hover']))
+            row.bind('<Leave>', lambda e, r=row, cid=consulta_id: r.configure(fg_color=self.colors['selected'] if self.paciente_selecionado == cid else 'transparent'))
 
-            status = (status or "").lower() # Normaliza para buscar na paleta pastel
-            data = data_hora.strftime("%d/%m/%Y")
-            hora = data_hora.strftime("%H:%M")
-            is_selected = self.paciente_selecionado == consulta_id
+            avatar = ctk.CTkLabel(row, width=28, height=28, corner_radius=14, fg_color='transparent')
+            avatar.grid(row=0, column=0, padx=6)
 
-            bg_color = self.colors["selected"] if is_selected else "transparent"
-            
-            row = ctk.CTkFrame(rows_container, fg_color=bg_color, corner_radius=8, height=50)
-            row.pack(fill="x", pady=2)
-            row.pack_propagate(False)
+            avatar_img = self._create_avatar_image(nome, foto, 28)
+            avatar.configure(image=avatar_img)
+            avatar.image = avatar_img
+            self.image_cache.append(avatar_img)
 
-            for col_idx, (_, width, _) in enumerate(headers):
-                row.grid_columnconfigure(col_idx, weight=1 if col_idx in [1, 2] else 0, minsize=width)
+            ctk.CTkLabel(row, text=(nome or 'Não informado'), font=ctk.CTkFont(size=12, weight='bold'), text_color=self.colors['text_primary']).grid(row=0, column=1, sticky='w', padx=4)
+            ctk.CTkLabel(row, text=(especialidade or '-'), font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']).grid(row=0, column=2, sticky='w', padx=4)
+            ctk.CTkLabel(row, text=(medico_nome or '-'), font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']).grid(row=0, column=3, sticky='w', padx=4)
+            ctk.CTkLabel(row, text=data_hora.strftime('%d/%m/%Y') if data_hora else '-', font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']).grid(row=0, column=4, sticky='w', padx=4)
+            ctk.CTkLabel(row, text=data_hora.strftime('%H:%M') if data_hora else '-', font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']).grid(row=0, column=5, sticky='w', padx=4)
 
-            # Eventos (Hover e Click) replicados do código adicional
-            row.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
-            if not is_selected:
-                row.bind("<Enter>", lambda e, f=row: f.configure(fg_color=self.colors["hover"]))
-                row.bind("<Leave>", lambda e, f=row: f.configure(fg_color="transparent"))
-
-            # --- Col 0: Avatar (Imagem ou Letra) ---
-            avatar_label = ctk.CTkLabel(
-                row,
-                width=32,
-                height=32,
-                corner_radius=16,
-                fg_color="transparent",
-                text=""
-            )
-            avatar_label.grid(row=0, column=0, pady=9)
-            avatar_label.grid_propagate(False)
-
-            # FOTO já está disponível no resultado original da lista (índice 9)
-            img = None
-            if foto:
-                try:
-                    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-                    local_path = os.path.join(root_dir, 'media', foto)
-                    if os.path.exists(local_path):
-                        img = Image.open(local_path).convert('RGB')
-                except Exception:
-                    img = None
-
-            if img is not None:
-                min_dim = min(img.size)
-                left = (img.width - min_dim) // 2
-                top = (img.height - min_dim) // 2
-                right = left + min_dim
-                bottom = top + min_dim
-                img = img.crop((left, top, right, bottom))
-
-                img = img.resize((32, 32), Image.Resampling.LANCZOS)
-
-                mask = Image.new('L', (32, 32), 0)
-                draw = ImageDraw.Draw(mask)
-                draw.ellipse((0, 0, 32, 32), fill=255)
-
-                img.putalpha(mask)
-
-                img_ctk = ctk.CTkImage(light_image=img, size=(32, 32))
-                avatar_label.configure(image=img_ctk, text='')
-                avatar_label.image = img_ctk
-                self.image_cache.append(img_ctk)
-            else:
-                # nome já está garantido não None/''
-                av_color = self.colors['avatar_colors'][hash(nome) % len(self.colors['avatar_colors'])]
-                avatar_letter = nome[0].upper() if nome else '?'
-                av_img = self.create_letter_avatar(avatar_letter, av_color, 32)
-                img_ctk = ctk.CTkImage(light_image=av_img, size=(32, 32))
-                avatar_label.configure(image=img_ctk)
-                avatar_label.image = img_ctk
-                self.image_cache.append(img_ctk)
-                av_img = self.create_letter_avatar(avatar_letter, av_color, 32)
-                img_ctk = ctk.CTkImage(light_image=av_img, size=(32, 32))
-                avatar_label.configure(image=img_ctk)
-                avatar_label.image = img_ctk
-                self.image_cache.append(img_ctk)
-
-            # --- Col 1: Nome ---
-            l_nome = ctk.CTkLabel(row, text=self.truncate_text(nome, 30), font=ctk.CTkFont(size=13, weight="bold"), text_color=self.colors["text_primary"])
-            l_nome.grid(row=0, column=1, sticky="w", padx=10)
-            
-            # --- Col 2: Médico ---
-            l_medico = ctk.CTkLabel(row, text=medico_nome, font=ctk.CTkFont(size=13), text_color=self.colors["text_primary"])
-            l_medico.grid(row=0, column=2, sticky="nsew")
-
-            # --- Col 3: Data ---
-            l_data = ctk.CTkLabel(row, text=data, font=ctk.CTkFont(size=12), text_color=self.colors["text_primary"])
-            l_data.grid(row=0, column=3, sticky="nsew")
-            
-            # --- Col 4: Hora ---
-            l_hora = ctk.CTkLabel(row, text=hora, font=ctk.CTkFont(size=12), text_color=self.colors["text_primary"])
-            l_hora.grid(row=0, column=4, sticky="nsew")
-
-            # --- Col 5: Status Badge ---
-            info_status = LOCAL_STATUS_COLORS.get(status, {"bg": "#E5E7EB", "text": "#374151"})
-            badge = ctk.CTkFrame(row, fg_color=info_status["bg"], corner_radius=12, width=80, height=24)
-            badge.grid(row=0, column=5, sticky="nsew", pady=13)
+            estilo_status = LOCAL_STATUS_COLORS.get(status_key, {'bg': '#E5E7EB', 'text': '#374151'})
+            badge = ctk.CTkFrame(row, fg_color=estilo_status['bg'], corner_radius=10)
+            badge.grid(row=0, column=6, sticky='w', padx=6, pady=6)
             badge.pack_propagate(False)
-            
-            l_status = ctk.CTkLabel(badge, text=status, text_color=info_status["text"], font=ctk.CTkFont(size=11, weight="bold"))
-            l_status.place(relx=0.5, rely=0.5, anchor="center")
+            ctk.CTkLabel(badge, text=status or '-', text_color=estilo_status['text'], font=ctk.CTkFont(size=10, weight='bold')).place(relx=0.5, rely=0.5, anchor='center')
 
-            # Bind clicks nos filhos
-            for widget in [avatar_label, l_nome, l_medico, l_data, l_hora, badge, l_status]:
-                widget.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
+    def _create_avatar_image(self, nome, foto, size):
+        if foto:
+            try:
+                root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                path = os.path.join(root, 'media', foto)
+                if os.path.exists(path):
+                    img = Image.open(path).convert('RGB')
+                    min_d = min(img.size)
+                    img = img.crop(((img.width - min_d)//2, (img.height - min_d)//2, (img.width + min_d)//2, (img.height + min_d)//2))
+                    img = img.resize((size, size), Image.Resampling.LANCZOS)
+                    mask = Image.new('L', (size, size), 0)
+                    draw = ImageDraw.Draw(mask)
+                    draw.ellipse((0, 0, size, size), fill=255)
+                    img.putalpha(mask)
+                    return ctk.CTkImage(light_image=img, size=(size, size))
+            except Exception:
+                pass
 
-        self.render_pagination(left_panel, total_consultas)
-        self.render_details_panel(self.main_layout)
+        inicial = (nome or '?')[0].upper() if nome else '?'
+        color = self.colors['avatar_colors'][hash(nome) % len(self.colors['avatar_colors'])] if nome else self.colors['avatar_colors'][0]
+        img = Image.new('RGBA', (size, size), color)
+        draw = ImageDraw.Draw(img)
+        try:
+            fonte = ImageFont.truetype('arial.ttf', int(size * 0.55))
+        except Exception:
+            fonte = ImageFont.load_default()
+        draw.text((size/2, size/2), inicial, fill='white', font=fonte, anchor='mm')
+        return ctk.CTkImage(light_image=img, size=(size, size))
 
     def render_pagination(self, parent, total_items):
-        pag_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        pag_frame.grid(row=3, column=0, sticky="e", padx=20, pady=15)
+        pag_frame = ctk.CTkFrame(parent, fg_color='transparent')
+        pag_frame.grid(row=4, column=0, sticky='e', padx=16, pady=(0, 12))
 
-        total_paginas = max(1, (total_items + LIMITE_CONSULTAS - 1) // LIMITE_CONSULTAS)
-
-        def create_btn(text, cmd, active=False):
-            return ctk.CTkButton(
-                pag_frame, text=text, width=32, height=32, corner_radius=6,
-                fg_color=self.colors["primary"] if active else "transparent",
-                border_width=0 if active else 1,
-                border_color=self.colors["border"],
-                text_color="white" if active else self.colors["text_secondary"],
-                hover_color=self.colors["primary"] if not active else "#F3F4F6",
-                font=ctk.CTkFont(weight="bold"),
-                command=cmd
-            )
-
-        # Renderiza botões parecidos com a imagem (Quadrados azuis)
-        for i in range(total_paginas):
-            create_btn(str(i + 1), lambda idx=i: self.mudar_pagina(idx), active=(i == self.pagina_atual)).pack(side="left", padx=2)
+        paginas = max(1, (total_items + LIMITE_CONSULTAS - 1)//LIMITE_CONSULTAS)
+        for i in range(paginas):
+            ctk.CTkButton(
+                pag_frame,
+                text=str(i+1),
+                width=34,
+                height=34,
+                corner_radius=8,
+                fg_color=self.colors['primary'] if i == self.pagina_atual else 'transparent',
+                border_width=0 if i == self.pagina_atual else 1,
+                border_color=self.colors['border'],
+                text_color='white' if i == self.pagina_atual else self.colors['text_secondary'],
+                command=lambda p=i: self.mudar_pagina(p)
+            ).pack(side='left', padx=2)
 
     def render_details_panel(self, parent):
-        details_frame = ctk.CTkFrame(parent, fg_color=self.colors["bg_card"], corner_radius=15)
-        details_frame.grid(row=0, column=1, sticky="nsew")
+        for w in parent.winfo_children():
+            w.destroy()
 
         if not self.paciente_selecionado:
-            ctk.CTkLabel(details_frame, text="Selecione um paciente.", font=ctk.CTkFont(size=14), text_color=self.colors["text_secondary"]).place(relx=0.5, rely=0.5, anchor="center")
+            ctk.CTkLabel(parent, text='Selecione uma consulta para ver detalhes.', text_color=self.colors['text_secondary'], font=ctk.CTkFont(size=13)).place(relx=0.5, rely=0.5, anchor='center')
             return
 
         consulta = ConsultaController.buscar_por_id(self.paciente_selecionado)
-        if not consulta: return
+        if not consulta:
+            ctk.CTkLabel(parent, text='Consulta não encontrada.', text_color='#EF4444').pack(pady=20)
+            return
 
-        (
-            consulta_id,
-            nome,
-            data_hora,
-            status,
-            telefone,
-            email,
-            sexo,
-            data_nascimento,
-            cpf,
-            foto,
-            observacoes,
-            medico_nome
-        ) = consulta
-        status = status.lower()
-        data = data_hora.strftime("%d/%m/%Y")
-        hora = data_hora.strftime("%H:%M")
-        medico_nome = medico_nome or "Não informado"
+        (consulta_id, nome, data_hora, status, telefone, email, sexo, data_nascimento, cpf, foto, observacoes, medico_nome, especialidade) = consulta
 
-        idade = self.calcular_idade(data_nascimento)
+        ctk.CTkLabel(parent, text=nome or 'Paciente', font=ctk.CTkFont(size=18, weight='bold'), text_color=self.colors['text_primary']).pack(anchor='w', padx=16, pady=(16, 8))
+        ctk.CTkLabel(parent, text=f'Status: {status or "-"}', font=ctk.CTkFont(size=14, weight='bold'), text_color=self.colors['text_primary']).pack(anchor='w', padx=16)
+        ctk.CTkLabel(parent, text=f'Médico: {medico_nome or "-"}', font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor='w', padx=16, pady=(4, 0))
+        ctk.CTkLabel(parent, text=f'Especialidade: {especialidade or "-"}', font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor='w', padx=16)
+        ctk.CTkLabel(parent, text=f'Data e Hora: {data_hora.strftime("%d/%m/%Y %H:%M") if data_hora else "-"}', font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor='w', padx=16)
 
-        content = ctk.CTkFrame(details_frame, fg_color="transparent")
-        content.pack(fill="both", expand=True, padx=30, pady=40)
+        ctk.CTkLabel(parent, text=f'Telefone: {telefone or "-"}', font=ctk.CTkFont(size=13), text_color=self.colors['text_secondary']).pack(anchor='w', padx=16, pady=(8, 0))
+        ctk.CTkLabel(parent, text=f'E-mail: {email or "-"}', font=ctk.CTkFont(size=13), text_color=self.colors['text_secondary']).pack(anchor='w', padx=16)
+        ctk.CTkLabel(parent, text=f'Sexo: {sexo or "-"} | Idade: {self.calcular_idade(data_nascimento)} | CPF: {cpf or "-"}', font=ctk.CTkFont(size=13), text_color=self.colors['text_secondary']).pack(anchor='w', padx=16, pady=(0, 10))
 
-        # --- HEADER DETALHES (Avatar Gigante, Nome, Status) ---
-        header_det = ctk.CTkFrame(content, fg_color="transparent")
-        header_det.pack(fill="x", pady=(0, 30))
-        
-        # Avatar Grande (imagem ou círculo padrão)
-        avatar_label = ctk.CTkLabel(
-            header_det,
-            width=90,
-            height=90,
-            corner_radius=45,
-            fg_color="#E5E7EB",
-            text=""
-        )
-        avatar_label.pack(pady=(0, 10))
-        avatar_label.pack_propagate(False)
+        ctk.CTkLabel(parent, text='Observações', font=ctk.CTkFont(size=15, weight='bold'), text_color=self.colors['text_primary']).pack(anchor='w', padx=16, pady=(10, 4))
+        obs = ctk.CTkTextbox(parent, height=120, fg_color='#F8FAFC', border_width=1, border_color=self.colors['border'])
+        obs.pack(fill='x', padx=16, pady=(0, 18))
+        obs.insert('1.0', observacoes or '')
+        obs.configure(state='disabled')
 
-        local_image_used = False
-        if foto:
-            try:
-                root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-                local_path = os.path.join(root_dir, 'media', foto)
-
-                if os.path.exists(local_path):
-                    img = Image.open(local_path).convert('RGBA')
-
-                    min_dim = min(img.size)
-                    left = (img.width - min_dim) // 2
-                    top = (img.height - min_dim) // 2
-                    right = left + min_dim
-                    bottom = top + min_dim
-                    img = img.crop((left, top, right, bottom))
-                    img = img.resize((90, 90), Image.Resampling.LANCZOS)
-
-                    mask = Image.new('L', (90, 90), 0)
-                    draw = ImageDraw.Draw(mask)
-                    draw.ellipse((0, 0, 90, 90), fill=255)
-
-                    img.putalpha(mask)
-
-                    img_ctk = ctk.CTkImage(light_image=img, size=(90, 90))
-                    avatar_label.configure(image=img_ctk, text='')
-                    avatar_label.image = img_ctk
-                    local_image_used = True
-
-            except Exception:
-                local_image_used = False
-
-        if not local_image_used:
-            av_color = self.colors['avatar_colors'][hash(nome) % len(self.colors['avatar_colors'])]
-            avatar_letter = nome[0].upper() if nome else '?'
-            av_img = self.create_letter_avatar(avatar_letter, av_color, 90)
-            img_ctk = ctk.CTkImage(light_image=av_img, size=(90, 90))
-            avatar_label.configure(image=img_ctk, text='')
-            avatar_label.image = img_ctk
-
-        ctk.CTkLabel(header_det, text=nome, font=ctk.CTkFont(size=20, weight="bold"), text_color=self.colors["text_primary"]).pack()
-        ctk.CTkLabel(header_det, text=email or "sem@email.com", font=ctk.CTkFont(size=13), text_color=self.colors["primary"]).pack(pady=(0, 10))
-
-        # Badge de Status centralizado abaixo do email
-        info_status = LOCAL_STATUS_COLORS.get(status, {"bg": "#E5E7EB", "text": "#374151"})
-        badge_det = ctk.CTkFrame(header_det, fg_color=info_status["bg"], corner_radius=6, height=28)
-        badge_det.pack(ipadx=15)
-        ctk.CTkLabel(badge_det, text=status, text_color=info_status["text"], font=ctk.CTkFont(size=12, weight="bold")).pack(padx=20, pady=4)
-
-        # --- CORPO: DUAS COLUNAS (Paciente | Consulta) ---
-        info_grid = ctk.CTkFrame(content, fg_color="transparent")
-        info_grid.pack(fill="both", expand=False, pady=10)
-        info_grid.grid_columnconfigure(0, weight=1)
-        info_grid.grid_columnconfigure(1, weight=1)
-
-        # Coluna Esquerda: Paciente
-        col_esq = ctk.CTkFrame(info_grid, fg_color="transparent")
-        col_esq.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
-        ctk.CTkLabel(col_esq, text="Paciente", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_secondary"]).pack(anchor="w", pady=(0,10))
-        
-        paciente_info = [("Idade", idade), ("Sexo", sexo or "Não informado"), ("Telefone", telefone or "Não informado"), ("CPF", cpf or "Não informado")]
-        for lbl, val in paciente_info:
-            row_f = ctk.CTkFrame(col_esq, fg_color="transparent")
-            row_f.pack(fill="x", pady=4)
-            ctk.CTkLabel(row_f, text=lbl, font=ctk.CTkFont(size=12), text_color=self.colors["text_secondary"]).pack(side="left")
-            ctk.CTkLabel(row_f, text=val, font=ctk.CTkFont(size=12, weight="bold"), text_color=self.colors["text_primary"]).pack(side="right")
-
-        # Coluna Direita: Consulta
-        col_dir = ctk.CTkFrame(info_grid, fg_color="transparent")
-        col_dir.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
-        ctk.CTkLabel(col_dir, text="Consulta", font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors["text_secondary"]).pack(anchor="w", pady=(0,10))
-        
-        consulta_info = [
-            ("Medico:", medico_nome),
-            ("Data:", data),
-            ("Horário:", hora)
-        ]
-        for lbl, val in consulta_info:
-            row_f = ctk.CTkFrame(col_dir, fg_color="transparent")
-            row_f.pack(fill="x", pady=4)
-            ctk.CTkLabel(row_f, text=lbl, font=ctk.CTkFont(size=12), text_color=self.colors["text_primary" if lbl=="Medico:" else "text_secondary"]).pack(side="left")
-            ctk.CTkLabel(row_f, text=val, font=ctk.CTkFont(size=12, weight="bold"), text_color=self.colors["text_primary"]).pack(side="right")
-
-        # -----------------------------
-        # OBSERVAÇÕES
-        # -----------------------------
-        obs_frame = ctk.CTkFrame(content, fg_color="transparent")
-        obs_frame.pack(fill="both", expand=False, pady=(20, 0))
-
-        ctk.CTkLabel(
-            obs_frame,
-            text="Observações",
-            font=ctk.CTkFont(size=14, weight="bold"),
-            text_color=self.colors["text_secondary"]
-        ).pack(anchor="w", pady=(0, 5))
-
-        self.obs_text = ctk.CTkTextbox(
-            obs_frame,
-            height=100
-        )
-        self.obs_text.pack(fill="x")
-
-        # Inserir texto vindo do banco
-        self.obs_text.delete("1.0", "end")
-        self.obs_text.insert("1.0", observacoes or "")
-
-        # --- BOTÃO EDITAR ---
-        btn_frame = ctk.CTkFrame(content, fg_color="transparent")
-        btn_frame.pack(fill="x", pady=(20, 0))
-        ctk.CTkButton(
-            btn_frame, text="Editar Paciente", fg_color=self.colors["primary"], 
-            height=35, width=150, corner_radius=4, font=ctk.CTkFont(size=12, weight="bold")
-        ).pack()
-
-    # ---------- LÓGICA ----------
     def selecionar_paciente(self, consulta_id):
         self.paciente_selecionado = consulta_id
-        # Atualiza apenas o painel de detalhes para evitar recarregamento pesado
-        if hasattr(self, 'main_layout'):
-            self.render_details_panel(self.main_layout)
+        # marca a linha selecionada sem recarregar toda a tela
+        for cid, row in self.row_widgets.items():
+            row.configure(fg_color=self.colors['selected'] if cid == consulta_id else 'transparent')
 
-    def mudar_pagina(self, nova_pagina):
-        self.pagina_atual = nova_pagina
-        self.paciente_selecionado = None
-        self.render()
+        # atualiza apenas painel de detalhes
+        if self.details_panel:
+            self.render_details_panel(self.details_panel)
 
-    def aplicar_filtros(self, *_):
-        valor_data = self.data_var.get()
-        valor_medico = self.medico_var.get()
-        valor_status = self.status_var.get()
-
-        # DATA
-        if valor_data in ["Data", "Todos"]:
-            self.filtro_data = None
-        else:
-            self.filtro_data = valor_data
-
-        # MÉDICO
-        if valor_medico in ["Médico", "Todos"]:
-            self.filtro_medico = None
-        else:
-            self.filtro_medico = valor_medico
-
-        # STATUS
-        if valor_status in ["Status", "Todos"]:
-            self.filtro_status = None
-        else:
-            self.filtro_status = valor_status
-
-        self.pagina_atual = 0
-        self.paciente_selecionado = None
-
+    def mudar_pagina(self, pagina):
+        self.pagina_atual = pagina
         self.render()
 
     def calcular_idade(self, data_nascimento):
         if not data_nascimento:
-            return ""
-
-        # Se vier string do MySQL, converte
+            return ''
         if isinstance(data_nascimento, str):
             from datetime import datetime
-            data_nascimento = datetime.strptime(data_nascimento, "%Y-%m-%d").date()
-
+            data_nascimento = datetime.strptime(data_nascimento, '%Y-%m-%d').date()
         hoje = date.today()
-        idade = hoje.year - data_nascimento.year
-
+        anos = hoje.year - data_nascimento.year
         if (hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day):
-            idade -= 1
-
-        return f"{idade} anos"
-
-from datetime import date
+            anos -= 1
+        return f'{anos} anos'
