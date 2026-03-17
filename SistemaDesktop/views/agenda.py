@@ -172,53 +172,40 @@ class Agenda(BaseScreen):
         rows_container.grid(row=2, column=0, sticky="nsew", padx=15)
         rows_container.grid_columnconfigure(0, weight=1)
 
-        # Paginação Lógica
-        todas_consultas = ConsultaController.listar_por_clinica(self.clinica_id)
+        # ✨ Segurança: transformar filtro_data para data SQL YYYY-MM-DD
+        data_sql = None
+        if self.filtro_data:
+            try:
+                d, m, y = self.filtro_data.split("/")
+                data_sql = f"{y}-{m.zfill(2)}-{d.zfill(2)}"
+            except Exception:
+                data_sql = None
 
-        # =========================
-        # GERAR DATAS DISPONÍVEIS
-        # =========================
-        datas_unicas = sorted(
-            {c[2].strftime("%d/%m/%Y") for c in todas_consultas}
+        # Buscar dados paginados já filtrados no banco
+        dados_pagina = ConsultaController.listar_por_clinica(
+            self.clinica_id,
+            pagina=self.pagina_atual,
+            limite=LIMITE_CONSULTAS,
+            data=data_sql,
+            status=self.filtro_status,
+            medico=self.filtro_medico
         )
 
-        valores_data = ["Todos"] + datas_unicas
-
-        # =========================
-        # GERAR MÉDICOS DISPONÍVEIS
-        # =========================
-        medicos_unicos = sorted(
-            {c[10] for c in todas_consultas if c[10]}
+        total_consultas = ConsultaController.contar_por_clinica(
+            self.clinica_id,
+            data=data_sql,
+            status=self.filtro_status,
+            medico=self.filtro_medico
         )
 
+        datas_unicas, medicos_unicos = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+
+        valores_data = ["Todos"] + [d.strftime("%d/%m/%Y") for d in datas_unicas]
         valores_medico = ["Todos"] + medicos_unicos
 
         # Atualiza OptionMenus dinamicamente
         self.data_option.configure(values=valores_data)
         self.medico_option.configure(values=valores_medico)
-
-        # Aplicar filtros
-        if self.filtro_data:
-            todas_consultas = [
-                c for c in todas_consultas
-                if c[2].strftime("%d/%m/%Y") == self.filtro_data
-            ]
-
-        if self.filtro_status:
-            todas_consultas = [
-                c for c in todas_consultas
-                if c[3].lower() == self.filtro_status.lower()
-            ]
-
-        if self.filtro_medico:
-            todas_consultas = [
-                c for c in todas_consultas
-                if c[10] == self.filtro_medico
-            ]
-
-        inicio = self.pagina_atual * LIMITE_CONSULTAS
-        fim = inicio + LIMITE_CONSULTAS
-        dados_pagina = todas_consultas[inicio:fim]
 
         # Renderiza Linhas
         for idx, item in enumerate(dados_pagina):
@@ -275,45 +262,46 @@ class Agenda(BaseScreen):
             avatar_label.grid(row=0, column=0, pady=9)
             avatar_label.grid_propagate(False)
 
-            # BUSCAR FOTO
-            consulta_full = ConsultaController.buscar_por_id(consulta_id)
-            foto = consulta_full[9] if consulta_full else None
-
+            # FOTO já está disponível no resultado original da lista (índice 9)
+            img = None
             if foto:
                 try:
-                    url = f"{BASE_URL}/media/{foto}"
-                    response = requests.get(url, timeout=5)
+                    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                    local_path = os.path.join(root_dir, 'media', foto)
+                    if os.path.exists(local_path):
+                        img = Image.open(local_path).convert('RGB')
+                except Exception:
+                    img = None
 
-                    if response.status_code == 200:
-                        img = Image.open(BytesIO(response.content)).convert("RGB")
+            if img is not None:
+                min_dim = min(img.size)
+                left = (img.width - min_dim) // 2
+                top = (img.height - min_dim) // 2
+                right = left + min_dim
+                bottom = top + min_dim
+                img = img.crop((left, top, right, bottom))
 
-                        min_dim = min(img.size)
-                        left = (img.width - min_dim) // 2
-                        top = (img.height - min_dim) // 2
-                        right = left + min_dim
-                        bottom = top + min_dim
-                        img = img.crop((left, top, right, bottom))
+                img = img.resize((32, 32), Image.Resampling.LANCZOS)
 
-                        img = img.resize((32, 32), Image.Resampling.LANCZOS)
+                mask = Image.new('L', (32, 32), 0)
+                draw = ImageDraw.Draw(mask)
+                draw.ellipse((0, 0, 32, 32), fill=255)
 
-                        mask = Image.new("L", (32, 32), 0)
-                        draw = ImageDraw.Draw(mask)
-                        draw.ellipse((0, 0, 32, 32), fill=255)
+                img.putalpha(mask)
 
-                        img.putalpha(mask)
-
-                        img_ctk = ctk.CTkImage(light_image=img, size=(32, 32))
-
-                        avatar_label.configure(image=img_ctk, text="")
-                        avatar_label.image = img_ctk
-                        self.image_cache.append(img_ctk)
-                except:
-                    pass
-
+                img_ctk = ctk.CTkImage(light_image=img, size=(32, 32))
+                avatar_label.configure(image=img_ctk, text='')
+                avatar_label.image = img_ctk
+                self.image_cache.append(img_ctk)
             else:
                 # nome já está garantido não None/''
-                av_color = self.colors["avatar_colors"][hash(nome) % len(self.colors["avatar_colors"])]
-                avatar_letter = nome[0].upper() if nome else "?"
+                av_color = self.colors['avatar_colors'][hash(nome) % len(self.colors['avatar_colors'])]
+                avatar_letter = nome[0].upper() if nome else '?'
+                av_img = self.create_letter_avatar(avatar_letter, av_color, 32)
+                img_ctk = ctk.CTkImage(light_image=av_img, size=(32, 32))
+                avatar_label.configure(image=img_ctk)
+                avatar_label.image = img_ctk
+                self.image_cache.append(img_ctk)
                 av_img = self.create_letter_avatar(avatar_letter, av_color, 32)
                 img_ctk = ctk.CTkImage(light_image=av_img, size=(32, 32))
                 avatar_label.configure(image=img_ctk)
@@ -349,7 +337,7 @@ class Agenda(BaseScreen):
             for widget in [avatar_label, l_nome, l_medico, l_data, l_hora, badge, l_status]:
                 widget.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
 
-        self.render_pagination(left_panel, len(todas_consultas))
+        self.render_pagination(left_panel, total_consultas)
         self.render_details_panel(self.main_layout)
 
     def render_pagination(self, parent, total_items):
@@ -425,15 +413,14 @@ class Agenda(BaseScreen):
         avatar_label.pack(pady=(0, 10))
         avatar_label.pack_propagate(False)
 
+        local_image_used = False
         if foto:
             try:
-                url = f"{BASE_URL}/media/{foto}"
-                response = requests.get(url, timeout=5)
+                root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                local_path = os.path.join(root_dir, 'media', foto)
 
-                if response.status_code == 200:
-                    img = Image.open(BytesIO(response.content))
-                    img = Image.open(BytesIO(response.content))
-                    img = Image.open(BytesIO(response.content)).convert("RGBA")
+                if os.path.exists(local_path):
+                    img = Image.open(local_path).convert('RGBA')
 
                     min_dim = min(img.size)
                     left = (img.width - min_dim) // 2
@@ -441,20 +428,29 @@ class Agenda(BaseScreen):
                     right = left + min_dim
                     bottom = top + min_dim
                     img = img.crop((left, top, right, bottom))
-                    img = img.resize((90, 90))
+                    img = img.resize((90, 90), Image.Resampling.LANCZOS)
 
-                    mask = Image.new("L", (90, 90), 0)
+                    mask = Image.new('L', (90, 90), 0)
                     draw = ImageDraw.Draw(mask)
                     draw.ellipse((0, 0, 90, 90), fill=255)
 
                     img.putalpha(mask)
 
                     img_ctk = ctk.CTkImage(light_image=img, size=(90, 90))
-                    avatar_label.configure(image=img_ctk, text="")
+                    avatar_label.configure(image=img_ctk, text='')
                     avatar_label.image = img_ctk
+                    local_image_used = True
 
             except Exception:
-                pass
+                local_image_used = False
+
+        if not local_image_used:
+            av_color = self.colors['avatar_colors'][hash(nome) % len(self.colors['avatar_colors'])]
+            avatar_letter = nome[0].upper() if nome else '?'
+            av_img = self.create_letter_avatar(avatar_letter, av_color, 90)
+            img_ctk = ctk.CTkImage(light_image=av_img, size=(90, 90))
+            avatar_label.configure(image=img_ctk, text='')
+            avatar_label.image = img_ctk
 
         ctk.CTkLabel(header_det, text=nome, font=ctk.CTkFont(size=20, weight="bold"), text_color=self.colors["text_primary"]).pack()
         ctk.CTkLabel(header_det, text=email or "sem@email.com", font=ctk.CTkFont(size=13), text_color=self.colors["primary"]).pack(pady=(0, 10))
