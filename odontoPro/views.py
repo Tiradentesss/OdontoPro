@@ -157,10 +157,9 @@ def login_paciente(request):
             )
 
             logger.info(
-                "login success paciente %s session_key=%s cookies=%s",
+                "✓ Login success paciente %s | session_key=%s | uid_signed criado com sucesso",
                 email,
-                request.session.session_key,
-                request.META.get('HTTP_COOKIE')
+                request.session.session_key
             )
             messages.success(request, f"Bem-vindo, {paciente.nome}!")
             return response
@@ -552,6 +551,10 @@ def configuracoes_conta(request):
                 httponly=True,
                 samesite=getattr(settings, "SESSION_COOKIE_SAMESITE", "Lax"),
                 secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
+            )
+            logger.info(
+                "✓ Configurações salvas para paciente %s | uid_signed recriado com sucesso",
+                paciente_id
             )
             return response
 

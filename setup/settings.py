@@ -38,7 +38,26 @@ CSRF_COOKIE_SAMESITE = "Lax"
 
 from django.core.management.utils import get_random_secret_key
 
-SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
+# Em produção, a SECRET_KEY DEVE estar em variáveis de ambiente
+# Se não estiver, use uma chave fixa para evitar invalidar cookies a cada deploy
+if os.getenv("SECRET_KEY"):
+    SECRET_KEY = os.getenv("SECRET_KEY")
+else:
+    if DEBUG:
+        # Local development - usar aleatória está OK
+        SECRET_KEY = get_random_secret_key()
+    else:
+        # Produção sem SECRET_KEY definida - usar fallback fixo
+        # IMPORTANTE: Adicione SECRET_KEY às variáveis de ambiente do Railway!
+        SECRET_KEY = "odontopro-fallback-key-change-in-production-12345-abcde-fghij-klmno"
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            "SECRET_KEY não definida em variáveis de ambiente! "
+            "Usando fallback. Cookies podem estar sendo invalidados a cada deploy. "
+            "Para produção, ACRESCENTE SECRET_KEY nas variáveis do Railway!"
+        )
+
 
 
 IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ

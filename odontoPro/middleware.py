@@ -1,5 +1,4 @@
 from django.core import signing
-from django.utils.decorators import sync_and_async_middleware
 from .models import Paciente
 import logging
 
@@ -31,11 +30,31 @@ class RestoreSessionMiddleware:
                         request.session['paciente_id'] = paciente_id
                         # Salva explicitamente a sessão
                         request.session.save()
-                        logger.info("[MIDDLEWARE] Sessão restaurada via uid_signed para paciente %s", paciente_id)
-                except signing.BadSignature:
-                    logger.warning("[MIDDLEWARE] uid_signed inválido: %r", signed)
+                        logger.info(
+                            "[MIDDLEWARE] ✓ Sessão restaurada via uid_signed para paciente %s",
+                            paciente_id
+                        )
+                    else:
+                        logger.warning(
+                            "[MIDDLEWARE] Paciente %s não existe no banco de dados",
+                            paciente_id
+                        )
+                except signing.BadSignature as e:
+                    logger.warning(
+                        "[MIDDLEWARE] ✗ BadSignature error ao decodificar uid_signed. "
+                        "Provável causa: SECRET_KEY foi alterada entre requisições. "
+                        "Certifique-se de que SECRET_KEY está configurada como variável de ambiente em produção. "
+                        "Cookie: %s | Erro: %s",
+                        signed[:20] + "..." if len(signed) > 20 else signed,
+                        str(e)
+                    )
                 except Exception as e:
-                    logger.error("[MIDDLEWARE] Erro ao restaurar sessão: %s", str(e), exc_info=True)
+                    logger.error(
+                        "[MIDDLEWARE] Erro ao restaurar sessão via uid_signed: %s",
+                        str(e),
+                        exc_info=True
+                    )
         
         response = self.get_response(request)
         return response
+
