@@ -150,6 +150,7 @@ def login_paciente(request):
                 "uid_signed",
                 uid_signed,
                 max_age=getattr(settings, "SESSION_COOKIE_AGE", 1209600),
+                path='/',
                 httponly=True,
                 samesite=getattr(settings, "SESSION_COOKIE_SAMESITE", "Lax"),
                 secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
@@ -439,15 +440,18 @@ def configuracoes_conta(request):
     # ===== VERIFICAR AUTENTICAÇÃO =====
     paciente_id = request.session.get('paciente_id')
 
-    # Se sessão perdida, tentar recuperar via UID assinado (POST ou cookie)
-    if request.method == 'POST' and not paciente_id:
+    # Tentar restaurar a sessão caso o cookie ou o POST contenha UID assinado
+    if not paciente_id:
         signed = request.POST.get('uid') or request.COOKIES.get('uid_signed')
         if signed:
             try:
                 paciente_id = signing.loads(signed)
                 if Paciente.objects.filter(id=paciente_id).exists():
                     request.session['paciente_id'] = paciente_id
-                    request.session.save()
+                    try:
+                        request.session.save()
+                    except Exception:
+                        pass
                 else:
                     paciente_id = None
             except signing.BadSignature:
@@ -561,6 +565,7 @@ def configuracoes_conta(request):
                 "uid_signed",
                 uid_signed,
                 max_age=getattr(settings, "SESSION_COOKIE_AGE", 1209600),
+                path='/',
                 httponly=True,
                 samesite=getattr(settings, "SESSION_COOKIE_SAMESITE", "Lax"),
                 secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
@@ -601,10 +606,10 @@ def configuracoes_conta(request):
 def alterar_senha_paciente(request):
     paciente_id = request.session.get('paciente_id')
 
-    # tentar recuperar sessão a partir de uid assinado se POST
-    if request.method == 'POST' and not paciente_id:
-        signed = request.POST.get('uid')
-        logger.debug("[SENHA] signed uid from POST: %r", signed)
+    # Tentar restaurar sessão a partir de uid assinado (POST ou cookie)
+    if not paciente_id:
+        signed = request.POST.get('uid') or request.COOKIES.get('uid_signed')
+        logger.debug("[SENHA] signed uid: %r", signed)
         if signed:
             try:
                 restored = signing.loads(signed)
