@@ -190,10 +190,14 @@ class Login(ctk.CTk):
             messagebox.showwarning("Atenção", "Preencha e-mail e senha")
             return
 
-        resultado = AuthController.autenticar(email, senha)
+        try:
+            resultado = AuthController.autenticar(email, senha)
+        except Exception as e:
+            messagebox.showerror("Erro de conexão", f"Falha ao conectar ao banco: {e}")
+            return
 
         if not resultado:
-            messagebox.showwarning("Atenção", "E-mail ou senha inválidos")
+            messagebox.showwarning("Atenção", "E-mail ou senha inválidos ou servidor indisponível")
             return
 
         usuario = resultado["usuario"]

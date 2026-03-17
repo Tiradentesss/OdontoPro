@@ -7,49 +7,60 @@ def hash_senha(senha: str) -> str:
 
 
 def autenticar_usuario(email, senha):
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+    conn = None
+    cursor = None
 
-    senha_hash = hash_senha(senha)
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
 
-    # ================= CLÍNICA =================
-    cursor.execute("""
-        SELECT id, nome
-        FROM odontoPro_clinica
-        WHERE email = %s
-          AND (senha = %s OR senha = %s)
-    """, (email, senha, senha_hash))
+        senha_hash = hash_senha(senha)
 
-    clinica = cursor.fetchone()
+        # ================= CLÍNICA =================
+        cursor.execute("""
+            SELECT id, nome
+            FROM odontoPro_clinica
+            WHERE email = %s
+              AND (senha = %s OR senha = %s)
+        """, (email, senha, senha_hash))
 
-    if clinica:
-        conn.close()
-        return {
-            "tipo": "clinica",
-            "id": clinica["id"],
-            "nome": clinica["nome"],
-            "clinica_id": clinica["id"]  # ✅ AQUI ESTAVA FALTANDO
-        }
+        clinica = cursor.fetchone()
 
-    # ================= GERENCIAMENTO =================
-    cursor.execute("""
-        SELECT id, nome, clinica_id
-        FROM odontoPro_gerenciamento
-        WHERE email = %s
-          AND (senha = %s OR senha = %s)
-          AND ativo = 1
-    """, (email, senha, senha_hash))
+        if clinica:
+            return {
+                "tipo": "clinica",
+                "id": clinica["id"],
+                "nome": clinica["nome"],
+                "clinica_id": clinica["id"]
+            }
 
-    gerenciamento = cursor.fetchone()
+        # ================= GERENCIAMENTO =================
+        cursor.execute("""
+            SELECT id, nome, clinica_id
+            FROM odontoPro_gerenciamento
+            WHERE email = %s
+              AND (senha = %s OR senha = %s)
+              AND ativo = 1
+        """, (email, senha, senha_hash))
 
-    conn.close()
+        gerenciamento = cursor.fetchone()
 
-    if gerenciamento:
-        return {
-            "tipo": "gerenciamento",
-            "id": gerenciamento["id"],
-            "nome": gerenciamento["nome"],
-            "clinica_id": gerenciamento["clinica_id"]
-        }
+        if gerenciamento:
+            return {
+                "tipo": "gerenciamento",
+                "id": gerenciamento["id"],
+                "nome": gerenciamento["nome"],
+                "clinica_id": gerenciamento["clinica_id"]
+            }
 
-    return None
+        return None
+
+    except Exception as e:
+        print(f"Erro de autenticação/DB: {e}")
+        return None
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()

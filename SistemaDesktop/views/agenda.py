@@ -1,6 +1,7 @@
 BASE_URL = "http://127.0.0.1:8000"
 import requests
 from io import BytesIO
+import threading
 
 from .base import BaseScreen
 import customtkinter as ctk
@@ -44,6 +45,12 @@ class Agenda(BaseScreen):
         self.pagina_atual = 0
         self.paciente_selecionado = None 
         self.image_cache = [] # Evita que as imagens dos avatares sumam por Garbage Collection
+
+        self._loading = False
+        self.current_data = []
+        self.total_consultas = 0
+        self.datas_unicas = []
+        self.medicos_unicos = []
 
         # Cores e Fontes alinhadas com a imagem
         self.colors = {
@@ -98,12 +105,73 @@ class Agenda(BaseScreen):
         return img
 
     def render(self):
-        self.image_cache.clear() # Limpa cache de imagens na re-renderização
+        if self._loading:
+            return
+
+        self._loading = True
+        self.image_cache.clear()
+
         for w in self.content_card.winfo_children():
             w.destroy()
 
         self.content_card.configure(fg_color="transparent")
-        
+
+        loading_label = ctk.CTkLabel(self.content_card, text="Carregando agenda...", font=ctk.CTkFont(size=16, weight="bold"), text_color=self.colors["text_secondary"])
+        loading_label.pack(expand=True)
+
+        threading.Thread(target=self._load_data_thread, daemon=True).start()
+
+    def _load_data_thread(self):
+        data_sql = None
+        if self.filtro_data:
+            try:
+                d, m, y = self.filtro_data.split("/")
+                data_sql = f"{y}-{m.zfill(2)}-{d.zfill(2)}"
+            except Exception:
+                data_sql = None
+
+        try:
+            dados_pagina = ConsultaController.listar_por_clinica(
+                self.clinica_id,
+                pagina=self.pagina_atual,
+                limite=LIMITE_CONSULTAS,
+                data=data_sql,
+                status=self.filtro_status,
+                medico=self.filtro_medico
+            )
+
+            total_consultas = ConsultaController.contar_por_clinica(
+                self.clinica_id,
+                data=data_sql,
+                status=self.filtro_status,
+                medico=self.filtro_medico
+            )
+
+            datas_unicas, medicos_unicos = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+
+            self.after(0, lambda: self._render_after_load(dados_pagina, total_consultas, datas_unicas, medicos_unicos))
+
+        except Exception as e:
+            self.after(0, lambda: self._render_error(str(e)))
+
+    def _render_error(self, msg):
+        self._loading = False
+        for w in self.content_card.winfo_children():
+            w.destroy()
+        ctk.CTkLabel(self.content_card, text=f"Erro: {msg}", text_color="#EF4444", font=ctk.CTkFont(size=14, weight="bold")).pack(expand=True)
+
+    def _render_after_load(self, dados_pagina, total_consultas, datas_unicas, medicos_unicos):
+        self._loading = False
+        self.current_data = dados_pagina
+        self.total_consultas = total_consultas
+        self.datas_unicas = datas_unicas
+        self.medicos_unicos = medicos_unicos
+
+        for w in self.content_card.winfo_children():
+            w.destroy()
+
+        self.content_card.configure(fg_color="transparent")
+
         # Grid Principal: Lista (65%) | Detalhes (35%)
         self.main_layout = ctk.CTkFrame(self.content_card, fg_color="transparent")
         self.main_layout.pack(fill="both", expand=True)
@@ -115,7 +183,7 @@ class Agenda(BaseScreen):
         left_panel = ctk.CTkFrame(self.main_layout, fg_color="white", corner_radius=15)
         left_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 15))
         left_panel.grid_columnconfigure(0, weight=1)
-        left_panel.grid_rowconfigure(2, weight=1) # A linha 2 (lista) expande
+        left_panel.grid_rowconfigure(2, weight=1)
 
         # 1. Filtros (Topo) - Estilo da Imagem
         filter_frame = ctk.CTkFrame(left_panel, fg_color="transparent", height=60)
@@ -127,7 +195,7 @@ class Agenda(BaseScreen):
         # Filtro Data
         self.data_option = ctk.CTkOptionMenu(
             filter_frame,
-            values=["Data"],
+            values=["Todos"] + [d.strftime("%d/%m/%Y") for d in datas_unicas],
             variable=self.data_var
         )
         self.data_option.grid(row=0, column=1, padx=5)
@@ -135,7 +203,7 @@ class Agenda(BaseScreen):
         # Filtro Médico
         self.medico_option = ctk.CTkOptionMenu(
             filter_frame,
-            values=["Médico"],
+            values=["Todos"] + medicos_unicos,
             variable=self.medico_var
         )
         self.medico_option.grid(row=0, column=2, padx=5)
@@ -153,7 +221,6 @@ class Agenda(BaseScreen):
         header_frame.grid(row=1, column=0, sticky="ew", padx=15, pady=(10, 5))
         header_frame.grid_propagate(False)
         
-        # Configuração das Colunas do Header
         headers = [
             ("Nome", self.col_widths["nome"], "w"),
             ("Medico", self.col_widths["medico"], "nsew"),
@@ -168,6 +235,67 @@ class Agenda(BaseScreen):
             lbl.grid(row=0, column=idx, sticky="ew" if anchor=="w" else "nsew", padx=10, pady=10)
 
         # 3. Container das Linhas
+        rows_container = ctk.CTkFrame(left_panel, fg_color="transparent")
+        rows_container.grid(row=2, column=0, sticky="nsew", padx=15)
+        rows_container.grid_columnconfigure(0, weight=1)
+
+        # Renderiza Linhas
+        for idx, item in enumerate(dados_pagina):
+            (consulta_id, nome, data_hora, status, telefone, email, sexo, data_nascimento, cpf, foto, observacoes, medico_nome) = item
+            nome = (nome or "Não informado").strip() or "Não informado"
+            medico_nome = medico_nome or "Não informado"
+            status = (status or "").lower()
+            data = data_hora.strftime("%d/%m/%Y")
+            hora = data_hora.strftime("%H:%M")
+            is_selected = self.paciente_selecionado == consulta_id
+            bg_color = self.colors["selected"] if is_selected else "transparent"
+            row = ctk.CTkFrame(rows_container, fg_color=bg_color, corner_radius=8, height=50)
+            row.pack(fill="x", pady=2)
+            row.pack_propagate(False)
+            for col_idx, (_, width, _) in enumerate(headers):
+                row.grid_columnconfigure(col_idx, weight=1 if col_idx in [1, 2] else 0, minsize=width)
+            row.bind("<Button-1>", lambda e, d=consulta_id: self.selecionar_paciente(d))
+            if not is_selected:
+                row.bind("<Enter>", lambda e, f=row: f.configure(fg_color=self.colors["hover"]))
+                row.bind("<Leave>", lambda e, f=row: f.configure(fg_color="transparent"))
+            avatar_label = ctk.CTkLabel(row, width=32, height=32, corner_radius=16, fg_color="transparent", text="")
+            avatar_label.grid(row=0, column=0, pady=9)
+            avatar_label.grid_propagate(False)
+
+            # imagem local
+            img_obj = None
+            if foto:
+                path_media = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'media', foto)
+                if os.path.exists(path_media):
+                    try:
+                        img_obj = Image.open(path_media).convert('RGB')
+                    except:
+                        img_obj = None
+
+            if img_obj:
+                min_dim = min(img_obj.size); l=(img_obj.width-min_dim)//2; t=(img_obj.height-min_dim)//2
+                img_obj = img_obj.crop((l, t, l+min_dim, t+min_dim)).resize((32,32), Image.Resampling.LANCZOS)
+                mask = Image.new('L',(32,32),0); d_mask=ImageDraw.Draw(mask); d_mask.ellipse((0,0,32,32),fill=255); img_obj.putalpha(mask)
+                img_ctk = ctk.CTkImage(light_image=img_obj, size=(32,32)); avatar_label.configure(image=img_ctk); avatar_label.image=img_ctk; self.image_cache.append(img_ctk)
+            else:
+                av_color = self.colors['avatar_colors'][hash(nome)%len(self.colors['avatar_colors'])]
+                avatar_letter = nome[0].upper() if nome else '?'
+                av_img = self.create_letter_avatar(avatar_letter, av_color, 32); img_ctk=ctk.CTkImage(light_image=av_img,size=(32,32)); avatar_label.configure(image=img_ctk); avatar_label.image=img_ctk; self.image_cache.append(img_ctk)
+
+            # cols
+            l_nome=ctk.CTkLabel(row,text=self.truncate_text(nome,30),font=ctk.CTkFont(size=13,weight='bold'),text_color=self.colors['text_primary']); l_nome.grid(row=0,column=1,sticky='w',padx=10)
+            l_medico=ctk.CTkLabel(row,text=medico_nome,font=ctk.CTkFont(size=13),text_color=self.colors['text_primary']); l_medico.grid(row=0,column=2,sticky='nsew')
+            l_data=ctk.CTkLabel(row,text=data,font=ctk.CTkFont(size=12),text_color=self.colors['text_primary']); l_data.grid(row=0,column=3,sticky='nsew')
+            l_hora=ctk.CTkLabel(row,text=hora,font=ctk.CTkFont(size=12),text_color=self.colors['text_primary']); l_hora.grid(row=0,column=4,sticky='nsew')
+            info_status=LOCAL_STATUS_COLORS.get(status,{'bg':'#E5E7EB','text':'#374151'});
+            badge=ctk.CTkFrame(row,fg_color=info_status['bg'],corner_radius=12,width=80,height=24); badge.grid(row=0,column=5,sticky='nsew',pady=13); badge.pack_propagate(False)
+            l_status=ctk.CTkLabel(badge,text=status,text_color=info_status['text'],font=ctk.CTkFont(size=11,weight='bold')); l_status.place(relx=0.5,rely=0.5,anchor='center')
+            for widget in [avatar_label,l_nome,l_medico,l_data,l_hora,badge,l_status]:
+                widget.bind('<Button-1>', lambda e,d=consulta_id: self.selecionar_paciente(d))
+
+        self.render_pagination(left_panel, total_consultas)
+        self.render_details_panel(self.main_layout)
+
         rows_container = ctk.CTkFrame(left_panel, fg_color="transparent")
         rows_container.grid(row=2, column=0, sticky="nsew", padx=15)
         rows_container.grid_columnconfigure(0, weight=1)
@@ -529,7 +657,9 @@ class Agenda(BaseScreen):
     # ---------- LÓGICA ----------
     def selecionar_paciente(self, consulta_id):
         self.paciente_selecionado = consulta_id
-        self.render()
+        # Atualiza apenas o painel de detalhes para evitar recarregamento pesado
+        if hasattr(self, 'main_layout'):
+            self.render_details_panel(self.main_layout)
 
     def mudar_pagina(self, nova_pagina):
         self.pagina_atual = nova_pagina
