@@ -134,11 +134,17 @@
 
     <div class="container-carrossel">
         <div class="slide-carrossel">
-            <img src="{% static 'img/banner simples.png' %}" alt="Banner 1">
+            <picture>
+                <source media="(max-width: 576px)" srcset="{% static 'img/banner1-mobile.png' %}">
+                <img src="{% static 'img/banner1-desktop.png' %}" alt="Banner 1">
+            </picture>
         </div>
 
         <div class="slide-carrossel">
-            <img src="{% static 'img/Agende já sua consulta (1).png' %}" alt="Banner 2">
+            <picture>
+                <source media="(max-width: 576px)" srcset="{% static 'img/banner2-mobile.png' %}">
+                <img src="{% static 'img/banner2-desktop.png' %}" alt="Banner 2">
+            </picture>
         </div>
 
         <div class="container-pontos">
