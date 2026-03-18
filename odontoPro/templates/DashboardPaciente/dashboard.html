@@ -132,24 +132,14 @@
 
     <h2 class="titulo-pagina">Página Inicial</h2>
 
-    <div class="container-carrossel">
-        <div class="slide-carrossel">
-            <picture>
-                <source media="(max-width: 576px)" srcset="{% static 'img/banner1-mobile.png' %}">
-                <img src="{% static 'img/banner1-desktop.png' %}" alt="Banner 1">
-            </picture>
-        </div>
-
-        <div class="slide-carrossel">
-            <picture>
-                <source media="(max-width: 576px)" srcset="{% static 'img/banner2-mobile.png' %}">
-                <img src="{% static 'img/banner2-desktop.png' %}" alt="Banner 2">
-            </picture>
-        </div>
-
-        <div class="container-pontos">
-            <span class="ponto"></span>
-            <span class="ponto"></span>
+    <div class="welcome-banner-modern">
+        <div class="banner-text">
+            <h1>Encontre a clínica ideal</h1>
+            <p>Selecione uma de nossas unidades para agendar sua consulta.</p>
+            <div class="search-bar-container">
+                <i data-lucide="search"></i>
+                <input type="text" id="clinicSearch" placeholder="Procurar clínica por nome ou bairro...">
+            </div>
         </div>
     </div>
 
@@ -157,11 +147,6 @@
         <h2 class="titulo-pagina">Clínicas Disponíveis</h2>
 
         <div class="controles-busca">
-            <div class="campo-busca">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input id="inputBuscaClinica" type="text" placeholder="Procurar Clínica">
-            </div>
-
             <div class="filtro-container">
                 <button class="btn-filtro" id="btnFiltro">
                     <i class="fa-solid fa-star"></i> Avaliação
