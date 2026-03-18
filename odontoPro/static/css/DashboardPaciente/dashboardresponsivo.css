@@ -238,8 +238,4 @@ body {
         padding-bottom: 90px; /* espaço para o menu inferior */
     }
 
-    /* Altura reduzida para o carrossel em telas muito pequenas */
-    .container-carrossel {
-        max-height: 200px;
-    }
 }
