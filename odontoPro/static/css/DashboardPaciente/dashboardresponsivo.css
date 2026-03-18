@@ -207,6 +207,15 @@ body {
         justify-content: flex-start;
         -webkit-overflow-scrolling: touch;
     }
+
+    /* Melhora o carrossel em telas menores */
+    .container-carrossel {
+        max-height: 230px;
+    }
+
+    .container-pontos {
+        bottom: 10px;
+    }
 }
 
 /* --- AJUSTES PARA CELULARES PEQUENOS (576px e abaixo) --- */
@@ -232,5 +241,10 @@ body {
     .area-conteudo {
         padding: 10px;
         padding-bottom: 90px; /* espaço para o menu inferior */
+    }
+
+    /* Altura reduzida para o carrossel em telas muito pequenas */
+    .container-carrossel {
+        max-height: 200px;
     }
 }
