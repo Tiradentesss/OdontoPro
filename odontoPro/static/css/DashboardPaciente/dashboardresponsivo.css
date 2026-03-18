@@ -208,11 +208,6 @@ body {
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Melhora o carrossel em telas menores */
-    .container-carrossel {
-        max-height: 230px;
-    }
-
     .container-pontos {
         bottom: 10px;
     }
