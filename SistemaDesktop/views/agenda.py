@@ -212,26 +212,35 @@ class Agenda(BaseScreen):
         right.grid_columnconfigure(0, weight=1)
         self.details_panel = right
 
-        # Filtros
-        filtros = ctk.CTkFrame(left, fg_color='transparent')
+        # Filtros (apenas botão/option menu estilizado; container transparente)
+        filtros = ctk.CTkFrame(left, fg_color='transparent', corner_radius=0, border_width=0)
         filtros.grid(row=0, column=0, sticky='ew', padx=15, pady=(15, 10))
         filtros.grid_columnconfigure(7, weight=1)
 
         ctk.CTkLabel(filtros, text='Filtros', font=ctk.CTkFont(size=15, weight='bold'), text_color=self.colors['text_primary']).grid(row=0, column=0, padx=(0, 10))
 
-        self.data_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + [d.strftime('%d/%m/%Y') for d in datas], variable=self.data_var, width=135, fg_color='#FFFFFF', button_color='#E5E7EB', text_color=self.colors['text_primary'])
+        option_kwargs = {
+            'fg_color': '#FFFFFF',
+            'button_color': self.colors['primary'],
+            'button_hover_color': '#0b86af',
+            'text_color': self.colors['primary'],
+            'corner_radius': 8,
+            'width': 150
+        }
+
+        self.data_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + [d.strftime('%d/%m/%Y') for d in datas], variable=self.data_var, **option_kwargs)
         self.data_option.grid(row=0, column=1, padx=4)
 
-        self.medico_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + medicos, variable=self.medico_var, width=190, fg_color='#FFFFFF', button_color='#E5E7EB', text_color=self.colors['text_primary'])
+        self.medico_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + medicos, variable=self.medico_var, **option_kwargs)
         self.medico_option.grid(row=0, column=2, padx=4)
 
-        self.status_option = ctk.CTkOptionMenu(filtros, values=['Todos', 'Agendada', 'Confirmada', 'Realizada', 'Cancelada'], variable=self.status_var, width=160, fg_color='#FFFFFF', button_color='#E5E7EB', text_color=self.colors['text_primary'])
+        self.status_option = ctk.CTkOptionMenu(filtros, values=['Todos', 'Agendada', 'Confirmada', 'Realizada', 'Cancelada'], variable=self.status_var, **option_kwargs)
         self.status_option.grid(row=0, column=3, padx=4)
 
-        self.especialidade_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + especialidades, variable=self.especialidade_var, width=170, fg_color='#FFFFFF', button_color='#E5E7EB', text_color=self.colors['text_primary'])
+        self.especialidade_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + especialidades, variable=self.especialidade_var, **option_kwargs)
         self.especialidade_option.grid(row=0, column=4, padx=4)
 
-        btn_reload = ctk.CTkButton(filtros, text='↻ Recarregar', command=self.render, width=140, corner_radius=8, fg_color=self.colors['primary'])
+        btn_reload = ctk.CTkButton(filtros, text='↻ Recarregar', command=self.render, width=140, corner_radius=8, fg_color=self.colors['primary'], text_color='#FFFFFF')
         btn_reload.grid(row=0, column=5, padx=(14, 0))
 
         ctk.CTkLabel(left, text=f'Total de consultas: {total}', font=ctk.CTkFont(size=13, weight='bold'), text_color=self.colors['text_secondary']).grid(row=1, column=0, sticky='w', padx=15, pady=(0, 8))
