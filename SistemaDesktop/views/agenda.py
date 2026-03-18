@@ -17,16 +17,32 @@ LOCAL_STATUS_COLORS = {
 }
 
 
+class CustomOptionMenu(ctk.CTkOptionMenu):
+    def __init__(self, *args, text_color_override=None, arrow_color=None, **kwargs):
+        self._text_color_override = text_color_override
+        self._arrow_color_override = arrow_color
+        super().__init__(*args, **kwargs)
+
+    def _draw(self, no_color_updates=False):
+        super()._draw(no_color_updates)
+
+        if self._text_color_override is not None:
+            self._text_label.configure(fg=self._text_color_override)
+
+        if self._arrow_color_override is not None:
+            self._canvas.itemconfig('dropdown_arrow', fill=self._arrow_color_override)
+
+
 class Agenda(BaseScreen):
     def __init__(self, parent, clinica_id):
         super().__init__(parent, 'Agenda')
 
         self.clinica_id = clinica_id
 
-        self.data_var = ctk.StringVar(value='Todos')
-        self.medico_var = ctk.StringVar(value='Todos')
-        self.status_var = ctk.StringVar(value='Todos')
-        self.especialidade_var = ctk.StringVar(value='Todos')
+        self.data_var = ctk.StringVar(value='Data')
+        self.medico_var = ctk.StringVar(value='Médico')
+        self.status_var = ctk.StringVar(value='Status')
+        self.especialidade_var = ctk.StringVar(value='Especialidade')
 
         self.data_var.trace_add('write', self.aplicar_filtros)
         self.medico_var.trace_add('write', self.aplicar_filtros)
@@ -81,6 +97,16 @@ class Agenda(BaseScreen):
             return None
 
     def aplicar_filtros(self, *_):
+        # Ajusta exibição: Se o usuário escolher "Todos", exibimos placeholder do filtro
+        if self.data_var.get() == 'Todos':
+            self.data_var.set('Data')
+        if self.medico_var.get() == 'Todos':
+            self.medico_var.set('Médico')
+        if self.status_var.get() == 'Todos':
+            self.status_var.set('Status')
+        if self.especialidade_var.get() == 'Todos':
+            self.especialidade_var.set('Especialidade')
+
         self.filtro_data = None if self.data_var.get() in ['Todos', 'Data'] else self.data_var.get()
         self.filtro_medico = None if self.medico_var.get() in ['Todos', 'Médico'] else self.medico_var.get()
         self.filtro_status = None if self.status_var.get() in ['Todos', 'Status'] else self.status_var.get()
@@ -212,36 +238,58 @@ class Agenda(BaseScreen):
         right.grid_columnconfigure(0, weight=1)
         self.details_panel = right
 
-        # Filtros (container claro e borda azul, botões com visual de destaque)
-        filtros = ctk.CTkFrame(left, fg_color='#FFFFFF', corner_radius=10, border_width=1, border_color=self.colors['primary'])
+        # Filtros (borda azul envolta do conjunto + fundo branco interno)
+        filtros = ctk.CTkFrame(left, fg_color='#FFFFFF', corner_radius=10, border_width=2, border_color=self.colors['primary'])
         filtros.grid(row=0, column=0, sticky='ew', padx=15, pady=(15, 10))
-        filtros.grid_columnconfigure(7, weight=1)
+        filtros.grid_columnconfigure(0, weight=0)
+        filtros.grid_columnconfigure(1, weight=0, minsize=140)
+        filtros.grid_columnconfigure(2, weight=0, minsize=140)
+        filtros.grid_columnconfigure(3, weight=0, minsize=140)
+        filtros.grid_columnconfigure(4, weight=0, minsize=140)
+        filtros.grid_columnconfigure(5, weight=0, minsize=140)
 
         ctk.CTkLabel(filtros, text='Filtros', font=ctk.CTkFont(size=15, weight='bold'), text_color=self.colors['primary']).grid(row=0, column=0, padx=(8, 12), pady=8)
 
         option_kwargs = {
+            # Fundo da parte do texto (esquerda) branco.
             'fg_color': '#FFFFFF',
+            # Fundo da seta (direita) azul e botão padrão azul.
             'button_color': self.colors['primary'],
             'button_hover_color': '#0b86af',
+            # texto do item selecionado azul
             'text_color': self.colors['primary'],
+            'dropdown_fg_color': '#FFFFFF',
+            'dropdown_hover_color': '#F0F9FF',
+            'dropdown_text_color': self.colors['text_primary'],
             'corner_radius': 8,
-            'width': 150
+            'width': 140,
+            'height': 32,
+            'font': ctk.CTkFont(size=12, weight='bold')
         }
 
-        self.data_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + [d.strftime('%d/%m/%Y') for d in datas], variable=self.data_var, **option_kwargs)
-        self.data_option.grid(row=0, column=1, padx=4)
+        # cada filtro recebe box com borda
+        data_frame = ctk.CTkFrame(filtros, fg_color='#FFFFFF', border_width=2, border_color=self.colors['primary'], corner_radius=8)
+        data_frame.grid(row=0, column=1, padx=3, pady=3, sticky='nsew')
+        self.data_option = CustomOptionMenu(data_frame, values=['Todos'] + [d.strftime('%d/%m/%Y') for d in datas], variable=self.data_var, text_color_override=self.colors['primary'], arrow_color='#FFFFFF', **option_kwargs)
+        self.data_option.pack(fill='both', expand=True, padx=0, pady=0)
 
-        self.medico_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + medicos, variable=self.medico_var, **option_kwargs)
-        self.medico_option.grid(row=0, column=2, padx=4)
+        medico_frame = ctk.CTkFrame(filtros, fg_color='#FFFFFF', border_width=2, border_color=self.colors['primary'], corner_radius=8)
+        medico_frame.grid(row=0, column=2, padx=3, pady=3, sticky='nsew')
+        self.medico_option = CustomOptionMenu(medico_frame, values=['Todos'] + medicos, variable=self.medico_var, text_color_override=self.colors['primary'], arrow_color='#FFFFFF', **option_kwargs)
+        self.medico_option.pack(fill='both', expand=True, padx=0, pady=0)
 
-        self.status_option = ctk.CTkOptionMenu(filtros, values=['Todos', 'Agendada', 'Confirmada', 'Realizada', 'Cancelada'], variable=self.status_var, **option_kwargs)
-        self.status_option.grid(row=0, column=3, padx=4)
+        status_frame = ctk.CTkFrame(filtros, fg_color='#FFFFFF', border_width=2, border_color=self.colors['primary'], corner_radius=8)
+        status_frame.grid(row=0, column=3, padx=3, pady=3, sticky='nsew')
+        self.status_option = CustomOptionMenu(status_frame, values=['Todos', 'Agendada', 'Confirmada', 'Realizada', 'Cancelada'], variable=self.status_var, text_color_override=self.colors['primary'], arrow_color='#FFFFFF', **option_kwargs)
+        self.status_option.pack(fill='both', expand=True, padx=0, pady=0)
 
-        self.especialidade_option = ctk.CTkOptionMenu(filtros, values=['Todos'] + especialidades, variable=self.especialidade_var, **option_kwargs)
-        self.especialidade_option.grid(row=0, column=4, padx=4)
+        especialidade_frame = ctk.CTkFrame(filtros, fg_color='#FFFFFF', border_width=2, border_color=self.colors['primary'], corner_radius=8)
+        especialidade_frame.grid(row=0, column=4, padx=3, pady=3, sticky='nsew')
+        self.especialidade_option = CustomOptionMenu(especialidade_frame, values=['Todos'] + especialidades, variable=self.especialidade_var, text_color_override=self.colors['primary'], arrow_color='#FFFFFF', **option_kwargs)
+        self.especialidade_option.pack(fill='both', expand=True, padx=0, pady=0)
 
-        btn_reload = ctk.CTkButton(filtros, text='↻ Recarregar', command=self.render, width=140, corner_radius=8, fg_color=self.colors['primary'], text_color='#FFFFFF')
-        btn_reload.grid(row=0, column=5, padx=(14, 0))
+        btn_reload = ctk.CTkButton(filtros, text='↻ Recarregar', command=self.render, width=140, height=32, corner_radius=8, fg_color=self.colors['primary'], text_color='#FFFFFF')
+        btn_reload.grid(row=0, column=5, padx=3, pady=6)
 
         ctk.CTkLabel(left, text=f'Total de consultas: {total}', font=ctk.CTkFont(size=13, weight='bold'), text_color=self.colors['text_secondary']).grid(row=1, column=0, sticky='w', padx=15, pady=(0, 8))
 

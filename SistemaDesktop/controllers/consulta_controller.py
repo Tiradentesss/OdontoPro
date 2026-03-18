@@ -8,19 +8,19 @@ class ConsultaController:
         where = ["c.clinica_id = %s"]
         params = [clinica_id]
 
-        if data:
+        if data and data not in ['Todos', 'Data']:
             where.append("DATE(c.data_hora) = %s")
             params.append(data)
 
-        if status:
+        if status and status not in ['Todos', 'Status']:
             where.append("LOWER(c.status) = %s")
             params.append(status.lower())
 
-        if medico:
+        if medico and medico not in ['Todos', 'Médico']:
             where.append("m.nome = %s")
             params.append(medico)
 
-        if especialidade:
+        if especialidade and especialidade not in ['Todos', 'Especialidade']:
             where.append("(LOWER(c.especialidade) = %s OR EXISTS ("
                          "SELECT 1 FROM odontoPro_medico_especialidades me "
                          "JOIN odontoPro_especialidade e ON me.especialidade_id = e.id "
