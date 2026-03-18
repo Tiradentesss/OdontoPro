@@ -212,12 +212,12 @@ class Agenda(BaseScreen):
         right.grid_columnconfigure(0, weight=1)
         self.details_panel = right
 
-        # Filtros (apenas botão/option menu estilizado; container transparente)
-        filtros = ctk.CTkFrame(left, fg_color='transparent', corner_radius=0, border_width=0)
+        # Filtros (container claro e borda azul, botões com visual de destaque)
+        filtros = ctk.CTkFrame(left, fg_color='#FFFFFF', corner_radius=10, border_width=1, border_color=self.colors['primary'])
         filtros.grid(row=0, column=0, sticky='ew', padx=15, pady=(15, 10))
         filtros.grid_columnconfigure(7, weight=1)
 
-        ctk.CTkLabel(filtros, text='Filtros', font=ctk.CTkFont(size=15, weight='bold'), text_color=self.colors['text_primary']).grid(row=0, column=0, padx=(0, 10))
+        ctk.CTkLabel(filtros, text='Filtros', font=ctk.CTkFont(size=15, weight='bold'), text_color=self.colors['primary']).grid(row=0, column=0, padx=(8, 12), pady=8)
 
         option_kwargs = {
             'fg_color': '#FFFFFF',
@@ -299,10 +299,10 @@ class Agenda(BaseScreen):
             row.bind('<Enter>', lambda e, r=row: r.configure(fg_color=self.colors['hover']))
             row.bind('<Leave>', lambda e, r=row, cid=consulta_id: r.configure(fg_color=self.colors['selected'] if self.paciente_selecionado == cid else 'transparent'))
 
-            avatar = ctk.CTkLabel(row, width=28, height=28, corner_radius=14, fg_color='transparent')
+            avatar = ctk.CTkLabel(row, width=34, height=34, corner_radius=17, fg_color=self.colors['secondary'] if foto is None else 'transparent', text='', compound='center')
             avatar.grid(row=0, column=0, padx=6)
 
-            avatar_img = self._create_avatar_image(nome, foto, 28)
+            avatar_img = self._create_avatar_image(nome, foto, 34)
             avatar.configure(image=avatar_img)
             avatar.image = avatar_img
             self.image_cache.append(avatar_img)
@@ -382,8 +382,22 @@ class Agenda(BaseScreen):
 
         (consulta_id, nome, data_hora, status, telefone, email, sexo, data_nascimento, cpf, foto, observacoes, medico_nome, especialidade) = consulta
 
-        ctk.CTkLabel(parent, text=nome or 'Paciente', font=ctk.CTkFont(size=18, weight='bold'), text_color=self.colors['text_primary']).pack(anchor='w', padx=16, pady=(16, 8))
-        ctk.CTkLabel(parent, text=f'Status: {status or "-"}', font=ctk.CTkFont(size=14, weight='bold'), text_color=self.colors['text_primary']).pack(anchor='w', padx=16)
+        status_key = (status or '').lower()
+        estilo_status = LOCAL_STATUS_COLORS.get(status_key, {'bg': '#E5E7EB', 'text': '#374151'})
+
+        header_frame = ctk.CTkFrame(parent, fg_color='transparent')
+        header_frame.pack(anchor='w', padx=16, pady=(16, 8))
+
+        avatar_img = self._create_avatar_image(nome, foto, 60)
+        avatar_lbl = ctk.CTkLabel(header_frame, image=avatar_img, text='', width=60, height=60, corner_radius=30)
+        avatar_lbl.image = avatar_img
+        avatar_lbl.grid(row=0, column=0, rowspan=2, padx=(0, 10))
+
+        ctk.CTkLabel(header_frame, text=nome or 'Paciente', font=ctk.CTkFont(size=18, weight='bold'), text_color=self.colors['text_primary']).grid(row=0, column=1, sticky='w')
+
+        status_blk = ctk.CTkFrame(header_frame, fg_color=estilo_status['bg'], corner_radius=12)
+        status_blk.grid(row=1, column=1, sticky='w', pady=(4, 0))
+        ctk.CTkLabel(status_blk, text=(status or '-'), text_color=estilo_status['text'], font=ctk.CTkFont(size=12, weight='bold')).pack(padx=10, pady=4)
         ctk.CTkLabel(parent, text=f'Médico: {medico_nome or "-"}', font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor='w', padx=16, pady=(4, 0))
         ctk.CTkLabel(parent, text=f'Especialidade: {especialidade or "-"}', font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor='w', padx=16)
         ctk.CTkLabel(parent, text=f'Data e Hora: {data_hora.strftime("%d/%m/%Y %H:%M") if data_hora else "-"}', font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor='w', padx=16)
