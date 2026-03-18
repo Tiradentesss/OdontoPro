@@ -33,8 +33,10 @@ document.addEventListener("DOMContentLoaded", () => {
         inputBusca.addEventListener("input", function () {
             const termo = this.value.toLowerCase();
             document.querySelectorAll(".card-clinica").forEach(card => {
-                const nome = card.querySelector("h3").textContent.toLowerCase();
-                card.style.display = nome.includes(termo) ? "flex" : "none";
+                const nome = card.querySelector("h3")?.textContent?.toLowerCase() || "";
+                const local = card.querySelector("p")?.textContent?.toLowerCase() || "";
+                const matches = nome.includes(termo) || local.includes(termo);
+                card.style.display = matches ? "flex" : "none";
             });
         });
     }
