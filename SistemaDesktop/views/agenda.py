@@ -299,16 +299,16 @@ class Agenda(BaseScreen):
         cols = [('Nome', 1), ('Especialidade', 1), ('Médico', 1), ('Data', 0), ('Hora', 0), ('Status', 0)]
         for i, (title, weight) in enumerate(cols):
             header.grid_columnconfigure(i, weight=weight, minsize=[self.col_widths['nome'], self.col_widths['especialidade'], self.col_widths['medico'], self.col_widths['data'], self.col_widths['hora'], self.col_widths['status']][i])
-            ctk.CTkLabel(header, text=title, font=ctk.CTkFont(size=13, weight='bold'), text_color=self.colors['text_secondary']).grid(row=0, column=i, padx=8, pady=8, sticky='w')
+            ctk.CTkLabel(header, text=title, font=ctk.CTkFont(size=13, weight='bold'), text_color=self.colors['text_secondary']).grid(row=0, column=i, padx=8, pady=8, sticky='nsew')
 
-        content_scroll = ctk.CTkScrollableFrame(left, fg_color='transparent')
-        content_scroll.grid(row=3, column=0, sticky='nsew', padx=15, pady=(0, 10))
-        content_scroll.grid_columnconfigure(0, weight=1)
+        content_frame = ctk.CTkFrame(left, fg_color='transparent')
+        content_frame.grid(row=3, column=0, sticky='nsew', padx=15, pady=(0, 10))
+        content_frame.grid_columnconfigure(0, weight=1)
 
         if not consultas:
-            ctk.CTkLabel(content_scroll, text='Nenhuma consulta encontrada.', text_color=self.colors['text_secondary']).pack(pady=40)
+            ctk.CTkLabel(content_frame, text='Nenhuma consulta encontrada.', text_color=self.colors['text_secondary']).pack(pady=40)
         else:
-            self._render_rows(content_scroll, consultas)
+            self._render_rows(content_frame, consultas)
 
         # Exibir detalhes da seleção anterior (se houver)
         if self.paciente_selecionado and self.details_panel:
@@ -347,7 +347,7 @@ class Agenda(BaseScreen):
             row.bind('<Enter>', lambda e, r=row: r.configure(fg_color=self.colors['hover']))
             row.bind('<Leave>', lambda e, r=row, cid=consulta_id: r.configure(fg_color=self.colors['selected'] if self.paciente_selecionado == cid else 'transparent'))
 
-            avatar = ctk.CTkLabel(row, width=34, height=34, corner_radius=17, fg_color=self.colors['secondary'] if foto is None else 'transparent', text='', compound='center')
+            avatar = ctk.CTkLabel(row, width=34, height=34, corner_radius=17, fg_color='transparent', text='', compound='center')
             avatar.grid(row=0, column=0, padx=6)
 
             avatar_img = self._create_avatar_image(nome, foto, 34)
@@ -355,11 +355,23 @@ class Agenda(BaseScreen):
             avatar.image = avatar_img
             self.image_cache.append(avatar_img)
 
-            ctk.CTkLabel(row, text=(nome or 'Não informado'), font=ctk.CTkFont(size=12, weight='bold'), text_color=self.colors['text_primary']).grid(row=0, column=1, sticky='w', padx=4)
-            ctk.CTkLabel(row, text=(especialidade or '-'), font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']).grid(row=0, column=2, sticky='w', padx=4)
-            ctk.CTkLabel(row, text=(medico_nome or '-'), font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']).grid(row=0, column=3, sticky='w', padx=4)
-            ctk.CTkLabel(row, text=data_hora.strftime('%d/%m/%Y') if data_hora else '-', font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']).grid(row=0, column=4, sticky='w', padx=4)
-            ctk.CTkLabel(row, text=data_hora.strftime('%H:%M') if data_hora else '-', font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']).grid(row=0, column=5, sticky='w', padx=4)
+            labels = []
+            labels.append(ctk.CTkLabel(row, text=(nome or 'Não informado'), font=ctk.CTkFont(size=12, weight='bold'), text_color=self.colors['text_primary']))
+            labels[-1].grid(row=0, column=1, sticky='nsew', padx=4)
+            labels.append(ctk.CTkLabel(row, text=(especialidade or '-'), font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']))
+            labels[-1].grid(row=0, column=2, sticky='nsew', padx=4)
+            labels.append(ctk.CTkLabel(row, text=(medico_nome or '-'), font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']))
+            labels[-1].grid(row=0, column=3, sticky='nsew', padx=4)
+            labels.append(ctk.CTkLabel(row, text=data_hora.strftime('%d/%m/%Y') if data_hora else '-', font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']))
+            labels[-1].grid(row=0, column=4, sticky='nsew', padx=4)
+            labels.append(ctk.CTkLabel(row, text=data_hora.strftime('%H:%M') if data_hora else '-', font=ctk.CTkFont(size=12), text_color=self.colors['text_secondary']))
+            labels[-1].grid(row=0, column=5, sticky='nsew', padx=4)
+
+            # tornar a linha inteira clicável, incluindo widgets filhos
+            row.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
+            avatar.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
+            for widget in labels:
+                widget.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
 
             estilo_status = LOCAL_STATUS_COLORS.get(status_key, {'bg': '#E5E7EB', 'text': '#374151'})
             badge = ctk.CTkFrame(row, fg_color=estilo_status['bg'], corner_radius=10)
@@ -387,8 +399,9 @@ class Agenda(BaseScreen):
 
         inicial = (nome or '?')[0].upper() if nome else '?'
         color = self.colors['avatar_colors'][hash(nome) % len(self.colors['avatar_colors'])] if nome else self.colors['avatar_colors'][0]
-        img = Image.new('RGBA', (size, size), color)
+        img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
+        draw.ellipse((0, 0, size, size), fill=color)
         try:
             fonte = ImageFont.truetype('arial.ttf', int(size * 0.55))
         except Exception:
