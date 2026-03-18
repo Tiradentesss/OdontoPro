@@ -299,7 +299,9 @@ body {
 .slide-carrossel img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
+    background: #e0e0e0; /* Previne "fundo preto" em bordas quando imagem não preencher */
 }
 
 .container-pontos {
