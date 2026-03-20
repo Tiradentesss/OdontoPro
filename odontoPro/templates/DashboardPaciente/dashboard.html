@@ -9,6 +9,7 @@
 
     <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboardresponsivo.css' %}">
+    <link rel="stylesheet" href="{% static 'css/DashboardPaciente/calendar.css' %}">
     <link rel="shortcut icon" href="{% static 'img/logo icon.png' %}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -17,6 +18,7 @@
     // signed token used for session recovery in AJAX requests
     const signedUid = "{{ uid_signed }}";
 </script>
+<script defer src="{% static 'js/DashboardPaciente/calendar.js' %}"></script>
 <script defer src="{% static 'js/DashboardPaciente/dashboard.js' %}"></script>
 </head>
 
@@ -380,12 +382,44 @@
                     <option value="">Escolha um Profissional</option>
                 </select>
 
-                <div class="input-group">
-                    <input type="date" id="inputData" name="data" required>
-                    <select id="selectHorario" name="horario" required>
-                        <option value="">Selecione o Horário</option>
-                    </select>
+                <!-- NOVO CALENDÁRIO INTEGRADO -->
+                <div class="calendar-container" style="margin: 30px 0; padding: 20px; background-color: #f9f9f9; border-radius: 12px;">
+                    <div class="calendar-header">
+                        <h3 class="calendar-title">Selecione Data e Horário</h3>
+                        <div class="calendar-controls">
+                            <button id="btn-prev-month" class="btn-nav" type="button">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <span class="month-year">January 2024</span>
+                            <button id="btn-next-month" class="btn-nav" type="button">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                            <button class="btn-today" type="button">Today</button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-main">
+                        <div class="calendar-left">
+                            <div class="calendar-matrix"></div>
+                        </div>
+                        <div class="calendar-right">
+                            <div class="calendar-aside">
+                                <div class="aside-label">Selected Date</div>
+                                <div class="aside-date">-</div>
+                                <div class="aside-month">-</div>
+
+                                <div class="aside-section-title">Available Times</div>
+                                <div class="time-slots"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Hidden inputs para manter compatibilidade com o backend -->
+                <input type="date" id="inputData" name="data" required style="display: none;">
+                <select id="selectHorario" name="horario" required style="display: none;">
+                    <option value="">Selecione o Horário</option>
+                </select>
 
                 <button class="btn-cyan" onclick="confirmarAgendamento()">Agendar Consulta</button>
 

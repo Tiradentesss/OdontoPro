@@ -1,0 +1,261 @@
+/**
+ * Calendar & Time Selector
+ * Calendário interativo com seletor de horários
+ */
+
+class CalendarTimeSelector {
+  constructor(options = {}) {
+    this.currentDate = new Date();
+    this.selectedDate = null;
+    this.selectedTime = null;
+    this.container = options.container || '.calendar-container';
+    this.minDate = options.minDate || new Date();
+    this.maxDate = options.maxDate || new Date(new Date().setMonth(new Date().getMonth() + 3));
+    this.availableTimes = options.availableTimes || this.getDefaultTimes();
+    this.onDateChange = options.onDateChange || (() => {});
+    this.onTimeChange = options.onTimeChange || (() => {});
+    
+    this.init();
+  }
+
+  init() {
+    this.renderCalendar();
+    this.attachEventListeners();
+  }
+
+  renderCalendar() {
+    const year = this.currentDate.getFullYear();
+    const month = this.currentDate.getMonth();
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    
+    let html = '';
+    
+    // Day headers
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayNames.forEach(day => {
+      html += `<div class="day-header">${day}</div>`;
+    });
+    
+    // Previous month days
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const day = daysInPrevMonth - i;
+      html += `<div class="day-cell other-month disabled">${day}</div>`;
+    }
+    
+    // Current month days
+    const today = new Date();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentCellDate = new Date(year, month, day);
+      const dateString = this.formatDate(currentCellDate);
+      const isToday = this.isToday(currentCellDate);
+      const isSelected = this.selectedDate && dateString === this.formatDate(this.selectedDate);
+      const isWeekend = currentCellDate.getDay() === 0 || currentCellDate.getDay() === 6;
+      
+      let classes = 'day-cell';
+      if (isToday) classes += ' today';
+      if (isSelected) classes += ' selected';
+      if (isWeekend) classes += ' weekend';
+      
+      html += `<div class="${classes}" data-date="${dateString}">${day}</div>`;
+    }
+    
+    // Next month days
+    const totalCells = firstDay + daysInMonth;
+    const remainingCells = 42 - totalCells; // 6 rows × 7 days
+    for (let day = 1; day <= remainingCells; day++) {
+      html += `<div class="day-cell other-month disabled">${day}</div>`;
+    }
+    
+    const matrix = document.querySelector('.calendar-matrix');
+    if (matrix) {
+      matrix.innerHTML = html;
+    }
+    
+    // Update month/year display
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthYearEl = document.querySelector('.month-year');
+    if (monthYearEl) {
+      monthYearEl.textContent = `${monthNames[month]} ${year}`;
+    }
+  }
+
+  attachEventListeners() {
+    // Day cells
+    document.querySelectorAll('.day-cell:not(.other-month):not(.disabled)').forEach(cell => {
+      cell.addEventListener('click', (e) => this.selectDate(e.target));
+    });
+    
+    // Time slots
+    document.querySelectorAll('.time-slot').forEach(slot => {
+      slot.addEventListener('click', (e) => this.selectTime(e.target));
+    });
+    
+    // Navigation buttons
+    const prevBtn = document.getElementById('btn-prev-month');
+    const nextBtn = document.getElementById('btn-next-month');
+    const todayBtn = document.querySelector('.btn-today');
+    
+    if (prevBtn) prevBtn.addEventListener('click', () => this.previousMonth());
+    if (nextBtn) nextBtn.addEventListener('click', () => this.nextMonth());
+    if (todayBtn) todayBtn.addEventListener('click', () => this.goToToday());
+  }
+
+  selectDate(element) {
+    const dateString = element.dataset.date;
+    if (!dateString) return;
+    
+    this.selectedDate = new Date(dateString);
+    
+    // Update UI
+    document.querySelectorAll('.day-cell.selected').forEach(el => {
+      el.classList.remove('selected');
+    });
+    element.classList.add('selected');
+    
+    // Update aside section
+    const dayNum = this.selectedDate.getDate();
+    const monthName = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December']
+                      [this.selectedDate.getMonth()];
+    
+    const asideNum = document.querySelector('.aside-date');
+    const asideMonth = document.querySelector('.aside-month');
+    if (asideNum) asideNum.textContent = dayNum;
+    if (asideMonth) asideMonth.textContent = monthName;
+    
+    this.onDateChange(this.selectedDate);
+  }
+
+  selectTime(element) {
+    if (element.classList.contains('unavailable')) return;
+    
+    this.selectedTime = element.textContent.trim();
+    
+    // Update UI
+    document.querySelectorAll('.time-slot.selected').forEach(el => {
+      el.classList.remove('selected');
+    });
+    element.classList.add('selected');
+    
+    this.onTimeChange(this.selectedTime);
+  }
+
+  previousMonth() {
+    this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+    this.renderCalendar();
+    this.attachEventListeners();
+  }
+
+  nextMonth() {
+    this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+    this.renderCalendar();
+    this.attachEventListeners();
+  }
+
+  goToToday() {
+    this.currentDate = new Date();
+    this.renderCalendar();
+    this.attachEventListeners();
+  }
+
+  isToday(date) {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  }
+
+  formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  getDefaultTimes() {
+    const times = [];
+    for (let hour = 8; hour <= 17; hour++) {
+      for (let minute of ['00', '30']) {
+        times.push(`${String(hour).padStart(2, '0')}:${minute}`);
+      }
+    }
+    return times;
+  }
+
+  renderTimeSlots() {
+    let html = '';
+    this.availableTimes.forEach(time => {
+      html += `<div class="time-slot" data-time="${time}">${time}</div>`;
+    });
+    
+    const container = document.querySelector('.time-slots');
+    if (container) {
+      container.innerHTML = html;
+      this.attachEventListeners();
+    }
+  }
+
+  getSelectedDateTime() {
+    if (!this.selectedDate || !this.selectedTime) return null;
+    
+    return {
+      date: this.formatDate(this.selectedDate),
+      time: this.selectedTime,
+      dateTime: `${this.formatDate(this.selectedDate)} ${this.selectedTime}`
+    };
+  }
+
+  reset() {
+    this.selectedDate = null;
+    this.selectedTime = null;
+    this.currentDate = new Date();
+    this.renderCalendar();
+    this.renderTimeSlots();
+    this.attachEventListeners();
+  }
+}
+
+// Initialize calendar when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  const calendarContainer = document.querySelector('.calendar-container');
+  
+  if (calendarContainer) {
+    window.calendarSelector = new CalendarTimeSelector({
+      onDateChange: (date) => {
+        console.log('Selected date:', date);
+        // Update form field if exists
+        const dateInput = document.getElementById('inputData');
+        if (dateInput) {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          dateInput.value = `${year}-${month}-${day}`;
+        }
+      },
+      onTimeChange: (time) => {
+        console.log('Selected time:', time);
+        // Update form field if exists
+        const timeInput = document.getElementById('selectHorario');
+        if (timeInput) {
+          // Create option if not exists
+          let option = timeInput.querySelector(`option[value="${time}"]`);
+          if (!option) {
+            option = document.createElement('option');
+            option.value = time;
+            option.textContent = time;
+            timeInput.appendChild(option);
+          }
+          timeInput.value = time;
+        }
+      }
+    });
+
+    // Render time slots
+    window.calendarSelector.renderTimeSlots();
+  }
+});
