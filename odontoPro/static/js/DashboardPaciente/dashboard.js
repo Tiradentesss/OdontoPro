@@ -999,6 +999,54 @@ function voltarAoFormulario() {
     }
 }
 
+/* ======== FUNÇÕES PARA ABRIR/FECHAR MODAIS DE DATA E HORA ======== */
+
+function abrirModalCalendario() {
+    const modal = document.getElementById('modal-calendario');
+    if (modal) {
+        modal.classList.add('mostrar');
+        modal.style.display = 'flex';
+        
+        // Reinicializar calendário
+        setTimeout(() => {
+            if (typeof initializeCalendarSelector === 'function') {
+                initializeCalendarSelector();
+            }
+        }, 100);
+    }
+}
+
+function fecharModalCalendario() {
+    const modal = document.getElementById('modal-calendario');
+    if (modal) {
+        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
+    }
+}
+
+function abrirModalHorario() {
+    const inputData = document.getElementById('inputData');
+    
+    if (!inputData || !inputData.value) {
+        alert('Por favor, selecione uma data primeiro.');
+        return;
+    }
+    
+    const modal = document.getElementById('modal-horarios');
+    if (modal) {
+        modal.classList.add('mostrar');
+        modal.style.display = 'flex';
+    }
+}
+
+function fecharModalHorario() {
+    const modal = document.getElementById('modal-horarios');
+    if (modal) {
+        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
+    }
+}
+
 /**
  * Função para confirmar agendamento
  */

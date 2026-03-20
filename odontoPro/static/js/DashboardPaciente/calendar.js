@@ -70,29 +70,57 @@ class CalendarTimeSelector {
       html += `<div class="day-cell other-month disabled">${day}</div>`;
     }
     
-    const matrix = document.querySelector('.calendar-matrix');
-    if (matrix) {
-      matrix.innerHTML = html;
-    }
+    // Procurar e atualizar a matriz visível
+    const matrices = document.querySelectorAll('.calendar-matrix');
+    matrices.forEach(matrix => {
+      // Verificar se a matriz está visível (dentro de um modal que está aberto)
+      const modal = matrix.closest('.modal');
+      if (modal && modal.classList.contains('mostrar')) {
+        matrix.innerHTML = html;
+      }
+    });
     
-    // Update month/year display
+    // Update month/year display - procurar o mês/ano correspondente
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                        'July', 'August', 'September', 'October', 'November', 'December'];
-    const monthYearEl = document.querySelector('.month-year');
-    if (monthYearEl) {
-      monthYearEl.textContent = `${monthNames[month]} ${year}`;
-    }
+    const monthYearEls = document.querySelectorAll('.month-year');
+    monthYearEls.forEach(el => {
+      const modal = el.closest('.modal');
+      if (modal && modal.classList.contains('mostrar')) {
+        el.textContent = `${monthNames[month]} ${year}`;
+      }
+    });
   }
 
   attachEventListeners() {
-    // Day cells
-    document.querySelectorAll('.day-cell:not(.other-month):not(.disabled)').forEach(cell => {
-      cell.addEventListener('click', (e) => this.selectDate(e.target));
+    // Day cells - encontrar os que estão visíveis
+    const visibleCells = document.querySelectorAll('.day-cell:not(.other-month):not(.disabled)');
+    visibleCells.forEach(cell => {
+      // Remover listeners antigos
+      const newCell = cell.cloneNode(true);
+      cell.parentNode.replaceChild(newCell, cell);
+      
+      // Adicionar novo listener
+      newCell.addEventListener('click', (e) => this.selectDate(e.target));
     });
     
     // Time slots
-    document.querySelectorAll('.time-slot').forEach(slot => {
-      slot.addEventListener('click', (e) => this.selectTime(e.target));
+    const timeSlots = document.querySelectorAll('.time-slot');
+    timeSlots.forEach(slot => {
+      const newSlot = slot.cloneNode(true);
+      slot.parentNode.replaceChild(newSlot, slot);
+      
+      newSlot.addEventListener('click', (e) => {
+        this.selectTime(e.target);
+        // Fechar modal de horários após selecionar
+        setTimeout(() => {
+          const modal = document.getElementById('modal-horarios');
+          if (modal) {
+            modal.classList.remove('mostrar');
+            modal.style.display = 'none';
+          }
+        }, 200);
+      });
     });
     
     // Navigation buttons
@@ -100,9 +128,23 @@ class CalendarTimeSelector {
     const nextBtn = document.getElementById('btn-next-month');
     const todayBtn = document.querySelector('.btn-today');
     
-    if (prevBtn) prevBtn.addEventListener('click', () => this.previousMonth());
-    if (nextBtn) nextBtn.addEventListener('click', () => this.nextMonth());
-    if (todayBtn) todayBtn.addEventListener('click', () => this.goToToday());
+    if (prevBtn) {
+      const newPrevBtn = prevBtn.cloneNode(true);
+      prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+      newPrevBtn.addEventListener('click', () => this.previousMonth());
+    }
+    
+    if (nextBtn) {
+      const newNextBtn = nextBtn.cloneNode(true);
+      nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+      newNextBtn.addEventListener('click', () => this.nextMonth());
+    }
+    
+    if (todayBtn) {
+      const newTodayBtn = todayBtn.cloneNode(true);
+      todayBtn.parentNode.replaceChild(newTodayBtn, todayBtn);
+      newTodayBtn.addEventListener('click', () => this.goToToday());
+    }
   }
 
   selectDate(element) {
@@ -129,6 +171,15 @@ class CalendarTimeSelector {
     if (asideMonth) asideMonth.textContent = monthName;
     
     this.onDateChange(this.selectedDate);
+    
+    // Fechar modal de calendário após selecionar data
+    setTimeout(() => {
+      const modal = document.getElementById('modal-calendario');
+      if (modal) {
+        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
+      }
+    }, 300);
   }
 
   selectTime(element) {
@@ -193,11 +244,13 @@ class CalendarTimeSelector {
       html += `<div class="time-slot" data-time="${time}">${time}</div>`;
     });
     
-    const container = document.querySelector('.time-slots');
-    if (container) {
+    // Tentar renderizar em .time-slots (pode haver múltiplos)
+    const containers = document.querySelectorAll('.time-slots');
+    containers.forEach(container => {
       container.innerHTML = html;
-      this.attachEventListeners();
-    }
+    });
+    
+    this.attachEventListeners();
   }
 
   getSelectedDateTime() {
@@ -222,54 +275,84 @@ class CalendarTimeSelector {
 
 // Initialize calendar when page loads
 function initializeCalendarSelector() {
-  const calendarContainer = document.querySelector('.calendar-container');
+  // Procurar por calendar-matrix tanto em .calendar-container quanto em #modal-calendario
+  const calendarMatrices = document.querySelectorAll('.calendar-matrix');
   
-  if (calendarContainer) {
-    // Limpar calendar anterior se existir
-    if (window.calendarSelector) {
-      window.calendarSelector = null;
-    }
-    
-    console.log('Inicializando calendário...');
-    
-    window.calendarSelector = new CalendarTimeSelector({
-      onDateChange: (date) => {
-        console.log('Selected date:', date);
-        // Update form field if exists
-        const dateInput = document.getElementById('inputData');
-        if (dateInput) {
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          dateInput.value = `${year}-${month}-${day}`;
-          console.log('Data input atualizado:', dateInput.value);
-        }
-      },
-      onTimeChange: (time) => {
-        console.log('Selected time:', time);
-        // Update form field if exists
-        const timeInput = document.getElementById('selectHorario');
-        if (timeInput) {
-          // Create option if not exists
-          let option = timeInput.querySelector(`option[value="${time}"]`);
-          if (!option) {
-            option = document.createElement('option');
-            option.value = time;
-            option.textContent = time;
-            timeInput.appendChild(option);
-          }
-          timeInput.value = time;
-          console.log('Horário input atualizado:', time);
-        }
-      }
-    });
-
-    // Render time slots
-    window.calendarSelector.renderTimeSlots();
-    console.log('Calendário inicializado com sucesso');
-  } else {
-    console.warn('Calendar container não encontrado');
+  if (calendarMatrices.length === 0) {
+    console.warn('Calendar matrix não encontrado');
+    return;
   }
+  
+  // Usar o último calendar-matrix visível (o do modal)
+  const visibleMatrix = Array.from(calendarMatrices).find(m => {
+    return m.closest('.modal') && m.closest('.modal').classList.contains('mostrar');
+  }) || calendarMatrices[calendarMatrices.length - 1];
+  
+  if (!visibleMatrix) {
+    console.warn('Nenhum calendar-matrix visível encontrado');
+    return;
+  }
+  
+  console.log('Inicializando calendário...');
+  
+  // Limpar calendar anterior se existir
+  if (window.calendarSelector) {
+    window.calendarSelector = null;
+  }
+  
+  window.calendarSelector = new CalendarTimeSelector({
+    onDateChange: (date) => {
+      console.log('Selected date:', date);
+      
+      // Update form field if exists
+      const dateInput = document.getElementById('inputData');
+      if (dateInput) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        dateInput.value = `${year}-${month}-${day}`;
+        console.log('Data input atualizado:', dateInput.value);
+      }
+      
+      // Atualizar display da data selecionada
+      const dataSelecionadaDisplay = document.getElementById('dataSelecionadaDisplay');
+      if (dataSelecionadaDisplay) {
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+        const dateStr = `${dayName}, ${day} de ${monthNames[parseInt(month) - 1]} de ${year}`;
+        dataSelecionadaDisplay.innerHTML = `<span>${dateStr}</span><i class="fa-solid fa-calendar" style="margin-left: 10px; color: #00BCD4;"></i>`;
+      }
+    },
+    onTimeChange: (time) => {
+      console.log('Selected time:', time);
+      
+      // Update form field if exists
+      const timeInput = document.getElementById('selectHorario');
+      if (timeInput) {
+        // Create option if not exists
+        let option = timeInput.querySelector(`option[value="${time}"]`);
+        if (!option) {
+          option = document.createElement('option');
+          option.value = time;
+          option.textContent = time;
+          timeInput.appendChild(option);
+        }
+        timeInput.value = time;
+        console.log('Horário input atualizado:', time);
+      }
+      
+      // Atualizar display da hora selecionada
+      const horaSelecionadaDisplay = document.getElementById('horaSelecionadaDisplay');
+      if (horaSelecionadaDisplay) {
+        horaSelecionadaDisplay.innerHTML = `<span>${time}</span><i class="fa-solid fa-clock" style="margin-left: 10px; color: #00BCD4;"></i>`;
+      }
+    }
+  });
+
+  // Render time slots
+  window.calendarSelector.renderTimeSlots();
+  console.log('Calendário inicializado com sucesso');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
