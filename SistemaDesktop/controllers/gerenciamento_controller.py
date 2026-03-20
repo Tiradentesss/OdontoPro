@@ -322,3 +322,130 @@ class GerenciamentoController:
                 cursor.close()
             if conn:
                 conn.close()
+
+    @staticmethod
+    def listar_todos_gerentes_por_clinica(clinica_id):
+        """
+        Lista TODOS os gerentes de uma clínica (incluindo inativos)
+        Usado na tela de permissões para configurar novos gerentes
+        """
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+
+            cursor.execute("""
+                SELECT id, nome, email, ativo FROM odontoPro_gerenciamento 
+                WHERE clinica_id = %s
+                ORDER BY criado_em DESC
+            """, (clinica_id,))
+
+            return cursor.fetchall()
+
+        except Exception as e:
+            print(f"Erro ao listar gerentes: {e}")
+            return []
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def remover_todas_permissoes_gerente(gerente_id):
+        """
+        Remove TODAS as permissões de um gerente
+        Usado na tela de permissões antes de salvar novas permissões
+        """
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                DELETE FROM odontoPro_gerenciamento_permissoes 
+                WHERE gerenciamento_id = %s
+            """, (gerente_id,))
+
+            conn.commit()
+            return {"sucesso": True, "mensagem": "Permissões removidas com sucesso"}
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            return {"sucesso": False, "mensagem": f"Erro ao remover permissões: {str(e)}"}
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def inicializar_permissoes_padrao():
+        """
+        Inicializa as permissões padrão do sistema no banco de dados
+        Verifica se as permissões já existem antes de inserir (evita duplicatas)
+        """
+        conn = None
+        cursor = None
+        permissoes_padrao = [
+            "Painel",
+            "Agenda",
+            "Financeiro",
+            "Configurações",
+            "Cadastro",
+            "Permissões"
+        ]
+        
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            # Verificar quais permissões já existem no BD
+            try:
+                cursor.execute("SELECT codigo FROM odontoPro_permissao")
+                permissoes_existentes = {row[0] for row in cursor.fetchall()}
+                print(f"[PERMISSÕES] Já existem no BD: {permissoes_existentes}")
+            except Exception as query_error:
+                print(f"[ERRO] Falha ao consultar tabela odontoPro_permissao: {query_error}")
+                print(f"[ERRO] Verifique se a tabela existe no banco de dados!")
+                return {"sucesso": False, "mensagem": f"Tabela não encontrada: {str(query_error)}"}
+
+            # Inserir as permissões que não existem
+            inseridas = []
+            for perm in permissoes_padrao:
+                if perm not in permissoes_existentes:
+                    try:
+                        cursor.execute(
+                            "INSERT INTO odontoPro_permissao (codigo) VALUES (%s)",
+                            (perm,)
+                        )
+                        inseridas.append(perm)
+                        print(f"[PERMISSÕES] ✓ Permissão inserida: {perm}")
+                    except Exception as insert_error:
+                        print(f"[ERRO] Falha ao inserir permissão '{perm}': {insert_error}")
+                        raise
+                else:
+                    print(f"[PERMISSÕES] → Permissão já existe: {perm}")
+
+            conn.commit()
+            mensagem = f"Permissões inicializadas com sucesso. Inseridas: {inseridas}"
+            print(f"[PERMISSÕES] ✓ {mensagem}")
+            return {"sucesso": True, "mensagem": mensagem, "inseridas": inseridas}
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            erro_msg = f"Erro ao inicializar permissões: {str(e)}"
+            print(f"[ERRO] {erro_msg}")
+            return {"sucesso": False, "mensagem": erro_msg}
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()

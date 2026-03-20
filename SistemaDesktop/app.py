@@ -9,6 +9,7 @@ from views.cadastro import Cadastro
 from views.configuracoes import Configuracoes
 from views.login import Login
 from views.permissao import Permissoes
+from controllers.gerenciamento_controller import GerenciamentoController
 
 from PIL import Image
 import customtkinter as ctk
@@ -24,14 +25,55 @@ class App(ctk.CTk):
             login = Login()
             login.mainloop()
 
-        self.after(100, abrir_login)    
+        self.after(100, abrir_login)
 
-    def __init__(self, usuario_nome="Usuário", tipo_usuario=None, clinica_id=None):
+    def _carregar_permissoes_usuario(self):
+        """Carrega as permissões do gerente logado"""
+        try:
+            perms_bd = GerenciamentoController.obter_permissoes_gerente(self.usuario_id)
+            # Mapear para dicionário {codigo_permissão: True}
+            return {p['codigo']: True for p in perms_bd}
+        except Exception as e:
+            print(f"Erro ao carregar permissões: {e}")
+            return {}
+
+    def tem_permissao(self, tela):
+        """Verifica se o usuário tem permissão para acessar uma tela"""
+        if self.tipo_usuario == "clinica":
+            # Usuários de clínica têm acesso a tudo
+            return True
+        
+        # Para gerentes, verificar a permissão
+        # Mapear nome da tela para nome da permissão no BD
+        mapa_permissoes = {
+            "painel": "Painel",
+            "agenda": "Agenda",
+            "financeiro": "Financeiro",
+            "config": "Configurações",
+            "cadastro": "Cadastro",
+            "permissao": "Permissões"
+        }
+        
+        perm_necessaria = mapa_permissoes.get(tela)
+        return perm_necessaria in self.permissoes_usuario if perm_necessaria else False
+
+    def __init__(self, usuario_nome="Usuário", usuario_id=None, tipo_usuario=None, clinica_id=None):
         self.clinica_id = clinica_id
+        self.usuario_id = usuario_id
+        self.tipo_usuario = tipo_usuario
         super().__init__()
 
         self.usuario_nome = usuario_nome
-        self.tipo_usuario = tipo_usuario
+        
+        # Inicializar permissões padrão no BD (se não existirem)
+        resultado_perms = GerenciamentoController.inicializar_permissoes_padrao()
+        if not resultado_perms.get("sucesso"):
+            print(f"[AVISO APP] Falha ao inicializar permissões: {resultado_perms.get('mensagem')}")
+        
+        # Carregar permissões do gerente se for tipo "gerenciamento"
+        self.permissoes_usuario = {}
+        if tipo_usuario == "gerenciamento" and usuario_id:
+            self.permissoes_usuario = self._carregar_permissoes_usuario()
 
         self.title("OdontoPro - Sistema de Gerenciamento")
         largura = self.winfo_screenwidth()
@@ -75,12 +117,17 @@ class App(ctk.CTk):
         # Menu
         self.buttons = {}
         if self.tipo_usuario == "gerenciamento":
-            self.menu_items = [
+            # Para gerentes, mostrar todos os itens possíveis
+            todos_itens = [
                 ("▣  Painel", "painel"),
                 ("🗓  Agenda", "agenda"),
                 ("💰  Financeiro", "financeiro"),
                 ("⚙  Configurações", "config"),
+                ("👤  Cadastro", "cadastro"),
+                ("🔒  Permissões", "permissao"),
             ]
+            # Filtrar apenas os que o gerente tem permissão
+            self.menu_items = [item for item in todos_itens if self.tem_permissao(item[1])]
         else:  # clinica
             self.menu_items = [
                 ("▣  Painel", "painel"),
@@ -89,8 +136,7 @@ class App(ctk.CTk):
                 ("⚙  Configurações", "config"),
                 ("👤  Cadastro", "cadastro"),
                 ("🔒  Permissões", "permissao"),
-        ]
-
+            ]
 
         for text, name in self.menu_items:
             self.buttons[name] = self.create_menu_button(text, name)
@@ -116,7 +162,7 @@ class App(ctk.CTk):
             "financeiro": Financeiro(self.container),
             "config": Configuracoes(self.container),
             "cadastro": Cadastro(self.container, self.clinica_id),
-            "permissao": Permissoes(self.container),
+            "permissao": Permissoes(self.container, self.clinica_id),
         }
 
         self.current_frame = None
@@ -139,6 +185,12 @@ class App(ctk.CTk):
         return btn
 
     def show_frame(self, name):
+        # Verificar se o usuário tem permissão para acessar esta tela
+        if not self.tem_permissao(name):
+            from tkinter import messagebox
+            messagebox.showerror("Acesso Negado", f"Você não tem permissão para acessar esta tela: {name}")
+            return
+        
         if self.current_frame:
             self.current_frame.pack_forget()
 

@@ -3,6 +3,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
 from tkinter import messagebox, filedialog
 from .theme import font, ICON_SIZE
+from controllers.gerenciamento_controller import GerenciamentoController
 
 # Certifique-se que este import existe no seu projeto, senão comente as linhas de salvar/carregar
 try:
@@ -447,47 +448,99 @@ class AdminListFrame(ctk.CTkFrame):
 
 
 class Permissoes(ctk.CTkFrame):
-    def __init__(self, parent):
+    def __init__(self, parent, clinica_id=None):
         super().__init__(parent, fg_color="#F1F5F9")
 
+        self.clinica_id = clinica_id
+        
+        # Inicializar permissões padrão no BD (se não existirem)
+        resultado_perms = GerenciamentoController.inicializar_permissoes_padrao()
+        if not resultado_perms.get("sucesso"):
+            print(f"[AVISO PERMISSÃO] Falha ao inicializar permissões: {resultado_perms.get('mensagem')}")
+        
         self.grid_columnconfigure(0, weight=4)
         self.grid_columnconfigure(1, weight=5)
         self.grid_rowconfigure(0, weight=0)
         self.grid_rowconfigure(1, weight=1)
 
         self.selected_admin_name = None
+        self.selected_admin_id = None  # Novo: armazenar ID do gerente
         self.switch_widgets = {}
         self.permissions_list = ["Painel", "Agenda", "Financeiro", "Configurações", "Cadastro", "Permissões"]
 
-        try:
-            dados = carregar_permissoes()
-            self.admins_data = dados if dados and isinstance(dados, dict) else self.get_default_data()
-        except Exception:
-            self.admins_data = self.get_default_data()
+        # Carregar gerentes do banco de dados
+        self.admins_data = self.load_gerentes_from_database()
 
         self.setup_ui()
+
+    def load_gerentes_from_database(self):
+        """Carrega gerentes da clínica do banco de dados"""
+        try:
+            gerentes_bd = GerenciamentoController.listar_todos_gerentes_por_clinica(self.clinica_id)
+            
+            if not gerentes_bd:
+                print("Nenhum gerente encontrado para esta clínica")
+                return self.get_default_data()
+            
+            # Mapear códigos de permissões do BD
+            permissoes_bd = GerenciamentoController.listar_permissoes_disponiveis()
+            permissao_map = {p['codigo']: p['id'] for p in permissoes_bd}
+            
+            # Converter dados do BD para formato da UI
+            admins = {}
+            for gerente in gerentes_bd:
+                gerente_id = gerente['id']
+                gerentes_perms_bd = GerenciamentoController.obter_permissoes_gerente(gerente_id)
+                
+                # Mapear permissões obtidas para o formato esperado
+                perms_dict = {}
+                for perm in self.permissions_list:
+                    # Verificar se o gerente tem essa permissão
+                    tem_permissao = any(p['codigo'] == perm for p in gerentes_perms_bd)
+                    perms_dict[perm] = tem_permissao
+                
+                status = "Ativo" if gerente['ativo'] == 1 else "Inativo"
+                
+                admins[gerente['nome']] = {
+                    "id": gerente_id,
+                    "level": "Gerente",
+                    "email": gerente['email'],
+                    "status": status,
+                    "perms": perms_dict
+                }
+            
+            return admins if admins else self.get_default_data()
+        except Exception as e:
+            print(f"Erro ao carregar gerentes do BD: {e}")
+            import traceback
+            traceback.print_exc()
+            return self.get_default_data()
 
     def get_default_data(self):
         return {
             "John Doe": {
+                "id": 1,
                 "level": "Admin", 
                 "email": "john.doe@email.com", 
                 "status": "Ativo", 
                 "perms": {p: True for p in self.permissions_list}
             },
             "Jane Smith": {
+                "id": 2,
                 "level": "Billing", 
                 "email": "jane.smith@email.com", 
                 "status": "Ativo", 
                 "perms": {p: True for p in self.permissions_list[:3]}
             },
             "Alice Brown": {
+                "id": 3,
                 "level": "Reporting", 
                 "email": "alice.b@email.com", 
                 "status": "Ativo", 
                 "perms": {p: False for p in self.permissions_list}
             },
             "Locaritn Ltrntan": {
+                "id": 4,
                 "level": "Somente Leitura", 
                 "email": "loc@email.com", 
                 "status": "Pendente", 
@@ -658,6 +711,7 @@ class Permissoes(ctk.CTkFrame):
 
     def on_admin_click(self, frame, admin_name):
         self.selected_admin_name = admin_name
+        self.selected_admin_id = self.admins_data[admin_name].get("id")  # Novo: guardar ID do gerente
         self.selected_admin_label.configure(text=f"Configurando: {admin_name}")
         self.toggle_switches_state("normal")
 
@@ -679,6 +733,35 @@ class Permissoes(ctk.CTkFrame):
             sw.configure(state=state)
 
     def save_to_database(self):
-        salvar_permissoes(self.admins_data)
-        messagebox.showinfo("Sucesso", "✅ Permissões salvas com sucesso!")
-        self.admin_list_panel.refresh_list()
+        """Salva as permissões no banco de dados"""
+        if not self.selected_admin_id:
+            messagebox.showwarning("Aviso", "Selecione um administrador para salvar permissões")
+            return
+        
+        try:
+            gerente_id = self.selected_admin_id
+            
+            # Passo 1: Remover todas as permissões antigas
+            GerenciamentoController.remover_todas_permissoes_gerente(gerente_id)
+            
+            # Passo 2: Adicionar as novas permissões selecionadas
+            todas_permissoes = GerenciamentoController.listar_permissoes_disponiveis()
+            permissao_map = {p['codigo']: p['id'] for p in todas_permissoes}
+            for perm_nome in self.permissions_list:
+                if self.switch_widgets[perm_nome].get():  # Se a permissão está ativada
+                    permissao_id = permissao_map.get(perm_nome)
+                    if permissao_id:
+                        GerenciamentoController.adicionar_permissao_gerente(gerente_id, permissao_id)
+            
+            # Passo 3: Ativar o gerente após configurar as permissões
+            GerenciamentoController.ativar_gerente(gerente_id)
+            
+            # Passo 4: Atualizar a UI com os dados salvos
+            self.admins_data = self.load_gerentes_from_database()
+            
+            messagebox.showinfo("Sucesso", "✅ Permissões salvas com sucesso e gerente ativado!")
+            self.admin_list_panel.refresh_list()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao salvar permissões: {str(e)}")
+            import traceback
+            traceback.print_exc()

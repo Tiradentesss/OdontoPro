@@ -4,6 +4,7 @@ from PIL import Image
 from tkinter import messagebox
 
 from controllers.auth_controller import AuthController
+from controllers.gerenciamento_controller import GerenciamentoController
 from .theme import font, ICON_SIZE
 
 
@@ -202,12 +203,18 @@ class Login(ctk.CTk):
 
         usuario = resultado["usuario"]
 
+        # Inicializar permissões padrão no BD (se não existirem)
+        resultado_perms = GerenciamentoController.inicializar_permissoes_padrao()
+        if not resultado_perms.get("sucesso"):
+            print(f"[AVISO LOGIN] Falha ao inicializar permissões: {resultado_perms.get('mensagem')}")
+
         self.destroy()
 
         from app import App
         app = App(
             usuario_nome=usuario["nome"],
+            usuario_id=usuario["id"],
             tipo_usuario=usuario["tipo"],
-            clinica_id=usuario["clinica_id"]  # ← ESSENCIAL
+            clinica_id=usuario["clinica_id"]
         )
         app.mainloop()

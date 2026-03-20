@@ -1,86 +1,58 @@
 {
-    "John Doe": {
+    "abacaxi": {
+        "id": 5,
         "level": "Admin",
-        "color": "#9CA3AF",
+        "email": "abacaxi@gmail.com",
+        "status": "Ativo",
         "perms": {
-            "Schedule Access": true,
-            "Patient Records": true,
-            "Patient Meds": true,
-            "Staff Records": false,
-            "Patient Management": false,
-            "Documentation Tools": false,
-            "Patient Trials": false,
-            "Inventory Tools": false,
-            "Financial Navigens": false,
-            "Insurance Tools": false,
-            "Communication Tools": false,
-            "Staff Mgmt": false,
-            "Event Management": false,
-            "Communication Teals": false,
             "Painel": true,
-            "Configurações": false
+            "Agenda": false,
+            "Financeiro": true,
+            "Configurações": false,
+            "Cadastro": false,
+            "Permissões": true
         }
     },
-    "Jane Smith": {
-        "level": "Billing",
-        "color": "#9CA3AF",
+    "Carlos Almeida": {
+        "id": 1,
+        "level": "Admin",
+        "email": "carlos@flores.com",
+        "status": "Ativo",
         "perms": {
-            "Schedule Access": false,
-            "Patient Records": true,
-            "Patient Meds": true,
-            "Staff Records": false,
-            "Patient Management": true,
-            "Documentation Tools": true,
-            "Patient Trials": false,
-            "Inventory Tools": true,
-            "Financial Navigens": true,
-            "Insurance Tools": false,
-            "Communication Tools": true,
-            "Staff Mgmt": true,
-            "Event Management": false,
-            "Communication Teals": true,
             "Painel": false,
-            "Configurações": false
+            "Agenda": false,
+            "Financeiro": false,
+            "Configurações": false,
+            "Cadastro": false,
+            "Permissões": false
         }
     },
-    "Alice Brown": {
-        "level": "Reporting",
-        "color": "#10B981",
+    "Fernanda Lima": {
+        "id": 2,
+        "level": "Admin",
+        "email": "fernanda@flores.com",
+        "status": "Ativo",
         "perms": {
-            "Schedule Access": true,
-            "Patient Records": false,
-            "Patient Meds": true,
-            "Staff Records": false,
-            "Patient Management": true,
-            "Documentation Tools": false,
-            "Patient Trials": true,
-            "Inventory Tools": false,
-            "Financial Navigens": true,
-            "Insurance Tools": false,
-            "Communication Tools": true,
-            "Staff Mgmt": false,
-            "Event Management": true,
-            "Communication Teals": false
+            "Painel": false,
+            "Agenda": false,
+            "Financeiro": false,
+            "Configurações": false,
+            "Cadastro": false,
+            "Permissões": false
         }
     },
-    "Locaritn Ltrntan": {
-        "level": "Read-Only",
-        "color": "#10B981",
+    "jul": {
+        "id": 6,
+        "level": "Admin",
+        "email": "jul@gmail.com",
+        "status": "Ativo",
         "perms": {
-            "Schedule Access": false,
-            "Patient Records": false,
-            "Patient Meds": false,
-            "Staff Records": false,
-            "Patient Management": false,
-            "Documentation Tools": false,
-            "Patient Trials": false,
-            "Inventory Tools": false,
-            "Financial Navigens": false,
-            "Insurance Tools": false,
-            "Communication Tools": false,
-            "Staff Mgmt": false,
-            "Event Management": false,
-            "Communication Teals": false
+            "Painel": false,
+            "Agenda": false,
+            "Financeiro": false,
+            "Configurações": false,
+            "Cadastro": false,
+            "Permissões": false
         }
     }
 }
