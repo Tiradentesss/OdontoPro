@@ -958,12 +958,50 @@ function proximaEtapa() {
     const modal1 = document.getElementById('modal-agendamento-1');
     const modal2 = document.getElementById('modal-agendamento-2');
     
-    if (modal1) modal1.classList.remove('mostrar');
-    if (modal2) modal2.classList.add('mostrar');
+    if (modal1) {
+        modal1.classList.remove('mostrar');
+        setTimeout(() => {
+            modal1.style.display = 'none';
+        }, 100);
+    }
+    
+    if (modal2) {
+        modal2.classList.add('mostrar');
+        modal2.style.display = 'flex';
+        
+        // Reinicializar o calendário quando o modal é aberto
+        setTimeout(() => {
+            if (typeof initializeCalendarSelector === 'function') {
+                console.log('Reinicializando calendário no segundo modal...');
+                initializeCalendarSelector();
+            }
+        }, 300);
+    }
     
     // Carregar especialidades e médicos da clínica selecionada
     carregarEspecialidadesEMedicos(clinicaSelecionada);
 }
+
+function voltarAoFormulario() {
+    const modal1 = document.getElementById('modal-agendamento-1');
+    const modal2 = document.getElementById('modal-agendamento-2');
+    
+    if (modal2) {
+        modal2.classList.remove('mostrar');
+        setTimeout(() => {
+            modal2.style.display = 'none';
+        }, 100);
+    }
+    
+    if (modal1) {
+        modal1.classList.add('mostrar');
+        modal1.style.display = 'flex';
+    }
+}
+
+/**
+ * Função para confirmar agendamento
+ */
 
 function confirmarAgendamento() {
     // Validar campos do segundo modal

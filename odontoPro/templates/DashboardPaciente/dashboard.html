@@ -373,7 +373,7 @@
         <div id="modal-agendamento-2" class="modal">
             <div class="modal-content">
                 <span class="tag-online">📅 Agendamento Online</span>
-                <h3>Escolha o tipo de consulta</h3>
+                <h3>Escolha o tipo de consulta e horário</h3>
 
                 <select id="selectEspecialidade" name="especialidade" required>
                     <option value="">Selecione uma Especialidade</option>
@@ -421,7 +421,10 @@
                     <option value="">Selecione o Horário</option>
                 </select>
 
-                <button class="btn-cyan" onclick="confirmarAgendamento()">Agendar Consulta</button>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn-cyan" style="flex: 1;" onclick="voltarAoFormulario()">← Voltar</button>
+                    <button class="btn-cyan" style="flex: 1; background-color: #00BCD4;" onclick="confirmarAgendamento()">Agendar Consulta</button>
+                </div>
 
                 <div class="security-banner">
                     🛡️ Suas informações estão seguras e protegidas

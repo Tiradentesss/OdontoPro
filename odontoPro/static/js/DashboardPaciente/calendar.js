@@ -221,10 +221,17 @@ class CalendarTimeSelector {
 }
 
 // Initialize calendar when page loads
-document.addEventListener('DOMContentLoaded', () => {
+function initializeCalendarSelector() {
   const calendarContainer = document.querySelector('.calendar-container');
   
   if (calendarContainer) {
+    // Limpar calendar anterior se existir
+    if (window.calendarSelector) {
+      window.calendarSelector = null;
+    }
+    
+    console.log('Inicializando calendário...');
+    
     window.calendarSelector = new CalendarTimeSelector({
       onDateChange: (date) => {
         console.log('Selected date:', date);
@@ -235,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const month = String(date.getMonth() + 1).padStart(2, '0');
           const day = String(date.getDate()).padStart(2, '0');
           dateInput.value = `${year}-${month}-${day}`;
+          console.log('Data input atualizado:', dateInput.value);
         }
       },
       onTimeChange: (time) => {
@@ -251,11 +259,22 @@ document.addEventListener('DOMContentLoaded', () => {
             timeInput.appendChild(option);
           }
           timeInput.value = time;
+          console.log('Horário input atualizado:', time);
         }
       }
     });
 
     // Render time slots
     window.calendarSelector.renderTimeSlots();
+    console.log('Calendário inicializado com sucesso');
+  } else {
+    console.warn('Calendar container não encontrado');
   }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Aguardar um pouco para garantir que o DOM está completo
+  setTimeout(() => {
+    initializeCalendarSelector();
+  }, 1000);
 });

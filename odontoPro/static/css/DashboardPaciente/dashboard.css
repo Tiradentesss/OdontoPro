@@ -1416,6 +1416,15 @@ body {
     text-align: center;
 }
 
+/* Estilos específicos para o modal de agendamento 2 (com calendário) */
+#modal-agendamento-2 .modal-content {
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 40px;
+}
+
 /* Cabeçalho e Títulos */
 .modal-header-tag {
     background-color: #E0F7FA;
