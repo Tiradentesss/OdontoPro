@@ -1,13 +1,12 @@
-# controllers/gerenciamento_controller.py
-
 from config.database import get_connection
 import hashlib
+from datetime import datetime
 
 
 class GerenciamentoController:
     
     @staticmethod
-    def criar_gerente(nome, email, telefone, cpf, clinica_id, senha=None, permissoes=None):
+    def criar_gerente(nome, email, clinica_id, senha=None, permissoes=None):
         """
         Cria um novo gerente/usuário de gerenciamento no banco de dados
         
@@ -31,9 +30,9 @@ class GerenciamentoController:
 
             cursor.execute("""
                 INSERT INTO odontoPro_gerenciamento 
-                (nome, email, senha, clinica_id, ativo)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (nome, email, senha_hash, clinica_id, 1))
+                (nome, email, senha, clinica_id, ativo, criado_em)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (nome, email, senha_hash, clinica_id, 0, datetime.now()))
 
 
             gerente_id = cursor.lastrowid

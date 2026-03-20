@@ -239,57 +239,159 @@ class Cadastro(BaseScreen):
 
         self._titulo(frame, "Cadastro de Profissional")
 
-        self._secao_titulo(frame, "Dados Pessoais")
+        self._secao_titulo(frame, "Dados Pessoais e Acesso ao Sistema")
         entries = []
-        e1, e2 = self._campo_duplo(frame, "Nome completo", "Email")
-        entries.extend([e1, e2])
+        
+        # Linha 1: Nome | Senha
+        container1 = ctk.CTkFrame(frame, fg_color="transparent")
+        container1.pack(fill="x", padx=self.padding_lateral, pady=(0, 0))
+
+        # Frame Nome (tamanho fixo)
+        frame_nome = ctk.CTkFrame(container1, fg_color="transparent")
+        frame_nome.pack(side="left", expand=True, fill="x", padx=(0, 5))
+
+        ctk.CTkLabel(
+            frame_nome,
+            text="Nome completo",
+            font=("Poppins", 14),
+            text_color="#4B5563",
+            anchor="w"
+        ).pack(anchor="w", pady=(0, 3))
+
+        nome_entry = ctk.CTkEntry(
+            frame_nome,
+            placeholder_text="Digite seu nome",
+            height=44,
+            fg_color="#F9FAFB",
+            border_color="#E5E7EB",
+            border_width=1,
+            corner_radius=5,
+            text_color="#111827",
+            placeholder_text_color="#9CA3AF"
+        )
+        nome_entry.pack(fill="x")
+        entries.append(nome_entry)
+
+        # Frame Senha (tamanho fixo, maior)
+        frame_senha = ctk.CTkFrame(container1, fg_color="transparent")
+        frame_senha.pack(side="left", padx=(5, 0))
+
+        ctk.CTkLabel(
+            frame_senha,
+            text="Senha",
+            font=("Poppins", 14),
+            text_color="#4B5563",
+            anchor="w"
+        ).pack(anchor="w", pady=(0, 3))
+
+        self.senha_entry = ctk.CTkEntry(
+            frame_senha,
+            placeholder_text="Sua senha",
+            height=44,
+            width=200,
+            show="*",
+            fg_color="#F9FAFB",
+            border_color="#E5E7EB",
+            border_width=1,
+            corner_radius=5,
+            text_color="#111827",
+            placeholder_text_color="#9CA3AF"
+        )
+        self.senha_entry.pack()
+        entries.append(self.senha_entry)
+
+        # Linha 2: Email | Confirmar Senha
+        container2 = ctk.CTkFrame(frame, fg_color="transparent")
+        container2.pack(fill="x", padx=self.padding_lateral, pady=(0, 0))
+
+        # Frame Email (tamanho fixo)
+        frame_email = ctk.CTkFrame(container2, fg_color="transparent")
+        frame_email.pack(side="left", expand=True, fill="x", padx=(0, 5))
+
+        ctk.CTkLabel(
+            frame_email,
+            text="Email",
+            font=("Poppins", 14),
+            text_color="#4B5563",
+            anchor="w"
+        ).pack(anchor="w", pady=(0, 3))
+
+        email_entry = ctk.CTkEntry(
+            frame_email,
+            placeholder_text="seu@email.com",
+            height=44,
+            fg_color="#F9FAFB",
+            border_color="#E5E7EB",
+            border_width=1,
+            corner_radius=5,
+            text_color="#111827",
+            placeholder_text_color="#9CA3AF"
+        )
+        email_entry.pack(fill="x")
+        entries.append(email_entry)
+
+        # Frame Confirmar Senha (tamanho fixo, maior)
+        frame_confirma_senha = ctk.CTkFrame(container2, fg_color="transparent")
+        frame_confirma_senha.pack(side="left", padx=(5, 0))
+
+        ctk.CTkLabel(
+            frame_confirma_senha,
+            text="Confirmar Senha",
+            font=("Poppins", 14),
+            text_color="#4B5563",
+            anchor="w"
+        ).pack(anchor="w", pady=(0, 3))
+
+        self.confirma_senha_entry = ctk.CTkEntry(
+            frame_confirma_senha,
+            placeholder_text="Confirme",
+            height=44,
+            width=200,
+            show="*",
+            fg_color="#F9FAFB",
+            border_color="#E5E7EB",
+            border_width=1,
+            corner_radius=5,
+            text_color="#111827",
+            placeholder_text_color="#9CA3AF"
+        )
+        self.confirma_senha_entry.pack()
+        entries.append(self.confirma_senha_entry)
 
         self._secao_titulo(frame, "Tipo de Profissional")
         tipo_container = ctk.CTkFrame(frame, fg_color="transparent")
-        tipo_container.pack(fill="x", padx=self.padding_lateral, pady=(0, 10))  # 9 -> 10
+        tipo_container.pack(fill="x", padx=self.padding_lateral, pady=(0, 10))
         
         ctk.CTkLabel(
             tipo_container, 
             text="Selecione o tipo", 
-            font=("Poppins", 14),  # 13 -> 14
+            font=("Poppins", 14),
             text_color="#4B5563"
-        ).pack(anchor="w", pady=(0, 3))  # 2 -> 3
+        ).pack(anchor="w", pady=(0, 3))
         
         self.tipo_profissional = ctk.CTkOptionMenu(
             tipo_container,
             values=["Médico", "Gerente"],
-            height=44,  # 40 -> 44
+            height=44,
             fg_color="#F9FAFB", 
             button_color="#E5E7EB", 
             button_hover_color="#D1D5DB",
             text_color="#111827", 
             dropdown_fg_color="#FFFFFF", 
             dropdown_text_color="#111827",
-            dropdown_font=("Poppins", 14),  # 13 -> 14
+            dropdown_font=("Poppins", 14),
             command=self._ao_mudar_tipo_profissional
         )
         self.tipo_profissional.pack(fill="x")
 
         self.campos_dinamicos_container = ctk.CTkFrame(frame, fg_color="transparent")
-        self.campos_dinamicos_container.pack(fill="x", pady=(0, 10))  # 9 -> 10
+        self.campos_dinamicos_container.pack(fill="x", pady=(0, 10))
 
         self.frame_medico = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
         self.cro_entry, self.telefone_entry = self._campo_duplo(
             self.frame_medico, "CRO", "Telefone"
         )
         entries.extend([self.cro_entry, self.telefone_entry])
-        
-        self.frame_gerente = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
-        self.gerente_cpf, self.gerente_telefone = self._campo_duplo(
-            self.frame_gerente, "CPF", "Telefone"
-        )
-        entries.extend([self.gerente_cpf, self.gerente_telefone])
-
-        self._secao_titulo(frame, "Acesso ao Sistema")
-        self.senha_entry, self.confirma_senha_entry = self._campo_duplo(
-            frame, "Senha", "Confirme a Senha", show1="*", show2="*"
-        )
-        entries.extend([self.senha_entry, self.confirma_senha_entry])
 
         self._ao_mudar_tipo_profissional("Médico")
 
@@ -300,15 +402,11 @@ class Cadastro(BaseScreen):
     def _ao_mudar_tipo_profissional(self, choice):
         try:
             self.frame_medico.pack_forget()
-            self.frame_gerente.pack_forget()
         except Exception:
             pass
         
         if choice == "Médico":
             self.frame_medico.pack(fill="x")
-            
-        elif choice == "Gerente":
-            self.frame_gerente.pack(fill="x")
 
     def _botoes_acao(self, parent, texto_principal, target_entries=None):
         container = ctk.CTkFrame(parent, fg_color="transparent")
@@ -481,13 +579,11 @@ class Cadastro(BaseScreen):
         try:
             nome = entries[0].get().strip()
             email = entries[1].get().strip()
-            cpf = self.gerente_cpf.get().strip()
-            telefone = self.gerente_telefone.get().strip()
             senha = self.senha_entry.get().strip()
             confirma_senha = self.confirma_senha_entry.get().strip()
             
             # Validações
-            if not all([nome, email, cpf, telefone, senha]):
+            if not all([nome, email, senha]):
                 self._mostrar_mensagem("Preencha todos os campos obrigatórios (inclusive senha)", sucesso=False)
                 return
             
@@ -498,8 +594,6 @@ class Cadastro(BaseScreen):
             resultado = GerenciamentoController.criar_gerente(
                 nome=nome,
                 email=email,
-                telefone=telefone,
-                cpf=cpf,
                 clinica_id=self.clinica_id,
                 senha=senha,
                 permissoes=None
@@ -508,7 +602,6 @@ class Cadastro(BaseScreen):
             if resultado["sucesso"]:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
                 self._limpar_campos([entries[0], entries[1]])
-                self._limpar_campos([self.gerente_cpf, self.gerente_telefone])
                 self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
