@@ -79,8 +79,15 @@ class ModernInput(ctk.CTkFrame):
         self.entry.insert(0, value)
 
 class Configuracoes(BaseScreen):
-    def __init__(self, parent):
+    def __init__(self, parent, tipo_usuario="clinica", clinica_id=None, usuario_id=None):
         super().__init__(parent, "Configurações")
+        
+        # Tipo de usuário: "clinica", "gerenciamento", "dentista", etc.
+        self.tipo_usuario = tipo_usuario
+        # ID da clínica (necessário para carregar/salvar dados quando tipo_usuario=="clinica")
+        self.clinica_id = clinica_id
+        # ID do usuário logado (necessário para carregar dados de perfil)
+        self.usuario_id = usuario_id
 
         self.colors = {
             "bg_main": "#FFFFFF",
@@ -104,6 +111,8 @@ class Configuracoes(BaseScreen):
         self.tab_buttons = {}
         self.images = {}
         self.loading_states = {}
+        self.clinic_entries = {}  # Inicializar vazio, preenchido apenas se tipo_usuario=="clinica"
+        self.profile_entries = {}  # Inicializar vazio, preenchido apenas se tipo_usuario="gerenciamento" ou "dentista"
 
         self.setup_ui()
 
@@ -143,13 +152,21 @@ class Configuracoes(BaseScreen):
         self.switch_tab(self.current_tab)
 
     def _build_tabs(self):
-        tabs = [
-            {"name": "Perfil", "text": "👤   Perfil"},
-            {"name": "Segurança", "text": "🔒   Segurança"},
-            {"name": "Minha Clínica", "text": "🏥   Minha Clínica"}
+        # Todas as abas disponíveis
+        todas_abas = [
+            {"name": "Perfil", "text": "👤   Perfil", "tipo_acesso": ["gerenciamento", "dentista"]},
+            {"name": "Segurança", "text": "🔒   Segurança", "tipo_acesso": ["clinica", "gerenciamento", "dentista"]},
+            {"name": "Minha Clínica", "text": "🏥   Minha Clínica", "tipo_acesso": ["clinica"]}
         ]
         
-        for i, tab in enumerate(tabs):
+        # Filtrar abas baseado no tipo de usuário
+        tabs_disponiveis = [tab for tab in todas_abas if self.tipo_usuario in tab["tipo_acesso"]]
+        
+        # Definir primeira aba disponível como padrão
+        if tabs_disponiveis:
+            self.current_tab = tabs_disponiveis[0]["name"]
+        
+        for i, tab in enumerate(tabs_disponiveis):
             btn = ctk.CTkButton(
                 self.tab_bar,
                 text=tab["text"],
@@ -157,7 +174,7 @@ class Configuracoes(BaseScreen):
                 width=135, height=37, corner_radius=6,
                 command=lambda t=tab["name"]: self.switch_tab(t)
             )
-            padx_val = (0, 5) if i < len(tabs) - 1 else 0
+            padx_val = (0, 5) if i < len(tabs_disponiveis) - 1 else 0
             btn.pack(side="left", padx=padx_val)
             self.tab_buttons[tab["name"]] = btn
 
@@ -329,7 +346,84 @@ class Configuracoes(BaseScreen):
             scrollbar_button_color="#D1D5DB", scrollbar_button_hover_color="#9CA3AF"
         )
         scroll.pack(fill="both", expand=True, anchor="w")
+        
+        # Carregar dados da clínica do BD (se for conta da clínica)
+        clinica_data = None
+        endereco_data = None
+        if self.tipo_usuario == "clinica" and self.clinica_id:
+            clinica_data = self._load_clinic_data()
+            endereco_data = self._load_endereco_data()
 
+        # ========== LOGO DA CLÍNICA (apenas para conta da clínica) ==========
+        if self.tipo_usuario == "clinica":
+            logo_section = ctk.CTkFrame(scroll, fg_color="transparent")
+            logo_section.pack(fill="x", padx=60, pady=(0, 25), anchor="w")
+            
+            self._secao_titulo(logo_section, "Logo da Clínica", padx=0)
+            
+            logo_container = ctk.CTkFrame(
+                logo_section, fg_color="transparent", width=140, height=140
+            )
+            logo_container.pack(anchor="w", pady=(0, 15))
+            logo_container.pack_propagate(False)
+            
+            # Preview da logo (círculo)
+            self.logo_canvas = tk.Canvas(
+                logo_container, width=140, height=140, bg="white", 
+                highlightthickness=0, bd=0
+            )
+            self.logo_canvas.pack()
+            self.logo_canvas.create_oval(5, 5, 135, 135, 
+                fill=self.colors["accent_light"], outline=self.colors["accent"], width=2)
+            self.logo_canvas.create_text(70, 70, text="LOGO", 
+                font=("Arial", 18, "bold"), fill=self.colors["accent"])
+            
+            self.logo_upload_btn = ctk.CTkButton(
+                logo_section, text="📷 Alterar Logo",
+                font=("Poppins", 14), fg_color=self.colors["accent"],
+                hover_color=self.colors["accent_hover"], height=44, corner_radius=5,
+                command=self._load_clinic_logo, width=200
+            )
+            self.logo_upload_btn.pack(anchor="w")
+            
+            # Informações da Clínica
+            clinic_section = ctk.CTkFrame(scroll, fg_color="transparent")
+            clinic_section.pack(fill="x", padx=60, pady=(0, 25), anchor="w")
+            
+            self._secao_titulo(clinic_section, "Informações da Clínica", padx=0)
+            
+            clinic_form = ctk.CTkFrame(clinic_section, fg_color="transparent")
+            clinic_form.pack(fill="x", anchor="w")
+            clinic_form.grid_columnconfigure((0, 1), weight=1)
+            
+            fields = [
+                {"label": "Nome da Clínica", "placeholder": "Nome oficial", "row": 0, "col": 0, "required": True},
+                {"label": "CNPJ", "placeholder": "00.000.000/0000-00", "row": 0, "col": 1, "required": True},
+                {"label": "E-mail Clínica", "placeholder": "email@clinica.com", "row": 1, "col": 0, "required": True},
+                {"label": "Telefone", "placeholder": "(00) 0000-0000", "row": 1, "col": 1, "required": True},
+            ]
+            
+            for field in fields:
+                padx_val = (0, 5) if field["col"] == 0 else (5, 0)
+                
+                input_widget = ModernInput(
+                    clinic_form, label=field["label"], placeholder=field["placeholder"],
+                    required=field.get("required", False)
+                )
+                input_widget.grid(
+                    row=field["row"], column=field["col"], sticky="ew",
+                    padx=padx_val, pady=5
+                )
+                self.clinic_entries[field["label"]] = input_widget
+            
+            # Preencher campos com dados existentes
+            if clinica_data:
+                self.clinic_entries["Nome da Clínica"].set(clinica_data.get("nome", ""))
+                self.clinic_entries["CNPJ"].set(clinica_data.get("cnpj", ""))
+                self.clinic_entries["E-mail Clínica"].set(clinica_data.get("email", ""))
+                self.clinic_entries["Telefone"].set(clinica_data.get("telefone", ""))
+
+        # ========== FOTOS DA CLÍNICA ==========
         photos_section = ctk.CTkFrame(scroll, fg_color="transparent")
         photos_section.pack(fill="x", padx=60, pady=(0, 25), anchor="w") 
 
@@ -389,6 +483,21 @@ class Configuracoes(BaseScreen):
                 border_color=self.colors["border"], fg_color="#F9FAFB", font=("Poppins", 14)
             )
             entry.grid(row=field["row"]*2 + 1, column=field["col"], sticky="ew", padx=padx_val)
+            
+            # Preencher com dados existentes
+            if endereco_data:
+                if field["label"] == "Rua" and endereco_data.get("rua"):
+                    entry.insert(0, endereco_data["rua"])
+                elif field["label"] == "Número" and endereco_data.get("numero"):
+                    entry.insert(0, endereco_data["numero"])
+                elif field["label"] == "Bairro" and endereco_data.get("bairro"):
+                    entry.insert(0, endereco_data["bairro"])
+                elif field["label"] == "Cidade" and endereco_data.get("cidade"):
+                    entry.insert(0, endereco_data["cidade"])
+                elif field["label"] == "Estado" and endereco_data.get("estado"):
+                    entry.insert(0, endereco_data["estado"])
+                elif field["label"] == "CEP" and endereco_data.get("cep"):
+                    entry.insert(0, endereco_data["cep"])
 
     def _render_preferences_services(self, parent):
         scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
@@ -486,6 +595,12 @@ class Configuracoes(BaseScreen):
                 padx=padx_val, pady=5
             )
             self.profile_entries[field["label"]] = input_widget
+        
+        # Carregar dados do perfil do gerente/dentista
+        profile_data = self._load_user_profile_data()
+        if profile_data:
+            self.profile_entries["Nome Completo"].set(profile_data.get("nome", ""))
+            self.profile_entries["E-mail"].set(profile_data.get("email", ""))
 
     # ==================== FOOTER ====================
     def _build_footer(self, parent):
@@ -514,7 +629,168 @@ class Configuracoes(BaseScreen):
         )
         cancel_btn.pack(side="left")
 
-    # ==================== HELPERS ====================
+    # ==================== CARREGAMENTO DE DADOS ====================
+    def _load_clinic_data(self):
+        """
+        Carrega dados da clínica do banco de dados
+        Retorna dicionário com nome, cnpj, email, telefone
+        """
+        try:
+            from config.database import get_connection
+            
+            conn = None
+            cursor = None
+            
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    SELECT nome, cnpj, email, telefone, logo
+                    FROM odontoPro_clinica
+                    WHERE id = %s
+                """, (self.clinica_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    return {
+                        "nome": result[0] or "",
+                        "cnpj": result[1] or "",
+                        "email": result[2] or "",
+                        "telefone": result[3] or "",
+                        "logo": result[4] or ""
+                    }
+                return None
+            
+            except Exception as e:
+                print(f"[ERRO] Falha ao carregar dados da clínica: {e}")
+                return None
+            
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        
+        except ImportError as e:
+            print(f"[ERRO] Falha ao importar módulos: {e}")
+            return None
+    
+    def _load_endereco_data(self):
+        """
+        Carrega dados de endereço da clínica do banco de dados
+        Retorna dicionário com rua, numero, bairro, cidade, estado, cep
+        """
+        try:
+            from config.database import get_connection
+            
+            conn = None
+            cursor = None
+            
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                
+                # Buscar endereço da clínica
+                cursor.execute("""
+                    SELECT e.rua, e.numero, e.bairro, e.cidade, e.estado, e.cep
+                    FROM odontoPro_clinica c
+                    LEFT JOIN odontoPro_endereco e ON c.endereco_id = e.id
+                    WHERE c.id = %s
+                """, (self.clinica_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    return {
+                        "rua": result[0] or "",
+                        "numero": result[1] or "",
+                        "bairro": result[2] or "",
+                        "cidade": result[3] or "",
+                        "estado": result[4] or "",
+                        "cep": result[5] or ""
+                    }
+                return None
+            
+            except Exception as e:
+                print(f"[ERRO] Falha ao carregar dados de endereço: {e}")
+                return None
+            
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        
+        except ImportError as e:
+            print(f"[ERRO] Falha ao importar módulos: {e}")
+            return None
+    
+    def _load_user_profile_data(self):
+        """
+        Carrega dados do perfil do gerente/dentista logado
+        Retorna dicionário com nome e email
+        """
+        try:
+            from config.database import get_connection
+            
+            # Se não for gerenciamento/dentista, não há dados para carregar
+            if self.tipo_usuario not in ["gerenciamento", "dentista"]:
+                return None
+            
+            conn = None
+            cursor = None
+            
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                
+                # Buscar dados do gerente/usuário
+                cursor.execute("""
+                    SELECT nome, email
+                    FROM odontoPro_gerenciamento
+                    WHERE id = %s
+                """, (self.usuario_id,))
+                
+                result = cursor.fetchone()
+                if result:
+                    return {
+                        "nome": result[0] or "",
+                        "email": result[1] or ""
+                    }
+                return None
+            
+            except Exception as e:
+                print(f"[ERRO] Falha ao carregar dados do perfil: {e}")
+                return None
+            
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        
+        except ImportError as e:
+            print(f"[ERRO] Falha ao importar módulos: {e}")
+            return None
+    def _load_clinic_logo(self):
+        """Carrega logo da clínica"""
+        file_path = filedialog.askopenfilename(
+            title="Selecionar logo da clínica", 
+            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.gif")]
+        )
+        if file_path:
+            self.logo_upload_btn.configure(text="⏳ Carregando...", state="disabled")
+            self.after(100, lambda: self._finish_load_clinic_logo(file_path))
+    
+    def _finish_load_clinic_logo(self, file_path):
+        """Finaliza carregamento da logo"""
+        self.images['logo'] = file_path
+        self.logo_upload_btn.configure(
+            text="✓ Logo carregada", 
+            fg_color=self.colors["success"], 
+            state="normal"
+        )
+
     def _load_main_photo(self):
         file_path = filedialog.askopenfilename(title="Selecionar foto da fachada", filetypes=[("Imagens", "*.png *.jpg *.jpeg *.gif")])
         if file_path:
@@ -535,9 +811,88 @@ class Configuracoes(BaseScreen):
 
     def _save(self):
         all_valid = True
+        
+        # Validar Perfil (gerentes/dentistas)
         if self.current_tab == "Perfil":
             for field_name, input_widget in self.profile_entries.items():
-                if not input_widget._validate(): all_valid = False
+                if not input_widget._validate(): 
+                    all_valid = False
         
-        if all_valid: messagebox.showinfo("Sucesso", "Configurações salvas com sucesso!")
-        else: messagebox.showerror("Erro", "Por favor, preencha todos os campos obrigatórios.")
+        # Validar Clínica (conta da clínica)
+        if self.current_tab == "Minha Clínica" and self.tipo_usuario == "clinica":
+            for field_name, input_widget in self.clinic_entries.items():
+                if not input_widget._validate(): 
+                    all_valid = False
+        
+        if all_valid:
+            # Se é clínica, salvar dados no BD
+            if self.tipo_usuario == "clinica" and self.clinica_id:
+                self._save_clinic_data()
+            else:
+                messagebox.showinfo("Sucesso", "Configurações salvas com sucesso!")
+        else:
+            messagebox.showerror("Erro", "Por favor, preencha todos os campos obrigatórios.")
+    
+    def _save_clinic_data(self):
+        """Salva dados da clínica no banco de dados"""
+        try:
+            from config.database import get_connection
+            import os
+            from datetime import datetime
+            
+            conn = None
+            cursor = None
+            
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                
+                # Preparar dados
+                nome = self.clinic_entries["Nome da Clínica"].get().strip()
+                cnpj = self.clinic_entries["CNPJ"].get().strip()
+                email = self.clinic_entries["E-mail Clínica"].get().strip()
+                telefone = self.clinic_entries["Telefone"].get().strip()
+                
+                # Atualizar informações da clínica
+                cursor.execute("""
+                    UPDATE odontoPro_clinica 
+                    SET nome = %s, cnpj = %s, email = %s, telefone = %s
+                    WHERE id = %s
+                """, (nome, cnpj, email, telefone, self.clinica_id))
+                
+                # Se carregou uma nova logo, salvar arquivo
+                if 'logo' in self.images:
+                    logo_path = self.images['logo']
+                    # Copicar arquivo para pasta de uploads
+                    import shutil
+                    upload_dir = os.path.join(os.path.dirname(__file__), "../assets/clinicas/logo")
+                    os.makedirs(upload_dir, exist_ok=True)
+                    
+                    filename = f"clinica_{self.clinica_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                    dest_path = os.path.join(upload_dir, filename)
+                    shutil.copy(logo_path, dest_path)
+                    
+                    # Salvar caminho da logo no BD
+                    cursor.execute("""
+                        UPDATE odontoPro_clinica 
+                        SET logo = %s
+                        WHERE id = %s
+                    """, (dest_path, self.clinica_id))
+                
+                conn.commit()
+                messagebox.showinfo("Sucesso", "✓ Dados da clínica atualizados com sucesso!")
+                
+            except Exception as e:
+                if conn:
+                    conn.rollback()
+                messagebox.showerror("Erro", f"Erro ao salvar dados da clínica: {str(e)}")
+                print(f"[ERRO] {str(e)}")
+            
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        
+        except ImportError as e:
+            messagebox.showerror("Erro", f"Erro ao importar módulos: {str(e)}")

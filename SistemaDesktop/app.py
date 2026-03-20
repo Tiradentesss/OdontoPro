@@ -160,7 +160,7 @@ class App(ctk.CTk):
             "painel": Painel(self.container),
             "agenda": Agenda(self.container, self.clinica_id),
             "financeiro": Financeiro(self.container),
-            "config": Configuracoes(self.container),
+            "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "permissao": Permissoes(self.container, self.clinica_id),
         }
