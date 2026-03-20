@@ -115,7 +115,7 @@ class App(ctk.CTk):
             "agenda": Agenda(self.container, self.clinica_id),
             "financeiro": Financeiro(self.container),
             "config": Configuracoes(self.container),
-            "cadastro": Cadastro(self.container),
+            "cadastro": Cadastro(self.container, self.clinica_id),
             "permissao": Permissoes(self.container),
         }
 

@@ -18,6 +18,7 @@ LOCAL_STATUS_COLORS = {
 
 
 class CustomOptionMenu(ctk.CTkOptionMenu):
+
     def __init__(self, *args, text_color_override=None, arrow_color=None, **kwargs):
         self._text_color_override = text_color_override
         self._arrow_color_override = arrow_color
@@ -31,6 +32,17 @@ class CustomOptionMenu(ctk.CTkOptionMenu):
 
         if self._arrow_color_override is not None:
             self._canvas.itemconfig('dropdown_arrow', fill=self._arrow_color_override)
+
+        # REMOVE divider antigo antes de desenhar novo
+        self._canvas.delete("divider")
+
+        self._canvas.create_line(
+            self._current_width - 28, 6,
+            self._current_width - 28, self._current_height - 6,
+            fill='#E5E7EB',
+            width=1,
+            tags="divider"
+        )
 
 
 class Agenda(BaseScreen):
@@ -238,58 +250,68 @@ class Agenda(BaseScreen):
         right.grid_columnconfigure(0, weight=1)
         self.details_panel = right
 
-        # Filtros (borda azul envolta do conjunto + fundo branco interno)
-        filtros = ctk.CTkFrame(left, fg_color='#FFFFFF', corner_radius=10, border_width=2, border_color=self.colors['primary'])
-        filtros.grid(row=0, column=0, sticky='ew', padx=15, pady=(15, 10))
-        filtros.grid_columnconfigure(0, weight=0)
-        filtros.grid_columnconfigure(1, weight=0, minsize=140)
-        filtros.grid_columnconfigure(2, weight=0, minsize=140)
-        filtros.grid_columnconfigure(3, weight=0, minsize=140)
-        filtros.grid_columnconfigure(4, weight=0, minsize=140)
-        filtros.grid_columnconfigure(5, weight=0, minsize=140)
+        # Filtros (sem borda externa, borda aplicada individualmente em cada filtro)
+        filtros = ctk.CTkFrame(left, fg_color='#FFFFFF', corner_radius=10, border_width=0)
+        filtros.grid(row=0, column=0, sticky='w', padx=15, pady=(15, 10))
+        filtros.grid_columnconfigure(0, weight=0, minsize=50)
+        for i in range(1, 6):
+            filtros.grid_columnconfigure(i, weight=1)
 
         ctk.CTkLabel(filtros, text='Filtros', font=ctk.CTkFont(size=15, weight='bold'), text_color=self.colors['primary']).grid(row=0, column=0, padx=(8, 12), pady=8)
 
         option_kwargs = {
-            # Fundo da parte do texto (esquerda) branco.
-            'fg_color': '#FFFFFF',
-            # Fundo da seta (direita) azul e botão padrão azul.
-            'button_color': self.colors['primary'],
-            'button_hover_color': '#0b86af',
-            # texto do item selecionado azul
-            'text_color': self.colors['primary'],
+            'fg_color': '#FFFFFF',   
+            'anchor': 'w',
+            'dynamic_resizing': False,                 # fundo branco
+            'button_color': self.colors['primary'],  # fundo azul da seta
+            'button_hover_color': '#0284C7',
+            'text_color': self.colors['primary'],    # texto azul
             'dropdown_fg_color': '#FFFFFF',
             'dropdown_hover_color': '#F0F9FF',
             'dropdown_text_color': self.colors['text_primary'],
-            'corner_radius': 8,
+            'corner_radius': 6,                      # mais quadrado
             'width': 140,
             'height': 32,
             'font': ctk.CTkFont(size=12, weight='bold')
         }
 
         # cada filtro recebe box com borda
-        data_frame = ctk.CTkFrame(filtros, fg_color='#FFFFFF', border_width=2, border_color=self.colors['primary'], corner_radius=8)
-        data_frame.grid(row=0, column=1, padx=3, pady=3, sticky='nsew')
+        data_frame = ctk.CTkFrame(
+            filtros,
+            fg_color='#FFFFFF',
+            border_width=2,
+            border_color=self.colors['primary'],
+            corner_radius=8
+        )
+        data_frame.grid(row=0, column=1, padx=4, pady=4, sticky='nsew')
         self.data_option = CustomOptionMenu(data_frame, values=['Todos'] + [d.strftime('%d/%m/%Y') for d in datas], variable=self.data_var, text_color_override=self.colors['primary'], arrow_color='#FFFFFF', **option_kwargs)
-        self.data_option.pack(fill='both', expand=True, padx=0, pady=0)
+        self.data_option.pack(fill='both', expand=True)
 
         medico_frame = ctk.CTkFrame(filtros, fg_color='#FFFFFF', border_width=2, border_color=self.colors['primary'], corner_radius=8)
-        medico_frame.grid(row=0, column=2, padx=3, pady=3, sticky='nsew')
+        medico_frame.grid(row=0, column=2, padx=4, pady=4, sticky='nsew')
         self.medico_option = CustomOptionMenu(medico_frame, values=['Todos'] + medicos, variable=self.medico_var, text_color_override=self.colors['primary'], arrow_color='#FFFFFF', **option_kwargs)
-        self.medico_option.pack(fill='both', expand=True, padx=0, pady=0)
+        self.medico_option.pack(fill='both', expand=True)
 
         status_frame = ctk.CTkFrame(filtros, fg_color='#FFFFFF', border_width=2, border_color=self.colors['primary'], corner_radius=8)
-        status_frame.grid(row=0, column=3, padx=3, pady=3, sticky='nsew')
+        status_frame.grid(row=0, column=3, padx=4, pady=4, sticky='nsew')
         self.status_option = CustomOptionMenu(status_frame, values=['Todos', 'Agendada', 'Confirmada', 'Realizada', 'Cancelada'], variable=self.status_var, text_color_override=self.colors['primary'], arrow_color='#FFFFFF', **option_kwargs)
-        self.status_option.pack(fill='both', expand=True, padx=0, pady=0)
+        self.status_option.pack(fill='both', expand=True)
 
         especialidade_frame = ctk.CTkFrame(filtros, fg_color='#FFFFFF', border_width=2, border_color=self.colors['primary'], corner_radius=8)
-        especialidade_frame.grid(row=0, column=4, padx=3, pady=3, sticky='nsew')
+        especialidade_frame.grid(row=0, column=4, padx=4, pady=4, sticky='nsew')
         self.especialidade_option = CustomOptionMenu(especialidade_frame, values=['Todos'] + especialidades, variable=self.especialidade_var, text_color_override=self.colors['primary'], arrow_color='#FFFFFF', **option_kwargs)
-        self.especialidade_option.pack(fill='both', expand=True, padx=0, pady=0)
+        self.especialidade_option.pack(fill='both', expand=True)
 
-        btn_reload = ctk.CTkButton(filtros, text='↻ Recarregar', command=self.render, width=140, height=32, corner_radius=8, fg_color=self.colors['primary'], text_color='#FFFFFF')
-        btn_reload.grid(row=0, column=5, padx=3, pady=6)
+        btn_reload = ctk.CTkButton(
+            filtros,
+            text='↻ Recarregar',
+            command=self.render,
+            height=32,
+            corner_radius=8,
+            fg_color=self.colors['primary'],
+            text_color='#FFFFFF'
+        )
+        btn_reload.grid(row=0, column=5, padx=4, pady=4, sticky='nsew')
 
         ctk.CTkLabel(left, text=f'Total de consultas: {total}', font=ctk.CTkFont(size=13, weight='bold'), text_color=self.colors['text_secondary']).grid(row=1, column=0, sticky='w', padx=15, pady=(0, 8))
 

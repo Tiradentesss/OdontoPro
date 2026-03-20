@@ -1,10 +1,15 @@
 from .base import BaseScreen
 from .theme import font, ICON_SIZE
 import customtkinter as ctk
+from controllers.paciente_controller import PacienteController
+from controllers.medico_controller import MedicoController
+from controllers.gerenciamento_controller import GerenciamentoController
+import hashlib
 
 class Cadastro(BaseScreen):
-    def __init__(self, parent):
+    def __init__(self, parent, clinica_id=None):
         super().__init__(parent, "Cadastro")
+        self.clinica_id = clinica_id
 
         # Configuração de cores - PALETA MAIS MODERNA
         self.cor_fundo_card = "#FFFFFF"
@@ -252,7 +257,7 @@ class Cadastro(BaseScreen):
         
         self.tipo_profissional = ctk.CTkOptionMenu(
             tipo_container,
-            values=["Dentista", "Auxiliar", "Recepcionista"],
+            values=["Médico", "Gerente"],
             height=44,  # 40 -> 44
             fg_color="#F9FAFB", 
             button_color="#E5E7EB", 
@@ -268,23 +273,17 @@ class Cadastro(BaseScreen):
         self.campos_dinamicos_container = ctk.CTkFrame(frame, fg_color="transparent")
         self.campos_dinamicos_container.pack(fill="x", pady=(0, 10))  # 9 -> 10
 
-        self.frame_cro_telefone = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
+        self.frame_medico = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
         self.cro_entry, self.telefone_entry = self._campo_duplo(
-            self.frame_cro_telefone, "CRO", "Telefone"
+            self.frame_medico, "CRO", "Telefone"
         )
         entries.extend([self.cro_entry, self.telefone_entry])
         
-        self.frame_recepcionista = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
-        self.recep_entry1, self.recep_entry2 = self._campo_duplo(
-            self.frame_recepcionista, "Turno (Manhã/Tarde)", "Telefone"
+        self.frame_gerente = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
+        self.gerente_cpf, self.gerente_telefone = self._campo_duplo(
+            self.frame_gerente, "CPF", "Telefone"
         )
-        entries.extend([self.recep_entry1, self.recep_entry2])
-        
-        self.frame_auxiliar = ctk.CTkFrame(self.campos_dinamicos_container, fg_color="transparent")
-        self.aux_entry = self._entry_unico(
-            self.frame_auxiliar, "Especialização em auxílio"
-        )
-        entries.append(self.aux_entry)
+        entries.extend([self.gerente_cpf, self.gerente_telefone])
 
         self._secao_titulo(frame, "Acesso ao Sistema")
         self.senha_entry, self.confirma_senha_entry = self._campo_duplo(
@@ -292,74 +291,42 @@ class Cadastro(BaseScreen):
         )
         entries.extend([self.senha_entry, self.confirma_senha_entry])
 
-        self._ao_mudar_tipo_profissional("Dentista")
+        self._ao_mudar_tipo_profissional("Médico")
 
         self.profissional_entries = entries
         self._botoes_acao(frame, "Salvar Profissional", target_entries=self.profissional_entries)
         return frame
 
-    def _entry_unico(self, parent, placeholder, show=None):
-        container = ctk.CTkFrame(parent, fg_color="transparent")
-        container.pack(fill="x", padx=self.padding_lateral, pady=5)  # 4 -> 5
-        
-        ctk.CTkLabel(
-            container,
-            text=placeholder,
-            font=("Poppins", 14),  # 13 -> 14
-            text_color="#4B5563",
-            anchor="w"
-        ).pack(anchor="w", pady=(0, 3))  # 2 -> 3
-        
-        entry = ctk.CTkEntry(
-            container,
-            placeholder_text=f"Digite {placeholder.lower()}",
-            height=44, show=show,  # 40 -> 44
-            fg_color="#F9FAFB",
-            border_color="#E5E7EB",
-            border_width=1,
-            corner_radius=5,  # 4 -> 5
-            text_color="#111827",
-            placeholder_text_color="#9CA3AF"
-        )
-        entry.pack(fill="x")
-        
-        return entry
-
     def _ao_mudar_tipo_profissional(self, choice):
         try:
-            self.frame_cro_telefone.pack_forget()
-            self.frame_recepcionista.pack_forget()
-            self.frame_auxiliar.pack_forget()
+            self.frame_medico.pack_forget()
+            self.frame_gerente.pack_forget()
         except Exception:
             pass
         
-        if choice == "Dentista":
-            self.frame_cro_telefone.pack(fill="x")
-            self._atualizar_labels_cro_telefone("CRO", "Telefone")
+        if choice == "Médico":
+            self.frame_medico.pack(fill="x")
             
-        elif choice == "Auxiliar":
-            self.frame_auxiliar.pack(fill="x")
-            self._atualizar_label_auxiliar("Especialização em auxílio")
-            
-        elif choice == "Recepcionista":
-            self.frame_recepcionista.pack(fill="x")
-            self._atualizar_labels_recepcionista("Turno (Manhã/Tarde)", "Telefone")
-
-    def _atualizar_labels_cro_telefone(self, label1, label2):
-        pass
-
-    def _atualizar_label_auxiliar(self, label):
-        pass
-
-    def _atualizar_labels_recepcionista(self, label1, label2):
-        pass
+        elif choice == "Gerente":
+            self.frame_gerente.pack(fill="x")
 
     def _botoes_acao(self, parent, texto_principal, target_entries=None):
         container = ctk.CTkFrame(parent, fg_color="transparent")
         container.pack(side="bottom", fill="x", padx=self.padding_lateral, pady=14)  # 12 -> 14
 
         def _salvar():
-            print("Salvar chamado", len(target_entries or []))
+            tipo_aba = "Pacientes" if hasattr(self, 'paciente_entries') and self.paciente_entries == target_entries else "Profissionais"
+            tipo_prof = self.tipo_profissional.get() if hasattr(self, 'tipo_profissional') else None
+            
+            try:
+                if tipo_aba == "Pacientes":
+                    self._salvar_paciente(target_entries)
+                elif tipo_prof == "Médico":
+                    self._salvar_medico(target_entries)
+                elif tipo_prof == "Gerente":
+                    self._salvar_gerente(target_entries)
+            except Exception as e:
+                self._mostrar_mensagem(f"Erro: {str(e)}", sucesso=False)
 
         ctk.CTkButton(
             container,
@@ -426,3 +393,146 @@ class Cadastro(BaseScreen):
             fg_color="#06B6D4", hover_color="#0891B2", text_color="#FFFFFF",
             corner_radius=5  # 4 -> 5
         ).pack(pady=22)  # 20 -> 22
+
+    def _salvar_paciente(self, entries):
+        """Valida e salva paciente no banco de dados"""
+        try:
+            nome = entries[0].get().strip()
+            cpf = entries[1].get().strip()
+            data_nasc = entries[2].get().strip()
+            telefone = entries[3].get().strip()
+            cep = entries[4].get().strip()
+            uf = entries[5].get().strip()
+            cidade = entries[6].get().strip()
+            rua = entries[7].get().strip()
+            numero = entries[8].get().strip()
+            complemento = entries[9].get().strip()
+            email = entries[10].get().strip()
+            senha = entries[11].get().strip()
+            
+            # Validações básicas
+            if not all([nome, email, telefone, senha]):
+                self._mostrar_mensagem("Preencha todos os campos obrigatórios (inclusive senha)", sucesso=False)
+                return
+            
+            resultado = PacienteController.criar_paciente(
+                nome=nome,
+                cpf=cpf or None,
+                sexo=None,
+                email=email,
+                data_nascimento=data_nasc or None,
+                telefone=telefone,
+                clinica_id=self.clinica_id,
+                senha=senha
+            )
+            
+            if resultado["sucesso"]:
+                self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
+                self._limpar_campos(entries)
+            else:
+                self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
+        except Exception as e:
+            self._mostrar_mensagem(f"Erro ao salvar paciente: {str(e)}", sucesso=False)
+
+    def _salvar_medico(self, entries):
+        """Valida e salva médico no banco de dados"""
+        try:
+            nome = entries[0].get().strip()
+            email = entries[1].get().strip()
+            cro = self.cro_entry.get().strip()
+            telefone = self.telefone_entry.get().strip()
+            senha = self.senha_entry.get().strip()
+            confirma_senha = self.confirma_senha_entry.get().strip()
+            
+            # Validações
+            if not all([nome, email, cro, telefone, senha]):
+                self._mostrar_mensagem("Preencha todos os campos obrigatórios (inclusive senha)", sucesso=False)
+                return
+            
+            if senha != confirma_senha:
+                self._mostrar_mensagem("As senhas não coincidem", sucesso=False)
+                return
+            
+            resultado = MedicoController.criar_medico(
+                nome=nome,
+                cpf=None,
+                sexo="m",
+                email=email,
+                data_nascimento=None,
+                telefone=telefone,
+                cro=cro,
+                clinica_id=self.clinica_id,
+                senha=senha,
+                especialidades=None
+            )
+            
+            if resultado["sucesso"]:
+                self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
+                self._limpar_campos([entries[0], entries[1]])
+                self._limpar_campos([self.cro_entry, self.telefone_entry])
+                self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
+            else:
+                self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
+        except Exception as e:
+            self._mostrar_mensagem(f"Erro ao salvar médico: {str(e)}", sucesso=False)
+
+    def _salvar_gerente(self, entries):
+        """Valida e salva gerente no banco de dados"""
+        try:
+            nome = entries[0].get().strip()
+            email = entries[1].get().strip()
+            cpf = self.gerente_cpf.get().strip()
+            telefone = self.gerente_telefone.get().strip()
+            senha = self.senha_entry.get().strip()
+            confirma_senha = self.confirma_senha_entry.get().strip()
+            
+            # Validações
+            if not all([nome, email, cpf, telefone, senha]):
+                self._mostrar_mensagem("Preencha todos os campos obrigatórios (inclusive senha)", sucesso=False)
+                return
+            
+            if senha != confirma_senha:
+                self._mostrar_mensagem("As senhas não coincidem", sucesso=False)
+                return
+            
+            resultado = GerenciamentoController.criar_gerente(
+                nome=nome,
+                email=email,
+                telefone=telefone,
+                cpf=cpf,
+                clinica_id=self.clinica_id,
+                senha=senha,
+                permissoes=None
+            )
+            
+            if resultado["sucesso"]:
+                self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
+                self._limpar_campos([entries[0], entries[1]])
+                self._limpar_campos([self.gerente_cpf, self.gerente_telefone])
+                self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
+            else:
+                self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
+        except Exception as e:
+            self._mostrar_mensagem(f"Erro ao salvar gerente: {str(e)}", sucesso=False)
+
+    def _limpar_campos(self, entries):
+        """Limpa os campos de entrada"""
+        for e in entries:
+            try:
+                e.delete(0, "end")
+            except Exception:
+                pass
+
+    def _mostrar_mensagem(self, mensagem, sucesso=True):
+        """Exibe uma mensagem de feedback ao usuário"""
+        cor = "#10B981" if sucesso else "#EF4444"
+        msg_label = ctk.CTkLabel(
+            self.content_card,
+            text=mensagem,
+            text_color=cor,
+            font=("Poppins", 13, "bold")
+        )
+        msg_label.pack(pady=10)
+        
+        # Remove a mensagem após 3 segundos
+        self.after(3000, lambda: msg_label.pack_forget())
