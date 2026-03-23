@@ -109,11 +109,15 @@ class CalendarTimeSelector {
     // Link do botão confirmar data para garantir funcionamento em todos os fluxos
     const btnConfirm = document.getElementById('btn-confirmar-data');
     if (btnConfirm) {
-      btnConfirm.removeEventListener('click', this.confirmarDataSelecionada);
-      btnConfirm.addEventListener('click', (event) => {
+      // Guarda a referência para remover antes de adicionar (evita múltiplos handlers sobrepostos)
+      if (this.btnConfirmHandler) {
+        btnConfirm.removeEventListener('click', this.btnConfirmHandler);
+      }
+      this.btnConfirmHandler = (event) => {
         event.preventDefault();
         this.confirmarDataSelecionada();
-      });
+      };
+      btnConfirm.addEventListener('click', this.btnConfirmHandler);
     }
 
     // Delegação para campos de horário
@@ -202,6 +206,7 @@ class CalendarTimeSelector {
       btnConfirm.disabled = false;
       btnConfirm.textContent = `Confirmar ${dateString}`;
       btnConfirm.style.opacity = '1';
+      btnConfirm.onclick = () => this.confirmarDataSelecionada();
     }
 
     // Atualiza timeslots para a data selecionada (sem abrir modal de horários automaticamente)

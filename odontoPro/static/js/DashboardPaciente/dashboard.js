@@ -1065,6 +1065,7 @@ function abrirModalCalendario() {
         btnConfirm.disabled = true;
         btnConfirm.textContent = 'Confirmar Data';
         btnConfirm.style.opacity = '0.5';
+        btnConfirm.onclick = confirmarDataSelecionada;
     }
 
     if (modal) {
