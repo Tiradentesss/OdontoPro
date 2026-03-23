@@ -188,6 +188,7 @@ class CalendarTimeSelector {
       btnConfirm.style.display = 'inline-block';
       btnConfirm.disabled = false;
       btnConfirm.textContent = `Confirmar ${dateString}`;
+      btnConfirm.style.opacity = '1';
     }
 
     // Atualiza timeslots para a data selecionada (sem abrir modal de horários automaticamente)
