@@ -324,6 +324,7 @@
             <div class="modal-content">
                 <!-- signed uid available here for JS fallback -->
                 <input type="hidden" id="signedUidForAgendar" value="{{ uid_signed }}">
+                <button class="modal-close" onclick="fecharModalAgendamento()">✕</button>
                 <span class="tag-online">📅 Agendamento Online</span>
                 <h3>Verifique seus dados</h3>
                 <p class="subtitle">Verifique se seus dados estão corretos antes de prosseguir</p>
@@ -372,6 +373,7 @@
 
         <div id="modal-agendamento-2" class="modal">
             <div class="modal-content">
+                <button class="modal-close" onclick="fecharModalAgendamento()">✕</button>
                 <span class="tag-online">📅 Agendamento Online</span>
                 <h3>Escolha o tipo de consulta e horário</h3>
 
@@ -418,7 +420,7 @@
 
         <!-- MODAL DO CALENDÁRIO -->
         <div id="modal-calendario" class="modal">
-            <div class="modal-content" style="max-width: 700px; padding: 30px;">
+            <div class="modal-content">
                 <div class="calendar-header">
                     <h3 class="calendar-title">Selecione a Data</h3>
                     <div class="calendar-controls">
@@ -456,6 +458,7 @@
 
         <div id="modal-sucesso" class="modal">
             <div class="modal-content">
+                <button class="modal-close" onclick="fecharModalAgendamento()">✕</button>
                 <div class="success-icon">✅</div>
                 <h3>Agendamento Realizado com Sucesso!</h3>
                 <p>Sua consulta foi marcada e está segura.</p>
