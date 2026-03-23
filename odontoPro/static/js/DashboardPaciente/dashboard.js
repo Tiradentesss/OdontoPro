@@ -1059,6 +1059,11 @@ function voltarAoFormulario() {
 
 function abrirModalCalendario() {
     const modal = document.getElementById('modal-calendario');
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+        btnConfirm.style.display = 'none';
+    }
+
     if (modal) {
         modal.classList.add('mostrar');
         modal.style.display = 'flex';

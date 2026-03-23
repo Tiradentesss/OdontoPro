@@ -153,8 +153,6 @@ class CalendarTimeSelector {
     const dateString = element.dataset.date;
     if (!dateString) return;
 
-    const isSecondClickOnSameDate = this.pendingDate === dateString;
-
     this.selectedDate = new Date(dateString);
     this.pendingDate = dateString;
 
@@ -184,15 +182,11 @@ class CalendarTimeSelector {
     // Sempre chama onDateChange, útil para visualizar a data no campo
     this.onDateChange(this.selectedDate);
 
-    // Primeiro clique apenas marca; segundo clique confirma a seleção e abre horário
-    if (!isSecondClickOnSameDate) {
-      // Mostra feedback para o usuário sobre clique de confirmação necessário
-      console.log('Data marcada em', dateString, '- clique novamente para confirmar');
-      return;
+    // Mostrar botão Confirmar Data para permitir ação explícita
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+      btnConfirm.style.display = 'inline-block';
     }
-
-    // Confirmar data
-    this.pendingDate = null; // reset pending state
 
     const modal = document.getElementById('modal-calendario');
     if (modal) {
@@ -217,6 +211,35 @@ class CalendarTimeSelector {
         }
       }
     }, 250);
+  }
+
+  confirmarDataSelecionada() {
+    if (!this.selectedDate) {
+      alert('Selecione primeiro uma data no calendário.');
+      return;
+    }
+
+    const modal = document.getElementById('modal-calendario');
+    if (modal) {
+      modal.classList.remove('mostrar');
+      modal.style.display = 'none';
+    }
+
+    if (typeof abrirModalHorario === 'function') {
+      abrirModalHorario();
+    } else {
+      const modalHorario = document.getElementById('modal-horarios');
+      if (modalHorario) {
+        modalHorario.classList.add('mostrar');
+        modalHorario.style.display = 'flex';
+      }
+    }
+
+    // Resetar botão confirmação após abertura de horário
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+      btnConfirm.style.display = 'none';
+    }
   }
 
   selectTime(element) {
@@ -390,6 +413,12 @@ function initializeCalendarSelector() {
   // Render time slots
   window.calendarSelector.renderTimeSlots();
   console.log('Calendário inicializado com sucesso');
+}
+
+function confirmarDataSelecionada() {
+  if (window.calendarSelector && typeof window.calendarSelector.confirmarDataSelecionada === 'function') {
+    window.calendarSelector.confirmarDataSelecionada();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
