@@ -1407,22 +1407,24 @@ body {
 /* Caixa do Modal */
 .modal-content {
     background-color: #ffffff;
-    padding: 30px;
-    border-radius: 15px; /* Cantos arredondados conforme design */
-    width: 600px;
-    max-width: 550px;
+    padding: clamp(15px, 5%, 30px);
+    border-radius: 15px;
+    width: 90%;
+    max-width: clamp(300px, 90vw, 800px);
     position: relative;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     text-align: center;
+    box-sizing: border-box;
 }
 
 /* Estilos específicos para o modal de agendamento 2 (com calendário) */
 #modal-agendamento-2 .modal-content {
-    width: 90%;
-    max-width: 600px;
+    width: 95%;
+    max-width: clamp(320px, 95vw, 900px);
     max-height: 90vh;
     overflow-y: auto;
-    padding: 40px;
+    padding: clamp(15px, 4%, 35px);
+    box-sizing: border-box;
 }
 
 /* Campo clicável de data e hora */
@@ -1430,13 +1432,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: clamp(10px, 2%, 16px);
     border: 2px solid #E0F7FA;
     border-radius: 8px;
     background-color: #F0F9FB;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 14px;
+    font-size: clamp(12px, 2.5vw, 16px);
     color: #00407b;
     font-weight: 500;
 }
@@ -1453,8 +1455,8 @@ body {
 
 /* Estilos do modal de horários */
 #modal-horarios .modal-content {
-    max-width: 600px;
-    padding: 30px;
+    max-width: clamp(300px, 90vw, 700px);
+    padding: clamp(15px, 4%, 30px);
 }
 
 /* Cabeçalho e Títulos */
@@ -2150,6 +2152,235 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+/* ===== MEDIA QUERIES COMPLETAS PARA MODAIS ===== */
+
+/* TELAS GIGANTES / TVs (acima de 1920px) */
+@media (min-width: 1921px) {
+    .modal-content {
+        padding: 40px;
+        max-width: 1000px;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        max-width: 1100px;
+        padding: 50px;
+    }
+
+    #modal-horarios .modal-content {
+        max-width: 1000px;
+        padding: 40px;
+    }
+
+    .date-time-field {
+        padding: 20px;
+        font-size: 18px;
+        min-height: 60px;
+    }
+
+    .modal-header-tag {
+        font-size: 16px;
+        padding: 10px 25px;
+    }
+
+    .input-group {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .radio-options {
+        gap: 40px;
+        font-size: 18px;
+    }
+
+    .btn-continuar,
+    .btn-cyan,
+    .btn-success {
+        padding: 20px;
+        font-size: 18px;
+        min-height: 70px;
+    }
+
+    .selection-row {
+        margin: 30px 0;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        padding: 18px;
+        font-size: 16px;
+    }
+}
+
+/* DESKTOPS GRANDES (1441px - 1920px) */
+@media (min-width: 1441px) and (max-width: 1920px) {
+    .modal-content {
+        padding: 30px;
+        max-width: 900px;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        max-width: 1000px;
+    }
+
+    #modal-horarios .modal-content {
+        max-width: 800px;
+    }
+
+    .date-time-field {
+        padding: 16px;
+        font-size: 16px;
+    }
+
+    .btn-continuar,
+    .btn-cyan,
+    .btn-success {
+        padding: 16px;
+        font-size: 16px;
+    }
+}
+
+/* DESKTOPS NORMAIS (1025px - 1440px) */
+@media (min-width: 1025px) and (max-width: 1440px) {
+    .modal-content {
+        padding: 25px;
+        max-width: 800px;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        max-width: 850px;
+    }
+}
+
+/* TABLETS (769px - 1024px) */
+@media (max-width: 1024px) {
+    .modal-content {
+        padding: 20px;
+        max-width: 90vw;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        max-width: 95vw;
+        padding: 20px;
+    }
+
+    .input-group {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .input-group > div {
+        width: 100%;
+    }
+
+    .selection-row {
+        flex-direction: column;
+        margin: 15px 0;
+    }
+
+    .date-time-field {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+/* CELULARES MÉDIOS E PEQUENOS (até 768px) */
+@media (max-width: 768px) {
+    .modal-content {
+        padding: 18px;
+        width: 95%;
+        max-width: 100%;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        width: 98%;
+        padding: 16px;
+        max-height: 85vh;
+    }
+
+    #modal-horarios .modal-content {
+        max-width: 100%;
+        padding: 16px;
+    }
+
+    .input-group {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+
+    .radio-options {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        padding: 12px;
+        font-size: 16px;
+    }
+
+    .btn-continuar,
+    .btn-cyan,
+    .btn-success {
+        padding: 14px;
+        font-size: 14px;
+    }
+
+    .date-time-field {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .modal-header-tag {
+        font-size: 11px;
+        padding: 4px 12px;
+    }
+}
+
+/* CELULARES MUITO PEQUENOS (até 480px) */
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 15px;
+        width: 96%;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        width: 97%;
+        padding: 12px;
+        max-height: 80vh;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .btn-continuar,
+    .btn-cyan,
+    .btn-success {
+        padding: 12px;
+        font-size: 12px;
+        margin-top: 10px;
+    }
+
+    .date-time-field {
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .radio-options {
+        gap: 10px;
+        font-size: 13px;
+    }
+
+    .selection-row {
+        margin: 12px 0;
+    }
+}
 }
 
 .lista-servicos-bullets li::before {
