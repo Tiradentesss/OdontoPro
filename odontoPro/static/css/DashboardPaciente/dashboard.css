@@ -1075,6 +1075,24 @@ body {
     background: #e2e8f0;
 }
 
+/* Modal responsivo */
+@media (max-width: 768px) {
+    .modal-conteudo {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    .modal-header {
+        padding-bottom: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
 .cancelado-card .corpo-agendamento h3,
 .cancelado-card .corpo-agendamento p {
     color: #a0aec0;
