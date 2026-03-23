@@ -106,6 +106,16 @@ class CalendarTimeSelector {
       });
     }
 
+    // Link do botão confirmar data para garantir funcionamento em todos os fluxos
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+      btnConfirm.removeEventListener('click', this.confirmarDataSelecionada);
+      btnConfirm.addEventListener('click', (event) => {
+        event.preventDefault();
+        this.confirmarDataSelecionada();
+      });
+    }
+
     // Delegação para campos de horário
     const timeSlotsContainer = document.querySelector('.time-slots');
     if (timeSlotsContainer) {
@@ -177,6 +187,9 @@ class CalendarTimeSelector {
     const inputData = document.getElementById('inputData');
     if (inputData) {
       inputData.value = dateString;
+      // Dispara change para o listener de horarios (dashboard.js)
+      const changeEvent = new Event('change', { bubbles: true });
+      inputData.dispatchEvent(changeEvent);
     }
 
     // Sempre chama onDateChange, útil para visualizar a data no campo
@@ -211,6 +224,12 @@ class CalendarTimeSelector {
     if (modal) {
       modal.classList.remove('mostrar');
       modal.style.display = 'none';
+    }
+
+    // Força carregamento de horários via dashboard.js (quando disponível)
+    const inputData = document.getElementById('inputData');
+    if (typeof carregarHorarios === 'function' && clinicaSelecionada && inputData && inputData.value) {
+      carregarHorarios(clinicaSelecionada, inputData.value);
     }
 
     // Abrir modal horários (agora que confirmou data)
@@ -409,6 +428,26 @@ function initializeCalendarSelector() {
 function confirmarDataSelecionada() {
   if (window.calendarSelector && typeof window.calendarSelector.confirmarDataSelecionada === 'function') {
     window.calendarSelector.confirmarDataSelecionada();
+  } else {
+    console.warn('calendarSelector não inicializado ainda. Tentativa manual de abrir modal de horário.');
+    const inputData = document.getElementById('inputData');
+    if (inputData && inputData.value) {
+      if (typeof carregarHorarios === 'function' && clinicaSelecionada) {
+        carregarHorarios(clinicaSelecionada, inputData.value);
+      }
+      const modalHorario = document.getElementById('modal-horarios');
+      const modalCalendario = document.getElementById('modal-calendario');
+      if (modalCalendario) {
+        modalCalendario.classList.remove('mostrar');
+        modalCalendario.style.display = 'none';
+      }
+      if (modalHorario) {
+        modalHorario.classList.add('mostrar');
+        modalHorario.style.display = 'flex';
+      }
+    } else {
+      alert('Por favor, selecione uma data primeiro.');
+    }
   }
 }
 
