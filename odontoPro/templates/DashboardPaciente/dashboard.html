@@ -324,18 +324,24 @@
             <div class="modal-content">
                 <!-- signed uid available here for JS fallback -->
                 <input type="hidden" id="signedUidForAgendar" value="{{ uid_signed }}">
+                <input type="hidden" id="pacienteNome" value="{{ paciente.nome|default_if_none:''|escape }}">
+                <input type="hidden" id="pacienteEmail" value="{{ paciente.email|default_if_none:''|escape }}">
+                <input type="hidden" id="pacienteTelefone" value="{{ paciente.telefone|default_if_none:''|escape }}">
+                <input type="hidden" id="pacienteSexo" value="{{ paciente.sexo|default_if_none:''|lower }}">
+                <input type="hidden" id="pacienteDataNascimento" value="{{ paciente.data_nascimento|date:'Y-m-d'|default_if_none:'' }}">
+
                 <span class="tag-online">📅 Agendamento Online</span>
                 <h3>Verifique seus dados</h3>
                 <p class="subtitle">Verifique se seus dados estão corretos antes de prosseguir</p>
 
-                <input type="text" id="inputNome" name="nome" placeholder="Digite seu nome completo" required>
+                <input type="text" id="inputNome" name="nome" placeholder="Digite seu nome completo" required value="{{ paciente.nome|default_if_none:''|escape }}">
 
                 <div class="selection-row">
                     <div class="selection-group">
                         <label class="group-title">Gênero</label>
                         <div class="radio-options">
-                            <label><input type="radio" name="gender" value="Masculino"> Masculino</label>
-                            <label><input type="radio" name="gender" value="Feminino"> Feminino</label>
+                            <label><input type="radio" name="gender" value="Masculino" {% if paciente.sexo|lower == 'masculino' or paciente.sexo|lower == 'm' %}checked{% endif %}> Masculino</label>
+                            <label><input type="radio" name="gender" value="Feminino" {% if paciente.sexo|lower == 'feminino' or paciente.sexo|lower == 'f' %}checked{% endif %}> Feminino</label>
                         </div>
                     </div>
 
@@ -351,12 +357,12 @@
                 <div class="input-group">
                     <div>
                         <label>Email</label>
-                        <input type="email" id="inputEmail" name="email" placeholder="Seu @gmail.com" required onchange="validarCampoEmail()">
+                        <input type="email" id="inputEmail" name="email" placeholder="Seu @gmail.com" required onchange="validarCampoEmail()" value="{{ paciente.email|default_if_none:''|escape }}">
                         <small id="emailError" style="color: #e74c3c; display: none; margin-top: 5px;">Email inválido. Use: usuario@email.com</small>
                     </div>
                     <div>
                         <label>Número de Telefone</label>
-                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required>
+                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required value="{{ paciente.telefone|default_if_none:''|escape }}">
                     </div>
                 </div>
 
