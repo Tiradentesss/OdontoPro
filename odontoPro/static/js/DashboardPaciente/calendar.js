@@ -7,6 +7,7 @@ class CalendarTimeSelector {
   constructor(options = {}) {
     this.currentDate = new Date();
     this.selectedDate = null;
+    this.pendingDate = null; // guarda data marcada no primeiro clique
     this.selectedTime = null;
     this.container = options.container || '.calendar-container';
     this.minDate = options.minDate || new Date();
@@ -152,10 +153,10 @@ class CalendarTimeSelector {
     const dateString = element.dataset.date;
     if (!dateString) return;
 
-    const previousSelectedDate = this.selectedDate ? this.formatDate(this.selectedDate) : null;
-    const isConfirmClick = previousSelectedDate === dateString;
+    const isSecondClickOnSameDate = this.pendingDate === dateString;
 
     this.selectedDate = new Date(dateString);
+    this.pendingDate = dateString;
 
     // Update UI
     document.querySelectorAll('.day-cell.selected').forEach(el => {
@@ -183,23 +184,39 @@ class CalendarTimeSelector {
     // Sempre chama onDateChange, útil para visualizar a data no campo
     this.onDateChange(this.selectedDate);
 
-    // Se for segundo clique na mesma data, fecha o modal e abre seleção de horário
-    if (isConfirmClick) {
-      const modal = document.getElementById('modal-calendario');
-      if (modal) {
-        modal.classList.remove('mostrar');
-        modal.style.display = 'none';
-      }
+    // Primeiro clique apenas marca; segundo clique confirma a seleção e abre horário
+    if (!isSecondClickOnSameDate) {
+      // Mostra feedback para o usuário sobre clique de confirmação necessário
+      console.log('Data marcada em', dateString, '- clique novamente para confirmar');
+      return;
+    }
 
-      // Abrir modal de horários 250ms depois para permitir animação de fechamento
-      setTimeout(() => {
+    // Confirmar data
+    this.pendingDate = null; // reset pending state
+
+    const modal = document.getElementById('modal-calendario');
+    if (modal) {
+      modal.classList.remove('mostrar');
+      modal.style.display = 'none';
+    }
+
+    // Re-render time slots (garante disponibilidade atualizada)
+    if (window.calendarSelector && typeof window.calendarSelector.renderTimeSlots === 'function') {
+      window.calendarSelector.renderTimeSlots();
+    }
+
+    // Abre o modal de horários (mesmo comportamento do botão de tempo)
+    setTimeout(() => {
+      if (typeof abrirModalHorario === 'function') {
+        abrirModalHorario();
+      } else {
         const modalHorario = document.getElementById('modal-horarios');
         if (modalHorario) {
           modalHorario.classList.add('mostrar');
           modalHorario.style.display = 'flex';
         }
-      }, 250);
-    }
+      }
+    }, 250);
   }
 
   selectTime(element) {
