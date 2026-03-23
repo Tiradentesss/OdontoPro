@@ -1363,6 +1363,39 @@ body {
     background-color: #00BBEE;
 }
 
+/* Botão de confirmação de data explícito */
+#btn-confirmar-data.btn-confirmar-data {
+    display: none;
+    width: auto;
+    min-width: 150px;
+    padding: 10px 18px;
+    margin-top: 0;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+#btn-confirmar-data.btn-confirmar-data:enabled {
+    opacity: 1;
+}
+
+#btn-confirmar-data.btn-confirmar-data:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.btn-cinza {
+    background-color: #ccc;
+    color: #333;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-cinza:hover {
+    background-color: #b3b3b3;
+}
+
 /* Banner de Segurança */
 .security-banner {
     background-color: #D1E9FF;
@@ -2431,7 +2464,6 @@ body {
     .selection-row {
         margin: 12px 0;
     }
-}
 }
 
 .lista-servicos-bullets li::before {
