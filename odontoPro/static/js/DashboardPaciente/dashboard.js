@@ -1063,6 +1063,8 @@ function abrirModalCalendario() {
     if (btnConfirm) {
         btnConfirm.style.display = 'inline-block';
         btnConfirm.disabled = true;
+        btnConfirm.setAttribute('disabled', 'disabled');
+        btnConfirm.style.pointerEvents = 'none';
         btnConfirm.textContent = 'Confirmar Data';
         btnConfirm.style.opacity = '0.5';
         btnConfirm.onclick = confirmarDataSelecionada;
@@ -1111,6 +1113,28 @@ function fecharModalHorario() {
         modal.style.display = 'none';
     }
 }
+
+function vincularConfirmarDataBotao() {
+    const btn = document.getElementById('btn-confirmar-data');
+    if (!btn) return;
+
+    btn.removeEventListener('click', window.__confirmarDataFallback);
+
+    window.__confirmarDataFallback = (event) => {
+        if (btn.disabled) {
+            event.preventDefault();
+            return;
+        }
+        console.log('[global] Confirmar Data fallback clicked');
+        confirmarDataSelecionada();
+    };
+
+    btn.addEventListener('click', window.__confirmarDataFallback);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    vincularConfirmarDataBotao();
+});
 
 /**
  * Função para confirmar agendamento

@@ -204,6 +204,8 @@ class CalendarTimeSelector {
     if (btnConfirm) {
       btnConfirm.style.display = 'inline-block';
       btnConfirm.disabled = false;
+      btnConfirm.removeAttribute('disabled');
+      btnConfirm.style.pointerEvents = 'auto';
       btnConfirm.textContent = `Confirmar ${dateString}`;
       btnConfirm.style.opacity = '1';
       btnConfirm.setAttribute('data-selected-date', dateString);
