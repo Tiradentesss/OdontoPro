@@ -188,29 +188,14 @@ class CalendarTimeSelector {
       btnConfirm.style.display = 'inline-block';
     }
 
-    const modal = document.getElementById('modal-calendario');
-    if (modal) {
-      modal.classList.remove('mostrar');
-      modal.style.display = 'none';
-    }
-
-    // Re-render time slots (garante disponibilidade atualizada)
+    // Atualiza timeslots para a data selecionada (sem abrir modal de horários automaticamente)
     if (window.calendarSelector && typeof window.calendarSelector.renderTimeSlots === 'function') {
       window.calendarSelector.renderTimeSlots();
     }
 
-    // Abre o modal de horários (mesmo comportamento do botão de tempo)
-    setTimeout(() => {
-      if (typeof abrirModalHorario === 'function') {
-        abrirModalHorario();
-      } else {
-        const modalHorario = document.getElementById('modal-horarios');
-        if (modalHorario) {
-          modalHorario.classList.add('mostrar');
-          modalHorario.style.display = 'flex';
-        }
-      }
-    }, 250);
+    // Não fechar modal do calendário nem abrir modal de horários aqui.
+    // O fluxo será: selecionar data → confirmar → abrir modal de horários.
+
   }
 
   confirmarDataSelecionada() {
