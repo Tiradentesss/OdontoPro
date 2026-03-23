@@ -1415,8 +1415,6 @@ body {
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     text-align: center;
     box-sizing: border-box;
-<<<<<<< HEAD
-=======
 }
 
 /* Botão de fechar modal */
@@ -1447,7 +1445,6 @@ body {
 
 .modal-close:active {
     transform: rotate(90deg) scale(0.95);
->>>>>>> fd1fdb13582a70d1df2c90be919ae8c19bff5572
 }
 
 /* Estilos específicos para o modal de agendamento 2 (com calendário) */
@@ -1810,7 +1807,6 @@ body {
 
 /* ==================================================
    UPLOAD DE FOTO DE PERFIL (VERSÃO FINAL LIMPA)
-================================================== */
 
 /* Wrapper apenas para alinhamento */
 .foto-wrapper {
@@ -2206,8 +2202,6 @@ body {
         padding: 40px;
     }
 
-<<<<<<< HEAD
-=======
     .modal-close {
         width: 50px;
         height: 50px;
@@ -2216,7 +2210,6 @@ body {
         right: 20px;
     }
 
->>>>>>> fd1fdb13582a70d1df2c90be919ae8c19bff5572
     .date-time-field {
         padding: 20px;
         font-size: 18px;
@@ -2309,15 +2302,12 @@ body {
         padding: 20px;
     }
 
-<<<<<<< HEAD
-=======
     .modal-close {
         width: 38px;
         height: 38px;
         font-size: 22px;
     }
 
->>>>>>> fd1fdb13582a70d1df2c90be919ae8c19bff5572
     .input-group {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -2405,8 +2395,6 @@ body {
         max-height: 80vh;
     }
 
-<<<<<<< HEAD
-=======
     .modal-close {
         width: 36px;
         height: 36px;
@@ -2415,7 +2403,6 @@ body {
         right: 10px;
     }
 
->>>>>>> fd1fdb13582a70d1df2c90be919ae8c19bff5572
     .modal-content input,
     .modal-content select,
     .modal-content textarea {

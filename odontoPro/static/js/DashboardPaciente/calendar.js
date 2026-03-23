@@ -93,26 +93,27 @@ class CalendarTimeSelector {
   }
 
   attachEventListeners() {
-    // Day cells - encontrar os que estão visíveis
-    const visibleCells = document.querySelectorAll('.day-cell:not(.other-month):not(.disabled)');
-    visibleCells.forEach(cell => {
-      // Remover listeners antigos
-      const newCell = cell.cloneNode(true);
-      cell.parentNode.replaceChild(newCell, cell);
-      
-      // Adicionar novo listener
-      newCell.addEventListener('click', (e) => this.selectDate(e.target));
-    });
-    
-    // Time slots
-    const timeSlots = document.querySelectorAll('.time-slot');
-    timeSlots.forEach(slot => {
-      const newSlot = slot.cloneNode(true);
-      slot.parentNode.replaceChild(newSlot, slot);
-      
-      newSlot.addEventListener('click', (e) => {
-        this.selectTime(e.target);
-        // Fechar modal de horários após selecionar
+    // Delegação: dia clicado no calendário
+    const calendarMatrix = document.querySelector('.calendar-matrix');
+    if (calendarMatrix) {
+      calendarMatrix.addEventListener('click', (event) => {
+        const dayCell = event.target.closest('.day-cell');
+        if (!dayCell || dayCell.classList.contains('other-month') || dayCell.classList.contains('disabled')) {
+          return;
+        }
+        this.selectDate(dayCell);
+      });
+    }
+
+    // Delegação para campos de horário
+    const timeSlotsContainer = document.querySelector('.time-slots');
+    if (timeSlotsContainer) {
+      timeSlotsContainer.addEventListener('click', (event) => {
+        const slot = event.target.closest('.time-slot');
+        if (!slot || slot.classList.contains('unavailable')) {
+          return;
+        }
+        this.selectTime(slot);
         setTimeout(() => {
           const modal = document.getElementById('modal-horarios');
           if (modal) {
@@ -121,7 +122,7 @@ class CalendarTimeSelector {
           }
         }, 200);
       });
-    });
+    }
     
     // Navigation buttons
     const prevBtn = document.getElementById('btn-prev-month');
