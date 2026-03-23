@@ -956,7 +956,6 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: none;
-    /* Escondido por padrão via JS */
     align-items: center;
     justify-content: center;
     z-index: 2000;
@@ -978,7 +977,6 @@ body {
         transform: scale(0.9);
         opacity: 0;
     }
-
     to {
         transform: scale(1);
         opacity: 1;
@@ -1000,7 +998,6 @@ body {
     margin-top: 2px;
 }
 
-/* Opcional: Adicionar um ícone de pin antes do endereço via JS ou HTML */
 .detalhe-item span i {
     margin-right: 5px;
     color: var(--azul-claro);
@@ -1025,7 +1022,6 @@ body {
     font-size: 13px;
 }
 
-/* Estilos para o formulário de reagendar dentro do modal */
 .input-reagendar {
     width: 100%;
     padding: 12px;
