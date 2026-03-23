@@ -306,16 +306,18 @@ function abrirModalAgendamentoClinica() {
 
 /* Função para fechar modais ao clicar fora deles */
 function inicializarFechoDeModais() {
-    const modaisAgendamento = document.querySelectorAll('#modal-agendamento-1, #modal-agendamento-2, #modal-sucesso');
-    
-    modaisAgendamento.forEach(modal => {
-        modal.addEventListener('click', function(event) {
-            // Fecha o modal apenas se clicou no fundo (não no conteúdo)
-            if (event.target === modal) {
-                fecharModalAgendamento();
-            }
-        });
-    });
+    // Removida a funcionalidade de fechar ao clicar fora
+    // Agora os modais só fecham ao clicar no botão X (modal-close)
+    // const modaisAgendamento = document.querySelectorAll('#modal-agendamento-1, #modal-agendamento-2, #modal-sucesso');
+    // 
+    // modaisAgendamento.forEach(modal => {
+    //     modal.addEventListener('click', function(event) {
+    //         // Fecha o modal apenas se clicou no fundo (não no conteúdo)
+    //         if (event.target === modal) {
+    //             fecharModalAgendamento();
+    //         }
+    //     });
+    // });
 }
 
 /* ================= UPLOAD DE FOTO ================= */
