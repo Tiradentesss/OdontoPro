@@ -1007,12 +1007,22 @@ function abrirModalCalendario() {
         modal.classList.add('mostrar');
         modal.style.display = 'flex';
         
-        // Reinicializar calendário
+        // Reinicializar calendário com um pequeno delay
         setTimeout(() => {
-            if (typeof initializeCalendarSelector === 'function') {
+            console.log('Abrindo modal de calendário...');
+            
+            // Garantir que o calendário está renderizado
+            if (window.calendarSelector) {
+                window.calendarSelector.renderCalendar();
+                window.calendarSelector.attachEventListeners();
+                console.log('Calendário rerenderizado e listeners anexados');
+            } else if (typeof initializeCalendarSelector === 'function') {
                 initializeCalendarSelector();
+                console.log('Calendário inicializado');
+            } else {
+                console.warn('initializeCalendarSelector não está disponível');
             }
-        }, 100);
+        }, 150);
     }
 }
 
