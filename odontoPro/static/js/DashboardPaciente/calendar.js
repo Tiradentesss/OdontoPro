@@ -151,27 +151,28 @@ class CalendarTimeSelector {
   selectDate(element) {
     const dateString = element.dataset.date;
     if (!dateString) return;
-    
+
+    const previousSelectedDate = this.selectedDate ? this.formatDate(this.selectedDate) : null;
+    const isConfirmClick = previousSelectedDate === dateString;
+
     this.selectedDate = new Date(dateString);
-    
+
     // Update UI
     document.querySelectorAll('.day-cell.selected').forEach(el => {
       el.classList.remove('selected');
     });
     element.classList.add('selected');
-    
+
     // Update aside section
     const dayNum = this.selectedDate.getDate();
     const monthName = ['January', 'February', 'March', 'April', 'May', 'June',
                       'July', 'August', 'September', 'October', 'November', 'December']
                       [this.selectedDate.getMonth()];
-    
+
     const asideNum = document.querySelector('.aside-date');
     const asideMonth = document.querySelector('.aside-month');
     if (asideNum) asideNum.textContent = dayNum;
     if (asideMonth) asideMonth.textContent = monthName;
-    
-    this.onDateChange(this.selectedDate);
 
     // Atualizar input direto (garantir que o valor ficou setado)
     const inputData = document.getElementById('inputData');
@@ -179,14 +180,26 @@ class CalendarTimeSelector {
       inputData.value = dateString;
     }
 
-    // Fechar modal de calendário após selecionar data
-    setTimeout(() => {
+    // Sempre chama onDateChange, útil para visualizar a data no campo
+    this.onDateChange(this.selectedDate);
+
+    // Se for segundo clique na mesma data, fecha o modal e abre seleção de horário
+    if (isConfirmClick) {
       const modal = document.getElementById('modal-calendario');
       if (modal) {
         modal.classList.remove('mostrar');
         modal.style.display = 'none';
       }
-    }, 300);
+
+      // Abrir modal de horários 250ms depois para permitir animação de fechamento
+      setTimeout(() => {
+        const modalHorario = document.getElementById('modal-horarios');
+        if (modalHorario) {
+          modalHorario.classList.add('mostrar');
+          modalHorario.style.display = 'flex';
+        }
+      }, 250);
+    }
   }
 
   selectTime(element) {
