@@ -182,10 +182,12 @@ class CalendarTimeSelector {
     // Sempre chama onDateChange, útil para visualizar a data no campo
     this.onDateChange(this.selectedDate);
 
-    // Mostrar botão Confirmar Data para permitir ação explícita
+    // Mostrar botão Confirmar Data e habilitar
     const btnConfirm = document.getElementById('btn-confirmar-data');
     if (btnConfirm) {
       btnConfirm.style.display = 'inline-block';
+      btnConfirm.disabled = false;
+      btnConfirm.textContent = `Confirmar ${dateString}`;
     }
 
     // Atualiza timeslots para a data selecionada (sem abrir modal de horários automaticamente)
@@ -210,6 +212,7 @@ class CalendarTimeSelector {
       modal.style.display = 'none';
     }
 
+    // Abrir modal horários (agora que confirmou data)
     if (typeof abrirModalHorario === 'function') {
       abrirModalHorario();
     } else {
@@ -224,6 +227,8 @@ class CalendarTimeSelector {
     const btnConfirm = document.getElementById('btn-confirmar-data');
     if (btnConfirm) {
       btnConfirm.style.display = 'none';
+      btnConfirm.disabled = true;
+      btnConfirm.textContent = 'Confirmar Data';
     }
   }
 
