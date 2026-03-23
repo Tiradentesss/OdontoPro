@@ -204,9 +204,16 @@ class CalendarTimeSelector {
     if (btnConfirm) {
       btnConfirm.style.display = 'inline-block';
       btnConfirm.disabled = false;
+      btnConfirm.removeAttribute('disabled');
+      btnConfirm.style.pointerEvents = 'auto';
       btnConfirm.textContent = `Confirmar ${dateString}`;
       btnConfirm.style.opacity = '1';
-      btnConfirm.onclick = () => this.confirmarDataSelecionada();
+      btnConfirm.setAttribute('data-selected-date', dateString);
+      btnConfirm.onclick = (event) => {
+        event.preventDefault();
+        console.log('[calendar] btn-confirmar-data clicked, date:', dateString);
+        this.confirmarDataSelecionada();
+      };
     }
 
     // Atualiza timeslots para a data selecionada (sem abrir modal de horários automaticamente)
@@ -225,16 +232,20 @@ class CalendarTimeSelector {
       return;
     }
 
+    console.log('[calendar] confirmarDataSelecionada called, selectedDate:', this.selectedDate);
+
     const modal = document.getElementById('modal-calendario');
     if (modal) {
       modal.classList.remove('mostrar');
       modal.style.display = 'none';
     }
 
-    // Força carregamento de horários via dashboard.js (quando disponível)
     const inputData = document.getElementById('inputData');
-    if (typeof carregarHorarios === 'function' && clinicaSelecionada && inputData && inputData.value) {
-      carregarHorarios(clinicaSelecionada, inputData.value);
+    if (inputData && inputData.value) {
+      if (typeof carregarHorarios === 'function' && typeof clinicaSelecionada !== 'undefined' && clinicaSelecionada) {
+        console.log('[calendar] chamando carregarHorarios', clinicaSelecionada, inputData.value);
+        carregarHorarios(clinicaSelecionada, inputData.value);
+      }
     }
 
     // Abrir modal horários (agora que confirmou data)
@@ -434,10 +445,11 @@ function confirmarDataSelecionada() {
   if (window.calendarSelector && typeof window.calendarSelector.confirmarDataSelecionada === 'function') {
     window.calendarSelector.confirmarDataSelecionada();
   } else {
-    console.warn('calendarSelector não inicializado ainda. Tentativa manual de abrir modal de horário.');
+    console.warn('[global] calendarSelector não inicializado ainda. Tentativa manual de abrir modal de horário.');
     const inputData = document.getElementById('inputData');
     if (inputData && inputData.value) {
-      if (typeof carregarHorarios === 'function' && clinicaSelecionada) {
+      if (typeof carregarHorarios === 'function' && typeof clinicaSelecionada !== 'undefined' && clinicaSelecionada) {
+        console.log('[global] carregando horarios manual', clinicaSelecionada, inputData.value);
         carregarHorarios(clinicaSelecionada, inputData.value);
       }
       const modalHorario = document.getElementById('modal-horarios');
@@ -455,7 +467,6 @@ function confirmarDataSelecionada() {
     }
   }
 }
-
 document.addEventListener('DOMContentLoaded', () => {
   // Aguardar um pouco para garantir que o DOM está completo
   setTimeout(() => {
