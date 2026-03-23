@@ -200,6 +200,7 @@ class CalendarTimeSelector {
     
     this.onDateChange(this.selectedDate);
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     // Atualizar input direto (garantir que o valor ficou setado)
     const inputData = document.getElementById('inputData');
@@ -211,6 +212,9 @@ class CalendarTimeSelector {
 =======
     
 >>>>>>> parent of 9519c28 (teste_horario_4)
+=======
+    
+>>>>>>> parent of 9519c28f (teste_horario_4)
     // Fechar modal de calendário após selecionar data
     setTimeout(() => {
       const modal = document.getElementById('modal-calendario');
