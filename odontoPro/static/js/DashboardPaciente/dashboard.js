@@ -306,18 +306,16 @@ function abrirModalAgendamentoClinica() {
 
 /* Função para fechar modais ao clicar fora deles */
 function inicializarFechoDeModais() {
-    // Removida a funcionalidade de fechar ao clicar fora
-    // Agora os modais só fecham ao clicar no botão X (modal-close)
-    // const modaisAgendamento = document.querySelectorAll('#modal-agendamento-1, #modal-agendamento-2, #modal-sucesso');
-    // 
-    // modaisAgendamento.forEach(modal => {
-    //     modal.addEventListener('click', function(event) {
-    //         // Fecha o modal apenas se clicou no fundo (não no conteúdo)
-    //         if (event.target === modal) {
-    //             fecharModalAgendamento();
-    //         }
-    //     });
-    // });
+    const modaisAgendamento = document.querySelectorAll('#modal-agendamento-1, #modal-agendamento-2, #modal-sucesso');
+    
+    modaisAgendamento.forEach(modal => {
+        modal.addEventListener('click', function(event) {
+            // Fecha o modal apenas se clicou no fundo (não no conteúdo)
+            if (event.target === modal) {
+                fecharModalAgendamento();
+            }
+        });
+    });
 }
 
 /* ================= UPLOAD DE FOTO ================= */
@@ -1009,22 +1007,12 @@ function abrirModalCalendario() {
         modal.classList.add('mostrar');
         modal.style.display = 'flex';
         
-        // Reinicializar calendário com um pequeno delay
+        // Reinicializar calendário
         setTimeout(() => {
-            console.log('Abrindo modal de calendário...');
-            
-            // Garantir que o calendário está renderizado
-            if (window.calendarSelector) {
-                window.calendarSelector.renderCalendar();
-                window.calendarSelector.attachEventListeners();
-                console.log('Calendário rerenderizado e listeners anexados');
-            } else if (typeof initializeCalendarSelector === 'function') {
+            if (typeof initializeCalendarSelector === 'function') {
                 initializeCalendarSelector();
-                console.log('Calendário inicializado');
-            } else {
-                console.warn('initializeCalendarSelector não está disponível');
             }
-        }, 150);
+        }, 100);
     }
 }
 

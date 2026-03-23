@@ -93,27 +93,16 @@ class CalendarTimeSelector {
   }
 
   attachEventListeners() {
-    // Day cells - encontrar os que estão visíveis em modalaberto
-    const modal = document.getElementById('modal-calendario');
-    if (modal && modal.classList.contains('mostrar')) {
-      // Pegar a matriz visível dentro do modal
-      const matrix = modal.querySelector('.calendar-matrix');
-      if (matrix) {
-        const cells = matrix.querySelectorAll('.day-cell:not(.other-month)');
-        cells.forEach(cell => {
-          // Remover listeners antigos (clonando)
-          const newCell = cell.cloneNode(true);
-          cell.parentNode.replaceChild(newCell, cell);
-          
-          // Adicionar novo listener
-          newCell.addEventListener('click', (e) => {
-            if (!e.currentTarget.classList.contains('other-month') && !e.currentTarget.classList.contains('disabled')) {
-              this.selectDate(e.currentTarget);
-            }
-          });
-        });
-      }
-    }
+    // Day cells - encontrar os que estão visíveis
+    const visibleCells = document.querySelectorAll('.day-cell:not(.other-month):not(.disabled)');
+    visibleCells.forEach(cell => {
+      // Remover listeners antigos
+      const newCell = cell.cloneNode(true);
+      cell.parentNode.replaceChild(newCell, cell);
+      
+      // Adicionar novo listener
+      newCell.addEventListener('click', (e) => this.selectDate(e.target));
+    });
     
     // Time slots
     const timeSlots = document.querySelectorAll('.time-slot');
@@ -122,73 +111,56 @@ class CalendarTimeSelector {
       slot.parentNode.replaceChild(newSlot, slot);
       
       newSlot.addEventListener('click', (e) => {
-        if (!e.currentTarget.classList.contains('unavailable')) {
-          this.selectTime(e.currentTarget);
-        }
+        this.selectTime(e.target);
+        // Fechar modal de horários após selecionar
+        setTimeout(() => {
+          const modal = document.getElementById('modal-horarios');
+          if (modal) {
+            modal.classList.remove('mostrar');
+            modal.style.display = 'none';
+          }
+        }, 200);
       });
     });
     
-    // Navigation buttons - dentro do modal
-    const modal = document.getElementById('modal-calendario');
-    if (modal) {
-      const prevBtn = modal.querySelector('#btn-prev-month');
-      const nextBtn = modal.querySelector('#btn-next-month');
-      const todayBtn = modal.querySelector('.btn-today');
-      
-      if (prevBtn) {
-        const newPrevBtn = prevBtn.cloneNode(true);
-        prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
-        newPrevBtn.addEventListener('click', () => {
-          console.log('Navegando para mês anterior');
-          this.previousMonth();
-        });
-      }
-      
-      if (nextBtn) {
-        const newNextBtn = nextBtn.cloneNode(true);
-        nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-        newNextBtn.addEventListener('click', () => {
-          console.log('Navegando para próximo mês');
-          this.nextMonth();
-        });
-      }
-      
-      if (todayBtn) {
-        const newTodayBtn = todayBtn.cloneNode(true);
-        todayBtn.parentNode.replaceChild(newTodayBtn, todayBtn);
-        newTodayBtn.addEventListener('click', () => {
-          console.log('Voltando para hoje');
-          this.goToToday();
-        });
-      }
+    // Navigation buttons
+    const prevBtn = document.getElementById('btn-prev-month');
+    const nextBtn = document.getElementById('btn-next-month');
+    const todayBtn = document.querySelector('.btn-today');
+    
+    if (prevBtn) {
+      const newPrevBtn = prevBtn.cloneNode(true);
+      prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+      newPrevBtn.addEventListener('click', () => this.previousMonth());
+    }
+    
+    if (nextBtn) {
+      const newNextBtn = nextBtn.cloneNode(true);
+      nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+      newNextBtn.addEventListener('click', () => this.nextMonth());
+    }
+    
+    if (todayBtn) {
+      const newTodayBtn = todayBtn.cloneNode(true);
+      todayBtn.parentNode.replaceChild(newTodayBtn, todayBtn);
+      newTodayBtn.addEventListener('click', () => this.goToToday());
     }
   }
 
   selectDate(element) {
     const dateString = element.dataset.date;
-    if (!dateString) {
-      console.warn('Data não encontrada no elemento');
-      return;
-    }
-    
-    // Verificar se é um dia válido (não disabled nem other-month)
-    if (element.classList.contains('other-month') || element.classList.contains('disabled')) {
-      console.warn('Dia inválido: other-month ou disabled');
-      return;
-    }
+    if (!dateString) return;
     
     this.selectedDate = new Date(dateString);
     
-    // Update UI - remover selected de todos
+    // Update UI
     document.querySelectorAll('.day-cell.selected').forEach(el => {
       el.classList.remove('selected');
     });
     element.classList.add('selected');
     
-    console.log('Data selecionada:', dateString, 'Elemento:', element);
-    
     // Update aside section
-    const dayNum = String(this.selectedDate.getDate()).padStart(2, '0');
+    const dayNum = this.selectedDate.getDate();
     const monthName = ['January', 'February', 'March', 'April', 'May', 'June',
                       'July', 'August', 'September', 'October', 'November', 'December']
                       [this.selectedDate.getMonth()];
@@ -199,22 +171,13 @@ class CalendarTimeSelector {
     if (asideMonth) asideMonth.textContent = monthName;
     
     this.onDateChange(this.selectedDate);
-<<<<<<< HEAD
-<<<<<<< HEAD
 
     // Atualizar input direto (garantir que o valor ficou setado)
     const inputData = document.getElementById('inputData');
     if (inputData) {
       inputData.value = dateString;
-      console.log('Input data atualizado:', inputData.value);
     }
 
-=======
-    
->>>>>>> parent of 9519c28 (teste_horario_4)
-=======
-    
->>>>>>> parent of 9519c28f (teste_horario_4)
     // Fechar modal de calendário após selecionar data
     setTimeout(() => {
       const modal = document.getElementById('modal-calendario');
@@ -226,13 +189,9 @@ class CalendarTimeSelector {
   }
 
   selectTime(element) {
-    if (element.classList.contains('unavailable')) {
-      console.warn('Horário indisponível');
-      return;
-    }
+    if (element.classList.contains('unavailable')) return;
     
     this.selectedTime = element.textContent.trim();
-    console.log('Horário selecionado:', this.selectedTime);
     
     // Update UI
     document.querySelectorAll('.time-slot.selected').forEach(el => {
@@ -241,15 +200,7 @@ class CalendarTimeSelector {
     element.classList.add('selected');
     
     this.onTimeChange(this.selectedTime);
-    
-    // Fechar modal de horários após selecionar
-    setTimeout(() => {
-      const modal = document.getElementById('modal-horarios');
-      if (modal) {
-        modal.classList.remove('mostrar');
-        modal.style.display = 'none';
-      }
-    }, 200);
+  }
 
   previousMonth() {
     this.currentDate.setMonth(this.currentDate.getMonth() - 1);
