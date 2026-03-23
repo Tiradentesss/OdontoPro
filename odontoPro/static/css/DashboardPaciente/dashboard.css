@@ -1407,10 +1407,10 @@ body {
 /* Caixa do Modal */
 .modal-content {
     background-color: #ffffff;
-    padding: 30px;
+    padding: 25px;
     border-radius: 15px; /* Cantos arredondados conforme design */
-    width: 600px;
-    max-width: 550px;
+    width: 90%;
+    max-width: 600px;
     position: relative;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     text-align: center;
@@ -1418,11 +1418,11 @@ body {
 
 /* Estilos específicos para o modal de agendamento 2 (com calendário) */
 #modal-agendamento-2 .modal-content {
-    width: 90%;
-    max-width: 600px;
+    width: 95%;
+    max-width: 650px;
     max-height: 90vh;
     overflow-y: auto;
-    padding: 40px;
+    padding: 25px;
 }
 
 /* Campo clicável de data e hora */

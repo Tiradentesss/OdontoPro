@@ -239,3 +239,44 @@ body {
     }
 
 }
+
+/* --- AJUSTES PARA O CALENDÁRIO EM DISPOSITIVOS PEQUENOS --- */
+@media (max-width: 768px) {
+    #modal-calendario .modal-content {
+        width: 95% !important;
+        padding: 15px !important;
+        max-height: 85vh !important;
+    }
+
+    #modal-horarios .modal-content {
+        width: 95% !important;
+        padding: 15px !important;
+    }
+
+    .calendar-container {
+        padding: 15px !important;
+        max-width: 100%;
+    }
+
+    .calendar-header {
+        margin-bottom: 15px;
+    }
+
+    .calendar-title {
+        font-size: 16px;
+    }
+
+    .calendar-matrix {
+        gap: 6px !important;
+        margin: 15px 0 !important;
+    }
+
+    .day-cell {
+        font-size: 11px;
+    }
+
+    .calendar-left,
+    .calendar-right {
+        min-width: 100% !important;
+    }
+}
