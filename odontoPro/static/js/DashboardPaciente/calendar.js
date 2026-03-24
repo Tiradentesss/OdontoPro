@@ -7,6 +7,7 @@ class CalendarTimeSelector {
   constructor(options = {}) {
     this.currentDate = new Date();
     this.selectedDate = null;
+    this.pendingDate = null; // guarda data marcada no primeiro clique
     this.selectedTime = null;
     this.container = options.container || '.calendar-container';
     this.minDate = options.minDate || new Date();
@@ -93,142 +94,184 @@ class CalendarTimeSelector {
   }
 
   attachEventListeners() {
-    // Day cells - encontrar os que estão visíveis em modalaberto
-    const modal = document.getElementById('modal-calendario');
-    if (modal && modal.classList.contains('mostrar')) {
-      // Pegar a matriz visível dentro do modal
-      const matrix = modal.querySelector('.calendar-matrix');
-      if (matrix) {
-        const cells = matrix.querySelectorAll('.day-cell:not(.other-month)');
-        cells.forEach(cell => {
-          // Remover listeners antigos (clonando)
-          const newCell = cell.cloneNode(true);
-          cell.parentNode.replaceChild(newCell, cell);
-          
-          // Adicionar novo listener
-          newCell.addEventListener('click', (e) => {
-            if (!e.currentTarget.classList.contains('other-month') && !e.currentTarget.classList.contains('disabled')) {
-              this.selectDate(e.currentTarget);
-            }
-          });
-        });
+    // Delegação: dia clicado no calendário
+    const calendarMatrix = document.querySelector('.calendar-matrix');
+    if (calendarMatrix) {
+      calendarMatrix.addEventListener('click', (event) => {
+        const dayCell = event.target.closest('.day-cell');
+        if (!dayCell || dayCell.classList.contains('other-month') || dayCell.classList.contains('disabled')) {
+          return;
+        }
+        this.selectDate(dayCell);
+      });
+    }
+
+    // Link do botão confirmar data para garantir funcionamento em todos os fluxos
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+      // Guarda a referência para remover antes de adicionar (evita múltiplos handlers sobrepostos)
+      if (this.btnConfirmHandler) {
+        btnConfirm.removeEventListener('click', this.btnConfirmHandler);
       }
+      this.btnConfirmHandler = (event) => {
+        event.preventDefault();
+        this.confirmarDataSelecionada();
+      };
+      btnConfirm.addEventListener('click', this.btnConfirmHandler);
+    }
+
+    // Delegação para campos de horário
+    const timeSlotsContainer = document.querySelector('.time-slots');
+    if (timeSlotsContainer) {
+      timeSlotsContainer.addEventListener('click', (event) => {
+        const slot = event.target.closest('.time-slot');
+        if (!slot || slot.classList.contains('unavailable')) {
+          return;
+        }
+        this.selectTime(slot);
+        setTimeout(() => {
+          const modal = document.getElementById('modal-horarios');
+          if (modal) {
+            modal.classList.remove('mostrar');
+            modal.style.display = 'none';
+          }
+        }, 200);
+      });
     }
     
-    // Time slots
-    const timeSlots = document.querySelectorAll('.time-slot');
-    timeSlots.forEach(slot => {
-      const newSlot = slot.cloneNode(true);
-      slot.parentNode.replaceChild(newSlot, slot);
-      
-      newSlot.addEventListener('click', (e) => {
-        if (!e.currentTarget.classList.contains('unavailable')) {
-          this.selectTime(e.currentTarget);
-        }
-      });
-    });
+    // Navigation buttons
+    const prevBtn = document.getElementById('btn-prev-month');
+    const nextBtn = document.getElementById('btn-next-month');
+    const todayBtn = document.querySelector('.btn-today');
     
-    // Navigation buttons - dentro do modal
-    const modal = document.getElementById('modal-calendario');
-    if (modal) {
-      const prevBtn = modal.querySelector('#btn-prev-month');
-      const nextBtn = modal.querySelector('#btn-next-month');
-      const todayBtn = modal.querySelector('.btn-today');
-      
-      if (prevBtn) {
-        const newPrevBtn = prevBtn.cloneNode(true);
-        prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
-        newPrevBtn.addEventListener('click', () => {
-          console.log('Navegando para mês anterior');
-          this.previousMonth();
-        });
-      }
-      
-      if (nextBtn) {
-        const newNextBtn = nextBtn.cloneNode(true);
-        nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-        newNextBtn.addEventListener('click', () => {
-          console.log('Navegando para próximo mês');
-          this.nextMonth();
-        });
-      }
-      
-      if (todayBtn) {
-        const newTodayBtn = todayBtn.cloneNode(true);
-        todayBtn.parentNode.replaceChild(newTodayBtn, todayBtn);
-        newTodayBtn.addEventListener('click', () => {
-          console.log('Voltando para hoje');
-          this.goToToday();
-        });
-      }
+    if (prevBtn) {
+      const newPrevBtn = prevBtn.cloneNode(true);
+      prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+      newPrevBtn.addEventListener('click', () => this.previousMonth());
+    }
+    
+    if (nextBtn) {
+      const newNextBtn = nextBtn.cloneNode(true);
+      nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+      newNextBtn.addEventListener('click', () => this.nextMonth());
+    }
+    
+    if (todayBtn) {
+      const newTodayBtn = todayBtn.cloneNode(true);
+      todayBtn.parentNode.replaceChild(newTodayBtn, todayBtn);
+      newTodayBtn.addEventListener('click', () => this.goToToday());
     }
   }
 
   selectDate(element) {
     const dateString = element.dataset.date;
-    if (!dateString) {
-      console.warn('Data não encontrada no elemento');
-      return;
-    }
-    
-    // Verificar se é um dia válido (não disabled nem other-month)
-    if (element.classList.contains('other-month') || element.classList.contains('disabled')) {
-      console.warn('Dia inválido: other-month ou disabled');
-      return;
-    }
-    
+    if (!dateString) return;
+
     this.selectedDate = new Date(dateString);
-    
-    // Update UI - remover selected de todos
+    this.pendingDate = dateString;
+
+    // Update UI
     document.querySelectorAll('.day-cell.selected').forEach(el => {
       el.classList.remove('selected');
     });
     element.classList.add('selected');
-    
-    console.log('Data selecionada:', dateString, 'Elemento:', element);
-    
+
     // Update aside section
-    const dayNum = String(this.selectedDate.getDate()).padStart(2, '0');
+    const dayNum = this.selectedDate.getDate();
     const monthName = ['January', 'February', 'March', 'April', 'May', 'June',
                       'July', 'August', 'September', 'October', 'November', 'December']
                       [this.selectedDate.getMonth()];
-    
+
     const asideNum = document.querySelector('.aside-date');
     const asideMonth = document.querySelector('.aside-month');
     if (asideNum) asideNum.textContent = dayNum;
     if (asideMonth) asideMonth.textContent = monthName;
-    
-    this.onDateChange(this.selectedDate);
-<<<<<<< HEAD
 
     // Atualizar input direto (garantir que o valor ficou setado)
     const inputData = document.getElementById('inputData');
     if (inputData) {
       inputData.value = dateString;
-      console.log('Input data atualizado:', inputData.value);
+      // Dispara change para o listener de horarios (dashboard.js)
+      const changeEvent = new Event('change', { bubbles: true });
+      inputData.dispatchEvent(changeEvent);
     }
 
-=======
-    
->>>>>>> parent of 9519c28 (teste_horario_4)
-    // Fechar modal de calendário após selecionar data
-    setTimeout(() => {
-      const modal = document.getElementById('modal-calendario');
-      if (modal) {
-        modal.classList.remove('mostrar');
-        modal.style.display = 'none';
+    // Sempre chama onDateChange, útil para visualizar a data no campo
+    this.onDateChange(this.selectedDate);
+
+    // Mostrar botão Confirmar Data e habilitar
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+      btnConfirm.style.display = 'inline-block';
+      btnConfirm.disabled = false;
+      btnConfirm.removeAttribute('disabled');
+      btnConfirm.style.pointerEvents = 'auto';
+      btnConfirm.textContent = `Confirmar ${dateString}`;
+      btnConfirm.style.opacity = '1';
+      btnConfirm.setAttribute('data-selected-date', dateString);
+      btnConfirm.onclick = (event) => {
+        event.preventDefault();
+        console.log('[calendar] btn-confirmar-data clicked, date:', dateString);
+        this.confirmarDataSelecionada();
+      };
+    }
+
+    // Atualiza timeslots para a data selecionada (sem abrir modal de horários automaticamente)
+    if (window.calendarSelector && typeof window.calendarSelector.renderTimeSlots === 'function') {
+      window.calendarSelector.renderTimeSlots();
+    }
+
+    // Não fechar modal do calendário nem abrir modal de horários aqui.
+    // O fluxo será: selecionar data → confirmar → abrir modal de horários.
+
+  }
+
+  confirmarDataSelecionada() {
+    if (!this.selectedDate) {
+      alert('Selecione primeiro uma data no calendário.');
+      return;
+    }
+
+    console.log('[calendar] confirmarDataSelecionada called, selectedDate:', this.selectedDate);
+
+    const modal = document.getElementById('modal-calendario');
+    if (modal) {
+      modal.classList.remove('mostrar');
+      modal.style.display = 'none';
+    }
+
+    const inputData = document.getElementById('inputData');
+    if (inputData && inputData.value) {
+      if (typeof carregarHorarios === 'function' && typeof clinicaSelecionada !== 'undefined' && clinicaSelecionada) {
+        console.log('[calendar] chamando carregarHorarios', clinicaSelecionada, inputData.value);
+        carregarHorarios(clinicaSelecionada, inputData.value);
       }
-    }, 300);
+    }
+
+    // Abrir modal horários (agora que confirmou data)
+    if (typeof abrirModalHorario === 'function') {
+      abrirModalHorario();
+    } else {
+      const modalHorario = document.getElementById('modal-horarios');
+      if (modalHorario) {
+        modalHorario.classList.add('mostrar');
+        modalHorario.style.display = 'flex';
+      }
+    }
+
+    // Resetar botão confirmação após abertura de horário
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+      btnConfirm.style.display = 'none';
+      btnConfirm.disabled = true;
+      btnConfirm.textContent = 'Confirmar Data';
+    }
   }
 
   selectTime(element) {
-    if (element.classList.contains('unavailable')) {
-      console.warn('Horário indisponível');
-      return;
-    }
+    if (element.classList.contains('unavailable')) return;
     
     this.selectedTime = element.textContent.trim();
-    console.log('Horário selecionado:', this.selectedTime);
     
     // Update UI
     document.querySelectorAll('.time-slot.selected').forEach(el => {
@@ -237,15 +280,7 @@ class CalendarTimeSelector {
     element.classList.add('selected');
     
     this.onTimeChange(this.selectedTime);
-    
-    // Fechar modal de horários após selecionar
-    setTimeout(() => {
-      const modal = document.getElementById('modal-horarios');
-      if (modal) {
-        modal.classList.remove('mostrar');
-        modal.style.display = 'none';
-      }
-    }, 200);
+  }
 
   previousMonth() {
     this.currentDate.setMonth(this.currentDate.getMonth() - 1);
@@ -406,6 +441,32 @@ function initializeCalendarSelector() {
   console.log('Calendário inicializado com sucesso');
 }
 
+function confirmarDataSelecionada() {
+  if (window.calendarSelector && typeof window.calendarSelector.confirmarDataSelecionada === 'function') {
+    window.calendarSelector.confirmarDataSelecionada();
+  } else {
+    console.warn('[global] calendarSelector não inicializado ainda. Tentativa manual de abrir modal de horário.');
+    const inputData = document.getElementById('inputData');
+    if (inputData && inputData.value) {
+      if (typeof carregarHorarios === 'function' && typeof clinicaSelecionada !== 'undefined' && clinicaSelecionada) {
+        console.log('[global] carregando horarios manual', clinicaSelecionada, inputData.value);
+        carregarHorarios(clinicaSelecionada, inputData.value);
+      }
+      const modalHorario = document.getElementById('modal-horarios');
+      const modalCalendario = document.getElementById('modal-calendario');
+      if (modalCalendario) {
+        modalCalendario.classList.remove('mostrar');
+        modalCalendario.style.display = 'none';
+      }
+      if (modalHorario) {
+        modalHorario.classList.add('mostrar');
+        modalHorario.style.display = 'flex';
+      }
+    } else {
+      alert('Por favor, selecione uma data primeiro.');
+    }
+  }
+}
 document.addEventListener('DOMContentLoaded', () => {
   // Aguardar um pouco para garantir que o DOM está completo
   setTimeout(() => {

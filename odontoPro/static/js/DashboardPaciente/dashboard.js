@@ -297,27 +297,81 @@ function abrirModalAgendamento(clinicaId) {
 
 
 /* Função para abrir o modal de agendamento na página de perfil da clínica */
+function calcularIdade(dataNascimentoStr) {
+    if (!dataNascimentoStr) return null;
+
+    const hoje = new Date();
+    const nasc = new Date(dataNascimentoStr);
+    if (Number.isNaN(nasc.getTime())) return null;
+
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const mes = hoje.getMonth() - nasc.getMonth();
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nasc.getDate())) {
+        idade -= 1;
+    }
+    return idade;
+}
+
+function preencherFormularioAgendamentoComDadosUsuario() {
+    const pacienteNome = document.getElementById('pacienteNome')?.value || '';
+    const pacienteEmail = document.getElementById('pacienteEmail')?.value || '';
+    const pacienteTelefone = document.getElementById('pacienteTelefone')?.value || '';
+    const pacienteSexo = document.getElementById('pacienteSexo')?.value || '';
+    const pacienteDataNascimento = document.getElementById('pacienteDataNascimento')?.value || '';
+
+    const inputNome = document.getElementById('inputNome');
+    const inputEmail = document.getElementById('inputEmail');
+    const inputTelefone = document.getElementById('inputTelefone');
+
+    if (inputNome) inputNome.value = pacienteNome;
+    if (inputEmail) inputEmail.value = pacienteEmail;
+    if (inputTelefone) inputTelefone.value = pacienteTelefone;
+
+    // Gênero
+    document.querySelectorAll('input[name="gender"]').forEach(r => {
+        if (pacienteSexo && r.value.toLowerCase() === pacienteSexo.toLowerCase()) {
+            r.checked = true;
+        }
+    });
+
+    // Faixa etária (se tiver data_nascimento)
+    const idade = calcularIdade(pacienteDataNascimento);
+    if (idade !== null) {
+        const radioAdulto = document.querySelector('input[name="age"][value="Adulto"]');
+        const radioInfantil = document.querySelector('input[name="age"][value="Infantil"]');
+
+        if (radioAdulto && radioInfantil) {
+            if (idade >= 18) {
+                radioAdulto.checked = true;
+            } else {
+                radioInfantil.checked = true;
+            }
+        }
+    }
+}
+
 function abrirModalAgendamentoClinica() {
+    preencherFormularioAgendamentoComDadosUsuario();
+
     const modal = document.getElementById('modal-agendamento-1');
     if (modal) {
         modal.classList.add('mostrar');
+        modal.style.display = 'flex';
     }
 }
 
 /* Função para fechar modais ao clicar fora deles */
 function inicializarFechoDeModais() {
-    // Removida a funcionalidade de fechar ao clicar fora
-    // Agora os modais só fecham ao clicar no botão X (modal-close)
-    // const modaisAgendamento = document.querySelectorAll('#modal-agendamento-1, #modal-agendamento-2, #modal-sucesso');
-    // 
-    // modaisAgendamento.forEach(modal => {
-    //     modal.addEventListener('click', function(event) {
-    //         // Fecha o modal apenas se clicou no fundo (não no conteúdo)
-    //         if (event.target === modal) {
-    //             fecharModalAgendamento();
-    //         }
-    //     });
-    // });
+    const modaisAgendamento = document.querySelectorAll('#modal-agendamento-1, #modal-agendamento-2, #modal-sucesso');
+    
+    modaisAgendamento.forEach(modal => {
+        modal.addEventListener('click', function(event) {
+            // Fecha o modal apenas se clicou no fundo (não no conteúdo)
+            if (event.target === modal) {
+                fecharModalAgendamento();
+            }
+        });
+    });
 }
 
 /* ================= UPLOAD DE FOTO ================= */
@@ -1005,26 +1059,27 @@ function voltarAoFormulario() {
 
 function abrirModalCalendario() {
     const modal = document.getElementById('modal-calendario');
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+        btnConfirm.style.display = 'inline-block';
+        btnConfirm.disabled = true;
+        btnConfirm.setAttribute('disabled', 'disabled');
+        btnConfirm.style.pointerEvents = 'none';
+        btnConfirm.textContent = 'Confirmar Data';
+        btnConfirm.style.opacity = '0.5';
+        btnConfirm.onclick = confirmarDataSelecionada;
+    }
+
     if (modal) {
         modal.classList.add('mostrar');
         modal.style.display = 'flex';
         
-        // Reinicializar calendário com um pequeno delay
+        // Reinicializar calendário
         setTimeout(() => {
-            console.log('Abrindo modal de calendário...');
-            
-            // Garantir que o calendário está renderizado
-            if (window.calendarSelector) {
-                window.calendarSelector.renderCalendar();
-                window.calendarSelector.attachEventListeners();
-                console.log('Calendário rerenderizado e listeners anexados');
-            } else if (typeof initializeCalendarSelector === 'function') {
+            if (typeof initializeCalendarSelector === 'function') {
                 initializeCalendarSelector();
-                console.log('Calendário inicializado');
-            } else {
-                console.warn('initializeCalendarSelector não está disponível');
             }
-        }, 150);
+        }, 100);
     }
 }
 
@@ -1058,6 +1113,28 @@ function fecharModalHorario() {
         modal.style.display = 'none';
     }
 }
+
+function vincularConfirmarDataBotao() {
+    const btn = document.getElementById('btn-confirmar-data');
+    if (!btn) return;
+
+    btn.removeEventListener('click', window.__confirmarDataFallback);
+
+    window.__confirmarDataFallback = (event) => {
+        if (btn.disabled) {
+            event.preventDefault();
+            return;
+        }
+        console.log('[global] Confirmar Data fallback clicked');
+        confirmarDataSelecionada();
+    };
+
+    btn.addEventListener('click', window.__confirmarDataFallback);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    vincularConfirmarDataBotao();
+});
 
 /**
  * Função para confirmar agendamento
@@ -1172,8 +1249,7 @@ function fecharModalAgendamento() {
 /* Função para limpar o formulário de agendamento */
 function limparFormularioAgendamento() {
     const campos = [
-        'inputNome', 'inputEmail', 'inputTelefone', 'inputSintomas',
-        'selectEspecialidade', 'selectProfissional', 'inputData', 'selectHorario'
+        'inputSintomas', 'selectEspecialidade', 'selectProfissional', 'inputData', 'selectHorario'
     ];
     
     campos.forEach(id => {
@@ -1181,9 +1257,8 @@ function limparFormularioAgendamento() {
         if (campo) campo.value = '';
     });
     
-    // Limpar radio buttons
-    document.querySelectorAll('input[name="gender"]').forEach(r => r.checked = false);
-    document.querySelectorAll('input[name="age"]').forEach(r => r.checked = false);
+    // Recarregar informações do paciente para manter preenchimento automático
+    preencherFormularioAgendamentoComDadosUsuario();
 }
 
 /* ================= IR PARA MEUS AGENDAMENTOS ================= */
