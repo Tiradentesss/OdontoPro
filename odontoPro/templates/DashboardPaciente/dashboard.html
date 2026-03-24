@@ -198,20 +198,28 @@
 
             <!-- BANNER -->
             <div class="banner-card">
-                <img
-                    src="{% if clinica.imagem %}{{ clinica.imagem.url }}{% else %}{% static 'img/default-banner.jpg' %}{% endif %}"
-                    class="fundo-banner">
-
-                <!-- LOGO SOBREPOSTA -->
-                <div class="logo-sobreposta">
-                    {% if clinica.logo %}
-                        <img src="{{ clinica.logo.url }}" alt="Logo da clínica">
+                {% with clinica.imagens.all as galeria %}
+                    {% if clinica.imagem %}
+                        <img src="{{ clinica.imagem.url }}" class="fundo-banner">
+                    {% elif galeria %}
+                        <img src="{{ galeria.0.imagem.url }}" class="fundo-banner">
                     {% else %}
-                        <div class="logo-placeholder">
-                            <i class="fa-solid fa-hospital"></i>
-                        </div>
+                        <img src="{% static 'img/default-banner.jpg' %}" class="fundo-banner">
                     {% endif %}
-                </div>
+
+                    <!-- LOGO SOBREPOSTA -->
+                    <div class="logo-sobreposta">
+                        {% if clinica.logo %}
+                            <img src="{{ clinica.logo.url }}" alt="Logo da clínica">
+                        {% elif galeria %}
+                            <img src="{{ galeria.0.imagem.url }}" alt="Logo da clínica">
+                        {% else %}
+                            <div class="logo-placeholder">
+                                <i class="fa-solid fa-hospital"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endwith %}
             </div>
 
 

@@ -1,6 +1,9 @@
 from django.core.management.base import BaseCommand
+from django.core.files import File
 from django.db import transaction
-from odontoPro.models import Clinica, Endereco, DiaSemanaDisponivel, HorarioAberto, Especialidade, Medico, Gerenciamento
+from pathlib import Path
+from django.conf import settings
+from odontoPro.models import Clinica, Endereco, DiaSemanaDisponivel, HorarioAberto, Especialidade, Medico, Gerenciamento, ClinicaImagem
 
 
 def _sexo_por_titulo(nome):
@@ -10,6 +13,36 @@ def _sexo_por_titulo(nome):
     if "dr." in nome_lower or nome_lower.startswith("dr"):
         return "m"
     return "m"
+
+
+def _carregar_imagens_clinica(clinica, dados):
+    base_static = Path(settings.BASE_DIR) / 'odontoPro' / 'static'
+
+    # Banner principal (imagem da clínica)
+    imagem_local = dados.get('imagem_local')
+    if imagem_local:
+        caminho = base_static / imagem_local
+        if caminho.exists():
+            with caminho.open('rb') as f:
+                clinica.imagem.save(Path(caminho).name, File(f), save=False)
+
+    # Logo da clínica
+    logo_local = dados.get('logo_local')
+    if logo_local:
+        caminho = base_static / logo_local
+        if caminho.exists():
+            with caminho.open('rb') as f:
+                clinica.logo.save(Path(caminho).name, File(f), save=False)
+
+    clinica.save()
+
+    # Galeria de imagens (ClinicaImagem)
+    for ordem, foto_local in enumerate(dados.get('fotos', []), start=1):
+        caminho_foto = base_static / foto_local
+        if caminho_foto.exists():
+            with caminho_foto.open('rb') as f:
+                ci = ClinicaImagem(clinica=clinica, ordem=ordem)
+                ci.imagem.save(Path(caminho_foto).name, File(f), save=True)
 
 
 def _criar_clinica(dados):
@@ -75,6 +108,8 @@ def _criar_clinica(dados):
             clinica=clinica,
         )
 
+    _carregar_imagens_clinica(clinica, dados)
+
     return clinica
 
 
@@ -118,6 +153,16 @@ class Command(BaseCommand):
                     "dias": ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"],
                     "horarios": [("08:00", "12:00"), ("14:00", "18:00")],
                     "especialidades": ["Harmonização Orofacial", "Implantodontia", "Ortodontia", "Endodontia", "Odontopediatria"],
+                    "imagem_local": "img/Clinicas/Odontoprime/Fotos/OdontoPrime_fachada.png",
+                    "logo_local": "img/Clinicas/Odontoprime/Fotos/OdontoPrime_logo.png",
+                    "fotos": [
+                        "img/Clinicas/Odontoprime/Fotos/OdontoPrime_fachada.png",
+                        "img/Clinicas/Odontoprime/Fotos/OdontoPrime_interior_1.png",
+                        "img/Clinicas/Odontoprime/Fotos/OdontoPrime_interior_2.png",
+                        "img/Clinicas/Odontoprime/Fotos/OdontoPrime_interior_3.png",
+                        "img/Clinicas/Odontoprime/Fotos/OdontoPrime_interior_4.png",
+                        "img/Clinicas/Odontoprime/Fotos/OdontoPrime_interior_5.png",
+                    ],
                     "medicos": [
                         {"nome": "Dr. Ricardo Almeida", "cpf": "11122233344", "email": "ricardo@odontoprime.com", "data_nascimento": "1982-03-12", "senha": "hash123", "crm_cro": "CRO-77777", "telefone": "(41)90000-0002", "especialidades": ["Implantodontia"]},
                         {"nome": "Dra. Fernanda Souza", "cpf": "22233344455", "email": "fernanda@odontoprime.com", "data_nascimento": "1988-06-25", "senha": "hash123", "crm_cro": "CRO-88888", "telefone": "(41)90000-0003", "especialidades": ["Ortodontia"]},
