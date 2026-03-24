@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.dateparse import parse_datetime
 from django.core import signing
 from django.conf import settings
+from django.core.management import call_command
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
 from datetime import datetime, timedelta
@@ -218,7 +219,15 @@ def dashboard_paciente(request):
     paciente = Paciente.objects.get(id=paciente_id)
     clinicas = Clinica.objects.all().order_by("nome")
 
-    # prepare signed uid for settings forms so it is always available
+    # Se não houver clínica cadastrada, popula automaticamente (comando já existente em management)
+    if not clinicas.exists():
+        try:
+            call_command('reset_clinicas')
+            clinicas = Clinica.objects.all().order_by("nome")
+        except Exception as e:
+            logger.error("Erro ao resetar clínicas automaticamente: %s", e, exc_info=True)
+
+    # prepare signed uid for settings forms so it is always disponível
     uid_signed = signing.dumps(paciente.id)
 
     filtro_status = request.GET.get("status")
