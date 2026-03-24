@@ -13,6 +13,7 @@ urlpatterns = [
 
     # DASHBOARD
     path('dashboard-paciente/', views.dashboard_paciente, name='dashboard_paciente'),
+    path('painel-profissional/', views.painel_profissional, name='painel_profissional'),
 
     # LOGOUT
     path('logout/', views.logout_view, name='logout'),

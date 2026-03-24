@@ -264,6 +264,21 @@ def dashboard_paciente(request):
     return render(request, "DashboardPaciente/dashboard.html", context)
 
 
+def painel_profissional(request):
+    medico_id = request.session.get('medico_id')
+    if not medico_id:
+        messages.error(request, "Faça login como profissional para acessar o painel.")
+        return redirect('login_paciente')
+
+    try:
+        medico = Medico.objects.get(id=medico_id)
+    except Medico.DoesNotExist:
+        messages.error(request, "Profissional não encontrado.")
+        return redirect('login_paciente')
+
+    return render(request, "DashboardProfissional/painel.html", {"medico": medico})
+
+
 # ---------- LOGOUT ----------
 def logout_view(request):
     request.session.flush()
@@ -418,23 +433,24 @@ def agendar_consulta(request):
         return JsonResponse({"success": False, "error": "Horário indisponível"})
 
     paciente = None
-    nome = email = telefone = ""
+    nome = request.POST.get("nome", "")
+    email = request.POST.get("email", "")
+    telefone = request.POST.get("telefone", "")
 
     # ✅ PACIENTE LOGADO (via sessão)
     if paciente_id:
         try:
             paciente = Paciente.objects.get(id=paciente_id)
-            nome = paciente.nome
-            email = paciente.email
-            telefone = paciente.telefone
+            if not nome:
+                nome = paciente.nome
+            if not email:
+                email = paciente.email
+            if not telefone:
+                telefone = paciente.telefone
         except Paciente.DoesNotExist:
             return JsonResponse({"success": False, "error": "Paciente não encontrado"}, status=404)
     else:
         # visitante (mantém compatibilidade)
-        nome = request.POST.get("nome")
-        email = request.POST.get("email")
-        telefone = request.POST.get("telefone")
-
         if not all([nome, email, telefone]):
             return JsonResponse({"success": False, "error": "Dados do paciente ausentes"})
 
@@ -457,6 +473,18 @@ def configuracoes_conta(request):
 
     # ===== VERIFICAR AUTENTICAÇÃO =====
     paciente_id = request.session.get('paciente_id')
+
+    # Tentar restaurar sessão a partir de UID assinado (POST) caso a sessão tenha expirado.
+    if not paciente_id and request.method == 'POST':
+        signed_uid = request.POST.get('uid')
+        if signed_uid:
+            try:
+                paciente_id = signing.loads(signed_uid)
+                if Paciente.objects.filter(id=paciente_id).exists():
+                    request.session['paciente_id'] = paciente_id
+                    request.session.save()
+            except signing.BadSignature:
+                logger.warning("uid inválido fornecido ao tentar restaurar sessão em configuracoes_conta: %s", signed_uid)
 
     if not paciente_id:
         messages.error(request, "Sua sessão expirou. Faça login novamente.")
@@ -590,10 +618,11 @@ def configuracoes_conta(request):
                 logger.error(f"Erro ao atualizar paciente {paciente_id}: {str(e)}", exc_info=True)
                 messages.error(request, 'Erro ao salvar alterações. Tente novamente.')
 
-        # Se salvou com sucesso, reemite o cookie de recuperação e redireciona para configurações
+        # Se salvou com sucesso, reemite o cookie de recuperação e redireciona para dashboard (aba ajustes)
         if saved:
             uid_signed = signing.dumps(paciente.id)
-            response = redirect('configuracoes_conta')
+            redirect_url = reverse('dashboard_paciente') + '?open=ajustes'
+            response = redirect(redirect_url)
             response.set_cookie(
                 "uid_signed",
                 uid_signed,
@@ -658,6 +687,8 @@ def alterar_senha_paciente(request):
         nova_senha = request.POST.get('nova_senha', '').strip()
         confirmar_senha = request.POST.get('confirmar_senha', '').strip()
 
+        senha_alterada = False
+
         # Validações
         try:
             if not senha_atual:
@@ -681,9 +712,13 @@ def alterar_senha_paciente(request):
                     logger.error("[SENHA] erro salvando sessão após update: %s", ex, exc_info=True)
                 messages.success(request, 'Senha alterada com sucesso!')
                 logger.info(f"[SENHA] Senha do paciente {paciente_id} alterada")
+                senha_alterada = True
         except Exception as e:
             logger.error(f"[SENHA] Erro: {str(e)}", exc_info=True)
             messages.error(request, f'Erro ao alterar senha: {str(e)}')
+
+        if senha_alterada:
+            return redirect('configuracoes_conta')
 
     # Preparar contexto para renderizar a página de configurações
     clinicas = Clinica.objects.all().order_by("nome")
