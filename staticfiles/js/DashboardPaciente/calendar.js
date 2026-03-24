@@ -37,20 +37,20 @@ class CalendarTimeSelector {
     
     // Day headers
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    dayNames.forEach(day => {
-      html += `<div class="day-header">${day}</div>`;
+    dayNames.forEach(dayName => {
+      html += `<div class="day-header">${dayName}</div>`;
     });
     
     // Previous month days
     for (let i = firstDay - 1; i >= 0; i--) {
-      const day = daysInPrevMonth - i;
-      html += `<div class="day-cell other-month disabled">${day}</div>`;
+      const dayNum = daysInPrevMonth - i;
+      html += `<div class="day-cell other-month disabled">${dayNum}</div>`;
     }
     
     // Current month days
     const today = new Date();
-    for (let day = 1; day <= daysInMonth; day++) {
-      const currentCellDate = new Date(year, month, day);
+    for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+      const currentCellDate = new Date(year, month, dayNum);
       const dateString = this.formatDate(currentCellDate);
       const isToday = this.isToday(currentCellDate);
       const isSelected = this.selectedDate && dateString === this.formatDate(this.selectedDate);
@@ -61,14 +61,14 @@ class CalendarTimeSelector {
       if (isSelected) classes += ' selected';
       if (isWeekend) classes += ' weekend';
       
-      html += `<div class="${classes}" data-date="${dateString}">${day}</div>`;
+      html += `<div class="${classes}" data-date="${dateString}">${dayNum}</div>`;
     }
     
     // Next month days
     const totalCells = firstDay + daysInMonth;
     const remainingCells = 42 - totalCells; // 6 rows × 7 days
-    for (let day = 1; day <= remainingCells; day++) {
-      html += `<div class="day-cell other-month disabled">${day}</div>`;
+    for (let dayNum = 1; dayNum <= remainingCells; dayNum++) {
+      html += `<div class="day-cell other-month disabled">${dayNum}</div>`;
     }
     
     // Procurar e atualizar a matriz visível
@@ -225,11 +225,6 @@ class CalendarTimeSelector {
       btnConfirm.textContent = `Confirmar ${dateString}`;
       btnConfirm.style.opacity = '1';
       btnConfirm.setAttribute('data-selected-date', dateString);
-      btnConfirm.onclick = (event) => {
-        event.preventDefault();
-        console.log('[calendar] btn-confirmar-data clicked, date:', dateString);
-        this.confirmarDataSelecionada();
-      };
     }
 
     // Atualiza timeslots para a data selecionada (sem abrir modal de horários automaticamente)
@@ -239,7 +234,6 @@ class CalendarTimeSelector {
 
     // Não fechar modal do calendário nem abrir modal de horários aqui.
     // O fluxo será: selecionar data → confirmar → abrir modal de horários.
-
   }
 
   confirmarDataSelecionada() {
@@ -326,8 +320,8 @@ class CalendarTimeSelector {
   formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const dayNum = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${dayNum}`;
   }
 
   getDefaultTimes() {
@@ -411,8 +405,8 @@ function initializeCalendarSelector() {
       if (dateInput) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        dateInput.value = `${year}-${month}-${day}`;
+        const dayNum = String(date.getDate()).padStart(2, '0');
+        dateInput.value = `${year}-${month}-${dayNum}`;
         console.log('Data input atualizado:', dateInput.value);
       }
       
@@ -422,7 +416,7 @@ function initializeCalendarSelector() {
         const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
-        const dateStr = `${dayName}, ${day} de ${monthNames[parseInt(month) - 1]} de ${year}`;
+        const dateStr = `${dayName}, ${dayNum} de ${monthNames[parseInt(month) - 1]} de ${year}`;
         dataSelecionadaDisplay.innerHTML = `<span>${dateStr}</span><i class="fa-solid fa-calendar" style="margin-left: 10px; color: #00BCD4;"></i>`;
       }
     },
@@ -483,6 +477,7 @@ function confirmarDataSelecionada() {
     }
   }
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   // Aguardar um pouco para garantir que o DOM está completo
   setTimeout(() => {
