@@ -261,11 +261,38 @@ class CalendarTimeSelector {
     if (inputData && inputData.value) {
       if (typeof carregarHorarios === 'function' && typeof clinicaSelecionada !== 'undefined' && clinicaSelecionada) {
         console.log('[calendar] chamando carregarHorarios', clinicaSelecionada, inputData.value);
-        carregarHorarios(clinicaSelecionada, inputData.value);
+        
+        // Aguardar carregamento dos horários antes de abrir o modal
+        carregarHorarios(clinicaSelecionada, inputData.value)
+          .then((horarios) => {
+            console.log('[calendar] Horários carregados com sucesso:', horarios);
+            
+            // Abrir modal horários após horários terem sido carregados
+            if (typeof abrirModalHorario === 'function') {
+              abrirModalHorario();
+            } else {
+              const modalHorario = document.getElementById('modal-horarios');
+              if (modalHorario) {
+                modalHorario.classList.add('mostrar');
+                modalHorario.style.display = 'flex';
+              }
+            }
+          })
+          .catch((error) => {
+            console.error('[calendar] Erro ao carregar horários:', error);
+            alert('Erro ao carregar horários disponíveis. Tente novamente.');
+            
+            // Abrir modal mesmo com erro para permitir retry
+            if (typeof abrirModalHorario === 'function') {
+              abrirModalHorario();
+            }
+          });
+        
+        return; // Retornar aqui para não continuar com o código antigo
       }
     }
 
-    // Abrir modal horários (agora que confirmou data)
+    // Abrir modal horários (se carregarHorarios não foi chamado)
     if (typeof abrirModalHorario === 'function') {
       abrirModalHorario();
     } else {

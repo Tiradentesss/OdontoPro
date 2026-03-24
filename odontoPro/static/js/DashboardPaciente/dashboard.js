@@ -894,11 +894,11 @@ function carregarEspecialidadesEMedicos(clinicaId) {
 
 function carregarHorarios(clinicaId, data) {
     // Buscar horários disponíveis da clínica para a data selecionada
-    fetch(`/clinica/${clinicaId}/horarios/?data=${data}`)
+    return fetch(`/clinica/${clinicaId}/horarios/?data=${data}`)
         .then(response => response.json())
         .then(data => {
             const selectHorario = document.getElementById('selectHorario');
-            if (!selectHorario) return;
+            if (!selectHorario) return Promise.reject('selectHorario não encontrado');
             
             selectHorario.innerHTML = '<option value="">Selecione o Horário</option>';
             
@@ -909,11 +909,26 @@ function carregarHorarios(clinicaId, data) {
                     option.textContent = horario;
                     selectHorario.appendChild(option);
                 });
+                
+                // IMPORTANTE: Sincronizar horários visíveis no modal com os horários reais do backend
+                if (window.calendarSelector) {
+                    console.log('[dashboard] Atualizando availableTimes com horários reais:', data.horarios);
+                    window.calendarSelector.availableTimes = data.horarios;
+                    window.calendarSelector.renderTimeSlots();
+                }
+                return Promise.resolve(data.horarios);
             } else {
                 const option = document.createElement('option');
                 option.disabled = true;
                 option.textContent = 'Nenhum horário disponível';
                 selectHorario.appendChild(option);
+                
+                // Limpar disponibilidades se não houver horários
+                if (window.calendarSelector) {
+                    window.calendarSelector.availableTimes = [];
+                    window.calendarSelector.renderTimeSlots();
+                }
+                return Promise.resolve([]);
             }
         })
         .catch(error => {
@@ -922,6 +937,7 @@ function carregarHorarios(clinicaId, data) {
             if (selectHorario) {
                 selectHorario.innerHTML = '<option value="">Erro ao carregar horários</option>';
             }
+            return Promise.reject(error);
         });
 }
 
