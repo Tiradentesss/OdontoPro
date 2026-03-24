@@ -83,8 +83,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with transaction.atomic():
-            self.stdout.write("Deletando clínicas existentes...")
+            self.stdout.write("Deletando dados existentes de clínicas e relacionados...")
+
+            # Apaga primeiro as tabelas filhas que usam on_delete=PROTECT no Clinica
+            Gerenciamento.objects.all().delete()
+            Medico.objects.all().delete()
+            DiaSemanaDisponivel.objects.all().delete()
+            HorarioAberto.objects.all().delete()
+            # Em seguida, apaga as clínicas e endereços
             Clinica.objects.all().delete()
+            Endereco.objects.all().delete()
 
             clinicas = [
                 {
