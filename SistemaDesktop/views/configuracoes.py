@@ -4,6 +4,114 @@ from tkinter import filedialog, messagebox
 from .base import BaseScreen
 from .theme import font, ICON_SIZE
 import os
+from PIL import Image, ImageTk, ImageDraw
+
+class ImagePreview:
+    """Classe utilitária para gerenciar previews de imagens"""
+    
+    @staticmethod
+    def create_circular_preview(canvas, image_path, size=140, placeholder_text="IMG"):
+        """Cria preview circular de imagem em um canvas"""
+        canvas.delete("all")  # Limpar canvas
+        
+        if image_path and os.path.exists(image_path):
+            try:
+                # Carregar e redimensionar imagem
+                img = Image.open(image_path)
+                img = img.resize((size-10, size-10), Image.Resampling.LANCZOS)
+                
+                # Criar máscara circular
+                mask = Image.new('L', (size-10, size-10), 0)
+                draw = ImageDraw.Draw(mask)
+                draw.ellipse((0, 0, size-10, size-10), fill=255)
+                
+                # Aplicar máscara
+                img.putalpha(mask)
+                
+                # Converter para PhotoImage
+                photo = ImageTk.PhotoImage(img)
+                
+                # Desenhar no canvas
+                canvas.create_image(size//2, size//2, image=photo)
+                canvas.image = photo  # Manter referência
+                
+                # Desenhar borda circular
+                canvas.create_oval(5, 5, size-5, size-5, outline="#0EA5E9", width=2)
+                
+            except Exception as e:
+                print(f"Erro ao carregar imagem: {e}")
+                ImagePreview._draw_placeholder_circle(canvas, size, placeholder_text)
+        else:
+            ImagePreview._draw_placeholder_circle(canvas, size, placeholder_text)
+    
+    @staticmethod
+    def create_rectangular_preview(canvas, image_path, width=300, height=150, placeholder_text="IMG"):
+        """Cria preview retangular de imagem em um canvas"""
+        canvas.delete("all")  # Limpar canvas
+        
+        if image_path and os.path.exists(image_path):
+            try:
+                # Carregar e redimensionar imagem mantendo proporção
+                img = Image.open(image_path)
+                img_ratio = img.width / img.height
+                canvas_ratio = width / height
+                
+                if img_ratio > canvas_ratio:
+                    # Imagem mais larga, ajustar pela largura
+                    new_width = width
+                    new_height = int(width / img_ratio)
+                else:
+                    # Imagem mais alta, ajustar pela altura
+                    new_height = height
+                    new_width = int(height * img_ratio)
+                
+                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                
+                # Centralizar imagem no canvas
+                x_offset = (width - new_width) // 2
+                y_offset = (height - new_height) // 2
+                
+                # Converter para PhotoImage
+                photo = ImageTk.PhotoImage(img)
+                
+                # Desenhar no canvas
+                canvas.create_image(x_offset + new_width//2, y_offset + new_height//2, image=photo)
+                canvas.image = photo  # Manter referência
+                
+                # Desenhar borda retangular
+                canvas.create_rectangle(2, 2, width-2, height-2, outline="#E5E7EB", width=1)
+                
+            except Exception as e:
+                print(f"Erro ao carregar imagem: {e}")
+                ImagePreview._draw_placeholder_rectangle(canvas, width, height, placeholder_text)
+        else:
+            ImagePreview._draw_placeholder_rectangle(canvas, width, height, placeholder_text)
+    
+    @staticmethod
+    def _draw_placeholder_circle(canvas, size, text):
+        """Desenha placeholder circular"""
+        colors = {"bg": "#EFF6FF", "border": "#0EA5E9", "text": "#0EA5E9"}
+        canvas.create_oval(5, 5, size-5, size-5, fill=colors["bg"], outline=colors["border"], width=2)
+        canvas.create_text(size//2, size//2, text=text, font=("Arial", 18, "bold"), fill=colors["text"])
+    
+    @staticmethod
+    def _draw_placeholder_rectangle(canvas, width, height, text):
+        """Desenha placeholder retangular"""
+        colors = {"bg": "#F9FAFB", "border": "#E5E7EB", "text": "#6B7280"}
+        canvas.create_rectangle(2, 2, width-2, height-2, fill=colors["bg"], outline=colors["border"], width=1)
+        canvas.create_text(width//2, height//2, text=text, font=("Arial", 14, "bold"), fill=colors["text"])
+    
+    @staticmethod
+    def _get_initials(name):
+        """Extrai iniciais de um nome"""
+        if not name:
+            return "U"
+        parts = name.strip().split()
+        if len(parts) >= 2:
+            return (parts[0][0] + parts[-1][0]).upper()
+        elif len(parts) == 1:
+            return parts[0][:2].upper()
+        return "U"
 
 class ModernInput(ctk.CTkFrame):
     """Componente de input padronizado com ícone e validação"""
@@ -350,9 +458,15 @@ class Configuracoes(BaseScreen):
         # Carregar dados da clínica do BD (se for conta da clínica)
         clinica_data = None
         endereco_data = None
+        print(f"[DEBUG INIT] tipo_usuario: {self.tipo_usuario}, clinica_id: {self.clinica_id}")
         if self.tipo_usuario == "clinica" and self.clinica_id:
+            print(f"[DEBUG] Carregando dados - tipo_usuario: {self.tipo_usuario}, clinica_id: {self.clinica_id}")
             clinica_data = self._load_clinic_data()
+            print(f"[DEBUG] clinica_data retornada: {clinica_data}")
             endereco_data = self._load_endereco_data()
+            print(f"[DEBUG] endereco_data retornada: {endereco_data}")
+        else:
+            print(f"[DEBUG] Não carregou dados - tipo: {self.tipo_usuario}, clinica_id: {self.clinica_id}")
 
         # ========== LOGO DA CLÍNICA (apenas para conta da clínica) ==========
         if self.tipo_usuario == "clinica":
@@ -373,10 +487,10 @@ class Configuracoes(BaseScreen):
                 highlightthickness=0, bd=0
             )
             self.logo_canvas.pack()
-            self.logo_canvas.create_oval(5, 5, 135, 135, 
-                fill=self.colors["accent_light"], outline=self.colors["accent"], width=2)
-            self.logo_canvas.create_text(70, 70, text="LOGO", 
-                font=("Arial", 18, "bold"), fill=self.colors["accent"])
+            
+            # Carregar logo existente se houver
+            logo_path = clinica_data.get("logo") if clinica_data else None
+            ImagePreview.create_circular_preview(self.logo_canvas, logo_path, 140, "LOGO")
             
             self.logo_upload_btn = ctk.CTkButton(
                 logo_section, text="📷 Alterar Logo",
@@ -418,36 +532,58 @@ class Configuracoes(BaseScreen):
             
             # Preencher campos com dados existentes
             if clinica_data:
-                self.clinic_entries["Nome da Clínica"].set(clinica_data.get("nome", ""))
-                self.clinic_entries["CNPJ"].set(clinica_data.get("cnpj", ""))
-                self.clinic_entries["E-mail Clínica"].set(clinica_data.get("email", ""))
-                self.clinic_entries["Telefone"].set(clinica_data.get("telefone", ""))
+                print(f"[DEBUG FILL] Preenchendo campos - clinica_data: {clinica_data}")
+                print(f"[DEBUG FILL] clinic_entries keys: {list(self.clinic_entries.keys())}")
+                
+                try:
+                    self.clinic_entries["Nome da Clínica"].set(clinica_data.get("nome", ""))
+                    print(f"[DEBUG FILL] ✓ Nome da Clínica setado: {clinica_data.get('nome', '')}")
+                except Exception as e:
+                    print(f"[DEBUG FILL] ✗ ERRO ao setar Nome da Clínica: {e}")
+                
+                try:
+                    self.clinic_entries["CNPJ"].set(clinica_data.get("cnpj", ""))
+                    print(f"[DEBUG FILL] ✓ CNPJ setado: {clinica_data.get('cnpj', '')}")
+                except Exception as e:
+                    print(f"[DEBUG FILL] ✗ ERRO ao setar CNPJ: {e}")
+                
+                try:
+                    self.clinic_entries["E-mail Clínica"].set(clinica_data.get("email", ""))
+                    print(f"[DEBUG FILL] ✓ E-mail Clínica setado: {clinica_data.get('email', '')}")
+                except Exception as e:
+                    print(f"[DEBUG FILL] ✗ ERRO ao setar E-mail Clínica: {e}")
+                
+                try:
+                    self.clinic_entries["Telefone"].set(clinica_data.get("telefone", ""))
+                    print(f"[DEBUG FILL] ✓ Telefone setado: {clinica_data.get('telefone', '')}")
+                except Exception as e:
+                    print(f"[DEBUG FILL] ✗ ERRO ao setar Telefone: {e}")
+            else:
+                print("[DEBUG FILL] clinica_data é None - não preenchendo campos")
 
         # ========== FOTOS DA CLÍNICA ==========
         photos_section = ctk.CTkFrame(scroll, fg_color="transparent")
-        photos_section.pack(fill="x", padx=60, pady=(0, 25), anchor="w") 
+        photos_section.pack(fill="x", padx=60, pady=(0, 25), anchor="w")
 
         self._secao_titulo(photos_section, "Fotos da Clínica", padx=0)
 
-        ctk.CTkLabel(
-            photos_section, text="Foto Principal da Fachada", font=("Poppins", 14),
-            text_color=self.colors["text_primary"], anchor="w"
-        ).pack(anchor="w")
-
-        self.main_photo_container = ctk.CTkFrame(
+        # Container principal para fotos
+        self.clinic_photos_container = ctk.CTkFrame(
             photos_section, fg_color="#F9FAFB", corner_radius=5,
-            height=150, border_width=1, border_color=self.colors["border"]
+            height=370, border_width=1, border_color=self.colors["border"]
         )
-        self.main_photo_container.pack(fill="x", pady=(8, 20), anchor="w")
-        self.main_photo_container.pack_propagate(False)
+        self.clinic_photos_container.pack(fill="both", expand=True, pady=(8, 20), anchor="w")
+        self.clinic_photos_container.pack_propagate(False)
 
-        self.main_photo_btn = ctk.CTkButton(
-            self.main_photo_container, text="📷 Carregar Foto da Fachada",
-            font=("Poppins", 14), fg_color=self.colors["accent"],
-            hover_color=self.colors["accent_hover"], height=44, corner_radius=5,
-            command=self._load_main_photo
-        )
-        self.main_photo_btn.pack(expand=True)
+        # Inicializar lista de fotos da clínica
+        self.clinic_photos = []
+        self.current_photo_index = 0
+
+        # Carregar fotos existentes se houver
+        if clinica_data and clinica_data.get("photos"):
+            self.clinic_photos = clinica_data["photos"]
+
+        self._setup_clinic_photos_ui()
 
         address_section = ctk.CTkFrame(scroll, fg_color="transparent")
         address_section.pack(fill="x", padx=60, pady=(0, 10), anchor="w") 
@@ -551,8 +687,14 @@ class Configuracoes(BaseScreen):
             avatar_container, width=140, height=140, bg="white", highlightthickness=0, bd=0
         )
         self.avatar_canvas.pack()
-        self.avatar_canvas.create_oval(5, 5, 135, 135, fill=self.colors["accent_light"], outline=self.colors["accent"], width=2)
-        self.avatar_canvas.create_text(70, 70, text="GG", font=("Arial", 36, "bold"), fill=self.colors["accent"])
+        
+        # Carregar foto de perfil existente se houver
+        profile_data = self._load_user_profile_data()
+        avatar_path = profile_data.get("avatar_path") if profile_data else None
+        # Usar iniciais do nome como placeholder
+        nome = profile_data.get("nome", "") if profile_data else ""
+        placeholder_text = ImagePreview._get_initials(nome) if nome else "GG"
+        ImagePreview.create_circular_preview(self.avatar_canvas, avatar_path, 140, placeholder_text)
 
         upload_btn = ctk.CTkButton(
             avatar_frame, text="Alterar foto", fg_color="transparent",
@@ -645,6 +787,8 @@ class Configuracoes(BaseScreen):
                 conn = get_connection()
                 cursor = conn.cursor()
                 
+                print(f"[DEBUG] Carregando dados da clínica ID: {self.clinica_id}")
+                
                 cursor.execute("""
                     SELECT nome, cnpj, email, telefone, logo
                     FROM odontoPro_clinica
@@ -653,13 +797,17 @@ class Configuracoes(BaseScreen):
                 
                 result = cursor.fetchone()
                 if result:
-                    return {
+                    data = {
                         "nome": result[0] or "",
                         "cnpj": result[1] or "",
                         "email": result[2] or "",
                         "telefone": result[3] or "",
-                        "logo": result[4] or ""
+                        "logo": result[4] or "",
+                        "photos": []
                     }
+                    print(f"[DEBUG] Dados carregados: {data}")
+                    return data
+                print("[DEBUG] Nenhum resultado encontrado para clinica_id:", self.clinica_id)
                 return None
             
             except Exception as e:
@@ -785,25 +933,177 @@ class Configuracoes(BaseScreen):
     def _finish_load_clinic_logo(self, file_path):
         """Finaliza carregamento da logo"""
         self.images['logo'] = file_path
+        
+        # Atualizar preview da logo
+        ImagePreview.create_circular_preview(self.logo_canvas, file_path, 140, "LOGO")
+        
         self.logo_upload_btn.configure(
             text="✓ Logo carregada", 
             fg_color=self.colors["success"], 
             state="normal"
         )
 
-    def _load_main_photo(self):
-        file_path = filedialog.askopenfilename(title="Selecionar foto da fachada", filetypes=[("Imagens", "*.png *.jpg *.jpeg *.gif")])
-        if file_path:
-            self.main_photo_btn.configure(text="⏳ Carregando...", state="disabled")
-            self.after(100, lambda: self._finish_load_main_photo(file_path))
+    def _setup_clinic_photos_ui(self):
+        """Configura a interface para múltiplas fotos da clínica"""
+        # Limpar container
+        for widget in self.clinic_photos_container.winfo_children():
+            widget.destroy()
 
-    def _finish_load_main_photo(self, file_path):
-        self.images['main'] = file_path
-        self.main_photo_btn.configure(text="✓ Foto carregada", fg_color=self.colors["success"], state="normal")
+        # Container da imagem principal
+        image_container = ctk.CTkFrame(self.clinic_photos_container, fg_color="transparent")
+        image_container.pack(fill="both", expand=True, padx=20, pady=(20, 10))
+
+        # Canvas para preview da imagem atual - agora se expande dinamicamente
+        self.clinic_photo_canvas = tk.Canvas(
+            image_container, bg="white",
+            highlightthickness=0, bd=0
+        )
+        self.clinic_photo_canvas.pack(fill="both", expand=True)
+        
+        # Bind para atualizar canvas quando redimensionar
+        self.clinic_photo_canvas.bind("<Configure>", self._on_canvas_resize)
+
+        # Botão de remover (X) no canto superior direito
+        if self.clinic_photos:
+            remove_btn = tk.Button(
+                image_container, text="✕", font=("Arial", 16, "bold"),
+                bg="#EF4444", fg="white", bd=0, relief="flat",
+                width=3, height=1, cursor="hand2",
+                command=self._remove_current_clinic_photo
+            )
+            self.clinic_photo_canvas.create_window(380, 10, window=remove_btn)
+
+        # Controles de navegação e adição
+        controls_frame = ctk.CTkFrame(self.clinic_photos_container, fg_color="transparent")
+        controls_frame.pack(fill="x", padx=20, pady=(0, 20))
+
+        # Frame para navegação (esquerda)
+        nav_frame = ctk.CTkFrame(controls_frame, fg_color="transparent")
+        nav_frame.pack(side="left")
+
+        self.prev_btn = ctk.CTkButton(
+            nav_frame, text="◀", width=40, height=40,
+            font=("Poppins", 16, "bold"), fg_color=self.colors["accent"],
+            hover_color=self.colors["accent_hover"], state="disabled",
+            command=self._previous_clinic_photo
+        )
+        self.prev_btn.pack(side="left", padx=(0, 5))
+
+        self.photo_counter_label = ctk.CTkLabel(
+            nav_frame, text="", font=("Poppins", 14),
+            text_color=self.colors["text_secondary"]
+        )
+        self.photo_counter_label.pack(side="left", padx=10)
+
+        self.next_btn = ctk.CTkButton(
+            nav_frame, text="▶", width=40, height=40,
+            font=("Poppins", 16, "bold"), fg_color=self.colors["accent"],
+            hover_color=self.colors["accent_hover"], state="disabled",
+            command=self._next_clinic_photo
+        )
+        self.next_btn.pack(side="left", padx=(5, 0))
+
+        # Botão de adicionar (direita)
+        self.add_photo_btn = ctk.CTkButton(
+            controls_frame, text="+ Adicionar Foto", width=150, height=40,
+            font=("Poppins", 14), fg_color=self.colors["success"],
+            hover_color="#10B981", command=self._add_clinic_photo
+        )
+        self.add_photo_btn.pack(side="right")
+
+        # Atualizar interface
+        self._update_clinic_photos_display()
+
+    def _update_clinic_photos_display(self, canvas_width=None, canvas_height=None):
+        """Atualiza a exibição da foto atual e controles de navegação"""
+        # Se não foram passadas dimensões, usar padrão
+        if canvas_width is None:
+            canvas_width = 400
+        if canvas_height is None:
+            canvas_height = 240
+            
+        if not self.clinic_photos:
+            # Nenhuma foto
+            ImagePreview.create_rectangular_preview(
+                self.clinic_photo_canvas, None, canvas_width, canvas_height, "SEM FOTOS\nCLIQUE EM + PARA ADICIONAR"
+            )
+            self.photo_counter_label.configure(text="0/0")
+            self.prev_btn.configure(state="disabled")
+            self.next_btn.configure(state="disabled")
+        else:
+            # Mostrar foto atual
+            current_photo = self.clinic_photos[self.current_photo_index]
+            ImagePreview.create_rectangular_preview(
+                self.clinic_photo_canvas, current_photo, canvas_width, canvas_height, "FOTO"
+            )
+
+            # Atualizar contador
+            self.photo_counter_label.configure(
+                text=f"{self.current_photo_index + 1}/{len(self.clinic_photos)}"
+            )
+
+            # Atualizar botões de navegação
+            self.prev_btn.configure(state="normal" if self.current_photo_index > 0 else "disabled")
+            self.next_btn.configure(state="normal" if self.current_photo_index < len(self.clinic_photos) - 1 else "disabled")
+
+    def _next_clinic_photo(self):
+        """Avança para a próxima foto"""
+        if self.current_photo_index < len(self.clinic_photos) - 1:
+            self.current_photo_index += 1
+            self._update_clinic_photos_display()
+
+    def _previous_clinic_photo(self):
+        """Volta para a foto anterior"""
+        if self.current_photo_index > 0:
+            self.current_photo_index -= 1
+            self._update_clinic_photos_display()
+
+    def _add_clinic_photo(self):
+        """Adiciona uma nova foto da clínica"""
+        file_path = filedialog.askopenfilename(
+            title="Selecionar foto da clínica",
+            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.gif")]
+        )
+        if file_path:
+            self.clinic_photos.append(file_path)
+            self.current_photo_index = len(self.clinic_photos) - 1
+            self._update_clinic_photos_display()
+
+    def _remove_current_clinic_photo(self):
+        """Remove a foto atual"""
+        if self.clinic_photos and 0 <= self.current_photo_index < len(self.clinic_photos):
+            # Confirmar remoção
+            result = messagebox.askyesno(
+                "Confirmar Remoção",
+                "Tem certeza que deseja remover esta foto?"
+            )
+            if result:
+                del self.clinic_photos[self.current_photo_index]
+                if self.current_photo_index >= len(self.clinic_photos):
+                    self.current_photo_index = max(0, len(self.clinic_photos) - 1)
+                self._update_clinic_photos_display()
+    
+    def _on_canvas_resize(self, event):
+        """Handle canvas resize event para redimensionar a imagem"""
+        # Obter o tamanho atual do canvas
+        canvas_width = event.width
+        canvas_height = event.height
+        
+        # Redreenhar a imagem com o novo tamanho
+        self._update_clinic_photos_display(canvas_width, canvas_height)
 
     def _change_avatar(self):
         file_path = filedialog.askopenfilename(title="Selecionar foto de perfil", filetypes=[("Imagens", "*.png *.jpg *.jpeg *.gif")])
-        if file_path: messagebox.showinfo("Sucesso", "Foto de perfil atualizada com sucesso!")
+        if file_path:
+            self.images['avatar'] = file_path
+            
+            # Atualizar preview do avatar
+            profile_data = self._load_user_profile_data()
+            nome = profile_data.get("nome", "") if profile_data else ""
+            placeholder_text = ImagePreview._get_initials(nome) if nome else "GG"
+            ImagePreview.create_circular_preview(self.avatar_canvas, file_path, 140, placeholder_text)
+            
+            messagebox.showinfo("Sucesso", "Foto de perfil atualizada com sucesso!")
 
     def _cancel(self):
         result = messagebox.askyesno("Cancelar", "Tem certeza que deseja cancelar? Todas as alterações não salvas serão perdidas.")
@@ -878,6 +1178,33 @@ class Configuracoes(BaseScreen):
                         SET logo = %s
                         WHERE id = %s
                     """, (dest_path, self.clinica_id))
+                
+                # Salvar fotos da clínica
+                if hasattr(self, 'clinic_photos') and self.clinic_photos:
+                    import json
+                    # Para cada foto nova (não salva ainda), copiar para pasta de uploads
+                    saved_photos = []
+                    upload_dir = os.path.join(os.path.dirname(__file__), "../assets/clinicas/fotos")
+                    os.makedirs(upload_dir, exist_ok=True)
+                    
+                    for photo_path in self.clinic_photos:
+                        if os.path.exists(photo_path):
+                            # Se é um caminho temporário (não está na pasta de uploads), copiar
+                            if not photo_path.startswith(upload_dir):
+                                filename = f"clinica_{self.clinica_id}_foto_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{len(saved_photos)}.jpg"
+                                dest_path = os.path.join(upload_dir, filename)
+                                shutil.copy(photo_path, dest_path)
+                                saved_photos.append(dest_path)
+                            else:
+                                # Já está na pasta de uploads
+                                saved_photos.append(photo_path)
+                    
+                    # Salvar lista de fotos como JSON
+                    cursor.execute("""
+                        UPDATE odontoPro_clinica 
+                        SET fotos = %s
+                        WHERE id = %s
+                    """, (json.dumps(saved_photos), self.clinica_id))
                 
                 conn.commit()
                 messagebox.showinfo("Sucesso", "✓ Dados da clínica atualizados com sucesso!")

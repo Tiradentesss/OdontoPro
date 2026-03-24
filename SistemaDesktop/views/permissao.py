@@ -5,6 +5,40 @@ from tkinter import messagebox, filedialog
 from .theme import font, ICON_SIZE
 from controllers.gerenciamento_controller import GerenciamentoController
 
+# Classe ImagePreview movida para o topo para ser reutilizada
+class ImagePreview:
+    """Classe utilitária para gerenciar previews de imagens"""
+    
+    @staticmethod
+    def create_circular_preview(canvas, image_path, size=36, placeholder_text="A"):
+        """Cria preview circular de imagem em um canvas"""
+        canvas.delete("all")  # Limpar canvas
+        
+        if image_path and os.path.exists(image_path):
+            try:
+                # Carregar e redimensionar imagem
+                img = Image.open(image_path)
+                img = img.resize((size, size), Image.Resampling.LANCZOS)
+                
+                # Criar máscara circular
+                mask = Image.new('L', (size, size), 0)
+                draw = ImageDraw.Draw(mask)
+                draw.ellipse((0, 0, size, size), fill=255)
+                
+                # Aplicar máscara
+                img.putalpha(mask)
+                
+                # Converter para CTkImage
+                ctk_img = ctk.CTkImage(light_image=img, dark_image=img, size=(size, size))
+                
+                # Criar label para exibir a imagem
+                return ctk_img
+                
+            except Exception as e:
+                print(f"Erro ao carregar imagem: {e}")
+                return None
+        return None
+
 # Certifique-se que este import existe no seu projeto, senão comente as linhas de salvar/carregar
 try:
     from services.permissoes_service import carregar_permissoes, salvar_permissoes
@@ -571,7 +605,7 @@ class Permissoes(ctk.CTkFrame):
         # COLUNA DIREITA
         self.right_card = ctk.CTkFrame(self, fg_color="white", corner_radius=20)
         self.right_card.grid(row=1, column=1, sticky="nsew", padx=(0, 20), pady=20)
-        self.right_card.grid_rowconfigure(2, weight=1)
+        self.right_card.grid_rowconfigure(3, weight=1)
         self.right_card.grid_columnconfigure(0, weight=1)
 
         # Cabeçalho do card direito
@@ -610,6 +644,10 @@ class Permissoes(ctk.CTkFrame):
             fg_color="transparent"
         )
         self.permissions_container.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
+        
+        # Configurar 2 colunas para os cards
+        self.permissions_container.grid_columnconfigure(0, weight=1)
+        self.permissions_container.grid_columnconfigure(1, weight=1)
         
         # Configurar 2 colunas para os cards
         self.permissions_container.grid_columnconfigure(0, weight=1)
@@ -690,9 +728,66 @@ class Permissoes(ctk.CTkFrame):
             sw.grid(row=0, column=2, rowspan=2, padx=(5, 15), sticky="e")
             self.switch_widgets[perm_name] = sw
 
+        # Área de status da conta
+        self.account_status_container = ctk.CTkFrame(
+            self.right_card, 
+            fg_color="#F8FAFC", 
+            corner_radius=16,
+            border_width=1,
+            border_color="#E2E8F0"
+        )
+        self.account_status_container.grid(row=2, column=0, sticky="ew", padx=20, pady=(10, 10))
+        self.account_status_container.grid_columnconfigure(1, weight=1)
+
+        # Ícone de status
+        status_icon_frame = ctk.CTkFrame(
+            self.account_status_container, 
+            fg_color="#F1F5F9",
+            width=44, 
+            height=44,
+            corner_radius=12
+        )
+        status_icon_frame.grid(row=0, column=0, padx=(12, 8), pady=10)
+        status_icon_frame.grid_propagate(False)
+        
+        ctk.CTkLabel(
+            status_icon_frame, 
+            text="👤", 
+            font=font(ICON_SIZE),
+            text_color="#6366F1"
+        ).place(relx=0.5, rely=0.5, anchor="center")
+
+        # Texto do status
+        ctk.CTkLabel(
+            self.account_status_container, 
+            text="Status da Conta", 
+            font=font("text", "bold"), 
+            text_color="#0F172A"
+        ).grid(row=0, column=1, sticky="w", padx=(0, 5), pady=(10, 0))
+
+        ctk.CTkLabel(
+            self.account_status_container, 
+            text="Ativar ou desativar o acesso à conta", 
+            font=font("small"), 
+            text_color="#64748B"
+        ).grid(row=1, column=1, sticky="w", padx=(0, 5), pady=(0, 10))
+
+        # Switch para status da conta
+        self.account_status_switch = ctk.CTkSwitch(
+            self.account_status_container, 
+            text="", 
+            width=40, 
+            height=22, 
+            progress_color="#6366F1",
+            button_color="white",
+            button_hover_color="#F1F5F9",
+            command=self.sync_account_status
+        )
+        self.account_status_switch.grid(row=0, column=2, rowspan=2, padx=(5, 15), sticky="e")
+
         # Botão Salvar
         button_frame = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        button_frame.grid(row=2, column=0, pady=(0, 25))
+        button_frame.grid(row=3, column=0, pady=(0, 25))
         
         self.save_btn = ctk.CTkButton(
             button_frame, 
@@ -722,15 +817,23 @@ class Permissoes(ctk.CTkFrame):
             else: 
                 self.switch_widgets[p_name].deselect()
 
-    def sync_permission(self, perm_name):
+        # Configurar status da conta
+        admin_status = self.admins_data[admin_name].get("status", "Inativo")
+        if admin_status == "Ativo":
+            self.account_status_switch.select()
+        else:
+            self.account_status_switch.deselect()
+
+    def sync_account_status(self):
         if self.selected_admin_name:
-            if "perms" not in self.admins_data[self.selected_admin_name]:
-                self.admins_data[self.selected_admin_name]["perms"] = {}
-            self.admins_data[self.selected_admin_name]["perms"][perm_name] = bool(self.switch_widgets[perm_name].get())
+            is_active = bool(self.account_status_switch.get())
+            status = "Ativo" if is_active else "Inativo"
+            self.admins_data[self.selected_admin_name]["status"] = status
 
     def toggle_switches_state(self, state):
         for sw in self.switch_widgets.values(): 
             sw.configure(state=state)
+        self.account_status_switch.configure(state=state)
 
     def save_to_database(self):
         """Salva as permissões no banco de dados"""
@@ -753,13 +856,16 @@ class Permissoes(ctk.CTkFrame):
                     if permissao_id:
                         GerenciamentoController.adicionar_permissao_gerente(gerente_id, permissao_id)
             
-            # Passo 3: Ativar o gerente após configurar as permissões
-            GerenciamentoController.ativar_gerente(gerente_id)
+            # Passo 3: Atualizar status da conta
+            if self.account_status_switch.get():
+                GerenciamentoController.ativar_gerente(gerente_id)
+            else:
+                GerenciamentoController.desativar_gerente(gerente_id)
             
             # Passo 4: Atualizar a UI com os dados salvos
             self.admins_data = self.load_gerentes_from_database()
             
-            messagebox.showinfo("Sucesso", "✅ Permissões salvas com sucesso e gerente ativado!")
+            messagebox.showinfo("Sucesso", "✅ Permissões e status da conta salvos com sucesso!")
             self.admin_list_panel.refresh_list()
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao salvar permissões: {str(e)}")
