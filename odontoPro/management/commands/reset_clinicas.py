@@ -199,6 +199,17 @@ class Command(BaseCommand):
                     "dias": ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"],
                     "horarios": [("08:00", "12:00"), ("14:00", "18:00")],
                     "especialidades": ["Implantodontia Avançada", "Odontopediatria Lúdica", "Ortodontia Digital", "Harmonização Orofacial", "Endodontia Microscópica"],
+                    "imagem_local": "img/Clinicas/Sorriso Leve/Fotos/ChatGPT_Image_11_de_mar._de_2026_16_04_02.png",
+                    "logo_local": "img/Clinicas/Sorriso Leve/Fotos/ChatGPT_Image_11_de_mar._de_2026_16_23_58.png",
+                    "fotos": [
+                        "img/Clinicas/Sorriso Leve/Fotos/ChatGPT_Image_11_de_mar._de_2026_16_04_02.png",
+                        "img/Clinicas/Sorriso Leve/Fotos/ChatGPT_Image_11_de_mar._de_2026_16_14_20.png",
+                        "img/Clinicas/Sorriso Leve/Fotos/ChatGPT_Image_11_de_mar._de_2026_16_15_34.png",
+                        "img/Clinicas/Sorriso Leve/Fotos/ChatGPT_Image_11_de_mar._de_2026_16_17_30.png",
+                        "img/Clinicas/Sorriso Leve/Fotos/ChatGPT_Image_11_de_mar._de_2026_16_19_53.png",
+                        "img/Clinicas/Sorriso Leve/Fotos/ChatGPT_Image_11_de_mar._de_2026_16_22_41.png",
+                        "img/Clinicas/Sorriso Leve/Fotos/ChatGPT_Image_11_de_mar._de_2026_16_23_58.png",
+                    ],
                     "medicos": [
                         {"nome": "Dr. Renato Alencar", "cpf": "66677788899", "email": "renato@sorrisoleve.com", "data_nascimento": "1981-04-15", "senha": "hash123", "crm_cro": "CRO-11111", "telefone": "(62)90000-0002", "especialidades": ["Implantodontia Avançada"]},
                         {"nome": "Dra. Beatriz Valente", "cpf": "77788899900", "email": "beatriz@sorrisoleve.com", "data_nascimento": "1990-08-11", "senha": "hash123", "crm_cro": "CRO-22223", "telefone": "(62)90000-0003", "especialidades": ["Odontopediatria Lúdica"]},
@@ -235,6 +246,15 @@ class Command(BaseCommand):
                     "dias": ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"],
                     "horarios": [("08:00", "12:00"), ("14:00", "18:00")],
                     "especialidades": ["Periodontia", "Implantodontia", "Estética Orofacial", "Endodontia Microscópica", "Reabilitação Oral de Alta Complexidade"],
+                    "imagem_local": "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_fachada.png",
+                    "logo_local": "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_logo.png",
+                    "fotos": [
+                        "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_fachada.png",
+                        "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_interior_1.png",
+                        "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_interior_2.png",
+                        "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_interior_3.png",
+                        "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_interior_4.png",
+                    ],
                     "medicos": [
                         {"nome": "Dra. Heloísa Meirelles", "cpf": "22211133344", "email": "heloisa@villanova.com", "data_nascimento": "1986-05-18", "senha": "hash123", "crm_cro": "CRO-60001", "telefone": "(41)90000-0011", "especialidades": ["Periodontia", "Implantodontia"]},
                         {"nome": "Dr. Fabrício Lancellotti", "cpf": "33322244455", "email": "fabricio@villanova.com", "data_nascimento": "1983-09-07", "senha": "hash123", "crm_cro": "CRO-60002", "telefone": "(41)90000-0012", "especialidades": ["Estética Orofacial"]},

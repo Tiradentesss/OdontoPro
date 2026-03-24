@@ -185,7 +185,9 @@ function abrirModalAgendamento(clinicaId) {
 
             const logoImg = document.getElementById("detalheLogoClinica");
             if (logoImg) {
-                if (data.logo_url) {
+                if (data.banner_url) {
+                    logoImg.src = data.banner_url;
+                } else if (data.logo_url) {
                     logoImg.src = data.logo_url;
                 } else {
                     logoImg.src = "/static/img/default-banner.jpg";

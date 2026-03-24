@@ -2,7 +2,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from django.core import signing
-from .models import Paciente, Medico, Clinica, Consulta
+from django.core.files.uploadedfile import SimpleUploadedFile
+from .models import Paciente, Medico, Clinica, Consulta, Endereco
 
 
 class LoginViewTests(TestCase):
@@ -14,7 +15,24 @@ class LoginViewTests(TestCase):
             senha=make_password("senha123"),
             telefone="123456789"
         )
-        self.clinica = Clinica.objects.create(nome="Clinica X", cnpj="00000000", endereco="Rua X")
+        self.endereco = Endereco.objects.create(
+            cep="00000000",
+            numero="1",
+            quadra="",
+            rua="Rua X",
+            bairro="Centro",
+            cidade="Belém",
+            estado="PA"
+        )
+        self.clinica = Clinica.objects.create(
+            nome="Clinica X",
+            cnpj="00000000",
+            endereco=self.endereco,
+            telefone="999999999",
+            conta_bancaria_juridica="0000-0",
+            email="clinica@example.com",
+            senha=make_password("clinica123")
+        )
         self.medico = Medico.objects.create(
             nome="Dr. Teste",
             email="medico@example.com",
@@ -157,7 +175,24 @@ class LoginViewTests(TestCase):
         self.assertTrue(check_password('novasenha', self.paciente.senha))
 
     def helper_create_clinic_and_doctor(self):
-        clinica = Clinica.objects.create(nome="Clinica Y", cnpj="11111111", endereco="Rua Y")
+        endereco = Endereco.objects.create(
+            cep="11111111",
+            numero="10",
+            quadra="",
+            rua="Rua Y",
+            bairro="Centro",
+            cidade="Belém",
+            estado="PA"
+        )
+        clinica = Clinica.objects.create(
+            nome="Clinica Y",
+            cnpj="11111111",
+            endereco=endereco,
+            telefone="43211234",
+            conta_bancaria_juridica="0000-0",
+            email="clinicay@example.com",
+            senha=make_password("clave")
+        )
         medico = Medico.objects.create(
             nome="Dr. Agendar",
             email="dia@example.com",
@@ -222,4 +257,68 @@ class LoginViewTests(TestCase):
         cons = Consulta.objects.filter(clinica=clinica, medico=medico, nome='Outro Nome').first()
         self.assertIsNotNone(cons)
         self.assertEqual(cons.paciente, self.paciente)
+
+    def test_cadastro_clinica_fallback_imagem_para_logo(self):
+        logo = SimpleUploadedFile('logo.png', b'\x89PNG\r\n\x1a\n', content_type='image/png')
+
+        response = self.client.post(
+            reverse('cadastro_clinica'),
+            {
+                'nome': 'Clinica Fallback',
+                'descricao': 'Descrição teste',
+                'telefone': '123456789',
+                'email': 'fallback@clinica.com',
+                'senha': '123456',
+                'confirmar_senha': '123456',
+                'cnpj': '123456789',
+                'cep': '12345678',
+                'estado': 'PA',
+                'cidade': 'Belém',
+                'bairro': 'Centro',
+                'rua': 'Rua Teste',
+                'numero': '100',
+                'logo': logo,
+            },
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, 302)
+        clinica = Clinica.objects.filter(email='fallback@clinica.com').first()
+        self.assertIsNotNone(clinica)
+        self.assertIsNotNone(clinica.logo)
+        self.assertIsNotNone(clinica.imagem)
+        self.assertTrue(clinica.imagem.name.endswith('.png'))
+
+    def test_cadastro_clinica_com_imagem_e_logo(self):
+        logo = SimpleUploadedFile('logo2.png', b'\x89PNG\r\n\x1a\n', content_type='image/png')
+        imagem = SimpleUploadedFile('banner2.png', b'\x89PNG\r\n\x1a\n', content_type='image/png')
+
+        response = self.client.post(
+            reverse('cadastro_clinica'),
+            {
+                'nome': 'Clinica Com Imagem',
+                'descricao': 'Descrição teste',
+                'telefone': '123456789',
+                'email': 'comimagem@clinica.com',
+                'senha': '123456',
+                'confirmar_senha': '123456',
+                'cnpj': '123456789',
+                'cep': '12345678',
+                'estado': 'PA',
+                'cidade': 'Belém',
+                'bairro': 'Centro',
+                'rua': 'Rua Teste',
+                'numero': '100',
+                'logo': logo,
+                'imagem': imagem,
+            },
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, 302)
+        clinica = Clinica.objects.filter(email='comimagem@clinica.com').first()
+        self.assertIsNotNone(clinica)
+        self.assertIsNotNone(clinica.logo)
+        self.assertIsNotNone(clinica.imagem)
+        self.assertNotEqual(clinica.imagem.name, '')
 

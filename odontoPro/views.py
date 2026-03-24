@@ -328,6 +328,15 @@ def clinica_detalhes(request, clinica_id):
         for av in avaliacoes
     ]
 
+    # Prioridade lógica para imagem de banner
+    banner_url = None
+    if clinica.imagem:
+        banner_url = clinica.imagem.url
+    elif clinica.logo:
+        banner_url = clinica.logo.url
+    elif clinica.imagens.exists():
+        banner_url = clinica.imagens.first().imagem.url
+
     return JsonResponse({
     "nome": clinica.nome,
     "email": clinica.email,
@@ -335,6 +344,7 @@ def clinica_detalhes(request, clinica_id):
     "descricao": clinica.descricao,
     "logo_url": clinica.logo.url if clinica.logo else None,
     "imagem_url": clinica.imagem.url if clinica.imagem else None,
+    "banner_url": banner_url,
     "rua": clinica.endereco.rua,
     "numero": clinica.endereco.numero,
     "bairro": clinica.endereco.bairro,
@@ -869,6 +879,10 @@ def cadastro_clinica(request):
                 estado=estado,
                 quadra=""
             )
+
+            # Se o usuário enviou apenas logo, manter a imagem/banner como logo (fallback)
+            if not imagem and logo:
+                imagem = logo
 
             # criar clínica
             Clinica.objects.create(
