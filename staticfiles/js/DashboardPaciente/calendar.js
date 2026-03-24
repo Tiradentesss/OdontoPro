@@ -107,18 +107,7 @@ class CalendarTimeSelector {
     }
 
     // Link do botão confirmar data para garantir funcionamento em todos os fluxos
-    const btnConfirm = document.getElementById('btn-confirmar-data');
-    if (btnConfirm) {
-      // Guarda a referência para remover antes de adicionar (evita múltiplos handlers sobrepostos)
-      if (this.btnConfirmHandler) {
-        btnConfirm.removeEventListener('click', this.btnConfirmHandler);
-      }
-      this.btnConfirmHandler = (event) => {
-        event.preventDefault();
-        this.confirmarDataSelecionada();
-      };
-      btnConfirm.addEventListener('click', this.btnConfirmHandler);
-    }
+    this.attachConfirmButton();
 
     // Botão Fechar Calendário
     const btnFechar = document.getElementById('btn-fechar-calendario');
@@ -176,6 +165,23 @@ class CalendarTimeSelector {
       const newTodayBtn = todayBtn.cloneNode(true);
       todayBtn.parentNode.replaceChild(newTodayBtn, todayBtn);
       newTodayBtn.addEventListener('click', () => this.goToToday());
+    }
+  }
+
+  attachConfirmButton() {
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+      // Remover listener anterior para evitar múltiplos listeners
+      if (this.btnConfirmHandler) {
+        btnConfirm.removeEventListener('click', this.btnConfirmHandler);
+      }
+      this.btnConfirmHandler = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log('[calendar] btn-confirmar-data clicked');
+        this.confirmarDataSelecionada();
+      };
+      btnConfirm.addEventListener('click', this.btnConfirmHandler);
     }
   }
 

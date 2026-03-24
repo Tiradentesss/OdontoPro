@@ -106,19 +106,8 @@ class CalendarTimeSelector {
       });
     }
 
-    // Link do botão confirmar data para garantir funcionamento em todos os fluxos
-    const btnConfirm = document.getElementById('btn-confirmar-data');
-    if (btnConfirm) {
-      // Guarda a referência para remover antes de adicionar (evita múltiplos handlers sobrepostos)
-      if (this.btnConfirmHandler) {
-        btnConfirm.removeEventListener('click', this.btnConfirmHandler);
-      }
-      this.btnConfirmHandler = (event) => {
-        event.preventDefault();
-        this.confirmarDataSelecionada();
-      };
-      btnConfirm.addEventListener('click', this.btnConfirmHandler);
-    }
+    // Link do botão confirmar data (separado para evitar conflitos)
+    this.attachConfirmButton();
 
     // Botão Fechar Calendário
     const btnFechar = document.getElementById('btn-fechar-calendario');
@@ -179,6 +168,23 @@ class CalendarTimeSelector {
     }
   }
 
+  attachConfirmButton() {
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+      // Remover listener anterior para evitar múltiplos listeners
+      if (this.btnConfirmHandler) {
+        btnConfirm.removeEventListener('click', this.btnConfirmHandler);
+      }
+      this.btnConfirmHandler = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log('[calendar] btn-confirmar-data clicked');
+        this.confirmarDataSelecionada();
+      };
+      btnConfirm.addEventListener('click', this.btnConfirmHandler);
+    }
+  }
+
   selectDate(element) {
     const dateString = element.dataset.date;
     if (!dateString) return;
@@ -225,11 +231,6 @@ class CalendarTimeSelector {
       btnConfirm.textContent = `Confirmar ${dateString}`;
       btnConfirm.style.opacity = '1';
       btnConfirm.setAttribute('data-selected-date', dateString);
-      btnConfirm.onclick = (event) => {
-        event.preventDefault();
-        console.log('[calendar] btn-confirmar-data clicked, date:', dateString);
-        this.confirmarDataSelecionada();
-      };
     }
 
     // Atualiza timeslots para a data selecionada (sem abrir modal de horários automaticamente)
@@ -406,12 +407,14 @@ function initializeCalendarSelector() {
     onDateChange: (date) => {
       console.log('Selected date:', date);
       
+      // Preparar valores de data uma vez
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
       // Update form field if exists
       const dateInput = document.getElementById('inputData');
       if (dateInput) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
         dateInput.value = `${year}-${month}-${day}`;
         console.log('Data input atualizado:', dateInput.value);
       }
