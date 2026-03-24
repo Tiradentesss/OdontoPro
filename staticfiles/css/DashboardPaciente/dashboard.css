@@ -1389,11 +1389,37 @@ body {
     background-color: #ffffff;
     padding: 30px;
     border-radius: 15px; /* Cantos arredondados conforme design */
-    width: 600px;
-    max-width: 550px;
+    width: min(600px, 90vw);
+    max-width: 580px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
     position: relative;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    text-align: left;
+    color: #1a1a1a;
+}
+
+/* Botão fechar do modal */
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: #f5f5f5;
+    color: #555;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.modal-close:hover {
+    background: #e74c3c;
+    color: #fff;
+    transform: rotate(90deg);
 }
 
 /* Cabeçalho e Títulos */
@@ -1407,6 +1433,19 @@ body {
     margin-bottom: 15px;
 }
 
+.modal-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 26px;
+    color: #0d2a4e;
+    text-align: center;
+}
+
+.modal-content .subtitle {
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #5f6e84;
+    text-align: center;
+}
 
 .selection-row {
     display: flex;
@@ -1566,9 +1605,11 @@ body {
 
 .modal-conteudo{
     background: var(--branco) !important;
-    padding: 40px !important;
+    padding: 30px !important;
     border-radius: 15px !important;
-    width: 360px !important;
+    width: min(560px, 90vw) !important;
+    max-height: calc(100vh - 40px) !important;
+    overflow-y: auto !important;
     border: 1px solid var(--cor-borda) !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
     z-index: 1000000 !important;
