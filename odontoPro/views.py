@@ -217,7 +217,7 @@ def dashboard_paciente(request):
         return redirect("login_paciente")
 
     paciente = Paciente.objects.get(id=paciente_id)
-    clinicas = Clinica.objects.exclude(nome__in=["OdontoPrime", "Sorriso Leve"]).order_by("nome")
+    clinicas = Clinica.objects.all().order_by("nome")
 
     # Se não houver clínica cadastrada, popula automaticamente (comando já existente em management)
     if not clinicas.exists():
