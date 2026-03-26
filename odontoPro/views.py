@@ -227,7 +227,36 @@ def dashboard_paciente(request):
         except Exception as e:
             logger.error("Erro ao resetar clínicas automaticamente: %s", e, exc_info=True)
 
-    # prepare signed uid for settings forms so it is always disponível
+    # Se ainda não houver clinicas (ex: no deploy sem arquivos estáticos), cria uma clínica fallback para o usuário testar.
+    if not clinicas.exists():
+        try:
+            endereco = Endereco.objects.create(
+                cep="00000000",
+                numero="0",
+                quadra="",
+                rua="Rua Exemplo",
+                bairro="Bairro Exemplo",
+                cidade="Cidade Exemplo",
+                estado="EX",
+            )
+            Clinica.objects.create(
+                cnpj="00000000000101",
+                nome="Clínica Exemplo",
+                descricao="Clínica criada automaticamente para exibir conteúdo.",
+                telefone="(00) 00000-0000",
+                conta_bancaria_juridica="0000000000",
+                endereco=endereco,
+                email="exemplo@clinica.com",
+                senha=make_password("123456"),
+                preco_consulta="100.00",
+                avaliacao=5.0,
+            )
+            clinicas = Clinica.objects.all().order_by("nome")
+            messages.info(request, "Nenhuma clínica cadastrada foi encontrada. Um modelo de clínica foi criado automaticamente para exibição.")
+        except Exception as e:
+            logger.error("Erro ao criar clínica fallback: %s", e, exc_info=True)
+
+    # prepare signed uid para settings forms so it is always disponível
     uid_signed = signing.dumps(paciente.id)
 
     filtro_status = request.GET.get("status")
