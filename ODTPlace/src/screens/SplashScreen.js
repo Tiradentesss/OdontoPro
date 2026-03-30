@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 
 export default function SplashScreen({ navigation }) {
 
@@ -12,7 +12,8 @@ export default function SplashScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logo}>Meu App 🚀</Text>
+      <Image source={require('../../assets/logo icon.png')} style={{ width: 150, height: 150, marginBottom: 20 }} />
+      <Text style={styles.logo}>Odonto Place</Text>
     </View>
   );
 }
@@ -20,13 +21,13 @@ export default function SplashScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#007bff',
+    backgroundColor: '#ecf4fd',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logo: {
     fontSize: 28,
-    color: '#fff',
+    color: '#07336d',
     fontWeight: 'bold',
   },
 });
