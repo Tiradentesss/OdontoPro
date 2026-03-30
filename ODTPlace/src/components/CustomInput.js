@@ -11,9 +11,10 @@ export default function CustomInput(props) {
 
 const styles = StyleSheet.create({
   input: {
-    borderWidth: 1,
+    borderWidth: 0,
     padding: 12,
     marginBottom: 15,
     borderRadius: 8,
+    backgroundColor : '#e6e6e6',
   },
 });

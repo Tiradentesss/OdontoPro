@@ -8,6 +8,8 @@ export default function HomeScreen() {
     { id: '2', nome: 'Mouse' },
     { id: '3', nome: 'Teclado' },
     { id: '4', nome: 'Monitor' },
+    { id: '5', nome: 'Impressora' },
+    { id: '6', nome: 'Tablet' },
   ];
 
   return (
