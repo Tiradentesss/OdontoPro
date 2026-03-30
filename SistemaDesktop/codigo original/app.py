@@ -184,88 +184,202 @@ class BaseScreen(ctk.CTkFrame):
 # ================= TELAS =================
 
 class Painel(BaseScreen):
+
     def __init__(self, parent):
         super().__init__(parent, "Painel")
 
-        dashboard = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        dashboard.pack(expand=True, fill="both", padx=25, pady=25)
-
-        dashboard.grid_columnconfigure((0, 1), weight=1)
-
-        # ---- Próximas Consultas ----
-        consultas = ctk.CTkFrame(
-            dashboard,
-            fg_color="white",
-            corner_radius=15,
-            border_width=1,
-            border_color="#E5E7EB"
+        # Background do Dashboard
+        self.main_container = ctk.CTkFrame(
+            self.content_card,
+            fg_color="#F0F2F5",
+            corner_radius=0
         )
-        consultas.grid(row=0, column=0, sticky="nsew", padx=(0, 15))
+        self.main_container.pack(expand=True, fill="both", padx=10, pady=10)
 
-        ctk.CTkLabel(
-            consultas,
-            text="Próximas Consultas",
-            font=ctk.CTkFont(size=16, weight="bold")
-        ).pack(anchor="w", padx=20, pady=15)
+        # Grid responsivo
+        self.main_container.grid_columnconfigure((0, 1), weight=1)
+        self.main_container.grid_rowconfigure((0, 1), weight=1)
 
-        dados = [
-            ("Victor Araújo", "Hoje • 09:00"),
-            ("Natália Silva", "Hoje • 12:00"),
-            ("Hugo Pontes", "Hoje • 14:30"),
+        # Estilo padrão dos cards
+        self.style = {
+            "fg_color": "#FFFFFF",
+            "corner_radius": 18,
+            "border_width": 1,
+            "border_color": "#E5E7EB"
+        }
+
+        self.setup_consultas()
+        self.setup_performance()
+        self.setup_pacientes()
+        self.setup_financeiro()
+
+    # --------------------------------------------------
+
+    def create_card(self, row, column):
+        card = ctk.CTkFrame(self.main_container, **self.style)
+        card.grid(row=row, column=column, padx=15, pady=15, sticky="nsew")
+        card.grid_rowconfigure(1, weight=1)
+        return card
+
+    def create_header(self, parent, text):
+        header = ctk.CTkFrame(parent, fg_color="transparent")
+        header.pack(fill="x", padx=25, pady=(25, 10))
+
+        title = ctk.CTkLabel(
+            header,
+            text=text,
+            font=font("subtitle", "bold"),
+            text_color="#111827"
+        )
+        title.pack(anchor="w")
+
+        return header
+
+    # --------------------------------------------------
+
+    def setup_consultas(self):
+
+        card = self.create_card(0, 0)
+        self.create_header(card, "📅 Próximas Consultas")
+
+        container = ctk.CTkFrame(card, fg_color="transparent")
+        container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+
+        data = [
+            ("Victor Araújo", "09:00", "Confirmado"),
+            ("Natália Silva", "12:00", "Pendente")
         ]
 
-        for nome, horario in dados:
-            row = ctk.CTkFrame(consultas, fg_color="transparent")
-            row.pack(fill="x", padx=20, pady=8)
+        for nome, hora, status in data:
 
-            ctk.CTkLabel(row, text=nome, font=ctk.CTkFont(weight="bold")).pack(anchor="w")
-            ctk.CTkLabel(row, text=horario, text_color="#6B7280", font=ctk.CTkFont(size=12)).pack(anchor="w")
+            item = ctk.CTkFrame(
+                container,
+                fg_color="#F8FAFC",
+                corner_radius=12,
+                height=52
+            )
+            item.pack(fill="x", pady=6)
+            item.pack_propagate(False)
 
-        # ---- Relatório ----
-        relatorio = ctk.CTkFrame(
-            dashboard,
-            fg_color="white",
-            corner_radius=15,
-            border_width=1,
-            border_color="#E5E7EB"
-        )
-        relatorio.grid(row=0, column=1, sticky="nsew", padx=(15, 0))
+            ctk.CTkLabel(
+                item,
+                text=nome,
+                font=font("text", "bold"),
+                text_color="#334155"
+            ).pack(side="left", padx=15)
+
+            badge_color = "#6366F1" if status == "Confirmado" else "#94A3B8"
+
+            ctk.CTkLabel(
+                item,
+                text=hora,
+                font=font("small", "bold"),
+                text_color="white",
+                fg_color=badge_color,
+                corner_radius=8,
+                width=70,
+                height=28
+            ).pack(side="right", padx=15)
+
+    # --------------------------------------------------
+
+    def setup_performance(self):
+
+        card = self.create_card(0, 1)
+        self.create_header(card, "📊 Presença Média")
+
+        center = ctk.CTkFrame(card, fg_color="transparent")
+        center.pack(expand=True)
 
         ctk.CTkLabel(
-            relatorio,
-            text="Relatório",
-            font=ctk.CTkFont(size=16, weight="bold")
-        ).pack(anchor="w", padx=20, pady=15)
+            center,
+            text="92%",
+            font=font("h1", "bold"),
+            text_color="#059669"
+        ).pack(pady=(10, 5))
 
-        progresso = ctk.CTkProgressBar(
-            relatorio,
+        bar = ctk.CTkProgressBar(
+            center,
             width=220,
-            height=14,
-            progress_color="#FACC15"
+            height=12,
+            progress_color="#10B981",
+            fg_color="#E2E8F0"
         )
-        progresso.set(0.92)
-        progresso.pack(pady=25)
+        bar.set(0.92)
+        bar.pack(pady=10)
 
         ctk.CTkLabel(
-            relatorio,
-            text="92% de comparecimento",
-            font=ctk.CTkFont(size=14, weight="bold")
-        ).pack(pady=(0, 10))
+            center,
+            text="Taxa de comparecimento alta",
+            font=font("small"),
+            text_color="#64748B"
+        ).pack()
 
-        legendas = [
-            ("Agendados", "#22C55E"),
-            ("Atendidos", "#FACC15"),
-            ("Primeira vez", "#0EA5E9"),
-            ("Faltas", "#A78BFA"),
-        ]
+    # --------------------------------------------------
 
-        for texto, cor in legendas:
-            item = ctk.CTkFrame(relatorio, fg_color="transparent")
-            item.pack(anchor="w", padx=20, pady=4)
+    def setup_pacientes(self):
 
-            ctk.CTkLabel(item, text="●", text_color=cor).pack(side="left")
-            ctk.CTkLabel(item, text=f" {texto}", text_color="#374151").pack(side="left")
+        card = self.create_card(1, 0)
+        self.create_header(card, "👥 Novos Pacientes")
 
+        container = ctk.CTkFrame(card, fg_color="transparent")
+        container.pack(fill="both", expand=True, padx=25, pady=(0, 20))
+
+        for p in ["Ana Costa", "Carlos Melo"]:
+
+            row = ctk.CTkFrame(container, fg_color="transparent")
+            row.pack(fill="x", pady=8)
+
+            avatar = ctk.CTkLabel(
+                row,
+                text=p[0],
+                width=38,
+                height=38,
+                fg_color="#E0E7FF",
+                text_color="#4338CA",
+                corner_radius=19,
+                font=font("text", "bold")
+            )
+            avatar.pack(side="left")
+
+            ctk.CTkLabel(
+                row,
+                text=p,
+                font=font("text"),
+                text_color="#1F2937"
+            ).pack(side="left", padx=15)
+
+    # --------------------------------------------------
+
+    def setup_financeiro(self):
+
+        card = self.create_card(1, 1)
+        self.create_header(card, "💰 Faturamento")
+
+        v_container = ctk.CTkFrame(card, fg_color="transparent")
+        v_container.pack(expand=True)
+
+        ctk.CTkLabel(
+            v_container,
+            text="R$ 12.450",
+            font=font("h1", "bold"),
+            text_color="#111827"
+        ).pack(pady=(10, 5))
+
+        badge = ctk.CTkLabel(
+            v_container,
+            text=" ▲ 12.5% este mês ",
+            font=font("small", "bold"),
+            text_color="#15803d",
+            fg_color="#DCFCE7",
+            corner_radius=10,
+            height=26
+        )
+        badge.pack(pady=8)
+
+        self.update_idletasks()
+        
+    pass
 
 class Financeiro(BaseScreen):
     def __init__(self, parent):
