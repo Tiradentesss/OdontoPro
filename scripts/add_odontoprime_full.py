@@ -12,8 +12,12 @@ django.setup()
 from odontoPro.models import Endereco, Clinica, DiaSemanaDisponivel, HorarioAberto, Especialidade, Medico, Gerenciamento
 from django.contrib.auth.hashers import make_password
 
-# Deletar qualquer OdontoPrime existente para evitar duplicação
-Clinica.objects.filter(nome='OdontoPrime').delete()
+# Deletar qualquer OdontoPrime existente para evitar duplicação (inclui dependências protegidas)
+for clinica_existente in Clinica.objects.filter(nome='OdontoPrime'):
+    Medico.objects.filter(clinica=clinica_existente).delete()
+    Gerenciamento.objects.filter(clinica=clinica_existente).delete()
+    DiaSemanaDisponivel.objects.filter(clinica=clinica_existente).delete()  # HorarioAberto em cascata
+    clinica_existente.delete()
 
 # Endereço
 endereco = Endereco.objects.create(
