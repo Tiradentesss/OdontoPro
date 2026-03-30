@@ -1,84 +1,88 @@
-import React from 'react';
-import { View, Text, Button, StyleSheet, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
+import CustomButton from '../components/CustomButton';
 
-// Esse componente representa a tela inicial
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
+
+  const dados = [
+    { id: '1', nome: 'Notebook' },
+    { id: '2', nome: 'Mouse' },
+    { id: '3', nome: 'Teclado' },
+    { id: '4', nome: 'Monitor' },
+  ];
 
   return (
     <View style={styles.container}>
-      <View style={{ alignItems: 'left', marginBottom: 20, flexDirection: 'row', backgroundColor: '#3b65c0', height: 80, width: '100%' }}>
-        <View style={{ alignItems: 'center', justifyContent: 'left', marginBottom: 20, flexDirection: 'row' }}>
-          <Image style={styles.imagem2} source={require('../../assets/profile.png')} />
-          <Text style={styles.titulo}>AAA</Text>
-        </View>
-        
-      </View>
 
+      {/* Cabeçalho */}
+      <Text style={styles.titulo}>🛍️ Produtos</Text>
 
-      <Text style={styles.titulo}>Tela Inicial</Text>
+      <FlatList
+        data={dados}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
 
-      <Button
-        title="Ir para Perfil"
+        renderItem={({ item }) => (
+        <View style={styles.card}>
 
-        onPress={() => navigation.navigate('Perfil')}
+          <Text style={styles.nome}>{item.nome}</Text>
+
+          <Text style={styles.descricao}>
+            Produto de alta qualidade
+          </Text>
+
+        {/* Botão reutilizável */}
+        <CustomButton
+          title="Ver mais"
+          onPress={() => alert(`Você clicou em ${item.nome}`)}
+        />
+
+  </View>
+)}
       />
-
-      <View style={{ alignItems: 'top', justifyContent: 'space-between', flexDirection: 'row', backgroundColor: '#3b65c0', height: 100, width: '100%'}}>
-              <Button style={styles.botoes}
-                title="Home"
-      
-                onPress={() => navigation.navigate('Home')}
-              />
-      
-               <Button style={styles.botoes}
-                title="Profile"
-      
-                onPress={() => navigation.navigate('Perfil')}
-              />
-      
-               <Button style={styles.botoes}
-                title="Tela3"
-      
-                onPress={() => navigation.navigate('Info')}
-              />
-      </View>
 
     </View>
   );
 }
-// Estilos
+
 const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    alignItems: 'right',
-    justifyContent: 'space-between',
+    backgroundColor: '#f5f5f5',
+    paddingTop: 30,
+    marginTop: 40,
   },
 
   titulo: {
-    fontSize: 22,
+    fontSize: 26,
+    textAlign: 'center',
+    fontWeight: 'bold',
     marginBottom: 20,
   },
 
-  imagem: {
-    width: 100,
-    height: 100,
-    marginBottom: 20,
-    borderRadius: 50,
+  card: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 15,
+
+    // sombra (Android + iOS)
+    elevation: 3, // Android
+    shadowColor: '#000', // iOS
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
   },
 
-    imagem2: {
-    width: 50,
-    height: 50,
-    marginBottom: 20,
-    borderRadius: 50,
+  nome: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 
-  botoes: {
-    backgroundColor: '#00c3ff',
-    borderRadius: 10,
-    height: 80,
-    width: 80,
-  }
+  descricao: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
 
 });
