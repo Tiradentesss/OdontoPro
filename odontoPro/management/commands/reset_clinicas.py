@@ -3,7 +3,7 @@ from django.core.files import File
 from django.db import transaction
 from pathlib import Path
 from django.conf import settings
-from odontoPro.models import Clinica, Endereco, DiaSemanaDisponivel, HorarioAberto, Especialidade, Medico, Gerenciamento, ClinicaImagem
+from odontoPro.models import Clinica, Endereco, DiaSemanaDisponivel, HorarioAberto, Especialidade, Medico, Gerenciamento, ClinicaImagem, Consulta, Avaliacao
 
 
 def _sexo_por_titulo(nome):
@@ -114,17 +114,63 @@ def _criar_clinica(dados):
 
 
 class Command(BaseCommand):
-    help = "Remove todas as clínicas antigas e cria apenas Clínica Villanova (OdontoPrime e Sorriso Leve removidas)"
+    help = "Remove clínicas (por padrão OdontoPrime e Sorriso Leve). Use --reset-completo para recriar Clínica Villanova."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--reset-completo",
+            action="store_true",
+            help="Apaga todos os dados e recria a Clínica Villanova (comportamento antigo).",
+        )
+        parser.add_argument(
+            "--nomes",
+            nargs="+",
+            default=["OdontoPrime", "Sorriso Leve"],
+            help="Lista de nomes de clínicas a remover (padrão OdontoPrime e Sorriso Leve).",
+        )
+
+    def _deletar_clinicas_por_nome(self, nomes):
+        clinicas = Clinica.objects.filter(nome__in=nomes)
+        if not clinicas.exists():
+            self.stdout.write(self.style.WARNING(f"Nenhuma clínica encontrada para remoção: {', '.join(nomes)}"))
+            return
+
+        self.stdout.write(self.style.WARNING(f"Removendo clínicas: {', '.join(clinicas.values_list('nome', flat=True))}"))
+
+        Gerenciamento.objects.filter(clinica__in=clinicas).delete()
+        Consulta.objects.filter(clinica__in=clinicas).delete()
+        Avaliacao.objects.filter(clinica__in=clinicas).delete()
+        Medico.objects.filter(clinica__in=clinicas).delete()
+        DiaSemanaDisponivel.objects.filter(clinica__in=clinicas).delete()
+        HorarioAberto.objects.filter(dia__clinica__in=clinicas).delete()
+        ClinicaImagem.objects.filter(clinica__in=clinicas).delete()
+
+        enderecos = Endereco.objects.filter(clinica__in=clinicas)
+        clinicas.delete()
+
+        # Remove endereços órfãos
+        Endereco.objects.filter(id__in=enderecos.values_list('id', flat=True)).delete()
+
+        self.stdout.write(self.style.SUCCESS("Remoção de clínicas concluída."))
 
     def handle(self, *args, **options):
         with transaction.atomic():
-            self.stdout.write("Deletando dados existentes de clínicas e relacionados...")
+            if not options.get("reset_completo"):
+                nomes = options.get("nomes", ["OdontoPrime", "Sorriso Leve"])
+                self.stdout.write(self.style.WARNING("Modo padrão: removendo clínicas especificadas sem recriar."))
+                self._deletar_clinicas_por_nome(nomes)
+                return
+
+            self.stdout.write("Modo reset completo ativado: deletando todos os dados de clínicas e relacionados...")
 
             # Apaga primeiro as tabelas filhas que usam on_delete=PROTECT no Clinica
             Gerenciamento.objects.all().delete()
             Medico.objects.all().delete()
             DiaSemanaDisponivel.objects.all().delete()
             HorarioAberto.objects.all().delete()
+            Consulta.objects.all().delete()
+            Avaliacao.objects.all().delete()
+            ClinicaImagem.objects.all().delete()
             # Em seguida, apaga as clínicas e endereços
             Clinica.objects.all().delete()
             Endereco.objects.all().delete()
