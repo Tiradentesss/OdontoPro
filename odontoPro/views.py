@@ -503,17 +503,26 @@ def configuracoes_conta(request):
     # ===== VERIFICAR AUTENTICAÇÃO =====
     paciente_id = request.session.get('paciente_id')
 
-    # Tentar restaurar sessão a partir de UID assinado (POST) caso a sessão tenha expirado.
-    if not paciente_id and request.method == 'POST':
+    # Durante POST, se existe uid assinado (mesmo com sessão corrente), devemos validar.
+    if request.method == 'POST':
         signed_uid = request.POST.get('uid')
         if signed_uid:
             try:
-                paciente_id = signing.loads(signed_uid)
-                if Paciente.objects.filter(id=paciente_id).exists():
+                paciente_id_from_uid = signing.loads(signed_uid)
+                if Paciente.objects.filter(id=paciente_id_from_uid).exists():
+                    paciente_id = paciente_id_from_uid
                     request.session['paciente_id'] = paciente_id
                     request.session.save()
+                else:
+                    # uid inválido/inexistente: limpar sessão e exigir novo login
+                    request.session.flush()
+                    messages.error(request, "Sua sessão expirou. Faça login novamente.")
+                    return redirect('login_paciente')
             except signing.BadSignature:
                 logger.warning("uid inválido fornecido ao tentar restaurar sessão em configuracoes_conta: %s", signed_uid)
+                request.session.flush()
+                messages.error(request, "Sua sessão expirou. Faça login novamente.")
+                return redirect('login_paciente')
 
     if not paciente_id:
         messages.error(request, "Sua sessão expirou. Faça login novamente.")

@@ -114,19 +114,14 @@ def _criar_clinica(dados):
 
 
 class Command(BaseCommand):
-    help = "Remove clínicas (por padrão OdontoPrime e Sorriso Leve). Use --reset-completo para recriar Clínica Villanova."
+    help = "Remove clínicas e dados relacionados. Se --nomes for omitido, remove todas as clínicas."
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--reset-completo",
-            action="store_true",
-            help="Apaga todos os dados e recria a Clínica Villanova (comportamento antigo).",
-        )
-        parser.add_argument(
             "--nomes",
             nargs="+",
-            default=["OdontoPrime", "Sorriso Leve"],
-            help="Lista de nomes de clínicas a remover (padrão OdontoPrime e Sorriso Leve).",
+            default=None,
+            help="Lista de nomes de clínicas a remover. Se omitido, remove todas as clínicas.",
         )
 
     def _deletar_clinicas_por_nome(self, nomes):
@@ -155,67 +150,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         with transaction.atomic():
-            if not options.get("reset_completo"):
-                nomes = options.get("nomes", ["OdontoPrime", "Sorriso Leve"])
-                self.stdout.write(self.style.WARNING("Modo padrão: removendo clínicas especificadas sem recriar."))
+            nomes = options.get("nomes")
+            if nomes:
+                self.stdout.write(self.style.WARNING("Removendo clínicas por nome: %s" % ", ".join(nomes)))
                 self._deletar_clinicas_por_nome(nomes)
                 return
 
-            self.stdout.write("Modo reset completo ativado: deletando todos os dados de clínicas e relacionados...")
+            self.stdout.write(self.style.WARNING("Modo padrão: removendo todas as clínicas e dados relacionados."))
+            nomes_todas = list(Clinica.objects.values_list("nome", flat=True))
+            if not nomes_todas:
+                self.stdout.write(self.style.WARNING("Não há clínicas cadastradas para remoção."))
+                return
 
-            # Apaga primeiro as tabelas filhas que usam on_delete=PROTECT no Clinica
-            Gerenciamento.objects.all().delete()
-            Medico.objects.all().delete()
-            DiaSemanaDisponivel.objects.all().delete()
-            HorarioAberto.objects.all().delete()
-            Consulta.objects.all().delete()
-            Avaliacao.objects.all().delete()
-            ClinicaImagem.objects.all().delete()
-            # Em seguida, apaga as clínicas e endereços
-            Clinica.objects.all().delete()
-            Endereco.objects.all().delete()
+            self._deletar_clinicas_por_nome(nomes_todas)
+            return
 
-            clinicas = [
-                {
-                    "cnpj": "55555555000100",
-                    "nome": "Clínica Villanova",
-                    "descricao": "A Clínica Villanova redefine a experiência odontológica com atendimento humanizado e tecnologia de ponta.",
-                    "telefone": "(41) 90000-0010",
-                    "conta_bancaria_juridica": "7766554433",
-                    "email": "contato@villanova.com",
-                    "senha": "123456",
-                    "preco_consulta": "220.00",
-                    "avaliacao": "5.0",
-                    "num_avaliacoes": 5,
-                    "endereco": {
-                        "cep": "80420000",
-                        "numero": "1042",
-                        "quadra": "Edifício Platinum 12º Andar",
-                        "rua": "Alameda das Orquídeas",
-                        "bairro": "Batel",
-                        "cidade": "Curitiba",
-                        "estado": "PR",
-                    },
-                    "dias": ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"],
-                    "horarios": [("08:00", "12:00"), ("14:00", "18:00")],
-                    "especialidades": ["Periodontia", "Implantodontia", "Estética Orofacial", "Endodontia", "Reabilitação Oral"],
-                    "imagem_local": "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_fachada.png",
-                    "logo_local": "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_logo.png",
-                    "fotos": [
-                        "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_fachada.png",
-                    ],
-                    "medicos": [
-                        {"nome": "Dra. Heloísa Meirelles", "cpf": "22211133344", "email": "heloisa@villanova.com", "data_nascimento": "1986-05-18", "senha": "hash123", "crm_cro": "CRO-60001", "telefone": "(41)90000-0011", "especialidades": ["Periodontia", "Implantodontia"]},
-                        {"nome": "Dr. Fabrício Lancellotti", "cpf": "33322244455", "email": "fabricio@villanova.com", "data_nascimento": "1983-09-07", "senha": "hash123", "crm_cro": "CRO-60002", "telefone": "(41)90000-0012", "especialidades": ["Estética Orofacial"]},
-                    ],
-                    "gerentes": [
-                        {"nome": "Eduardo Pires", "email": "eduardo@villanova.com", "senha": "123456"},
-                    ],
-                },
-            ]
-
-            for cl in clinicas:
-                _criar_clinica(cl)
-                self.stdout.write(self.style.SUCCESS(f"Clínica criada: {cl['nome']}"))
-
-            self.stdout.write(self.style.SUCCESS("Reset de clínicas concluído com sucesso."))
