@@ -11,6 +11,8 @@ from django.utils.dateparse import parse_datetime
 from django.core import signing
 from django.conf import settings
 from django.core.management import call_command
+from django.templatetags.static import static
+from django.core.files.storage import default_storage
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
 from datetime import datetime, timedelta
@@ -194,6 +196,41 @@ def login_paciente(request):
 
 
 # ---------- DASHBOARD PACIENTE ----------
+def _get_clinica_imagem_url(clinica):
+    # prioriza assertiva e evita 404 se o arquivo físico estiver ausente
+    if clinica.imagem and getattr(clinica.imagem, 'name', None):
+        if default_storage.exists(clinica.imagem.name):
+            return clinica.imagem.url
+
+    if clinica.logo and getattr(clinica.logo, 'name', None):
+        if default_storage.exists(clinica.logo.name):
+            return clinica.logo.url
+
+    primeira = clinica.imagens.order_by('ordem').first()
+    if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
+        if default_storage.exists(primeira.imagem.name):
+            return primeira.imagem.url
+
+    return static('img/default-banner.jpg')
+
+
+def _get_clinica_logo_url(clinica):
+    if clinica.logo and getattr(clinica.logo, 'name', None):
+        if default_storage.exists(clinica.logo.name):
+            return clinica.logo.url
+
+    if clinica.imagem and getattr(clinica.imagem, 'name', None):
+        if default_storage.exists(clinica.imagem.name):
+            return clinica.imagem.url
+
+    primeira = clinica.imagens.order_by('ordem').first()
+    if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
+        if default_storage.exists(primeira.imagem.name):
+            return primeira.imagem.url
+
+    return static('img/default-logo.png')
+
+
 def dashboard_paciente(request):
     paciente_id = request.session.get("paciente_id")
 
@@ -218,6 +255,10 @@ def dashboard_paciente(request):
 
     paciente = Paciente.objects.get(id=paciente_id)
     clinicas = Clinica.objects.all().order_by("nome")
+
+    for c in clinicas:
+        c.banner_url = _get_clinica_imagem_url(c)
+        c.logo_url = _get_clinica_logo_url(c)
 
     # Se não houver clínica cadastrada, popula automaticamente (comando já existente em management)
     if not clinicas.exists():
