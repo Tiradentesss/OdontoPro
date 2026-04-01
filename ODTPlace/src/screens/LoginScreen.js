@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, ImageBackground } from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 
@@ -23,7 +23,11 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={require('../../assets/imagem background.png')}
+      style={styles.container}
+      resizeMode="cover"
+    >
 
       {/* Logo */}
       <View style={styles.header}>
@@ -31,11 +35,14 @@ export default function LoginScreen({ navigation }) {
           source={require('../../assets/LogoODTPlace.png')}
           style={styles.logo}
         />
-        <Text style={styles.subtitle}>SISTEMA DE GERENCIAMENTO</Text>
+        <View style={styles.ladoheader}>
+          <Text style={styles.title}>ODONTO PLACE</Text>
+          <Text style={styles.subtitle}>SISTEMA DE GERENCIAMENTO</Text>
+        </View>
       </View>
 
       {/* Título */}
-      <Text style={styles.title}>Faça login com sua conta</Text>
+      <Text style={styles.title}>Faça login</Text>
       <Text style={styles.description}>
         Digite seu e-mail e senha para fazer login
       </Text>
@@ -84,7 +91,7 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.signup}>Quero me cadastrar</Text>
       </TouchableOpacity>
 
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -97,24 +104,32 @@ const styles = StyleSheet.create({
 
   header: {
     marginTop: 40,
-    marginBottom: 30,
+    marginBottom: 40,
+    flexDirection: 'row',
+    justifyContent: 'left',
+    marginLeft: -30,
+  },
+  ladoheader: {
+    justifyContent: 'center',
+    marginLeft: -10,
   },
 
   logo: {
-    width: 150,
+    width: 100,
     height: 50,
     resizeMode: 'contain',
   },
 
   subtitle: {
     fontSize: 12,
-    color: '#6b7a90',
+    color: '#07336d',
   },
 
   title: {
-    fontSize: 26,
+    fontSize: 25,
     fontWeight: 'bold',
     marginBottom: 8,
+    color: '#07336d',
   },
 
   description: {
