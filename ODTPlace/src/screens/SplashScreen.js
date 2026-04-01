@@ -1,27 +1,34 @@
 import { useEffect } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SplashScreen({ navigation }) {
 
-  // Executa ao abrir a tela
   useEffect(() => {
     setTimeout(() => {
-      navigation.replace('Login'); // troca de tela
-    }, 2000); // 2 segundos
+      navigation.replace('Login');
+    }, 2000);
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Image source={require('../../assets/logo icon.png')} style={{ width: 150, height: 150, marginBottom: 20 }} />
+    <LinearGradient
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0.6 }}
+      colors={['#0246A3', '#1BC4EB']} // cores do gradiente
+      style={styles.container}
+    >
+      <Image 
+        source={require('../../assets/logo icon.png')} 
+        style={{ width: 150, height: 150, marginBottom: 20 }} 
+      />
       <Text style={styles.logo}>Odonto Place</Text>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ecf4fd',
     alignItems: 'center',
     justifyContent: 'center',
   },
