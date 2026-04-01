@@ -3,7 +3,7 @@ from django.core.files import File
 from django.db import transaction
 from pathlib import Path
 from django.conf import settings
-from odontoPro.models import Clinica, Endereco, DiaSemanaDisponivel, HorarioAberto, Especialidade, Medico, Gerenciamento, ClinicaImagem, Consulta, Avaliacao
+from odontoPro.models import Clinica, Endereco, DiaSemanaDisponivel, HorarioAberto, Especialidade, Medico, Gerenciamento, ClinicaImagem, Consulta, Avaliacao, ClinicaServico
 
 
 def _sexo_por_titulo(nome):
@@ -139,12 +139,16 @@ class Command(BaseCommand):
         DiaSemanaDisponivel.objects.filter(clinica__in=clinicas).delete()
         HorarioAberto.objects.filter(dia__clinica__in=clinicas).delete()
         ClinicaImagem.objects.filter(clinica__in=clinicas).delete()
+        ClinicaServico.objects.filter(clinica__in=clinicas).delete()
 
         enderecos = Endereco.objects.filter(clinica__in=clinicas)
         clinicas.delete()
 
         # Remove endereços órfãos
         Endereco.objects.filter(id__in=enderecos.values_list('id', flat=True)).delete()
+
+        # Remove quaisquer endereços que não estejam mais vinculados a clínicas
+        Endereco.objects.filter(clinica__isnull=True).delete()
 
         self.stdout.write(self.style.SUCCESS("Remoção de clínicas concluída."))
 
@@ -160,6 +164,9 @@ class Command(BaseCommand):
             nomes_todas = list(Clinica.objects.values_list("nome", flat=True))
             if not nomes_todas:
                 self.stdout.write(self.style.WARNING("Não há clínicas cadastradas para remoção."))
+                # Limpa endereços órfãos existentes, caso tenham sobrado processos anteriores
+                orphan_delete_count, _ = Endereco.objects.filter(clinica__isnull=True).delete()
+                self.stdout.write(self.style.SUCCESS(f"Endereços órfãos removidos: {orphan_delete_count}"))
                 return
 
             self._deletar_clinicas_por_nome(nomes_todas)
