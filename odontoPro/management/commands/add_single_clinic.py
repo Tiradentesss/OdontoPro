@@ -52,10 +52,14 @@ def _criar_clinica(dados):
         estado=endereco_data.get("estado"),
     )
 
+    descricao = dados.get("descricao", "")
+    if descricao and len(descricao) > 300:
+        descricao = descricao[:300]  # garante compatibilidade com campos antigos ou limites do DB
+
     clinica = Clinica.objects.create(
         cnpj=dados["cnpj"],
         nome=dados["nome"],
-        descricao=dados.get("descricao", ""),
+        descricao=descricao,
         telefone=dados.get("telefone", ""),
         conta_bancaria_juridica=dados.get("conta_bancaria_juridica", "0000000000"),
         endereco=endereco,
@@ -116,7 +120,7 @@ class Command(BaseCommand):
             "cnpj": "33333333000100",
             "nome": "OdontoPrime",
             "descricao": "A OdontoPrime é referência em tratamentos odontológicos de alta tecnologia e atendimento humanizado para toda a família. Nossa missão é transformar sorrisos através de procedimentos inovadores em estética, implantes e ortodontia. Contamos com uma infraestrutura moderna e profissionais altamente qualificados para garantir o máximo de conforto e segurança aos nossos pacientes.",
-            "telefone": "(41) 90000-0001",
+            "telefone": "(41)90000-0001",
             "conta_bancaria_juridica": "9988776655",
             "email": "contato@odontoprime.com",
             "senha": "123456",
