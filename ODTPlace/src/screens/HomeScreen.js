@@ -2,17 +2,18 @@ import { useState } from 'react';
 import {
     View,
     Text,
-    FlatList,
     StyleSheet,
     TextInput,
     TouchableOpacity,
     SafeAreaView,
+    FlatList,
+    ImageBackground,
 } from 'react-native';
-import CustomButton from '../components/CustomButton';
 
-export default function HomeScreen() {
+export default function HomeScreen({ route }) {
+    const usuario = route?.params?.userName ?? 'Paciente';
     const [search, setSearch] = useState('');
-    const [clinicas, setClinicas] = useState([
+    const [clinicas] = useState([
         {
             id: '1',
             nome: 'Clínica Sorriso Vivo',
@@ -31,140 +32,163 @@ export default function HomeScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <View>
-                    <Text style={styles.welcomeTitle}>Bem-vindo,</Text>
-                    <Text style={styles.welcomeName}>Gabriel Gomes</Text>
+        <ImageBackground
+            source={require('../../assets/imagem background.png')}
+            style={styles.pageBackground}
+            resizeMode="cover"
+        >
+            <SafeAreaView style={styles.container}>
+                <View style={styles.topCard}>
+                    <View style={styles.topCardContent}>
+                        <View style={styles.topHeader}>
+                            <View>
+                                <Text style={styles.welcomeLabel}>Bem-vindo,</Text>
+                                <Text style={styles.welcomeName}>{usuario}</Text>
+                            </View>
+
+                            <TouchableOpacity style={styles.bellButton}>
+                                <Text style={styles.bellIcon}>🔔</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.searchBox}>
+                            <Text style={styles.searchIcon}>🔍</Text>
+                            <TextInput
+                                value={search}
+                                onChangeText={setSearch}
+                                placeholder="Pesquise por nomes"
+                                placeholderTextColor="#94a3b8"
+                                style={styles.searchInput}
+                            />
+                            <TouchableOpacity style={styles.filterButton}>
+                                <Text style={styles.filterText}>⌗</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    <View style={styles.sectionBar}>
+                        <Text style={styles.sectionBarText}>Clínicas Disponíveis</Text>
+                    </View>
                 </View>
 
-                <TouchableOpacity style={styles.bellButton}>
-                    <Text style={styles.bellText}>🔔</Text>
-                </TouchableOpacity>
-            </View>
+                <FlatList
+                    data={dadosFiltrados}
+                    keyExtractor={(item) => item.id}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.listContent}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            style={styles.card}
+                            activeOpacity={0.85}
+                            onPress={() => alert(`Abrindo ${item.nome}`)}
+                        >
+                            <View style={styles.cardHeader}>
+                                <View style={styles.clinicLogo} />
 
-            <Text style={styles.subtitle}>Em busca de uma Clínica ?</Text>
-
-            <View style={styles.searchBox}>
-                <Text style={styles.searchIcon}>🔍</Text>
-                <TextInput
-                    value={search}
-                    onChangeText={setSearch}
-                    placeholder="Pesquise aqui"
-                    placeholderTextColor="#9ca3af"
-                    style={styles.searchInput}
-                />
-                <TouchableOpacity style={styles.filterButton}>
-                    <Text style={styles.filterText}>⌗</Text>
-                </TouchableOpacity>
-            </View>
-
-            <Text style={styles.sectionTitle}>Clinicas Disponíveis</Text>
-
-            <FlatList
-                data={dadosFiltrados}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.listContent}
-                renderItem={({ item }) => (
-                    <View style={styles.card}>
-                        <View style={styles.cardHeader}>
-                            <View style={styles.clinicInfo}>
-                                <Text style={styles.clinicName}>{item.nome}</Text>
-                                <Text style={styles.clinicSpecialty}>{item.especialidade}</Text>
-                            </View>
-                            <View style={styles.rating}>
-                                <Text style={styles.ratingValue}>{item.avaliacao}</Text>
-                                <Text style={styles.ratingCount}>{item.avaliacoes} avaliações</Text>
-                            </View>
-                        </View>
-
-                        <Text style={styles.paymentText}>Forma de pagamento: {item.modalidades}</Text>
-                        <Text style={styles.priceText}>Consulta: {item.preco}</Text>
-
-                        <Text style={styles.scheduleTitle}>{item.dia}</Text>
-
-                        <View style={styles.hours}>
-                            {item.horarios.map((hora) => (
-                                <View key={hora} style={styles.hourBadge}>
-                                    <Text style={styles.hourText}>{hora}</Text>
+                                <View style={styles.infoBlock}>
+                                    <Text style={styles.clinicName}>{item.nome}</Text>
+                                    <Text style={styles.clinicSpecialty}>{item.especialidade}</Text>
                                 </View>
-                            ))}
-                        </View>
 
-                        <CustomButton
-                            title="Ver mais"
-                            onPress={() => alert(`Você clicou em ${item.nome}`)}
-                        />
-                    </View>
-                )}
-            />
-        </SafeAreaView>
+                                <View style={styles.ratingBox}>
+                                    <Text style={styles.ratingValue}>{item.avaliacao}</Text>
+                                    <Text style={styles.ratingCount}>{item.avaliacoes} avaliações</Text>
+                                </View>
+                            </View>
+
+                            <Text style={styles.paymentText}>
+                                Forma de pagamento: {item.modalidades}
+                            </Text>
+                            <Text style={styles.priceText}>Consulta: {item.preco}</Text>
+
+                            <Text style={styles.scheduleTitle}>{item.dia}</Text>
+
+                            <View style={styles.hours}>
+                                {item.horarios.map((hora, index) => (
+                                    <View
+                                        key={hora}
+                                        style={[
+                                            styles.hourBadge,
+                                            index < item.horarios.length - 1 && styles.hourMargin,
+                                        ]}
+                                    >
+                                        <Text style={styles.hourText}>{hora}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        </TouchableOpacity>
+                    )}
+                    ListEmptyComponent={
+                        <Text style={styles.emptyText}>Nenhuma clínica encontrada.</Text>
+                    }
+                />
+            </SafeAreaView>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
+    pageBackground: {
+        flex: 1,
+    },
     container: {
         flex: 1,
-        backgroundColor: '#f3f6fb',
-        paddingHorizontal: 20,
+        backgroundColor: 'transparent',
     },
-    header: {
+    topCard: {
         marginTop: 24,
-        marginBottom: 20,
+        marginHorizontal: -20,
+        backgroundColor: '#0ea5e9',
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
+        overflow: 'hidden',
+    },
+    topCardContent: {
+        paddingHorizontal: 24,
+        paddingTop: 24,
+        paddingBottom: 16,
+    },
+    topHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 18,
     },
-    welcomeTitle: {
-        color: '#0f172a',
-        fontSize: 18,
+    welcomeLabel: {
+        color: '#dbeafe',
+        fontSize: 16,
     },
     welcomeName: {
-        color: '#0ea5e9',
-        fontSize: 24,
+        color: '#ffffff',
+        fontSize: 26,
         fontWeight: '800',
         marginTop: 4,
     },
     bellButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
+        width: 44,
+        height: 44,
+        borderRadius: 14,
         backgroundColor: '#ffffff',
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 3,
     },
-    bellText: {
-        fontSize: 18,
-    },
-    subtitle: {
+    bellIcon: {
         fontSize: 20,
-        fontWeight: '700',
-        color: '#0f172a',
-        marginBottom: 16,
     },
     searchBox: {
+        width: '92%',
+        alignSelf: 'center',
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#ffffff',
         borderRadius: 16,
         paddingHorizontal: 14,
         paddingVertical: 10,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: 1 },
-        shadowRadius: 2,
-        elevation: 2,
-        marginBottom: 20,
     },
     searchIcon: {
         fontSize: 18,
         marginRight: 10,
+        color: '#64748b',
     },
     searchInput: {
         flex: 1,
@@ -172,25 +196,33 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     filterButton: {
-        width: 36,
-        height: 36,
+        width: 38,
+        height: 38,
         borderRadius: 12,
-        backgroundColor: '#eef2ff',
+        backgroundColor: '#e0f2fe',
         alignItems: 'center',
         justifyContent: 'center',
     },
     filterText: {
         fontSize: 18,
-        color: '#2563eb',
+        color: '#0284c7',
     },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#334155',
-        marginBottom: 12,
+    sectionBar: {
+        backgroundColor: '#ffffff',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#99abc2',
+    },
+    sectionBarText: {
+        color: '#0f172a',
+        fontSize: 15,
+        fontWeight: '700',
     },
     listContent: {
-        paddingBottom: 20,
+        paddingBottom: 24,
+        paddingHorizontal: 20,
+        paddingTop: 14,
     },
     card: {
         backgroundColor: '#ffffff',
@@ -205,11 +237,17 @@ const styles = StyleSheet.create({
     },
     cardHeader: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 12,
+        alignItems: 'center',
+        marginBottom: 14,
     },
-    clinicInfo: {
+    clinicLogo: {
+        width: 58,
+        height: 58,
+        borderRadius: 16,
+        backgroundColor: '#e0f2fe',
+        marginRight: 14,
+    },
+    infoBlock: {
         flex: 1,
         paddingRight: 10,
     },
@@ -221,9 +259,9 @@ const styles = StyleSheet.create({
     },
     clinicSpecialty: {
         fontSize: 14,
-        color: '#2563eb',
+        color: '#0ea5e9',
     },
-    rating: {
+    ratingBox: {
         alignItems: 'flex-end',
     },
     ratingValue: {
@@ -253,17 +291,24 @@ const styles = StyleSheet.create({
     },
     hours: {
         flexDirection: 'row',
-        gap: 10,
-        marginBottom: 16,
+        marginBottom: 4,
     },
     hourBadge: {
-        backgroundColor: '#cffafe',
+        backgroundColor: '#dbeafe',
         borderRadius: 12,
         paddingVertical: 8,
         paddingHorizontal: 12,
     },
+    hourMargin: {
+        marginRight: 10,
+    },
     hourText: {
-        color: '#0c4a6e',
+        color: '#0369a1',
         fontSize: 13,
+    },
+    emptyText: {
+        textAlign: 'center',
+        color: '#64748b',
+        marginTop: 20,
     },
 });
