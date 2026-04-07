@@ -1,14 +1,32 @@
 import { useState } from 'react';
-import {View, Text, StyleSheet, Alert, Image, TouchableOpacity, ImageBackground,} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  ImageBackground,
+} from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 
-export default function LoginScreen({ navigation }) {
+export default function RegisterScreen({ navigation }) {
+  const [nome, setNome] = useState('');
+  const [sobrenome, setSobrenome] = useState('');
   const [email, setEmail] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
+  const [telefone, setTelefone] = useState('');
   const [senha, setSenha] = useState('');
 
-  const handleLogin = () => {
-    if (email === '' || senha === '') {
+  const handleRegister = () => {
+    if (
+      !nome ||
+      !sobrenome ||
+      !email ||
+      !dataNascimento ||
+      !telefone ||
+      !senha
+    ) {
       Alert.alert('Erro', 'Preencha todos os campos!');
       return;
     }
@@ -28,41 +46,53 @@ export default function LoginScreen({ navigation }) {
       resizeMode="cover"
     >
       <View style={styles.header}>
-        <Image
-          source={require('../../assets/LogoODTPlace.png')}
-          style={styles.logo}
-        />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Text style={styles.backText}>‹</Text>
+        </TouchableOpacity>
+
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>OdontoPro</Text>
-          <Text style={styles.headerSubtitle}>Sistema de gerenciamento</Text>
+          <Text style={styles.pageTitle}>Registro</Text>
+          <Text style={styles.description}>
+            Crie sua conta para Continuar
+          </Text>
         </View>
       </View>
 
-      <Text style={styles.pageTitle}>Faça login com sua conta</Text>
-      <Text style={styles.description}>
-        Digite seu e-mail e senha para fazer login
-      </Text>
-
-      <Text style={styles.label}>Email</Text>
       <CustomInput
-        placeholder="Digite seu email"
+        placeholder="Nome"
+        value={nome}
+        onChangeText={setNome}
+      />
+      <CustomInput
+        placeholder="Sobrenome"
+        value={sobrenome}
+        onChangeText={setSobrenome}
+      />
+      <CustomInput
+        placeholder="Email"
         value={email}
         onChangeText={setEmail}
+        keyboardType="email-address"
       />
-
-      <Text style={styles.label}>Senha</Text>
       <CustomInput
-        placeholder="Digite sua senha"
+        placeholder="Data de nascimento"
+        value={dataNascimento}
+        onChangeText={setDataNascimento}
+      />
+      <CustomInput
+        placeholder="Telefone"
+        value={telefone}
+        onChangeText={setTelefone}
+        keyboardType="phone-pad"
+      />
+      <CustomInput
+        placeholder="Senha"
         value={senha}
         onChangeText={setSenha}
         secureTextEntry
       />
 
-      <TouchableOpacity activeOpacity={0.7}>
-        <Text style={styles.forgot}>Esqueceu a Senha ?</Text>
-      </TouchableOpacity>
-
-      <CustomButton title="Entrar na Conta" onPress={handleLogin} />
+      <CustomButton title="Registrar Conta" onPress={handleRegister} />
 
       <Text style={styles.or}>Ou</Text>
 
@@ -72,10 +102,6 @@ export default function LoginScreen({ navigation }) {
 
       <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
         <Text style={styles.socialText}>Continuar com Facebook</Text>
-      </TouchableOpacity>
-
-            <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Cadastro')}>
-        <Text style={styles.signup}>Quero me cadastrar</Text>
       </TouchableOpacity>
     </ImageBackground>
   );
@@ -89,52 +115,36 @@ const styles = StyleSheet.create({
   },
   header: {
     marginTop: 40,
-    marginBottom: 30,
+    marginBottom: 24,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logo: {
-    width: 44,
-    height: 44,
-    resizeMode: 'contain',
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  backText: {
+    fontSize: 24,
+    color: '#07336d',
+    lineHeight: 26,
   },
   headerText: {
-    marginLeft: 10,
-  },
-  headerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#07336d',
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: '#6b7a90',
-    marginTop: 2,
+    flex: 1,
   },
   pageTitle: {
     fontSize: 28,
     fontWeight: '700',
-    marginBottom: 8,
     color: '#07336d',
   },
   description: {
     color: '#6b7a90',
-    marginBottom: 22,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  label: {
-    marginTop: 10,
-    marginBottom: 6,
-    color: '#6b7a90',
-    fontSize: 13,
-  },
-  forgot: {
-    textAlign: 'right',
-    marginTop: 10,
-    marginBottom: 20,
-    color: '#1f4ed8',
-    fontSize: 13,
+    fontSize: 14,
+    marginTop: 4,
   },
   or: {
     textAlign: 'center',
@@ -154,11 +164,5 @@ const styles = StyleSheet.create({
   socialText: {
     fontSize: 15,
     color: '#24325f',
-  },
-  signup: {
-    textAlign: 'center',
-    marginTop: 22,
-    color: '#1f4ed8',
-    fontSize: 15,
   },
 });
