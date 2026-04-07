@@ -208,11 +208,9 @@ const styles = StyleSheet.create({
         color: '#0284c7',
     },
     sectionBar: {
-        backgroundColor: '#ffffff',
+        backgroundColor: '#e0f2fe',
         paddingVertical: 14,
         paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#99abc2',
     },
     sectionBarText: {
         color: '#0f172a',
