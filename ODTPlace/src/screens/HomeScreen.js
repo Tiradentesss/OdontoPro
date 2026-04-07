@@ -156,6 +156,8 @@ const styles = StyleSheet.create({
         paddingBottom: 16,
     },
     topHeader: {
+        paddingLeft: 10,
+        paddingRight: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
