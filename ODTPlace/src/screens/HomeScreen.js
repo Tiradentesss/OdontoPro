@@ -122,6 +122,13 @@ export default function HomeScreen({ route }) {
                         <Text style={styles.emptyText}>Nenhuma clínica encontrada.</Text>
                     }
                 />
+
+                <View style={styles.bottomBar}>
+                    <TouchableOpacity style={styles.bottomTab} activeOpacity={0.85}>
+                        <Text style={styles.bottomTabIcon}>🏠</Text>
+                        <Text style={styles.bottomTabLabel}>Home</Text>
+                    </TouchableOpacity>
+                </View>
             </SafeAreaView>
         </ImageBackground>
     );
@@ -208,17 +215,18 @@ const styles = StyleSheet.create({
         color: '#0284c7',
     },
     sectionBar: {
-        backgroundColor: '#e0f2fe',
+        backgroundColor: '#0b6eb1',
         paddingVertical: 14,
         paddingHorizontal: 20,
     },
     sectionBarText: {
-        color: '#0f172a',
-        fontSize: 15,
+        paddingLeft: 10,
+        color: '#ffffff',
+        fontSize: 17,
         fontWeight: '700',
     },
     listContent: {
-        paddingBottom: 24,
+        paddingBottom: 180,
         paddingHorizontal: 20,
         paddingTop: 14,
     },
@@ -232,6 +240,43 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowRadius: 10,
         elevation: 4,
+    },
+    bottomBar: {
+        position: 'absolute',
+        left: 20,
+        right: 20,
+        bottom: 34,
+        borderRadius: 28,
+        backgroundColor: '#ffffff',
+        paddingVertical: 14,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOpacity: 0.16,
+        shadowOffset: { width: 0, height: 10 },
+        shadowRadius: 20,
+        elevation: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#f8fafc',
+    },
+    bottomTab: {
+        width: 92,
+        height: 92,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#0ea5e9',
+        borderRadius: 24,
+        paddingVertical: 14,
+    },
+    bottomTabIcon: {
+        fontSize: 24,
+        marginBottom: 8,
+        color: '#ffffff',
+    },
+    bottomTabLabel: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '700',
     },
     cardHeader: {
         flexDirection: 'row',
