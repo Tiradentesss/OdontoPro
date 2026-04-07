@@ -150,17 +150,40 @@
 
         <div class="controles-busca">
             <div class="filtro-container">
-                <button class="btn-filtro" id="btnFiltro">
-                    <i class="fa-solid fa-star"></i> Avaliação
-                    <i class="fa-solid fa-chevron-down"></i>
+                <button class="btn-filtro" id="btnFiltro" type="button">
+                    <span class="btn-left">
+                        <span class="icone">⭐</span>
+                        <span id="tituloFiltro">Avaliação</span>
+                    </span>
+                    <span class="seta">⌄</span>
                 </button>
 
                 <div class="dropdown-filtro" id="dropdownFiltro">
-                    <div class="opcao">⭐ 1 estrela</div>
-                    <div class="opcao">⭐⭐ 2 estrelas</div>
-                    <div class="opcao">⭐⭐⭐ 3 estrelas</div>
-                    <div class="opcao">⭐⭐⭐⭐ 4 estrelas</div>
-                    <div class="opcao">⭐⭐⭐⭐⭐ 5 estrelas</div>
+                    <button class="opcao" type="button" data-value="1">
+                        <span class="estrelas">⭐</span>
+                        <span class="texto-opcao">1 estrela</span>
+                        <span class="check">✓</span>
+                    </button>
+                    <button class="opcao" type="button" data-value="2">
+                        <span class="estrelas">⭐⭐</span>
+                        <span class="texto-opcao">2 estrelas</span>
+                        <span class="check">✓</span>
+                    </button>
+                    <button class="opcao" type="button" data-value="3">
+                        <span class="estrelas">⭐⭐⭐</span>
+                        <span class="texto-opcao">3 estrelas</span>
+                        <span class="check">✓</span>
+                    </button>
+                    <button class="opcao" type="button" data-value="4">
+                        <span class="estrelas">⭐⭐⭐⭐</span>
+                        <span class="texto-opcao">4 estrelas</span>
+                        <span class="check">✓</span>
+                    </button>
+                    <button class="opcao" type="button" data-value="5">
+                        <span class="estrelas">⭐⭐⭐⭐⭐</span>
+                        <span class="texto-opcao">5 estrelas</span>
+                        <span class="check">✓</span>
+                    </button>
                 </div>
             </div>
 

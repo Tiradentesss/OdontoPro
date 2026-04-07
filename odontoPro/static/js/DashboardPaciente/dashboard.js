@@ -470,17 +470,18 @@ function initFiltroEstrelas(btnId, dropdownId) {
             outroDropdown.classList.remove("mostrar");
         }
         
-        dropdown.classList.toggle("mostrar");
+        const estaAberto = dropdown.classList.toggle("mostrar");
+        btnFiltro.classList.toggle("ativo", estaAberto);
         
         // Ajustar posição do dropdown se necessário
-        if (dropdown.classList.contains("mostrar")) {
+        if (estaAberto) {
             setTimeout(() => ajustarPosicaoDropdown(dropdown, btnFiltro), 0);
         }
     });
 
     // Adicionar evento click em cada opção de estrelas
-    opcoes.forEach((opcao, index) => {
-        const estrelas = index + 1; // 1 a 5 estrelas
+    opcoes.forEach((opcao) => {
+        const estrelas = parseInt(opcao.dataset.value, 10) || 0;
         
         opcao.style.cursor = "pointer";
         opcao.addEventListener("click", (e) => {
@@ -491,15 +492,22 @@ function initFiltroEstrelas(btnId, dropdownId) {
             // Armazenar filtro selecionado
             filtroEstrelasSelecionado = estrelas;
             
+            // Atualizar opção selecionada
+            opcoes.forEach(item => item.classList.remove("selecionada"));
+            opcao.classList.add("selecionada");
+            
             // Filtrar clínicas
             aplicarFiltros();
             
             // Fechar dropdown
             dropdown.classList.remove("mostrar");
+            btnFiltro.classList.remove("ativo");
             
-            // Atualizar texto do botão - mantendo as estrelas douradas da opção
-            const textoOpcao = opcao.textContent.trim();
-            btnFiltro.innerHTML = `${textoOpcao} <i class="fa-solid fa-chevron-down"></i>`;
+            // Atualizar texto do botão mantendo o layout novo
+            const tituloFiltro = btnFiltro.querySelector("#tituloFiltro");
+            if (tituloFiltro) {
+                tituloFiltro.textContent = `${'⭐'.repeat(estrelas)} ${estrelas} estrela${estrelas > 1 ? "s" : ""}`;
+            }
         });
     });
 
@@ -507,18 +515,15 @@ function initFiltroEstrelas(btnId, dropdownId) {
     document.addEventListener("click", (e) => {
         if (!dropdown.contains(e.target) && e.target !== btnFiltro) {
             dropdown.classList.remove("mostrar");
+            btnFiltro.classList.remove("ativo");
         }
     });
     
     // Adicionar opção "Limpar filtro" (opcional)
-    const opcaoLimpar = document.createElement("div");
-    opcaoLimpar.className = "opcao";
+    const opcaoLimpar = document.createElement("button");
+    opcaoLimpar.type = "button";
+    opcaoLimpar.className = "opcao limpar-filtro";
     opcaoLimpar.textContent = "✕ Limpar filtro";
-    opcaoLimpar.style.cursor = "pointer";
-    opcaoLimpar.style.color = "#666";
-    opcaoLimpar.style.borderTop = "1px solid #ddd";
-    opcaoLimpar.style.paddingTop = "8px";
-    opcaoLimpar.style.marginTop = "8px";
     
     opcaoLimpar.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -529,7 +534,13 @@ function initFiltroEstrelas(btnId, dropdownId) {
         filtroEstrelasSelecionado = 0;
         
         // Resetar texto do botão
-        btnFiltro.innerHTML = `<i class="fa-solid fa-star"></i> Avaliação <i class="fa-solid fa-chevron-down"></i>`;
+        const tituloFiltro = btnFiltro.querySelector("#tituloFiltro");
+        if (tituloFiltro) {
+            tituloFiltro.textContent = "Avaliação";
+        }
+        
+        // Limpar seleção visual
+        opcoes.forEach(item => item.classList.remove("selecionada"));
         
         // Aplicar filtros (agora sem filtro de estrelas)
         aplicarFiltros();

@@ -419,34 +419,168 @@ body {
 
 /* Container do botão de filtro + dropdown */
 .filtro-container {
-    position: relative;     /* Necessário para posicionar o dropdown em relação ao botão */
-    display: inline-block;  /* Mantém botão e dropdown juntos */
-    flex-shrink: 0;         /* Não encolhe */
-    z-index: 1001;            /* Para garantir que o dropdown fica acima */
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    z-index: 1001;
 }
 
-/* Dropdown de avaliação */
+.btn-filtro {
+    min-width: 165px;
+    height: 52px;
+    border: 1px solid #d9e1ef;
+    background: #ffffff;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 18px;
+    cursor: pointer;
+    color: #5c6785;
+    font-size: 18px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(25, 55, 109, 0.06);
+    transition: all 0.25s ease;
+}
+
+.btn-filtro:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(25, 55, 109, 0.12);
+    border-color: #bfd1ee;
+}
+
+.btn-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.icone {
+    font-size: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.seta {
+    transition: transform 0.28s ease;
+    display: inline-block;
+}
+
+.btn-filtro.ativo .seta {
+    transform: rotate(180deg);
+}
+
 .dropdown-filtro {
-    position: absolute;          /* Posiciona em relação ao botão */
-    top: calc(100% + 5px);       /* Logo abaixo do botão com pequeno espaçamento */
-    left: 0;                      /* Alinhado à esquerda do botão */
-    background: var(--branco);    /* Fundo branco */
-    border: 1px solid var(--cor-borda); /* Borda */
-    width: 220px;                 /* Largura fixa do dropdown */
-    display: none;                /* Inicialmente escondido */
-    flex-direction: column;       /* Mantém opções em coluna (vertical) */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12); /* Sombra leve */
-    z-index: 1000;                /* Fica sobre outros elementos */
-    border-radius: 4px;           /* Bordas arredondadas */
-    overflow: hidden; 
-    overflow-y: auto;             /* Permite scroll interno se necessário */
-    transition: opacity 0.2s ease, transform 0.2s ease; /* Animação suave */
-    transform-origin: top;        /* Origem da animação */
-    opacity: 0;                   /* Inicialmente invisível */
-    max-height: calc(90vh - 80px);             /* Não ultrapassa viewport */
-    right: auto;                  /* Reset */
-    /* Garante que não saia da tela */
-    max-width: 280px;
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 0;
+    width: 260px;
+    background: #ffffff;
+    border: 1px solid #dfe6f3;
+    border-radius: 18px;
+    box-shadow: 0 18px 40px rgba(35, 56, 100, 0.16);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 100;
+}
+
+.dropdown-filtro.mostrar {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.dropdown-filtro .opcao {
+    width: 100%;
+    border: none;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px;
+    font-size: 18px;
+    color: #2f3b57;
+    cursor: pointer;
+    transition: background 0.22s ease, transform 0.22s ease;
+    border-bottom: 1px solid #edf1f7;
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.dropdown-filtro.mostrar .opcao {
+    animation: subirItem 0.35s ease forwards;
+}
+
+.dropdown-filtro.mostrar .opcao:nth-child(1) { animation-delay: 0.04s; }
+.dropdown-filtro.mostrar .opcao:nth-child(2) { animation-delay: 0.08s; }
+.dropdown-filtro.mostrar .opcao:nth-child(3) { animation-delay: 0.12s; }
+.dropdown-filtro.mostrar .opcao:nth-child(4) { animation-delay: 0.16s; }
+.dropdown-filtro.mostrar .opcao:nth-child(5) { animation-delay: 0.20s; }
+.dropdown-filtro.mostrar .opcao.limpar-filtro { animation-delay: 0.24s; }
+
+@keyframes subirItem {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-filtro .opcao:hover {
+    background: #f7faff;
+    transform: translateX(4px);
+}
+
+.dropdown-filtro .opcao.selecionada {
+    background: #eef5ff;
+}
+
+.dropdown-filtro .estrelas {
+    color: #f4bf3a;
+    letter-spacing: 1px;
+    font-size: 18px;
+    min-width: 112px;
+}
+
+.dropdown-filtro .texto-opcao {
+    flex: 1;
+    text-align: left;
+}
+
+.dropdown-filtro .check {
+    opacity: 0;
+    transform: scale(0.7);
+    transition: all 0.2s ease;
+    color: #007aff;
+    font-weight: bold;
+}
+
+.dropdown-filtro .opcao.selecionada .check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.dropdown-filtro .limpar-filtro {
+    width: 100%;
+    border: none;
+    background: #ffffff;
+    padding: 16px 18px;
+    font-size: 17px;
+    color: #6c7897;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.22s ease, color 0.22s ease;
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.dropdown-filtro .limpar-filtro:hover {
+    background: #fff4f4;
+    color: #d14b4b;
 }
 
 .filtros-consultas {
