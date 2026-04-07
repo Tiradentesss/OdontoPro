@@ -636,20 +636,23 @@ function initFiltroLocalizacao(btnId, dropdownId) {
         const outroDropdown = document.getElementById("dropdownFiltro");
         if (outroDropdown) {
             outroDropdown.classList.remove("mostrar");
+            document.getElementById("btnFiltro").classList.remove("ativo");
         }
         
-        dropdown.classList.toggle("mostrar");
+        const estaAberto = dropdown.classList.toggle("mostrar");
+        btnFiltro.classList.toggle("ativo", estaAberto);
         
         // Ajustar posição do dropdown se necessário
-        if (dropdown.classList.contains("mostrar")) {
+        if (estaAberto) {
             setTimeout(() => ajustarPosicaoDropdown(dropdown, btnFiltro), 0);
         }
     });
 
     // Fechar dropdown ao clicar fora
     document.addEventListener("click", (e) => {
-        if (!dropdown.contains(e.target) && e.target !== btnFiltro) {
+        if (!dropdown.contains(e.target) && !btnFiltro.contains(e.target)) {
             dropdown.classList.remove("mostrar");
+            btnFiltro.classList.remove("ativo");
         }
     });
 }

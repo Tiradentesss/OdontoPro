@@ -473,6 +473,15 @@ body {
     position: relative;                 /* Para posicionar dropdown */
 }
 
+.seta {
+    transition: transform 0.28s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    font-size: 16px;
+}
+
 .dropdown-filtro .estrelas {
     color: #f4bf3a;
     letter-spacing: 1px;
