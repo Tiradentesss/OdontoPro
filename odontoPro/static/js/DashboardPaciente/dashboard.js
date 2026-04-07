@@ -513,7 +513,7 @@ function initFiltroEstrelas(btnId, dropdownId) {
 
     // Fechar dropdown ao clicar fora
     document.addEventListener("click", (e) => {
-        if (!dropdown.contains(e.target) && e.target !== btnFiltro) {
+        if (!dropdown.contains(e.target) && !btnFiltro.contains(e.target)) {
             dropdown.classList.remove("mostrar");
             btnFiltro.classList.remove("ativo");
         }
