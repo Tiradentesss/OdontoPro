@@ -541,20 +541,59 @@
                 </div>
 
                 <!-- 🔹 Modal Detalhes -->
-                <div class="modal" id="modal-{{ cons.id }}">
+                <div class="modal modal-consulta" id="modal-{{ cons.id }}">
                     <div class="modal-conteudo">
                         <h3>Detalhes da Consulta</h3>
-                        <p><strong>Status:</strong> {{ cons.get_status_display }}</p>
-                        <p><strong>Clínica:</strong> {{ cons.clinica.nome }}</p>
-                        <p><strong>Endereço:</strong> {{ cons.clinica.endereco }}</p>
-                        <p><strong>Médico:</strong> {{ cons.medico.nome }}</p>
-                        <p><strong>Data:</strong> {{ cons.data_hora|date:"d/m/Y" }}</p>
-                        <p><strong>Hora:</strong> {{ cons.data_hora|time:"H:i" }}</p>
-                        {% if cons.observacoes %}
-                            <p><strong>Observações:</strong> {{ cons.observacoes }}</p>
-                        {% endif %}
-                        <div class="acoes-modal">
-                            <button class="btn-fechar" onclick="fecharDetalhes('{{ cons.id }}')">Fechar</button>
+
+                        <div class="status-consulta">
+                            <i class="fa-solid fa-check"></i>
+                            {{ cons.get_status_display }}
+                        </div>
+
+                        <div class="card-info-consulta">
+                            <div class="info-item">
+                                <div class="icone"><i class="fa-solid fa-hospital"></i></div>
+                                <div class="info-texto">
+                                    <span class="label">Clínica</span>
+                                    <span class="valor">{{ cons.clinica.nome }}</span>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="icone"><i class="fa-solid fa-user-doctor"></i></div>
+                                <div class="info-texto">
+                                    <span class="label">Médico</span>
+                                    <span class="valor">{{ cons.medico.nome }}</span>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="icone"><i class="fa-regular fa-calendar"></i></div>
+                                <div class="info-inline">
+                                    <span class="label-inline">Data:</span>
+                                    <span class="valor-inline">{{ cons.data_hora|date:"d/m/Y" }}</span>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="icone"><i class="fa-regular fa-clock"></i></div>
+                                <div class="info-inline">
+                                    <span class="label-inline">Hora:</span>
+                                    <span class="valor-inline">{{ cons.data_hora|time:"H:i" }}</span>
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="icone"><i class="fa-solid fa-location-dot"></i></div>
+                                <div class="info-texto">
+                                    <span class="label">Endereço</span>
+                                    <span class="valor">{{ cons.clinica.endereco }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="acoes-consulta">
+                            <button class="btn-fechar-consulta" onclick="fecharDetalhes('{{ cons.id }}')">Fechar</button>
                         </div>
                     </div>
                 </div>
