@@ -464,6 +464,7 @@ body {
     cursor: pointer;                    /* Cursor de clique */
     display: flex;                      /* Para alinhar ícones e texto */
     align-items: center;                /* Centraliza verticalmente */
+    justify-content: flex-start;
     gap: 8px;                           /* Espaço entre ícones e texto */
     font-size: 14px;                     /* Tamanho da fonte */
     color: var(--texto-suave);          /* Cor do texto */
@@ -480,6 +481,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
+    margin-right: 4px;
 }
 
 .dropdown-filtro .texto-opcao {
