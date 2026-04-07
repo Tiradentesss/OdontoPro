@@ -2636,18 +2636,18 @@ body {
 
 .modal.modal-consulta .modal-conteudo {
     width: 100%;
-    max-width: 620px;
+    max-width: 520px;
     background: var(--branco);
-    border-radius: 24px;
-    padding: 26px 26px 22px;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+    border-radius: 20px;
+    padding: 22px 22px 18px;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
     font-family: 'Poppins', sans-serif;
     color: var(--texto-principal);
 }
 
 .modal.modal-consulta h3 {
-    margin: 0 0 18px;
-    font-size: 28px;
+    margin: 0 0 16px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--texto-principal);
     line-height: 1.1;
@@ -2660,32 +2660,32 @@ body {
     gap: 10px;
     background: linear-gradient(135deg, rgba(77, 184, 255, 0.95), var(--azul-claro));
     color: #ffffff;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 14px;
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
 .modal.modal-consulta .status-consulta i,
 .modal.modal-consulta .status-consulta svg {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
 }
 
 .modal.modal-consulta .card-info-consulta {
     border: 1px solid var(--cor-borda);
-    border-radius: 22px;
-    padding: 14px 18px;
+    border-radius: 20px;
+    padding: 12px 16px;
     background: #fcfdff;
 }
 
 .modal.modal-consulta .info-item {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 14px 0;
+    gap: 10px;
+    padding: 12px 0;
     border-bottom: 1px solid #e8eef5;
 }
 
@@ -2694,19 +2694,19 @@ body {
 }
 
 .modal.modal-consulta .info-item .icone {
-    min-width: 44px;
+    min-width: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--azul-claro);
-    font-size: 34px;
+    font-size: 28px;
     margin-top: 2px;
 }
 
 .modal.modal-consulta .info-item .icone i,
 .modal.modal-consulta .info-item .icone svg {
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
 }
 
 .modal.modal-consulta .info-texto {
@@ -2717,7 +2717,7 @@ body {
 
 .modal.modal-consulta .info-texto .label,
 .modal.modal-consulta .info-inline .label-inline {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--texto-principal);
     line-height: 1.1;
@@ -2725,7 +2725,7 @@ body {
 
 .modal.modal-consulta .info-texto .valor,
 .modal.modal-consulta .info-inline .valor-inline {
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 400;
     color: #2a3444;
     line-height: 1.3;
@@ -2740,17 +2740,17 @@ body {
 .modal.modal-consulta .acoes-consulta {
     display: flex;
     justify-content: center;
-    margin-top: 22px;
+    margin-top: 18px;
 }
 
 .modal.modal-consulta .btn-fechar-consulta {
-    min-width: 200px;
-    height: 52px;
+    min-width: 180px;
+    height: 48px;
     border: 1px solid var(--cor-borda);
     background: #f7fafe;
     color: var(--texto-principal);
     border-radius: 16px;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
