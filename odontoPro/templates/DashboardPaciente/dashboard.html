@@ -847,6 +847,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         window.history.replaceState({}, document.title, window.location.pathname);
     }
+
+    const bannerBoasVindas = document.querySelector('.mensagem-boas-vindas');
+    if (bannerBoasVindas) {
+        setTimeout(() => {
+            bannerBoasVindas.classList.add('oculta');
+            setTimeout(() => bannerBoasVindas.remove(), 600);
+        }, 5000);
+    }
 });
 </script>
 
