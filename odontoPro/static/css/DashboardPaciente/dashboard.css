@@ -757,14 +757,15 @@ body {
     height: 150px;
     position: relative;
     border-radius: 20px 20px 0 0;
-    overflow: hidden;
-    /* Corta apenas a imagem interna */
+    overflow: visible;
+    /* Permite que a logo sobreposta fique à frente */
 }
 
 .fundo-banner {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 20px 20px 0 0;
 }
 
 .perfil-clinica-container {
