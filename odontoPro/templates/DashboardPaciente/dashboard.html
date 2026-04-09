@@ -65,8 +65,12 @@
 <div class="container-principal">
 
 <header class="barra-topo">
-    <div class="texto-boas-vindas">
-        Olá {{ paciente.nome }} 👋🏼
+    <div class="mensagem-boas-vindas">
+        <div class="icone-boas-vindas">👋</div>
+        <div class="texto-boas-vindas">
+            <strong>Bem-vindo, {{ paciente.nome }}</strong>
+            <span>Que bom ter você de volta.</span>
+        </div>
     </div>
 
     <div class="controles-usuario">
