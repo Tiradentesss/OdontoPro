@@ -1,14 +1,11 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 
 const tabs = [
-    { key: 'consultas', label: 'Consultas', icon: '📅' },
-    { key: 'mensagens', label: 'Mensagens', icon: '💬' },
-    { key: 'pacientes', label: 'Meus Pacientes', icon: '👥' },
-    { key: 'mais', label: 'Mais', icon: '⋯' },
+    { key: 'home', label: 'Home', icon: require('../../assets/IconHome.png') },
 ];
 
-export default function BottomNavBar({ activeTab = 'consultas', onTabPress = () => {} }) {
+export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {} }) {
     return (
         <View style={styles.bottomBar}>
             {tabs.map((tab) => {
@@ -20,7 +17,7 @@ export default function BottomNavBar({ activeTab = 'consultas', onTabPress = () 
                         onPress={() => onTabPress(tab.key)}
                         activeOpacity={0.8}
                     >
-                        <Text style={[styles.bottomTabIcon, isActive && styles.activeIcon]}>{tab.icon}</Text>
+                        <Image source={tab.icon} style={[styles.bottomTabIcon, isActive && styles.activeIcon]} resizeMode="contain" />
                         <Text style={[styles.bottomTabLabel, isActive && styles.activeLabel]}>{tab.label}</Text>
                     </TouchableOpacity>
                 );
@@ -49,7 +46,7 @@ const styles = StyleSheet.create({
         elevation: 18,
     },
     bottomTab: {
-        width: 72,
+        width: 84,
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 6,
@@ -61,9 +58,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 6,
     },
     bottomTabIcon: {
-        fontSize: 22,
-        color: '#94a3b8',
-        marginBottom: 4,
+        width: 32,
+        height: 32,
+        marginBottom: 6,
+        tintColor: '#94a3b8',
     },
     bottomTabLabel: {
         fontSize: 11,
@@ -71,7 +69,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     activeIcon: {
-        color: '#0ea5e9',
+        tintColor: '#0ea5e9',
     },
     activeLabel: {
         color: '#0b4a88',

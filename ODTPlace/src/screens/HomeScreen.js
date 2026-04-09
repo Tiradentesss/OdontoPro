@@ -91,7 +91,7 @@ export default function HomeScreen({ route }) {
                     }
                 />
 
-                <BottomNavBar activeTab="consultas" />
+                <BottomNavBar activeTab="home" />
             </SafeAreaView>
         </ImageBackground>
     );

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import NotificationButton from './NotificationButton';
 
 export default function HomeHeader({ usuario, search, setSearch, onBellPress, onFilterPress }) {
     return (
@@ -11,9 +12,7 @@ export default function HomeHeader({ usuario, search, setSearch, onBellPress, on
                         <Text style={styles.welcomeName}>{usuario}</Text>
                     </View>
 
-                    <TouchableOpacity style={styles.bellButton} onPress={onBellPress} activeOpacity={0.8}>
-                        <Text style={styles.bellIcon}>🔔</Text>
-                    </TouchableOpacity>
+                    <NotificationButton onPress={onBellPress} />
                 </View>
 
                 <View style={styles.searchBox}>
@@ -67,17 +66,6 @@ const styles = StyleSheet.create({
         fontSize: 26,
         fontWeight: '800',
         marginTop: 4,
-    },
-    bellButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 14,
-        backgroundColor: '#ffffff',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    bellIcon: {
-        fontSize: 20,
     },
     searchBox: {
         width: '92%',

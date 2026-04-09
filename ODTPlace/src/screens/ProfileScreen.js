@@ -1,17 +1,19 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet, Image } from 'react-native';
+import NotificationButton from '../components/NotificationButton';
 
 // Tela de perfil
 export default function ProfileScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={{ alignItems: 'center', marginBottom: 20, flexDirection: 'row', backgroundColor: '#3b65c0', height: 80, width: '100%' }}>
-        <View style={{ alignItems: 'center', justifyContent: 'left', marginBottom: 20, flexDirection: 'row' }}>
+      <View style={styles.profileHeader}>
+        <View style={styles.profileInfo}>
           <Image style={styles.imagem2} source={require('../../assets/profile.png')} />
           <Text style={styles.titulo}>AAA</Text>
         </View>
 
+        <NotificationButton onPress={() => {}} />
       </View>
 
       <Text style={styles.titulo}>Perfil 👤</Text>
@@ -69,6 +71,22 @@ const styles = StyleSheet.create({
   titulo: {
     fontSize: 22,
     marginBottom: 20,
+  },
+
+  profileHeader: {
+    width: '100%',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginBottom: 20,
+    backgroundColor: '#3b65c0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  profileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
   imagem: {
