@@ -164,7 +164,6 @@ def login_paciente(request):
                 email,
                 request.session.session_key
             )
-            messages.success(request, f"Bem-vindo, {paciente.nome}!")
             return response
 
         # if no paciente found, attempt to authenticate a medico
