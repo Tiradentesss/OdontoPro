@@ -49,6 +49,7 @@
 
 .mensagem-boas-vindas.oculta {
     opacity: 0;
+    visibility: hidden;
     transform: translateY(-8px);
     pointer-events: none;
 }
