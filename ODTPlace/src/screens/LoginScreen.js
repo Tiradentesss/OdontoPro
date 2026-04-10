@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import {View, Text, StyleSheet, Alert, Image, TouchableOpacity, ImageBackground,} from 'react-native';
+import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, ImageBackground } from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 
@@ -18,7 +18,8 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
-    navigation.replace('Home');
+    const userName = email.split('@')[0];
+    navigation.replace('Home', { userName });
   };
 
   return (
@@ -31,6 +32,7 @@ export default function LoginScreen({ navigation }) {
         <Image
           source={require('../../assets/LogoODTPlace.png')}
           style={styles.logo}
+          resizeMode="contain"
         />
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>OdontoPro</Text>
@@ -39,9 +41,7 @@ export default function LoginScreen({ navigation }) {
       </View>
 
       <Text style={styles.pageTitle}>Faça login com sua conta</Text>
-      <Text style={styles.description}>
-        Digite seu e-mail e senha para fazer login
-      </Text>
+      <Text style={styles.description}>Digite seu e-mail e senha para fazer login</Text>
 
       <Text style={styles.label}>Email</Text>
       <CustomInput
@@ -66,15 +66,15 @@ export default function LoginScreen({ navigation }) {
 
       <Text style={styles.or}>Ou</Text>
 
-      <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.socialButton} onPress={handleLogin} activeOpacity={0.8}>
         <Text style={styles.socialText}>Continuar com Google</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.socialButton} onPress={handleLogin} activeOpacity={0.8}>
         <Text style={styles.socialText}>Continuar com Facebook</Text>
       </TouchableOpacity>
 
-            <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Cadastro')}>
+      <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Cadastro')}>
         <Text style={styles.signup}>Quero me cadastrar</Text>
       </TouchableOpacity>
     </ImageBackground>

@@ -36,7 +36,8 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    navigation.replace('Home');
+    const userName = nome || 'Paciente';
+    navigation.replace('Home', { userName });
   };
 
   return (

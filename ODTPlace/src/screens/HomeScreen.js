@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, Image
 import HomeHeader from '../components/HomeHeader';
 import BottomNavBar from '../components/BottomNavBar';
 
-export default function HomeScreen({ route }) {
+export default function HomeScreen({ route, navigation }) {
     const usuario = route?.params?.userName ?? 'Paciente';
     const [search, setSearch] = useState('');
     const [clinicas] = useState([
@@ -48,7 +48,7 @@ export default function HomeScreen({ route }) {
                         <TouchableOpacity
                             style={styles.card}
                             activeOpacity={0.85}
-                            onPress={() => alert(`Abrindo ${item.nome}`)}
+                            onPress={() => navigation.navigate('ClinicDetail', { clinic: item })}
                         >
                             <View style={styles.cardHeader}>
                                 <View style={styles.clinicLogo} />
@@ -91,7 +91,14 @@ export default function HomeScreen({ route }) {
                     }
                 />
 
-                <BottomNavBar activeTab="home" />
+                <BottomNavBar
+                    activeTab="home"
+                    onTabPress={(tab) => {
+                        if (tab === 'schedule') {
+                            navigation.navigate('Schedule');
+                        }
+                    }}
+                />
             </SafeAreaView>
         </ImageBackground>
     );
@@ -106,9 +113,15 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
     listContent: {
-        paddingBottom: 180,
+        paddingBottom: 220,
         paddingHorizontal: 20,
         paddingTop: 14,
+    },
+    actionRow: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        marginTop: 20,
+        marginBottom: 6,
     },
     card: {
         backgroundColor: '#ffffff',

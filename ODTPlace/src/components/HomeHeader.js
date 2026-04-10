@@ -2,16 +2,12 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import NotificationButton from './NotificationButton';
 
-export default function HomeHeader({ usuario, search, setSearch, onBellPress, onFilterPress }) {
+export default function HomeHeader({ usuario, search, setSearch, onBellPress, onFilterPress, sectionText = 'Clínicas Disponíveis' }) {
     return (
         <View style={styles.topCard}>
             <View style={styles.topCardContent}>
                 <View style={styles.topHeader}>
-                    <View>
-                        <Text style={styles.welcomeLabel}>Bem-vindo,</Text>
-                        <Text style={styles.welcomeName}>{usuario}</Text>
-                    </View>
-
+                    <Text style={styles.welcomeText}>Bem-vindo, <Text style={styles.welcomeName}>{usuario}</Text></Text>
                     <NotificationButton onPress={onBellPress} />
                 </View>
 
@@ -31,7 +27,7 @@ export default function HomeHeader({ usuario, search, setSearch, onBellPress, on
             </View>
 
             <View style={styles.sectionBar}>
-                <Text style={styles.sectionBarText}>Clínicas Disponíveis</Text>
+                <Text style={styles.sectionBarText}>{sectionText}</Text>
             </View>
         </View>
     );
@@ -39,33 +35,39 @@ export default function HomeHeader({ usuario, search, setSearch, onBellPress, on
 
 const styles = StyleSheet.create({
     topCard: {
-        marginTop: 24,
+        marginTop: 18,
         marginHorizontal: -20,
         backgroundColor: '#0ea5e9',
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
         overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.12,
+        shadowRadius: 18,
+        elevation: 10,
     },
     topCardContent: {
         paddingHorizontal: 24,
-        paddingTop: 24,
-        paddingBottom: 16,
+        paddingTop: 14,
+        paddingBottom: 12,
     },
     topHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 18,
+        marginBottom: 10,
     },
-    welcomeLabel: {
+    welcomeText: {
         color: '#dbeafe',
-        fontSize: 16,
+        fontSize: 18,
+        fontWeight: '600',
+        flexShrink: 1,
     },
     welcomeName: {
         color: '#ffffff',
-        fontSize: 26,
+        fontSize: 18,
         fontWeight: '800',
-        marginTop: 4,
     },
     searchBox: {
         width: '92%',

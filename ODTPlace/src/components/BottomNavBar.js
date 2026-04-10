@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 
 const tabs = [
     { key: 'home', label: 'Home', icon: require('../../assets/IconHome.png') },
+    { key: 'schedule', label: 'Agendamentos', icon: require('../../assets/IconClipboard.png') },
 ];
 
 export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {} }) {
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
         borderRadius: 32,
         backgroundColor: '#ffffff',
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'space-around',
         alignItems: 'center',
         paddingVertical: 14,
         paddingHorizontal: 16,
