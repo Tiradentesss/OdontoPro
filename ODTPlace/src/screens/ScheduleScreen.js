@@ -67,6 +67,8 @@ export default function ScheduleScreen({ navigation }) {
     const [currentMonth, setCurrentMonth] = useState({ year: 2025, month: 12 });
     const [selectedDate, setSelectedDate] = useState('2025-12-22');
     const [pickerVisible, setPickerVisible] = useState(false);
+    const [actionModalVisible, setActionModalVisible] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
     const monthDays = getMonthDays(currentMonth.year, currentMonth.month);
     const calendarStartOffset = new Date(currentMonth.year, currentMonth.month - 1, 1).getDay();
     const calendarCells = [...Array(calendarStartOffset).fill(null), ...monthDays];
@@ -102,6 +104,16 @@ export default function ScheduleScreen({ navigation }) {
             return;
         }
         setSelectedDate(dateId);
+    };
+
+    const handleOpenAppointmentActions = (item) => {
+        setSelectedAppointment(item);
+        setActionModalVisible(true);
+    };
+
+    const closeActionModal = () => {
+        setActionModalVisible(false);
+        setSelectedAppointment(null);
     };
 
     return (
@@ -174,7 +186,16 @@ export default function ScheduleScreen({ navigation }) {
                             <View style={styles.appointmentCard}>
                                 <View style={styles.cardHeader}>
                                     <Text style={styles.cardLabel}>{item.clinic}</Text>
-                                    <View style={[styles.statusDot, item.confirmed && styles.statusDotActive]} />
+                                    <View style={styles.cardRightActions}>
+                                        <View style={[styles.statusDot, item.confirmed && styles.statusDotActive]} />
+                                        <TouchableOpacity
+                                            style={styles.actionMenuButton}
+                                            onPress={() => handleOpenAppointmentActions(item)}
+                                            activeOpacity={0.8}
+                                        >
+                                            <Text style={styles.actionMenuText}>...</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                                 <Text style={styles.patientName}>{item.specialty}</Text>
                             </View>
@@ -186,6 +207,28 @@ export default function ScheduleScreen({ navigation }) {
                         </View>
                     )}
                 </ScrollView>
+
+                <Modal visible={actionModalVisible} transparent animationType="fade">
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.actionModalContent}>
+                            <Text style={styles.actionModalTitle}>Informações da consulta</Text>
+                            <Text style={styles.actionModalLabel}>{selectedAppointment?.clinic}</Text>
+                            <Text style={styles.actionModalSubtitle}>{selectedAppointment?.specialty}</Text>
+                            <Text style={styles.actionModalTime}>{selectedAppointment?.time} - {selectedAppointment?.endTime}</Text>
+                            <View style={styles.actionButtonsRow}>
+                                <TouchableOpacity style={styles.cancelButton} activeOpacity={0.8} onPress={closeActionModal}>
+                                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.rescheduleButton} activeOpacity={0.8} onPress={closeActionModal}>
+                                    <Text style={styles.rescheduleButtonText}>Reagendar</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <TouchableOpacity style={styles.closeButton} onPress={closeActionModal} activeOpacity={0.8}>
+                                <Text style={styles.closeButtonText}>Fechar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
 
                 <Modal visible={pickerVisible} transparent animationType="fade">
                     <View style={styles.modalOverlay}>
@@ -275,8 +318,8 @@ const styles = StyleSheet.create({
     },
     monthHelp: {
         color: '#64748b',
-        marginTop: 4,
-        fontSize: 13,
+        marginTop: 2,
+        fontSize: 11,
     },
     selectButton: {
         backgroundColor: '#ffffff',
@@ -300,13 +343,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: '#ffffff',
         borderRadius: 20,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
         marginHorizontal: 10,
         shadowColor: '#000',
         shadowOpacity: 0.04,
         shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 10,
+        shadowRadius: 8,
         elevation: 4,
     },
     monthSelectIcon: {
@@ -375,19 +418,19 @@ const styles = StyleSheet.create({
         marginTop: 6,
     },
     dateCarousel: {
-        paddingHorizontal: 20,
-        paddingTop: 10,
-        paddingBottom: 6,
+        paddingHorizontal: 18,
+        paddingTop: 6,
+        paddingBottom: 4,
     },
     dateItem: {
-        width: 64,
-        height: 70,
-        borderRadius: 20,
+        width: 58,
+        height: 62,
+        borderRadius: 18,
         backgroundColor: '#ffffff',
-        marginRight: 10,
+        marginRight: 8,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 6,
+        paddingVertical: 4,
         shadowColor: '#000',
         shadowOpacity: 0.04,
         shadowOffset: { width: 0, height: 4 },
@@ -399,15 +442,15 @@ const styles = StyleSheet.create({
     },
     dateWeekday: {
         color: '#94a3b8',
-        fontSize: 12,
-        marginBottom: 6,
+        fontSize: 11,
+        marginBottom: 4,
     },
     dateWeekdayActive: {
         color: '#ffffff',
     },
     dateDay: {
         color: '#0f172a',
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '800',
     },
     dateDayActive: {
@@ -480,6 +523,24 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 10,
     },
+    cardRightActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    actionMenuButton: {
+        marginLeft: 10,
+        width: 34,
+        height: 34,
+        borderRadius: 12,
+        backgroundColor: '#f1f5f9',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    actionMenuText: {
+        fontSize: 18,
+        color: '#0f172a',
+        fontWeight: '700',
+    },
     cardLabel: {
         fontSize: 14,
         fontWeight: '700',
@@ -513,6 +574,64 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 24,
+    },
+    actionModalContent: {
+        width: '100%',
+        backgroundColor: '#ffffff',
+        borderRadius: 24,
+        padding: 20,
+    },
+    actionModalTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#0f172a',
+        marginBottom: 10,
+    },
+    actionModalLabel: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#0f172a',
+        marginBottom: 4,
+    },
+    actionModalSubtitle: {
+        fontSize: 14,
+        color: '#64748b',
+        marginBottom: 8,
+    },
+    actionModalTime: {
+        fontSize: 14,
+        color: '#64748b',
+        marginBottom: 18,
+    },
+    actionButtonsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 14,
+    },
+    cancelButton: {
+        flex: 1,
+        marginRight: 10,
+        backgroundColor: '#f8fafc',
+        borderRadius: 16,
+        paddingVertical: 14,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#cbd5e1',
+    },
+    cancelButtonText: {
+        color: '#0f172a',
+        fontWeight: '700',
+    },
+    rescheduleButton: {
+        flex: 1,
+        backgroundColor: '#0ea5e9',
+        borderRadius: 16,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+    rescheduleButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
     },
     modalContent: {
         width: '100%',
