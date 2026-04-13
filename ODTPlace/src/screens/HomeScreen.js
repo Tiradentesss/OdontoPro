@@ -10,6 +10,7 @@ export default function HomeScreen({ route, navigation }) {
         {
             id: '1',
             nome: 'Clínica Sorriso Vivo',
+            descricao: 'Clínica com equipamentos modernos e equipe preparada para resolver seu caso.',
             especialidade: 'Odontologia',
             avaliacao: '5.0',
             avaliacoes: '83',
@@ -17,6 +18,23 @@ export default function HomeScreen({ route, navigation }) {
             modalidades: 'Online',
             dia: 'Terça 14 - Dezembro',
             horarios: ['11:00', '12:00'],
+            services: [
+                {
+                    name: 'Ortodontia',
+                    price: 'R$ 280,00',
+                    availability: ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
+                },
+                {
+                    name: 'Odontopediatria',
+                    price: 'R$ 170,00',
+                    availability: ['Ter. 14 - Dez • 10:30', 'Qui. 16 - Dez • 11:00'],
+                },
+                {
+                    name: 'Periodontia',
+                    price: 'R$ 210,00',
+                    availability: ['Qua. 15 - Dez • 14:00', 'Sex. 17 - Dez • 15:30'],
+                },
+            ],
         },
     ]);
 

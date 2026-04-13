@@ -9,9 +9,17 @@ import {
     ScrollView,
 } from 'react-native';
 import NotificationButton from '../components/NotificationButton';
+import BottomNavBar from '../components/BottomNavBar';
 
 export default function ClinicDetailScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
+    const services = clinic.services ?? [
+        {
+            name: clinic.especialidade ?? 'Especialidade',
+            price: clinic.preco ?? 'R$ 250,00',
+            availability: ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
+        },
+    ];
 
     return (
         <ImageBackground
@@ -24,62 +32,77 @@ export default function ClinicDetailScreen({ route, navigation }) {
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                         <Text style={styles.backText}>‹</Text>
                     </TouchableOpacity>
+                    <Text style={styles.screenTitle}>Perfil da Clínica</Text>
                     <NotificationButton onPress={() => {}} />
                 </View>
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                    <View style={styles.infoCard}>
-                        <Text style={styles.clinicTitle}>{clinic.nome}</Text>
-                        <Text style={styles.clinicSubtitle}>{clinic.especialidade}</Text>
-
-                        <View style={styles.rowBetween}>
-                            <View>
-                                <Text style={styles.label}>Avaliação</Text>
-                                <Text style={styles.value}>{clinic.avaliacao} ★</Text>
+                    <View style={styles.clinicCard}>
+                        <View style={styles.clinicHeader}>
+                            <View style={styles.clinicImagePlaceholder}>
+                                <Text style={styles.imageLabel}>Foto</Text>
                             </View>
-                            <View>
-                                <Text style={styles.label}>Consultas</Text>
-                                <Text style={styles.value}>{clinic.avaliacoes}</Text>
+                            <View style={styles.clinicHeaderInfo}>
+                                <Text style={styles.clinicTitle}>{clinic.nome}</Text>
+                                <Text style={styles.clinicSubtitle}>{clinic.descricao ?? clinic.especialidade}</Text>
+                                <Text style={styles.clinicInfoText}>Atendimento: {clinic.modalidades}</Text>
                             </View>
                         </View>
 
-                        <View style={styles.detailsBlock}>
-                            <Text style={styles.detailLabel}>Modalidade</Text>
-                            <Text style={styles.detailText}>{clinic.modalidades}</Text>
-                        </View>
-                        <View style={styles.detailsBlock}>
-                            <Text style={styles.detailLabel}>Valor da consulta</Text>
-                            <Text style={styles.detailText}>{clinic.preco}</Text>
-                        </View>
-                        <View style={styles.detailsBlock}>
-                            <Text style={styles.detailLabel}>Próxima disponibilidade</Text>
-                            <Text style={styles.detailText}>{clinic.dia}</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Horários disponíveis</Text>
-                    </View>
-                    <View style={styles.hourList}>
-                        {clinic.horarios?.map((hora) => (
-                            <View key={hora} style={styles.hourTag}>
-                                <Text style={styles.hourText}>{hora}</Text>
+                        <View style={styles.ratingRow}>
+                            <View style={styles.ratingPill}>
+                                <Text style={styles.ratingValue}>{clinic.avaliacao} ★</Text>
                             </View>
-                        ))}
+                            <Text style={styles.ratingCount}>{clinic.avaliacoes} avaliações</Text>
+                        </View>
                     </View>
 
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Sobre a clínica</Text>
+                    <View style={styles.serviceSection}>
+                        <Text style={styles.sectionTitle}>Especialidades</Text>
+                        <View style={styles.serviceGrid}>
+                            {services.map((service) => (
+                                <View key={service.name} style={styles.serviceCard}>
+                                    <Text style={styles.serviceName}>{service.name}</Text>
+                                    <Text style={styles.servicePrice}>{service.price}</Text>
+                                    <Text style={styles.availabilityLabel}>Próximos horários</Text>
+                                    <View style={styles.availabilityList}>
+                                        {service.availability?.map((slot) => (
+                                            <View key={slot} style={styles.timeChip}>
+                                                <Text style={styles.timeChipText}>{slot}</Text>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
                     </View>
-                    <Text style={styles.description}>
-                        Clínica especializada em odontologia com atendimento personalizado e equipe dedicada a
-                        seu conforto. Marque sua consulta e cuide do seu sorriso com quem entende do assunto.
-                    </Text>
 
-                    <TouchableOpacity style={styles.actionButton} activeOpacity={0.85} onPress={() => alert('Consulta agendada!')}>
-                        <Text style={styles.actionButtonText}>Agendar consulta</Text>
+                    <TouchableOpacity style={styles.chooseButton} activeOpacity={0.85} onPress={() => alert('Escolher profissional')}>
+                        <Text style={styles.chooseButtonText}>Escolher Profissional</Text>
                     </TouchableOpacity>
+
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Endereço da Clínica</Text>
+                    </View>
+                    <View style={styles.addressCard}>
+                        <Text style={styles.addressLabel}>Endereço</Text>
+                        <Text style={styles.addressText}>{clinic.endereco ?? 'Edifício Síntese Plaza - Av. Sen. Lemos, 791 - sala 1006 - Umarizal, Belém - PA, 66050-000'}</Text>
+                        <Text style={[styles.addressLabel, { marginTop: 14 }]}>Telefone</Text>
+                        <Text style={styles.addressText}>{clinic.telefone ?? '(91) 98132-2686'}</Text>
+                    </View>
+
+                    <View style={styles.mapPlaceholder}>
+                        <Text style={styles.mapPlaceholderText}>Mapa da Clínica</Text>
+                    </View>
                 </ScrollView>
+                <BottomNavBar
+                    activeTab="home"
+                    onTabPress={(tab) => {
+                        if (tab === 'schedule') {
+                            navigation.navigate('Schedule');
+                        }
+                    }}
+                />
             </SafeAreaView>
         </ImageBackground>
     );
@@ -116,18 +139,109 @@ const styles = StyleSheet.create({
     content: {
         paddingHorizontal: 20,
         paddingVertical: 24,
-        paddingBottom: 100,
+        paddingBottom: 80,
     },
-    infoCard: {
+    clinicCard: {
         backgroundColor: '#ffffff',
         borderRadius: 28,
-        padding: 24,
-        marginBottom: 20,
+        padding: 20,
+        marginBottom: 12,
         shadowColor: '#000',
         shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: 8 },
         shadowRadius: 20,
         elevation: 10,
+    },
+    clinicHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    clinicImagePlaceholder: {
+        width: 110,
+        height: 110,
+        borderRadius: 24,
+        backgroundColor: '#e0f2fe',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 16,
+    },
+    imageLabel: {
+        color: '#0ea5e9',
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    clinicHeaderInfo: {
+        flex: 1,
+        justifyContent: 'space-between',
+    },
+    clinicInfoText: {
+        color: '#64748b',
+        fontSize: 13,
+        marginTop: 6,
+    },
+    serviceSection: {
+        marginBottom: 22,
+    },
+    serviceGrid: {
+        marginTop: 12,
+    },
+    serviceCard: {
+        width: '100%',
+        backgroundColor: '#f8fafc',
+        borderRadius: 18,
+        paddingVertical: 14,
+        paddingHorizontal: 18,
+        marginBottom: 14,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    serviceName: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#0f172a',
+        marginBottom: 6,
+    },
+    servicePrice: {
+        fontSize: 13,
+        color: '#0ea5e9',
+        fontWeight: '700',
+    },
+    availabilityLabel: {
+        fontSize: 12,
+        color: '#64748b',
+        marginTop: 10,
+        marginBottom: 8,
+    },
+    availabilityList: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginTop: 0,
+    },
+    ratingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    ratingPill: {
+        backgroundColor: '#e0f2fe',
+        borderRadius: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        marginRight: 10,
+    },
+    ratingValue: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#0ea5e9',
+    },
+    ratingCount: {
+        color: '#64748b',
+        fontSize: 13,
+    },
+    screenTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#0f172a',
     },
     clinicTitle: {
         color: '#0f172a',
@@ -138,7 +252,73 @@ const styles = StyleSheet.create({
     clinicSubtitle: {
         color: '#0ea5e9',
         fontSize: 16,
-        marginBottom: 18,
+        marginBottom: 12,
+    },
+    clinicInfoText: {
+        color: '#64748b',
+        fontSize: 13,
+        marginTop: 4,
+    },
+    timeChip: {
+        backgroundColor: '#ffffff',
+        borderWidth: 1,
+        borderColor: '#0ea5e9',
+        borderRadius: 14,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        marginRight: 8,
+        marginBottom: 8,
+    },
+    timeChipText: {
+        color: '#0ea5e9',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    chooseButton: {
+        backgroundColor: '#0ea5e9',
+        borderRadius: 24,
+        paddingVertical: 16,
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    chooseButtonText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    addressCard: {
+        backgroundColor: '#ffffff',
+        borderRadius: 24,
+        padding: 18,
+        shadowColor: '#000',
+        shadowOpacity: 0.06,
+        shadowOffset: { width: 0, height: 6 },
+        shadowRadius: 14,
+        elevation: 5,
+        marginBottom: 20,
+    },
+    addressLabel: {
+        fontSize: 13,
+        color: '#64748b',
+        marginBottom: 6,
+    },
+    addressText: {
+        fontSize: 14,
+        color: '#0f172a',
+        lineHeight: 20,
+    },
+    mapPlaceholder: {
+        height: 180,
+        borderRadius: 24,
+        backgroundColor: '#e2e8f0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 40,
+    },
+    mapPlaceholderText: {
+        color: '#475569',
+        fontSize: 14,
+        fontWeight: '600',
     },
     rowBetween: {
         flexDirection: 'row',
