@@ -10,6 +10,7 @@ import SplashScreen from './src/screens/SplashScreen';
 import CadastroScreen from './src/screens/CadastroScreen';
 import ClinicDetailScreen from './src/screens/ClinicDetailScreen';
 import ScheduleScreen from './src/screens/ScheduleScreen';
+import ProfessionalsScreen from './src/screens/ProfessionalsScreen';
 // import ProfileScreen from './src/screens/ProfileScreen';
 
 // Criando o stack
@@ -27,6 +28,7 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Schedule" component={ScheduleScreen} />
         <Stack.Screen name="ClinicDetail" component={ClinicDetailScreen} />
+        <Stack.Screen name="Professionals" component={ProfessionalsScreen} />
         {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
 
       </Stack.Navigator>

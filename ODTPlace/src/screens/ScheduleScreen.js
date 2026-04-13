@@ -9,7 +9,7 @@ import {
     Modal,
     ImageBackground,
 } from 'react-native';
-import HomeHeader from '../components/HomeHeader';
+import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 
 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -123,14 +123,7 @@ export default function ScheduleScreen({ navigation }) {
             resizeMode="cover"
         >
             <SafeAreaView style={styles.container}>
-                <HomeHeader
-                    usuario={usuario}
-                    search={search}
-                    setSearch={setSearch}
-                    onBellPress={() => {}}
-                    onFilterPress={() => {}}
-                    sectionText="Agendamentos"
-                />
+                <ScheduleHeader title="Agendamentos" onBack={() => navigation.goBack()} />
 
                 <View style={styles.monthRow}> 
                     <TouchableOpacity style={styles.monthArrow} onPress={goPreviousMonth} activeOpacity={0.8}>
@@ -296,6 +289,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'transparent',
+        paddingTop: 120,
     },
     headerRow: {
         marginTop: 24,

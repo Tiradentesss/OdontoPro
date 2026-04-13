@@ -8,7 +8,7 @@ import {
     ImageBackground,
     ScrollView,
 } from 'react-native';
-import NotificationButton from '../components/NotificationButton';
+import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 
 export default function ClinicDetailScreen({ route, navigation }) {
@@ -28,13 +28,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
             resizeMode="cover"
         >
             <SafeAreaView style={styles.container}>
-                <View style={styles.topRow}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Text style={styles.backText}>‹</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.screenTitle}>Perfil da Clínica</Text>
-                    <NotificationButton onPress={() => {}} />
-                </View>
+                <ScheduleHeader title="Perfil da Clínica" onBack={() => navigation.goBack()} />
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <View style={styles.clinicCard}>
@@ -61,7 +55,12 @@ export default function ClinicDetailScreen({ route, navigation }) {
                         <Text style={styles.sectionTitle}>Especialidades</Text>
                         <View style={styles.serviceGrid}>
                             {services.map((service) => (
-                                <View key={service.name} style={styles.serviceCard}>
+                                <TouchableOpacity
+                                    key={service.name}
+                                    style={styles.serviceCard}
+                                    activeOpacity={0.85}
+                                    onPress={() => navigation.navigate('Professionals', { clinic, selectedSpecialty: service.name })}
+                                >
                                     <Text style={styles.serviceName}>{service.name}</Text>
                                     <Text style={styles.servicePrice}>{service.price}</Text>
                                     <Text style={styles.availabilityLabel}>Próximos horários</Text>
@@ -72,23 +71,36 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                             </View>
                                         ))}
                                     </View>
-                                </View>
+                                </TouchableOpacity>
                             ))}
                         </View>
                     </View>
 
-                    <TouchableOpacity style={styles.chooseButton} activeOpacity={0.85} onPress={() => alert('Escolher profissional')}>
+                    <TouchableOpacity
+                        style={styles.chooseButton}
+                        activeOpacity={0.85}
+                        onPress={() => navigation.navigate('Professionals', { clinic })}
+                    >
                         <Text style={styles.chooseButtonText}>Escolher Profissional</Text>
                     </TouchableOpacity>
 
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Endereço da Clínica</Text>
+                        <Text style={styles.sectionTitle}>Informações da Clínica</Text>
                     </View>
                     <View style={styles.addressCard}>
                         <Text style={styles.addressLabel}>Endereço</Text>
                         <Text style={styles.addressText}>{clinic.endereco ?? 'Edifício Síntese Plaza - Av. Sen. Lemos, 791 - sala 1006 - Umarizal, Belém - PA, 66050-000'}</Text>
-                        <Text style={[styles.addressLabel, { marginTop: 14 }]}>Telefone</Text>
-                        <Text style={styles.addressText}>{clinic.telefone ?? '(91) 98132-2686'}</Text>
+                        <Text style={[styles.addressLabel, { marginTop: 14 }]}>Contate-nos</Text>
+                        <View style={styles.contactRow}>
+                            <TouchableOpacity style={styles.contactButton} activeOpacity={0.85} onPress={() => {}}>
+                                <Text style={styles.contactButtonTitle}>Telefone</Text>
+                                <Text style={styles.contactButtonText}>{clinic.telefone ?? '(91) 98132-2686'}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.contactButton, styles.contactButtonLast]} activeOpacity={0.85} onPress={() => {}}>
+                                <Text style={styles.contactButtonTitle}>WhatsApp</Text>
+                                <Text style={styles.contactButtonText}>Enviar mensagem</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     <View style={styles.mapPlaceholder}>
@@ -115,6 +127,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'transparent',
+        paddingTop: 120,
     },
     topRow: {
         marginTop: 24,
@@ -307,10 +320,37 @@ const styles = StyleSheet.create({
         color: '#0f172a',
         lineHeight: 20,
     },
+    contactRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
+    },
+    contactButton: {
+        flex: 1,
+        backgroundColor: '#eef6ff',
+        borderRadius: 16,
+        paddingVertical: 14,
+        paddingHorizontal: 14,
+        borderWidth: 1,
+        borderColor: '#dbeafe',
+    },
+    contactButtonLast: {
+        marginLeft: 10,
+    },
+    contactButtonTitle: {
+        fontSize: 12,
+        color: '#64748b',
+        marginBottom: 6,
+    },
+    contactButtonText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#0f172a',
+    },
     mapPlaceholder: {
         height: 180,
         borderRadius: 24,
-        backgroundColor: '#e2e8f0',
+        backgroundColor: '#e2f2ff',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 40,

@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
 import NotificationButton from './NotificationButton';
+
+const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
 export default function HomeHeader({ usuario, search, setSearch, onBellPress, onFilterPress, sectionText = 'Clínicas Disponíveis' }) {
     return (
@@ -24,10 +26,8 @@ export default function HomeHeader({ usuario, search, setSearch, onBellPress, on
                         <Text style={styles.filterText}>⌗</Text>
                     </TouchableOpacity>
                 </View>
-            </View>
 
-            <View style={styles.sectionBar}>
-                <Text style={styles.sectionBarText}>{sectionText}</Text>
+                <Text style={styles.sectionText}>{sectionText}</Text>
             </View>
         </View>
     );
@@ -35,7 +35,7 @@ export default function HomeHeader({ usuario, search, setSearch, onBellPress, on
 
 const styles = StyleSheet.create({
     topCard: {
-        marginTop: 18,
+        marginTop: -statusBarHeight,
         marginHorizontal: -20,
         backgroundColor: '#0ea5e9',
         borderBottomLeftRadius: 32,
@@ -49,8 +49,8 @@ const styles = StyleSheet.create({
     },
     topCardContent: {
         paddingHorizontal: 24,
-        paddingTop: 14,
-        paddingBottom: 12,
+        paddingTop: statusBarHeight + 40,
+        paddingBottom: 18,
     },
     topHeader: {
         flexDirection: 'row',
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     filterButton: {
         width: 38,
         height: 38,
-        borderRadius: 12,
+        borderRadius: 15,
         backgroundColor: '#e0f2fe',
         alignItems: 'center',
         justifyContent: 'center',
@@ -102,14 +102,11 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#0284c7',
     },
-    sectionBar: {
-        backgroundColor: '#e0f2fe',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-    },
-    sectionBarText: {
-        color: '#0f172a',
-        fontSize: 15,
+    sectionText: {
+        color: '#ffffff',
+        fontSize: 16,
         fontWeight: '700',
+        marginTop: 16,
+        marginLeft: 14,
     },
 });
