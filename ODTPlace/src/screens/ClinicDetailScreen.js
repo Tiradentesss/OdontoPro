@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -13,6 +13,7 @@ import BottomNavBar from '../components/BottomNavBar';
 
 export default function ClinicDetailScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
+    const [showFullDescription, setShowFullDescription] = useState(false);
     const services = clinic.services ?? [
         {
             name: clinic.especialidade ?? 'Especialidade',
@@ -37,11 +38,31 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                 <Text style={styles.imageLabel}>Foto</Text>
                             </View>
                             <View style={styles.clinicHeaderInfo}>
-                                <Text style={styles.clinicTitle}>{clinic.nome}</Text>
-                                <Text style={styles.clinicSubtitle}>{clinic.descricao ?? clinic.especialidade}</Text>
+                                <Text style={styles.clinicTitle} numberOfLines={2}>{clinic.nome}</Text>
+                                {clinic.especialidade ? (
+                                    <Text style={styles.clinicSubtitle} numberOfLines={1}>{clinic.especialidade}</Text>
+                                ) : null}
                                 <Text style={styles.clinicInfoText}>Atendimento: {clinic.modalidades}</Text>
                             </View>
                         </View>
+                        {clinic.descricao ? (
+                            <View style={styles.clinicDescriptionContainer}>
+                                <Text style={styles.description}>
+                                    {showFullDescription || clinic.descricao.length <= 120
+                                        ? clinic.descricao
+                                        : `${clinic.descricao.slice(0, 120).trim()}...`}
+                                </Text>
+                                {clinic.descricao.length > 120 ? (
+                                    <TouchableOpacity
+                                        onPress={() => setShowFullDescription(prev => !prev)}
+                                    >
+                                        <Text style={styles.descriptionToggle}>
+                                            {showFullDescription ? 'Ver menos' : 'Ver mais'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ) : null}
+                            </View>
+                        ) : null}
 
                         <View style={styles.ratingRow}>
                             <View style={styles.ratingPill}>
@@ -167,7 +188,7 @@ const styles = StyleSheet.create({
     },
     clinicHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         marginBottom: 16,
     },
     clinicImagePlaceholder: {
@@ -186,12 +207,29 @@ const styles = StyleSheet.create({
     },
     clinicHeaderInfo: {
         flex: 1,
-        justifyContent: 'space-between',
+        minWidth: 0,
+        flexShrink: 1,
+    },
+    clinicTitle: {
+        color: '#0f172a',
+        fontSize: 24,
+        fontWeight: '800',
+        marginBottom: 6,
+        flexShrink: 1,
+    },
+    clinicSubtitle: {
+        color: '#0ea5e9',
+        fontSize: 16,
+        marginBottom: 12,
+        flexShrink: 1,
     },
     clinicInfoText: {
         color: '#64748b',
         fontSize: 13,
         marginTop: 6,
+    },
+    clinicDescriptionContainer: {
+        marginTop: 14,
     },
     serviceSection: {
         marginBottom: 22,
@@ -255,17 +293,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '800',
         color: '#0f172a',
-    },
-    clinicTitle: {
-        color: '#0f172a',
-        fontSize: 24,
-        fontWeight: '800',
-        marginBottom: 6,
-    },
-    clinicSubtitle: {
-        color: '#0ea5e9',
-        fontSize: 16,
-        marginBottom: 12,
     },
     clinicInfoText: {
         color: '#64748b',
@@ -417,8 +444,14 @@ const styles = StyleSheet.create({
     description: {
         color: '#475569',
         fontSize: 14,
-        lineHeight: 22,
-        marginBottom: 24,
+        lineHeight: 20,
+        marginBottom: 10,
+    },
+    descriptionToggle: {
+        color: '#0ea5e9',
+        fontSize: 13,
+        fontWeight: '700',
+        marginBottom: 12,
     },
     actionButton: {
         backgroundColor: '#0ea5e9',
