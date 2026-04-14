@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet, Image } from 'react-native';
-import NotificationButton from '../components/NotificationButton';
 
 // Tela de perfil
 export default function ProfileScreen({ navigation }) {
@@ -13,12 +12,6 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.titulo}>AAA</Text>
         </View>
 
-        <NotificationButton onPress={() => {}} />
-      </View>
-
-      <Text style={styles.titulo}>Perfil 👤</Text>
-
-      <View style={{ alignItems: 'right', marginBottom: 20, flexDirection: 'row' }}>
         <Image style={styles.imagem} source={require('../../assets/profile.png')} />
         <Text style={styles.titulo}>Nome: AAA</Text>
       </View>

@@ -35,7 +35,7 @@ export default function LoginScreen({ navigation }) {
           resizeMode="contain"
         />
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>OdontoPro</Text>
+          <Text style={styles.headerTitle}>OdontoPlace</Text>
           <Text style={styles.headerSubtitle}>Sistema de gerenciamento</Text>
         </View>
       </View>

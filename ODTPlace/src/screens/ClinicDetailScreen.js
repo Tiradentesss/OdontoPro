@@ -133,6 +133,10 @@ export default function ClinicDetailScreen({ route, navigation }) {
                     onTabPress={(tab) => {
                         if (tab === 'schedule') {
                             navigation.navigate('Schedule');
+                        } else if (tab === 'settings') {
+                            navigation.navigate('Settings');
+                        } else if (tab === 'notifications') {
+                            navigation.navigate('Notifications');
                         }
                     }}
                 />

@@ -274,6 +274,10 @@ export default function ScheduleScreen({ navigation }) {
                     onTabPress={(tab) => {
                         if (tab === 'home') {
                             navigation.navigate('Home');
+                        } else if (tab === 'settings') {
+                            navigation.navigate('Settings');
+                        } else if (tab === 'notifications') {
+                            navigation.navigate('Notifications');
                         }
                     }}
                 />

@@ -53,7 +53,7 @@ export default function HomeScreen({ route, navigation }) {
                     usuario={usuario}
                     search={search}
                     setSearch={setSearch}
-                    onBellPress={() => {}}
+                    onBellPress={() => navigation.navigate('Notifications')}
                     onFilterPress={() => {}}
                 />
 
@@ -114,6 +114,10 @@ export default function HomeScreen({ route, navigation }) {
                     onTabPress={(tab) => {
                         if (tab === 'schedule') {
                             navigation.navigate('Schedule');
+                        } else if (tab === 'settings') {
+                            navigation.navigate('Settings');
+                        } else if (tab === 'notifications') {
+                            navigation.navigate('Notifications');
                         }
                     }}
                 />

@@ -1,15 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform, StatusBar } from 'react-native';
-import NotificationButton from './NotificationButton';
 
 const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
-export default function ScheduleHeaderNoBack({ title, onNotificationPress }) {
+export default function ScheduleHeaderNoBack({ title }) {
     return (
         <View style={styles.headerWrapper}>
             <View style={styles.headerContainer}>
                 <Text style={styles.title}>{title}</Text>
-                <NotificationButton onPress={onNotificationPress} />
             </View>
         </View>
     );

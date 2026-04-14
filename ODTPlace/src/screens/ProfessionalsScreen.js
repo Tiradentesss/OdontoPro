@@ -181,6 +181,10 @@ export default function ProfessionalsScreen({ route, navigation }) {
                     onTabPress={(tab) => {
                         if (tab === 'schedule') {
                             navigation.navigate('Schedule');
+                        } else if (tab === 'settings') {
+                            navigation.navigate('Settings');
+                        } else if (tab === 'notifications') {
+                            navigation.navigate('Notifications');
                         }
                     }}
                 />
@@ -233,6 +237,7 @@ const styles = StyleSheet.create({
         color: '#0f172a',
     },
     searchArea: {
+        paddingTop: 16,
         paddingHorizontal: 20,
         marginBottom: 16,
     },

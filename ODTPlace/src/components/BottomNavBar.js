@@ -4,6 +4,8 @@ import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 const tabs = [
     { key: 'home', label: 'Home', icon: require('../../assets/IconHome.png') },
     { key: 'schedule', label: 'Agendamentos', icon: require('../../assets/IconClipboard.png') },
+    { key: 'notifications', label: 'Notificações', icon: require('../../assets/IconNotificacao.png') },
+    { key: 'settings', label: 'Configurações', icon: require('../../assets/IconConfiguracao.png') },
 ];
 
 export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {} }) {
@@ -61,11 +63,11 @@ const styles = StyleSheet.create({
     bottomTabIcon: {
         width: 32,
         height: 32,
-        marginBottom: 6,
+        marginBottom: 4,
         tintColor: '#94a3b8',
     },
     bottomTabLabel: {
-        fontSize: 11,
+        fontSize: 10,
         color: '#64748b',
         textAlign: 'center',
     },
