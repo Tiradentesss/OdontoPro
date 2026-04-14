@@ -10,7 +10,7 @@ const sampleProfessionals = [
     { id: '4', name: 'Marina Silva', specialty: 'Periodontista', rating: 4, reviews: 42 },
 ];
 
-const ratingFilters = [5, 4, 3];
+const ratingFilters = [5, 4, 3, 2, 1];
 
 export default function ProfessionalsScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
@@ -18,7 +18,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
     const [search, setSearch] = useState('');
     const [activeSpecialty, setActiveSpecialty] = useState(selectedSpecialty);
     const [activeRating, setActiveRating] = useState(null);
-    const [showSpecialtyFilters, setShowSpecialtyFilters] = useState(false);
+    const [showSpecialtyFilters, setShowSpecialtyFilters] = useState(true);
     const [showRatingFilters, setShowRatingFilters] = useState(false);
 
     const specialtyOptions = useMemo(() => {
@@ -65,6 +65,9 @@ export default function ProfessionalsScreen({ route, navigation }) {
                         <TouchableOpacity
                             style={[styles.openFilterButton, showSpecialtyFilters && styles.openFilterButtonActive]}
                             onPress={() => {
+                                if (showSpecialtyFilters && !showRatingFilters) {
+                                    return;
+                                }
                                 setShowSpecialtyFilters(!showSpecialtyFilters);
                                 setShowRatingFilters(false);
                             }}
@@ -77,6 +80,9 @@ export default function ProfessionalsScreen({ route, navigation }) {
                         <TouchableOpacity
                             style={[styles.openFilterButton, showRatingFilters && styles.openFilterButtonActive]}
                             onPress={() => {
+                                if (showRatingFilters && !showSpecialtyFilters) {
+                                    return;
+                                }
                                 setShowRatingFilters(!showRatingFilters);
                                 setShowSpecialtyFilters(false);
                             }}
@@ -158,7 +164,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                             <TouchableOpacity
                                 style={styles.professionalCard}
                                 activeOpacity={0.86}
-                                onPress={() => {}}
+                                onPress={() => navigation.navigate('ProfessionalInfo', { professional: item })}
                             >
                                 <View style={styles.avatarPlaceholder}>
                                     <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>

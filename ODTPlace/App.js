@@ -11,6 +11,8 @@ import CadastroScreen from './src/screens/CadastroScreen';
 import ClinicDetailScreen from './src/screens/ClinicDetailScreen';
 import ScheduleScreen from './src/screens/ScheduleScreen';
 import ProfessionalsScreen from './src/screens/ProfessionalsScreen';
+import ProfessionalInfoScreen from './src/screens/ProfessionalInfoScreen';
+import AppointmentBookingScreen from './src/screens/AppointmentBookingScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 // import ProfileScreen from './src/screens/ProfileScreen';
@@ -31,6 +33,8 @@ export default function App() {
         <Stack.Screen name="Schedule" component={ScheduleScreen} />
         <Stack.Screen name="ClinicDetail" component={ClinicDetailScreen} />
         <Stack.Screen name="Professionals" component={ProfessionalsScreen} />
+        <Stack.Screen name="ProfessionalInfo" component={ProfessionalInfoScreen} />
+        <Stack.Screen name="AppointmentBooking" component={AppointmentBookingScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
