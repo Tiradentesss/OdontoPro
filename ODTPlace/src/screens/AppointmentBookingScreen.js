@@ -13,6 +13,22 @@ import {
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 
+const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+const getMonthDays = (year, month) => {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const date = new Date(year, month - 1, day);
+    return {
+      id: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      day,
+      weekday: weekdays[date.getDay()],
+    };
+  });
+};
+
 export default function AppointmentBookingScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
   const [firstName, setFirstName] = useState('');
@@ -20,18 +36,40 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [reason, setReason] = useState('');
-  const [selectedSlot, setSelectedSlot] = useState('Janeiro - 02 - 2024 - 09:00AM');
+  const [selectedSlot, setSelectedSlot] = useState('Janeiro - 02 - 2024 - 09:00 AM');
   const [confirmationVisible, setConfirmationVisible] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState({ year: 2025, month: 1 });
+  const [selectedDate, setSelectedDate] = useState('2025-01-02');
+  const [selectedTime, setSelectedTime] = useState('09:00 AM');
+
+  const monthDays = getMonthDays(currentMonth.year, currentMonth.month);
+  const monthLabel = `${monthNames[currentMonth.month - 1]} ${currentMonth.year}`;
+
+  const goPreviousMonth = () => {
+    if (currentMonth.month === 1) {
+      setCurrentMonth({ year: currentMonth.year - 1, month: 12 });
+    } else {
+      setCurrentMonth({ year: currentMonth.year, month: currentMonth.month - 1 });
+    }
+  };
+
+  const goNextMonth = () => {
+    if (currentMonth.month === 12) {
+      setCurrentMonth({ year: currentMonth.year + 1, month: 1 });
+    } else {
+      setCurrentMonth({ year: currentMonth.year, month: currentMonth.month + 1 });
+    }
+  };
 
   const handleSlotPress = () => {
-    const options = [
-      'Janeiro - 02 - 2024 - 09:00AM',
-      'Janeiro - 02 - 2024 - 10:30AM',
-      'Janeiro - 02 - 2024 - 14:00PM',
-    ];
-    const currentIndex = options.indexOf(selectedSlot);
-    const nextIndex = (currentIndex + 1) % options.length;
-    setSelectedSlot(options[nextIndex]);
+    setPickerVisible(true);
+  };
+
+  const confirmDateTime = () => {
+    const [year, month, day] = selectedDate.split('-');
+    setSelectedSlot(`${monthNames[Number(month) - 1]} - ${String(day).padStart(2, '0')} - ${selectedTime}`);
+    setPickerVisible(false);
   };
 
   const handleConfirmBooking = () => {
@@ -116,8 +154,77 @@ export default function AppointmentBookingScreen({ route, navigation }) {
               <Text style={styles.slotText}>{selectedSlot}</Text>
               <Text style={styles.slotArrow}>⌄</Text>
             </TouchableOpacity>
-            <Text style={styles.slotHelp}>Toque para alternar entre os horários disponíveis.</Text>
+            <Text style={styles.slotHelp}>Toque para escolher o dia e o horário.</Text>
           </View>
+
+          <Modal visible={pickerVisible} transparent animationType="fade">
+            <View style={styles.pickerOverlay}>
+              <View style={styles.pickerCard}>
+                <View style={styles.pickerHeader}>
+                  <Text style={styles.pickerTitle}>{monthLabel}</Text>
+                  <View style={styles.pickerNavButtons}>
+                    <TouchableOpacity style={styles.pickerNavButton} onPress={goPreviousMonth} activeOpacity={0.8}>
+                      <Text style={styles.pickerNavText}>‹</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.pickerNavButton} onPress={goNextMonth} activeOpacity={0.8}>
+                      <Text style={styles.pickerNavText}>›</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.weekdaysRow}>
+                  {weekdays.map((weekday) => (
+                    <Text key={weekday} style={styles.weekdayLabel}>{weekday}</Text>
+                  ))}
+                </View>
+
+                <View style={styles.daysGrid}>
+                  {Array.from({ length: new Date(currentMonth.year, currentMonth.month - 1, 1).getDay() }, (_, index) => (
+                    <View key={`empty-${index}`} style={styles.dayCellEmpty} />
+                  ))}
+                  {monthDays.map((day) => {
+                    const isSelected = selectedDate === day.id;
+                    return (
+                      <TouchableOpacity
+                        key={day.id}
+                        style={[styles.dayCell, isSelected && styles.dayCellSelected]}
+                        activeOpacity={0.85}
+                        onPress={() => setSelectedDate(day.id)}
+                      >
+                        <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{day.day}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <Text style={styles.timeSectionTitle}>Horário</Text>
+                <View style={styles.timeRow}>
+                  {['09:00 AM', '09:30 AM', '12:00 PM', '12:30 PM', '03:00 PM', '04:30 PM'].map((time) => {
+                    const isActive = selectedTime === time;
+                    return (
+                      <TouchableOpacity
+                        key={time}
+                        style={[styles.timeChip, isActive && styles.timeChipActive]}
+                        activeOpacity={0.85}
+                        onPress={() => setSelectedTime(time)}
+                      >
+                        <Text style={[styles.timeChipText, isActive && styles.timeChipTextActive]}>{time}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.pickerActionsRow}>
+                  <TouchableOpacity style={styles.pickerCancelButton} onPress={() => setPickerVisible(false)} activeOpacity={0.85}>
+                    <Text style={styles.pickerCancelText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.pickerConfirmButton} onPress={confirmDateTime} activeOpacity={0.85}>
+                    <Text style={styles.pickerConfirmText}>Confirmar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
 
           <View style={styles.formGroup}>
             <Text style={styles.fieldLabel}>Motivo da consulta (Opcional)</Text>
@@ -307,6 +414,136 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
+  },
+  pickerCard: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 28,
+    padding: 20,
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  pickerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  pickerNavButtons: {
+    flexDirection: 'row',
+  },
+  pickerNavButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    backgroundColor: '#e2e8f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  pickerNavText: {
+    fontSize: 18,
+    color: '#0f172a',
+  },
+  weekdaysRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  weekdayLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    width: '14.28%',
+    textAlign: 'center',
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 18,
+  },
+  dayCellEmpty: {
+    width: '14.28%',
+    height: 44,
+  },
+  dayCell: {
+    width: '14.28%',
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
+    marginBottom: 6,
+  },
+  dayCellSelected: {
+    backgroundColor: '#0ea5e9',
+  },
+  dayNumber: {
+    fontSize: 14,
+    color: '#0f172a',
+  },
+  dayNumberSelected: {
+    color: '#ffffff',
+    fontWeight: '800',
+  },
+  timeSectionTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0f172a',
+    marginBottom: 12,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  timeChip: {
+    width: '48%',
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  timeChipActive: {
+    backgroundColor: '#0ea5e9',
+  },
+  timeChipText: {
+    fontSize: 14,
+    color: '#0f172a',
+    fontWeight: '700',
+  },
+  timeChipTextActive: {
+    color: '#ffffff',
+  },
+  pickerActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  pickerCancelButton: {
+    flex: 1,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 20,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  pickerCancelText: {
+    color: '#0f172a',
+    fontWeight: '700',
+  },
+  pickerConfirmButton: {
+    flex: 1,
+    backgroundColor: '#0ea5e9',
+    borderRadius: 20,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  pickerConfirmText: {
+    color: '#ffffff',
+    fontWeight: '700',
   },
   confirmationCard: {
     width: '100%',
