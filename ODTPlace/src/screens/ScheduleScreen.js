@@ -15,12 +15,22 @@ import BottomNavBar from '../components/BottomNavBar';
 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const weekdays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-const appointmentDays = ['2025-12-22'];
+const appointmentDays = ['2026-04-11', '2026-04-16'];
 
 const appointmentsByDate = {
-    '2025-12-22': [
+    '2026-04-11': [
         {
             id: '1',
+            time: '10:00',
+            endTime: '10:30',
+            clinic: 'Clínica Sorriso Vivo',
+            specialty: 'Odontopediatria',
+            confirmed: true,
+        },
+    ],
+    '2026-04-16': [
+        {
+            id: '2',
             time: '09:00',
             endTime: '09:30',
             clinic: 'Clínica Sorriso Vivo',
@@ -28,22 +38,31 @@ const appointmentsByDate = {
             confirmed: true,
         },
         {
-            id: '2',
+            id: '3',
             time: '12:00',
             endTime: '12:30',
-            clinic: 'Clínica Sorriso Vivo',
-            specialty: 'Odontopediatria',
-            confirmed: false,
-        },
-        {
-            id: '3',
-            time: '14:00',
-            endTime: '14:30',
             clinic: 'Clínica Sorriso Vivo',
             specialty: 'Periodontia',
             confirmed: false,
         },
     ],
+};
+
+const toDateOnly = (dateId) => {
+    const [year, month, day] = dateId.split('-').map(Number);
+    return new Date(year, month - 1, day);
+};
+
+const today = new Date();
+const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+const getUpcomingAppointmentDate = () => {
+    const futureDates = appointmentDays
+        .map((id) => ({ id, date: toDateOnly(id) }))
+        .filter(({ date }) => date >= todayStart)
+        .sort((a, b) => a.date - b.date)
+        .map(({ id }) => id);
+    return futureDates[0] ?? appointmentDays.slice().sort()[0] ?? `${todayStart.getFullYear()}-${String(todayStart.getMonth() + 1).padStart(2, '0')}-${String(todayStart.getDate()).padStart(2, '0')}`;
 };
 
 const getMonthDays = (year, month) => {
@@ -57,6 +76,7 @@ const getMonthDays = (year, month) => {
             day: String(day),
             weekday: weekdays[date.getDay()],
             hasAppointments: appointmentDays.includes(id),
+            isPast: toDateOnly(id) < todayStart,
         };
     });
 };
@@ -64,11 +84,16 @@ const getMonthDays = (year, month) => {
 export default function ScheduleScreen({ navigation }) {
     const [search, setSearch] = useState('');
     const usuario = 'Paciente';
-    const [currentMonth, setCurrentMonth] = useState({ year: 2025, month: 12 });
-    const [selectedDate, setSelectedDate] = useState('2025-12-22');
+    const initialSelectedDate = getUpcomingAppointmentDate();
+    const [currentMonth, setCurrentMonth] = useState({
+        year: Number(initialSelectedDate.split('-')[0]),
+        month: Number(initialSelectedDate.split('-')[1]),
+    });
+    const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
     const [pickerVisible, setPickerVisible] = useState(false);
     const [actionModalVisible, setActionModalVisible] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [swipeStartX, setSwipeStartX] = useState(null);
     const monthDays = getMonthDays(currentMonth.year, currentMonth.month);
     const calendarStartOffset = new Date(currentMonth.year, currentMonth.month - 1, 1).getDay();
     const calendarCells = [...Array(calendarStartOffset).fill(null), ...monthDays];
@@ -78,7 +103,26 @@ export default function ScheduleScreen({ navigation }) {
 
     const setMonth = (year, month) => {
         setCurrentMonth({ year, month });
-        setSelectedDate(`${year}-${String(month).padStart(2, '0')}-01`);
+        const [currentYear, currentMonthNum, currentDay] = selectedDate.split('-').map(Number);
+        const daysInNewMonth = new Date(year, month, 0).getDate();
+        const nextDay = Math.min(currentDay, daysInNewMonth);
+        setSelectedDate(`${year}-${String(month).padStart(2, '0')}-${String(nextDay).padStart(2, '0')}`);
+    };
+
+    const handleSwipeEnd = (endX) => {
+        if (swipeStartX === null) {
+            return;
+        }
+        const deltaX = endX - swipeStartX;
+        setSwipeStartX(null);
+        if (Math.abs(deltaX) < 40) {
+            return;
+        }
+        if (deltaX > 0) {
+            goPreviousMonth();
+        } else {
+            goNextMonth();
+        }
     };
 
     const goPreviousMonth = () => {
@@ -98,11 +142,6 @@ export default function ScheduleScreen({ navigation }) {
     };
 
     const handleSelectDate = (dateId) => {
-        const lastDayOfMonth = monthDays[monthDays.length - 1].id;
-        if (dateId === lastDayOfMonth) {
-            goNextMonth();
-            return;
-        }
         setSelectedDate(dateId);
     };
 
@@ -125,7 +164,11 @@ export default function ScheduleScreen({ navigation }) {
             <SafeAreaView style={styles.container}>
                 <ScheduleHeaderNoBack title="Agendamentos" onNotificationPress={() => {}} />
 
-                <View style={styles.monthRow}> 
+                <View
+                    style={styles.monthRow}
+                    onTouchStart={(e) => setSwipeStartX(e.nativeEvent.pageX)}
+                    onTouchEnd={(e) => handleSwipeEnd(e.nativeEvent.pageX)}
+                >
                     <TouchableOpacity style={styles.monthArrow} onPress={goPreviousMonth} activeOpacity={0.8}>
                         <Text style={styles.monthArrowText}>‹</Text>
                     </TouchableOpacity>
@@ -150,12 +193,24 @@ export default function ScheduleScreen({ navigation }) {
                         return (
                             <TouchableOpacity
                                 key={date.id}
-                                style={[styles.dateItem, isSelected && styles.dateItemActive]}
-                                activeOpacity={0.85}
+                                style={[
+                                    styles.dateItem,
+                                    isSelected && styles.dateItemActive,
+                                    date.isPast && styles.dateItemPast,
+                                ]}
+                                activeOpacity={date.isPast ? 1 : 0.85}
                                 onPress={() => handleSelectDate(date.id)}
                             >
-                                <Text style={[styles.dateWeekday, isSelected && styles.dateWeekdayActive]}>{date.weekday}</Text>
-                                <Text style={[styles.dateDay, isSelected && styles.dateDayActive]}>{date.day}</Text>
+                                <Text style={[
+                                    styles.dateWeekday,
+                                    isSelected && styles.dateWeekdayActive,
+                                    date.isPast && styles.dateWeekdayPast,
+                                ]}>{date.weekday}</Text>
+                                <Text style={[
+                                    styles.dateDay,
+                                    isSelected && styles.dateDayActive,
+                                    date.isPast && styles.dateDayPast,
+                                ]}>{date.day}</Text>
                                 {date.hasAppointments && (
                                     <View style={[styles.appointmentDot, isSelected && styles.appointmentDotSelected]} />
                                 )}
@@ -226,7 +281,11 @@ export default function ScheduleScreen({ navigation }) {
                 <Modal visible={pickerVisible} transparent animationType="fade">
                     <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
-                            <View style={styles.modalHeaderRow}>
+                            <View
+                                style={styles.modalHeaderRow}
+                                onTouchStart={(e) => setSwipeStartX(e.nativeEvent.pageX)}
+                                onTouchEnd={(e) => handleSwipeEnd(e.nativeEvent.pageX)}
+                            >
                                 <TouchableOpacity style={styles.modalArrowButton} onPress={goPreviousMonth} activeOpacity={0.8}>
                                     <Text style={styles.modalArrowText}>‹</Text>
                                 </TouchableOpacity>
@@ -236,11 +295,15 @@ export default function ScheduleScreen({ navigation }) {
                                 </TouchableOpacity>
                             </View>
                             <View style={styles.weekHeader}>
-                                {weekdays.map((weekday) => (
-                                    <Text key={weekday} style={styles.weekdayText}>{weekday}</Text>
+                                {weekdays.map((weekday, index) => (
+                                    <Text key={`${weekday}-${index}`} style={styles.weekdayText}>{weekday}</Text>
                                 ))}
                             </View>
-                            <View style={styles.calendarGrid}>
+                            <View
+                                style={styles.calendarGrid}
+                                onTouchStart={(e) => setSwipeStartX(e.nativeEvent.pageX)}
+                                onTouchEnd={(e) => handleSwipeEnd(e.nativeEvent.pageX)}
+                            >
                                 {calendarCells.map((date, index) => {
                                     if (!date) {
                                         return <View key={`blank-${index}`} style={styles.dayCellEmpty} />;
@@ -372,7 +435,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     weekdayText: {
-        width: 32,
+        width: '14.2857%',
         textAlign: 'center',
         color: '#64748b',
         fontSize: 12,
@@ -381,15 +444,17 @@ const styles = StyleSheet.create({
     calendarGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
     },
     dayCellEmpty: {
-        width: 40,
+        flexBasis: '14.2857%',
+        maxWidth: '14.2857%',
         height: 44,
         marginBottom: 8,
     },
     dayCell: {
-        width: 40,
+        flexBasis: '14.2857%',
+        maxWidth: '14.2857%',
         height: 44,
         borderRadius: 16,
         alignItems: 'center',
@@ -438,6 +503,9 @@ const styles = StyleSheet.create({
     dateItemActive: {
         backgroundColor: '#0ea5e9',
     },
+    dateItemPast: {
+        backgroundColor: '#f1f5f9',
+    },
     dateWeekday: {
         color: '#94a3b8',
         fontSize: 11,
@@ -446,6 +514,10 @@ const styles = StyleSheet.create({
     dateWeekdayActive: {
         color: '#ffffff',
     },
+    dateWeekdayPast: {
+        color: '#94a3b8',
+        opacity: 0.5,
+    },
     dateDay: {
         color: '#0f172a',
         fontSize: 16,
@@ -453,6 +525,10 @@ const styles = StyleSheet.create({
     },
     dateDayActive: {
         color: '#ffffff',
+    },
+    dateDayPast: {
+        color: '#0f172a',
+        opacity: 0.5,
     },
     appointmentDot: {
         width: 6,
@@ -664,11 +740,12 @@ const styles = StyleSheet.create({
     },
     weekHeader: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         marginBottom: 8,
     },
     weekdayText: {
-        width: 32,
+        flexBasis: '14.2857%',
+        maxWidth: '14.2857%',
         textAlign: 'center',
         color: '#64748b',
         fontSize: 12,
@@ -677,10 +754,17 @@ const styles = StyleSheet.create({
     calendarGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
+    },
+    dayCellEmpty: {
+        flexBasis: '14.2857%',
+        maxWidth: '14.2857%',
+        height: 52,
+        marginBottom: 10,
     },
     dayCell: {
-        width: 40,
+        flexBasis: '14.2857%',
+        maxWidth: '14.2857%',
         height: 52,
         borderRadius: 16,
         alignItems: 'center',
