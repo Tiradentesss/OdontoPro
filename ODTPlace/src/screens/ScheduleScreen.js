@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -94,6 +94,10 @@ export default function ScheduleScreen({ navigation }) {
     const [actionModalVisible, setActionModalVisible] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [swipeStartX, setSwipeStartX] = useState(null);
+    const [carouselWidth, setCarouselWidth] = useState(0);
+    const scrollViewRef = useRef(null);
+    const dayButtonWidth = 58;
+    const dayButtonSpacing = 8;
     const monthDays = getMonthDays(currentMonth.year, currentMonth.month);
     const calendarStartOffset = new Date(currentMonth.year, currentMonth.month - 1, 1).getDay();
     const calendarCells = [...Array(calendarStartOffset).fill(null), ...monthDays];
@@ -145,6 +149,21 @@ export default function ScheduleScreen({ navigation }) {
         setSelectedDate(dateId);
     };
 
+    useEffect(() => {
+        if (!scrollViewRef.current || carouselWidth === 0) {
+            return;
+        }
+
+        const selectedIndex = monthDays.findIndex((day) => day.id === selectedDate);
+        if (selectedIndex < 0) {
+            return;
+        }
+
+        const itemTotalWidth = dayButtonWidth + dayButtonSpacing;
+        const targetX = Math.max(selectedIndex * itemTotalWidth + dayButtonWidth / 2 - carouselWidth / 2, 0);
+        scrollViewRef.current.scrollTo({ x: targetX, animated: true });
+    }, [selectedDate, monthDays, carouselWidth]);
+
     const handleOpenAppointmentActions = (item) => {
         setSelectedAppointment(item);
         setActionModalVisible(true);
@@ -187,6 +206,8 @@ export default function ScheduleScreen({ navigation }) {
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.dateCarousel}
+                    ref={scrollViewRef}
+                    onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
                 >
                     {monthDays.map((date) => {
                         const isSelected = date.id === selectedDate;
@@ -212,7 +233,13 @@ export default function ScheduleScreen({ navigation }) {
                                     date.isPast && styles.dateDayPast,
                                 ]}>{date.day}</Text>
                                 {date.hasAppointments && (
-                                    <View style={[styles.appointmentDot, isSelected && styles.appointmentDotSelected]} />
+                                    <View
+                                        style={[
+                                            styles.appointmentDot,
+                                            isSelected && styles.appointmentDotSelected,
+                                            date.isPast && !isSelected && styles.appointmentDotPast,
+                                        ]}
+                                    />
                                 )}
                             </TouchableOpacity>
                         );
@@ -312,15 +339,35 @@ export default function ScheduleScreen({ navigation }) {
                                     return (
                                         <TouchableOpacity
                                             key={date.id}
-                                            style={[styles.dayCell, isSelected && styles.dayCellActive]}
+                                            style={[
+                                                styles.dayCell,
+                                                isSelected && styles.dayCellActive,
+                                                date.isPast && !isSelected && styles.dayCellPast,
+                                            ]}
                                             activeOpacity={0.85}
                                             onPress={() => {
                                                 handleSelectDate(date.id);
                                                 setPickerVisible(false);
                                             }}
                                         >
-                                            <Text style={[styles.dayNumber, isSelected && styles.dayNumberActive]}>{date.day}</Text>
-                                            {date.hasAppointments && <View style={styles.dayDot} />}
+                                            <Text
+                                                style={[
+                                                    styles.dayNumber,
+                                                    isSelected && styles.dayNumberActive,
+                                                    date.isPast && !isSelected && styles.dayNumberPast,
+                                                ]}
+                                            >
+                                                {date.day}
+                                            </Text>
+                                            {date.hasAppointments && (
+                                                <View
+                                                    style={[
+                                                        styles.dayDot,
+                                                        isSelected && styles.dayDotSelected,
+                                                        date.isPast && !isSelected && styles.dayDotPast,
+                                                    ]}
+                                                />
+                                            )}
                                         </TouchableOpacity>
                                     );
                                 })}
@@ -435,7 +482,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     weekdayText: {
-        width: '14.2857%',
+        flexBasis: '13.5%',
+        maxWidth: '13.5%',
         textAlign: 'center',
         color: '#64748b',
         fontSize: 12,
@@ -444,17 +492,17 @@ const styles = StyleSheet.create({
     calendarGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
     },
     dayCellEmpty: {
-        flexBasis: '14.2857%',
-        maxWidth: '14.2857%',
+        flexBasis: '13.5%',
+        maxWidth: '13.5%',
         height: 44,
         marginBottom: 8,
     },
     dayCell: {
-        flexBasis: '14.2857%',
-        maxWidth: '14.2857%',
+        flexBasis: '13.5%',
+        maxWidth: '13.5%',
         height: 44,
         borderRadius: 16,
         alignItems: 'center',
@@ -539,6 +587,9 @@ const styles = StyleSheet.create({
     },
     appointmentDotSelected: {
         backgroundColor: '#ffffff',
+    },
+    appointmentDotPast: {
+        backgroundColor: '#0b4a88',
     },
     scheduleHeader: {
         marginTop: 12,
@@ -744,8 +795,8 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     weekdayText: {
-        flexBasis: '14.2857%',
-        maxWidth: '14.2857%',
+        flexBasis: '13.5%',
+        maxWidth: '13.5%',
         textAlign: 'center',
         color: '#64748b',
         fontSize: 12,
@@ -757,20 +808,25 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
     },
     dayCellEmpty: {
-        flexBasis: '14.2857%',
-        maxWidth: '14.2857%',
+        flexBasis: '13.5%',
+        maxWidth: '13.5%',
         height: 52,
         marginBottom: 10,
+        marginRight: '0.7%',
     },
     dayCell: {
-        flexBasis: '14.2857%',
-        maxWidth: '14.2857%',
+        flexBasis: '13.5%',
+        maxWidth: '13.5%',
         height: 52,
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 10,
+        marginRight: '0.7%',
         backgroundColor: '#f8fafc',
+    },
+    dayCellPast: {
+        backgroundColor: '#d1d5db',
     },
     dayCellActive: {
         backgroundColor: '#0ea5e9',
@@ -780,6 +836,9 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#0f172a',
     },
+    dayNumberPast: {
+        color: '#475569',
+    },
     dayNumberActive: {
         color: '#ffffff',
     },
@@ -787,8 +846,14 @@ const styles = StyleSheet.create({
         width: 6,
         height: 6,
         borderRadius: 3,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#0ea5e9',
         marginTop: 4,
+    },
+    dayDotSelected: {
+        backgroundColor: '#ffffff',
+    },
+    dayDotPast: {
+        backgroundColor: '#0b4a88',
     },
     closeButton: {
         marginTop: 16,
