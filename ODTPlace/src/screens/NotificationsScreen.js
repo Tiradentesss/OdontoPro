@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, SafeAreaView, ImageBackground } from 'react-nat
 import ScheduleHeaderNoBack from '../components/ScheduleHeaderNoBack';
 import BottomNavBar from '../components/BottomNavBar';
 
-export default function NotificationsScreen({ navigation }) {
+export default function NotificationsScreen({ navigation, showBottomNav = true }) {
   return (
     <ImageBackground
       source={require('../../assets/imagem background.png')}
@@ -18,18 +18,20 @@ export default function NotificationsScreen({ navigation }) {
             <Text style={styles.subtitle}>Assim que houver novidades, você verá aqui.</Text>
           </View>
         </View>
-        <BottomNavBar
-          activeTab="notifications"
-          onTabPress={(tab) => {
-            if (tab === 'home') {
-              navigation.navigate('Home');
-            } else if (tab === 'schedule') {
-              navigation.navigate('Schedule');
-            } else if (tab === 'settings') {
-              navigation.navigate('Settings');
-            }
-          }}
-        />
+        {showBottomNav && (
+          <BottomNavBar
+            activeTab="notifications"
+            onTabPress={(tab) => {
+              if (tab === 'home') {
+                navigation.navigate('Home');
+              } else if (tab === 'schedule') {
+                navigation.navigate('Schedule');
+              } else if (tab === 'settings') {
+                navigation.navigate('Settings');
+              }
+            }}
+          />
+        )}
       </SafeAreaView>
     </ImageBackground>
   );

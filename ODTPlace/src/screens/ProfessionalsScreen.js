@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ImageBackground, FlatList, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ImageBackground, FlatList, TextInput, Image } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 
@@ -52,7 +52,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
 
                 <View style={styles.searchArea}>
                     <View style={styles.searchBox}>
-                        <Text style={styles.searchIcon}>🔍</Text>
+                        <Image source={require('../../assets/IconLupa.png')} style={styles.searchIcon} />
                         <TextInput
                             value={search}
                             onChangeText={setSearch}
@@ -261,9 +261,10 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     searchIcon: {
-        fontSize: 18,
+        width: 18,
+        height: 18,
         marginRight: 10,
-        color: '#64748b',
+        resizeMode: 'contain',
     },
     searchInput: {
         flex: 1,

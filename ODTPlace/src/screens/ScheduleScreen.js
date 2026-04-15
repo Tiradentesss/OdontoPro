@@ -81,7 +81,7 @@ const getMonthDays = (year, month) => {
     });
 };
 
-export default function ScheduleScreen({ navigation }) {
+export default function ScheduleScreen({ navigation, showBottomNav = true }) {
     const [search, setSearch] = useState('');
     const usuario = 'Paciente';
     const initialSelectedDate = getUpcomingAppointmentDate();
@@ -379,18 +379,20 @@ export default function ScheduleScreen({ navigation }) {
                     </View>
                 </Modal>
 
-                <BottomNavBar
-                    activeTab="schedule"
-                    onTabPress={(tab) => {
-                        if (tab === 'home') {
-                            navigation.navigate('Home');
-                        } else if (tab === 'settings') {
-                            navigation.navigate('Settings');
-                        } else if (tab === 'notifications') {
-                            navigation.navigate('Notifications');
-                        }
-                    }}
-                />
+                {showBottomNav && (
+                    <BottomNavBar
+                        activeTab="schedule"
+                        onTabPress={(tab) => {
+                            if (tab === 'home') {
+                                navigation.navigate('Home');
+                            } else if (tab === 'settings') {
+                                navigation.navigate('Settings');
+                            } else if (tab === 'notifications') {
+                                navigation.navigate('Notifications');
+                            }
+                        }}
+                    />
+                )}
             </SafeAreaView>
         </ImageBackground>
     );

@@ -7,6 +7,7 @@ import {
     SafeAreaView,
     ImageBackground,
     ScrollView,
+    TextInput,
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
@@ -14,6 +15,9 @@ import BottomNavBar from '../components/BottomNavBar';
 export default function ClinicDetailScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
     const [showFullDescription, setShowFullDescription] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showAllSpecialties, setShowAllSpecialties] = useState(false);
+
     const services = clinic.services ?? [
         {
             name: clinic.especialidade ?? 'Especialidade',
@@ -21,6 +25,13 @@ export default function ClinicDetailScreen({ route, navigation }) {
             availability: ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
         },
     ];
+
+    const filteredServices = services.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const visibleServices = showAllSpecialties ? filteredServices : filteredServices.slice(0, 5);
+    const hasMoreSpecialties = filteredServices.length > 5;
 
     return (
         <ImageBackground
@@ -74,8 +85,15 @@ export default function ClinicDetailScreen({ route, navigation }) {
 
                     <View style={styles.serviceSection}>
                         <Text style={styles.sectionTitle}>Especialidades</Text>
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="Pesquisar especialidades"
+                            placeholderTextColor="#94a3b8"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                        />
                         <View style={styles.serviceGrid}>
-                            {services.map((service) => (
+                            {visibleServices.map((service) => (
                                 <TouchableOpacity
                                     key={service.name}
                                     style={styles.serviceCard}
@@ -94,7 +112,19 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                     </View>
                                 </TouchableOpacity>
                             ))}
+                            {visibleServices.length === 0 && (
+                                <Text style={styles.noResultsText}>Nenhuma especialidade encontrada.</Text>
+                            )}
                         </View>
+                        {hasMoreSpecialties && (
+                            <TouchableOpacity
+                                style={styles.showMoreButton}
+                                activeOpacity={0.85}
+                                onPress={() => setShowAllSpecialties((prev) => !prev)}
+                            >
+                                <Text style={styles.showMoreText}>{showAllSpecialties ? 'Ver menos' : 'Ver mais'}</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     <TouchableOpacity
@@ -238,8 +268,18 @@ const styles = StyleSheet.create({
     serviceSection: {
         marginBottom: 22,
     },
-    serviceGrid: {
+    searchInput: {
+        width: '100%',
+        height: 48,
+        backgroundColor: '#f1f5f9',
+        borderRadius: 14,
+        paddingHorizontal: 16,
         marginTop: 12,
+        marginBottom: 12,
+        color: '#0f172a',
+    },
+    serviceGrid: {
+        marginTop: 0,
     },
     serviceCard: {
         width: '100%',
@@ -250,6 +290,24 @@ const styles = StyleSheet.create({
         marginBottom: 14,
         borderWidth: 1,
         borderColor: '#e2e8f0',
+    },
+    noResultsText: {
+        color: '#64748b',
+        fontSize: 14,
+        marginTop: 8,
+        textAlign: 'center',
+    },
+    showMoreButton: {
+        alignSelf: 'flex-start',
+        marginTop: 4,
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        backgroundColor: '#0ea5e9',
+        borderRadius: 16,
+    },
+    showMoreText: {
+        color: '#ffffff',
+        fontWeight: '700',
     },
     serviceName: {
         fontSize: 14,

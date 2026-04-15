@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Platform, StatusBar, Image } from 'react-native';
 import NotificationButton from './NotificationButton';
 
 const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
@@ -14,7 +14,7 @@ export default function HomeHeader({ usuario, search, setSearch, onBellPress, on
                 </View>
 
                 <View style={styles.searchBox}>
-                    <Text style={styles.searchIcon}>🔍</Text>
+                    <Image source={require('../../assets/IconLupa.png')} style={styles.searchIcon} />
                     <TextInput
                         value={search}
                         onChangeText={setSearch}
@@ -81,9 +81,10 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
     },
     searchIcon: {
-        fontSize: 18,
+        width: 18,
+        height: 18,
         marginRight: 10,
-        color: '#64748b',
+        resizeMode: 'contain',
     },
     searchInput: {
         flex: 1,

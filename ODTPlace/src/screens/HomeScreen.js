@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, Image
 import HomeHeader from '../components/HomeHeader';
 import BottomNavBar from '../components/BottomNavBar';
 
-export default function HomeScreen({ route, navigation }) {
+export default function HomeScreen({ route, navigation, showBottomNav = true }) {
     const usuario = route?.params?.userName ?? 'Paciente';
     const [search, setSearch] = useState('');
     const [clinicas] = useState([
@@ -109,18 +109,20 @@ export default function HomeScreen({ route, navigation }) {
                     }
                 />
 
-                <BottomNavBar
-                    activeTab="home"
-                    onTabPress={(tab) => {
-                        if (tab === 'schedule') {
-                            navigation.navigate('Schedule');
-                        } else if (tab === 'settings') {
-                            navigation.navigate('Settings');
-                        } else if (tab === 'notifications') {
-                            navigation.navigate('Notifications');
-                        }
-                    }}
-                />
+                {showBottomNav && (
+                    <BottomNavBar
+                        activeTab="home"
+                        onTabPress={(tab) => {
+                            if (tab === 'schedule') {
+                                navigation.navigate('Schedule');
+                            } else if (tab === 'settings') {
+                                navigation.navigate('Settings');
+                            } else if (tab === 'notifications') {
+                                navigation.navigate('Notifications');
+                            }
+                        }}
+                    />
+                )}
             </SafeAreaView>
         </ImageBackground>
     );
