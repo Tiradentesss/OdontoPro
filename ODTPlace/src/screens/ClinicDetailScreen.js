@@ -27,7 +27,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
     ];
 
     const filteredServices = services.filter((item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        item.name.toLowerCase().startsWith(searchQuery.toLowerCase())
     );
 
     const visibleServices = showAllSpecialties ? filteredServices : filteredServices.slice(0, 5);

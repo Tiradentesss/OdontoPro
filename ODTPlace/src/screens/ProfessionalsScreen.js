@@ -31,8 +31,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
         return sampleProfessionals.filter((professional) => {
             const matchesSearch =
                 search.length === 0 ||
-                professional.name.toLowerCase().includes(search.toLowerCase()) ||
-                professional.specialty.toLowerCase().includes(search.toLowerCase());
+                professional.name.toLowerCase().startsWith(search.toLowerCase());
             const matchesSpecialty =
                 !activeSpecialty ||
                 professional.specialty.toLowerCase().includes(activeSpecialty.toLowerCase());

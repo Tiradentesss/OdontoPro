@@ -17,7 +17,7 @@ export default function ProfileScreen({ navigation }) {
   ];
 
   const filteredSpecialties = specialties.filter((item) =>
-    item.toLowerCase().includes(searchQuery.toLowerCase())
+    item.toLowerCase().startsWith(searchQuery.toLowerCase())
   );
 
   const visibleSpecialties = showAllSpecialties ? filteredSpecialties : filteredSpecialties.slice(0, 5);

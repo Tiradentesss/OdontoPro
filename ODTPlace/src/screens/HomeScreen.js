@@ -39,7 +39,7 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
     ]);
 
     const dadosFiltrados = clinicas.filter((clinica) =>
-        clinica.nome.toLowerCase().includes(search.toLowerCase())
+        clinica.nome.toLowerCase().startsWith(search.toLowerCase())
     );
 
     return (
