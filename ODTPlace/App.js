@@ -15,6 +15,9 @@ import ProfessionalInfoScreen from './src/screens/ProfessionalInfoScreen';
 import AppointmentBookingScreen from './src/screens/AppointmentBookingScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
+import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
+import SystemScreen from './src/screens/SystemScreen';
+import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
 // import ProfileScreen from './src/screens/ProfileScreen';
 
 // Criando o stack
@@ -37,6 +40,9 @@ export default function App() {
         <Stack.Screen name="AppointmentBooking" component={AppointmentBookingScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+        <Stack.Screen name="System" component={SystemScreen} />
+        <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
         {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
 
       </Stack.Navigator>

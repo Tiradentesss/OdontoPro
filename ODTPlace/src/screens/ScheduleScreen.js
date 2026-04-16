@@ -81,8 +81,10 @@ const getMonthDays = (year, month) => {
     });
 };
 
-export default function ScheduleScreen({ navigation, showBottomNav = true }) {
+export default function ScheduleScreen({ navigation, activeTab, showBottomNav = true }) {
     const [search, setSearch] = useState('');
+    const [shouldResetPosition, setShouldResetPosition] = useState(true);
+    const lastActiveTab = useRef(activeTab);
     const usuario = 'Paciente';
     const initialSelectedDate = getUpcomingAppointmentDate();
     const [currentMonth, setCurrentMonth] = useState({
@@ -106,6 +108,7 @@ export default function ScheduleScreen({ navigation, showBottomNav = true }) {
     const monthLabel = `${monthNames[currentMonth.month - 1]}, ${currentMonth.year}`;
 
     const setMonth = (year, month) => {
+        setShouldResetPosition(false);
         setCurrentMonth({ year, month });
         const [currentYear, currentMonthNum, currentDay] = selectedDate.split('-').map(Number);
         const daysInNewMonth = new Date(year, month, 0).getDate();
@@ -147,10 +150,26 @@ export default function ScheduleScreen({ navigation, showBottomNav = true }) {
 
     const handleSelectDate = (dateId) => {
         setSelectedDate(dateId);
+        setShouldResetPosition(false);
+    };
+
+    const handleCalendarSelect = (dateId) => {
+        setSelectedDate(dateId);
+        setPickerVisible(false);
+        setShouldResetPosition(true);
     };
 
     useEffect(() => {
-        if (!scrollViewRef.current || carouselWidth === 0) {
+        if (lastActiveTab.current !== activeTab) {
+            if (activeTab === 'schedule') {
+                setShouldResetPosition(true);
+            }
+            lastActiveTab.current = activeTab;
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (!scrollViewRef.current || carouselWidth === 0 || !shouldResetPosition) {
             return;
         }
 
@@ -162,7 +181,8 @@ export default function ScheduleScreen({ navigation, showBottomNav = true }) {
         const itemTotalWidth = dayButtonWidth + dayButtonSpacing;
         const targetX = Math.max(selectedIndex * itemTotalWidth + dayButtonWidth / 2 - carouselWidth / 2, 0);
         scrollViewRef.current.scrollTo({ x: targetX, animated: true });
-    }, [selectedDate, monthDays, carouselWidth]);
+        setShouldResetPosition(false);
+    }, [selectedDate, monthDays, carouselWidth, shouldResetPosition]);
 
     const handleOpenAppointmentActions = (item) => {
         setSelectedAppointment(item);
@@ -207,6 +227,10 @@ export default function ScheduleScreen({ navigation, showBottomNav = true }) {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.dateCarousel}
                     ref={scrollViewRef}
+                    nestedScrollEnabled={true}
+                    onStartShouldSetResponderCapture={() => true}
+                    onMoveShouldSetResponderCapture={() => true}
+                    onScrollBeginDrag={() => setShouldResetPosition(false)}
                     onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
                 >
                     {monthDays.map((date) => {
@@ -345,10 +369,7 @@ export default function ScheduleScreen({ navigation, showBottomNav = true }) {
                                                 date.isPast && !isSelected && styles.dayCellPast,
                                             ]}
                                             activeOpacity={0.85}
-                                            onPress={() => {
-                                                handleSelectDate(date.id);
-                                                setPickerVisible(false);
-                                            }}
+                                            onPress={() => handleCalendarSelect(date.id)}
                                         >
                                             <Text
                                                 style={[

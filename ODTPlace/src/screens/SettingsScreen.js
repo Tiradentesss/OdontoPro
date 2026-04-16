@@ -16,31 +16,32 @@ export default function SettingsScreen({ navigation, showBottomNav = true }) {
         <View style={styles.content}>
           <View style={styles.topCard}>
             <View style={styles.iconWrapper} />
+            <Text style={styles.profileName}>Nome da Conta</Text>
           </View>
 
           <View style={styles.optionCard}>
-            <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => {}}>
+            <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => navigation.navigate('PersonalInfo')}>
               <Image source={require('../../assets/IconHome.png')} style={styles.optionIcon} resizeMode="contain" />
               <View style={styles.optionText}>
                 <Text style={styles.optionTitle}>Informações Pessoais</Text>
                 <Text style={styles.optionSubtitle}>Atualize seus dados</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => {}}>
+            <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => navigation.navigate('System')}>
               <Image source={require('../../assets/IconClipboard.png')} style={styles.optionIcon} resizeMode="contain" />
               <View style={styles.optionText}>
                 <Text style={styles.optionTitle}>Sistema</Text>
                 <Text style={styles.optionSubtitle}>Configurações do aplicativo</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => {}}>
+            <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => navigation.navigate('NotificationSettings')}>
               <Image source={require('../../assets/IconNotificacao.png')} style={styles.optionIcon} resizeMode="contain" />
               <View style={styles.optionText}>
                 <Text style={styles.optionTitle}>Notificações</Text>
                 <Text style={styles.optionSubtitle}>Gerencie alertas e sons</Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => {}}>
+            <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => navigation.navigate('Login')}>
               <Image source={require('../../assets/IconConfiguracao.png')} style={styles.optionIcon} resizeMode="contain" />
               <View style={styles.optionText}>
                 <Text style={styles.optionTitle}>Sair</Text>
@@ -136,6 +137,13 @@ const styles = StyleSheet.create({
   },
   optionText: {
     flex: 1,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginTop: -8,
+    marginBottom: 16,
   },
   optionTitle: {
     fontSize: 16,

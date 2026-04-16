@@ -57,6 +57,7 @@ export default function MainTabs({ route, navigation }) {
                             navigation={navigation}
                             route={route}
                             showBottomNav={false}
+                            activeTab={activeTab}
                         />
                     </View>
                 ))}
