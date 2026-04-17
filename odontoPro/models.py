@@ -24,7 +24,7 @@ class Endereco(models.Model):
 class Clinica(models.Model):
     cnpj = models.CharField(max_length=45)
     nome = models.CharField(max_length=85)
-    descricao = models.CharField(max_length=300, null=True, blank=True)
+    descricao = models.TextField(null=True, blank=True)
     telefone = models.CharField(max_length=14)
     conta_bancaria_juridica = models.CharField(max_length=45)
     endereco = models.ForeignKey('Endereco', on_delete=models.PROTECT)

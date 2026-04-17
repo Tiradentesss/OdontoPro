@@ -442,6 +442,10 @@ body {
     cursor: pointer;      /* Cursor de clique */
     font-size: 14px;      /* Tamanho da fonte */
     transition: background 0.2s ease; /* Transição suave */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 /* Hover das opções */
@@ -460,12 +464,42 @@ body {
     cursor: pointer;                    /* Cursor de clique */
     display: flex;                      /* Para alinhar ícones e texto */
     align-items: center;                /* Centraliza verticalmente */
+    justify-content: flex-start;
     gap: 8px;                           /* Espaço entre ícones e texto */
     font-size: 14px;                     /* Tamanho da fonte */
     color: var(--texto-suave);          /* Cor do texto */
     font-weight: 500;                    /* Negrito leve */
     transition: 0.3s;                    /* Transição suave ao hover */
     position: relative;                 /* Para posicionar dropdown */
+}
+
+.seta {
+    transition: transform 0.28s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    font-size: 16px;
+}
+
+.dropdown-filtro .estrelas {
+    color: #f4bf3a;
+    letter-spacing: 1px;
+    font-size: 18px;
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-right: 4px;
+}
+
+.dropdown-filtro .texto-opcao {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Hover do botão */

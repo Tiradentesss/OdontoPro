@@ -3,7 +3,7 @@ from django.core.files import File
 from django.db import transaction
 from pathlib import Path
 from django.conf import settings
-from odontoPro.models import Clinica, Endereco, DiaSemanaDisponivel, HorarioAberto, Especialidade, Medico, Gerenciamento, ClinicaImagem
+from odontoPro.models import Clinica, Endereco, DiaSemanaDisponivel, HorarioAberto, Especialidade, Medico, Gerenciamento, ClinicaImagem, Consulta, Avaliacao, ClinicaServico
 
 
 def _sexo_por_titulo(nome):
@@ -114,62 +114,61 @@ def _criar_clinica(dados):
 
 
 class Command(BaseCommand):
-    help = "Remove todas as clínicas antigas e cria apenas Clínica Villanova (OdontoPrime e Sorriso Leve removidas)"
+    help = "Remove clínicas e dados relacionados. Se --nomes for omitido, remove todas as clínicas."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--nomes",
+            nargs="+",
+            default=None,
+            help="Lista de nomes de clínicas a remover. Se omitido, remove todas as clínicas.",
+        )
+
+    def _deletar_clinicas_por_nome(self, nomes):
+        clinicas = Clinica.objects.filter(nome__in=nomes)
+        if not clinicas.exists():
+            self.stdout.write(self.style.WARNING(f"Nenhuma clínica encontrada para remoção: {', '.join(nomes)}"))
+            return
+
+        self.stdout.write(self.style.WARNING(f"Removendo clínicas: {', '.join(clinicas.values_list('nome', flat=True))}"))
+
+        Gerenciamento.objects.filter(clinica__in=clinicas).delete()
+        Consulta.objects.filter(clinica__in=clinicas).delete()
+        Avaliacao.objects.filter(clinica__in=clinicas).delete()
+        Medico.objects.filter(clinica__in=clinicas).delete()
+        DiaSemanaDisponivel.objects.filter(clinica__in=clinicas).delete()
+        HorarioAberto.objects.filter(dia__clinica__in=clinicas).delete()
+        ClinicaImagem.objects.filter(clinica__in=clinicas).delete()
+        ClinicaServico.objects.filter(clinica__in=clinicas).delete()
+
+        enderecos = Endereco.objects.filter(clinica__in=clinicas)
+        clinicas.delete()
+
+        # Remove endereços órfãos
+        Endereco.objects.filter(id__in=enderecos.values_list('id', flat=True)).delete()
+
+        # Remove quaisquer endereços que não estejam mais vinculados a clínicas
+        Endereco.objects.filter(clinica__isnull=True).delete()
+
+        self.stdout.write(self.style.SUCCESS("Remoção de clínicas concluída."))
 
     def handle(self, *args, **options):
         with transaction.atomic():
-            self.stdout.write("Deletando dados existentes de clínicas e relacionados...")
+            nomes = options.get("nomes")
+            if nomes:
+                self.stdout.write(self.style.WARNING("Removendo clínicas por nome: %s" % ", ".join(nomes)))
+                self._deletar_clinicas_por_nome(nomes)
+                return
 
-            # Apaga primeiro as tabelas filhas que usam on_delete=PROTECT no Clinica
-            Gerenciamento.objects.all().delete()
-            Medico.objects.all().delete()
-            DiaSemanaDisponivel.objects.all().delete()
-            HorarioAberto.objects.all().delete()
-            # Em seguida, apaga as clínicas e endereços
-            Clinica.objects.all().delete()
-            Endereco.objects.all().delete()
+            self.stdout.write(self.style.WARNING("Modo padrão: removendo todas as clínicas e dados relacionados."))
+            nomes_todas = list(Clinica.objects.values_list("nome", flat=True))
+            if not nomes_todas:
+                self.stdout.write(self.style.WARNING("Não há clínicas cadastradas para remoção."))
+                # Limpa endereços órfãos existentes, caso tenham sobrado processos anteriores
+                orphan_delete_count, _ = Endereco.objects.filter(clinica__isnull=True).delete()
+                self.stdout.write(self.style.SUCCESS(f"Endereços órfãos removidos: {orphan_delete_count}"))
+                return
 
-            clinicas = [
-                {
-                    "cnpj": "55555555000100",
-                    "nome": "Clínica Villanova",
-                    "descricao": "A Clínica Villanova redefine a experiência odontológica com atendimento humanizado e tecnologia de ponta.",
-                    "telefone": "(41) 90000-0010",
-                    "conta_bancaria_juridica": "7766554433",
-                    "email": "contato@villanova.com",
-                    "senha": "123456",
-                    "preco_consulta": "220.00",
-                    "avaliacao": "5.0",
-                    "num_avaliacoes": 5,
-                    "endereco": {
-                        "cep": "80420000",
-                        "numero": "1042",
-                        "quadra": "Edifício Platinum 12º Andar",
-                        "rua": "Alameda das Orquídeas",
-                        "bairro": "Batel",
-                        "cidade": "Curitiba",
-                        "estado": "PR",
-                    },
-                    "dias": ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"],
-                    "horarios": [("08:00", "12:00"), ("14:00", "18:00")],
-                    "especialidades": ["Periodontia", "Implantodontia", "Estética Orofacial", "Endodontia", "Reabilitação Oral"],
-                    "imagem_local": "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_fachada.png",
-                    "logo_local": "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_logo.png",
-                    "fotos": [
-                        "img/Clinicas/Vila Nova/Fotos/Foto_Villanova_fachada.png",
-                    ],
-                    "medicos": [
-                        {"nome": "Dra. Heloísa Meirelles", "cpf": "22211133344", "email": "heloisa@villanova.com", "data_nascimento": "1986-05-18", "senha": "hash123", "crm_cro": "CRO-60001", "telefone": "(41)90000-0011", "especialidades": ["Periodontia", "Implantodontia"]},
-                        {"nome": "Dr. Fabrício Lancellotti", "cpf": "33322244455", "email": "fabricio@villanova.com", "data_nascimento": "1983-09-07", "senha": "hash123", "crm_cro": "CRO-60002", "telefone": "(41)90000-0012", "especialidades": ["Estética Orofacial"]},
-                    ],
-                    "gerentes": [
-                        {"nome": "Eduardo Pires", "email": "eduardo@villanova.com", "senha": "123456"},
-                    ],
-                },
-            ]
+            self._deletar_clinicas_por_nome(nomes_todas)
+            return
 
-            for cl in clinicas:
-                _criar_clinica(cl)
-                self.stdout.write(self.style.SUCCESS(f"Clínica criada: {cl['nome']}"))
-
-            self.stdout.write(self.style.SUCCESS("Reset de clínicas concluído com sucesso."))

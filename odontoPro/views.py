@@ -11,6 +11,8 @@ from django.utils.dateparse import parse_datetime
 from django.core import signing
 from django.conf import settings
 from django.core.management import call_command
+from django.templatetags.static import static
+from django.core.files.storage import default_storage
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
 from datetime import datetime, timedelta
@@ -162,7 +164,6 @@ def login_paciente(request):
                 email,
                 request.session.session_key
             )
-            messages.success(request, f"Bem-vindo, {paciente.nome}!")
             return response
 
         # if no paciente found, attempt to authenticate a medico
@@ -194,6 +195,41 @@ def login_paciente(request):
 
 
 # ---------- DASHBOARD PACIENTE ----------
+def _get_clinica_imagem_url(clinica):
+    # prioriza assertiva e evita 404 se o arquivo físico estiver ausente
+    if clinica.imagem and getattr(clinica.imagem, 'name', None):
+        if default_storage.exists(clinica.imagem.name):
+            return clinica.imagem.url
+
+    if clinica.logo and getattr(clinica.logo, 'name', None):
+        if default_storage.exists(clinica.logo.name):
+            return clinica.logo.url
+
+    primeira = clinica.imagens.order_by('ordem').first()
+    if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
+        if default_storage.exists(primeira.imagem.name):
+            return primeira.imagem.url
+
+    return static('img/default-banner.jpg')
+
+
+def _get_clinica_logo_url(clinica):
+    if clinica.logo and getattr(clinica.logo, 'name', None):
+        if default_storage.exists(clinica.logo.name):
+            return clinica.logo.url
+
+    if clinica.imagem and getattr(clinica.imagem, 'name', None):
+        if default_storage.exists(clinica.imagem.name):
+            return clinica.imagem.url
+
+    primeira = clinica.imagens.order_by('ordem').first()
+    if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
+        if default_storage.exists(primeira.imagem.name):
+            return primeira.imagem.url
+
+    return static('img/default-logo.png')
+
+
 def dashboard_paciente(request):
     paciente_id = request.session.get("paciente_id")
 
@@ -219,42 +255,13 @@ def dashboard_paciente(request):
     paciente = Paciente.objects.get(id=paciente_id)
     clinicas = Clinica.objects.all().order_by("nome")
 
-    # Se não houver clínica cadastrada, popula automaticamente (comando já existente em management)
-    if not clinicas.exists():
-        try:
-            call_command('reset_clinicas')
-            clinicas = Clinica.objects.all().order_by("nome")
-        except Exception as e:
-            logger.error("Erro ao resetar clínicas automaticamente: %s", e, exc_info=True)
+    for c in clinicas:
+        c.banner_url = _get_clinica_imagem_url(c)
+        c.logo_url = _get_clinica_logo_url(c)
 
-    # Se ainda não houver clinicas (ex: no deploy sem arquivos estáticos), cria uma clínica fallback para o usuário testar.
+    # Se não houver clínica cadastrada, mantém lista vazia (evita criação automática de clínica de exemplo).
     if not clinicas.exists():
-        try:
-            endereco = Endereco.objects.create(
-                cep="00000000",
-                numero="0",
-                quadra="",
-                rua="Rua Exemplo",
-                bairro="Bairro Exemplo",
-                cidade="Cidade Exemplo",
-                estado="EX",
-            )
-            Clinica.objects.create(
-                cnpj="00000000000101",
-                nome="Clínica Exemplo",
-                descricao="Clínica criada automaticamente para exibir conteúdo.",
-                telefone="(00) 00000-0000",
-                conta_bancaria_juridica="0000000000",
-                endereco=endereco,
-                email="exemplo@clinica.com",
-                senha=make_password("123456"),
-                preco_consulta="100.00",
-                avaliacao=5.0,
-            )
-            clinicas = Clinica.objects.all().order_by("nome")
-            messages.info(request, "Nenhuma clínica cadastrada foi encontrada. Um modelo de clínica foi criado automaticamente para exibição.")
-        except Exception as e:
-            logger.error("Erro ao criar clínica fallback: %s", e, exc_info=True)
+        messages.info(request, "Nenhuma clínica cadastrada foi encontrada. Não serão criadas clínicas automaticamente.")
 
     # prepare signed uid para settings forms so it is always disponível
     uid_signed = signing.dumps(paciente.id)
@@ -503,17 +510,26 @@ def configuracoes_conta(request):
     # ===== VERIFICAR AUTENTICAÇÃO =====
     paciente_id = request.session.get('paciente_id')
 
-    # Tentar restaurar sessão a partir de UID assinado (POST) caso a sessão tenha expirado.
-    if not paciente_id and request.method == 'POST':
+    # Durante POST, se existe uid assinado (mesmo com sessão corrente), devemos validar.
+    if request.method == 'POST':
         signed_uid = request.POST.get('uid')
         if signed_uid:
             try:
-                paciente_id = signing.loads(signed_uid)
-                if Paciente.objects.filter(id=paciente_id).exists():
+                paciente_id_from_uid = signing.loads(signed_uid)
+                if Paciente.objects.filter(id=paciente_id_from_uid).exists():
+                    paciente_id = paciente_id_from_uid
                     request.session['paciente_id'] = paciente_id
                     request.session.save()
+                else:
+                    # uid inválido/inexistente: limpar sessão e exigir novo login
+                    request.session.flush()
+                    messages.error(request, "Sua sessão expirou. Faça login novamente.")
+                    return redirect('login_paciente')
             except signing.BadSignature:
                 logger.warning("uid inválido fornecido ao tentar restaurar sessão em configuracoes_conta: %s", signed_uid)
+                request.session.flush()
+                messages.error(request, "Sua sessão expirou. Faça login novamente.")
+                return redirect('login_paciente')
 
     if not paciente_id:
         messages.error(request, "Sua sessão expirou. Faça login novamente.")

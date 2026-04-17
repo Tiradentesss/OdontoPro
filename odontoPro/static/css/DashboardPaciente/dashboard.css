@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 :root {
     --cor-fundo: #f4f7fe;
     --branco: #ffffff;
@@ -27,6 +29,63 @@
     background-color: #e9f7ef;
     color: #2ecc71;
     border: 1px solid #c3e6cb;
+}
+
+/* boas-vindas personalizada */
+.mensagem-boas-vindas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #eaf6ff 0%, #f7fbff 100%);
+    border: 1px solid #d6ebff;
+    border-left: 5px solid #4db8ff;
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin: 20px 0;
+    box-shadow: 0 8px 24px rgba(77, 184, 255, 0.15);
+    animation: aparecerMensagem 0.4s ease;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.mensagem-boas-vindas.oculta {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    pointer-events: none;
+}
+
+.icone-boas-vindas {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4db8ff, #1BC3EA);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.texto-boas-vindas strong {
+    font-size: 15px;
+    color: #313131;
+}
+
+.texto-boas-vindas span {
+    display: block;
+    font-size: 13px;
+    color: #6C7293;
+}
+
+@keyframes aparecerMensagem {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -419,80 +478,223 @@ body {
 
 /* Container do botão de filtro + dropdown */
 .filtro-container {
-    position: relative;     /* Necessário para posicionar o dropdown em relação ao botão */
-    display: inline-block;  /* Mantém botão e dropdown juntos */
-    flex-shrink: 0;         /* Não encolhe */
-    z-index: 1001;            /* Para garantir que o dropdown fica acima */
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    z-index: 1001;
 }
 
-/* Dropdown de avaliação */
+.btn-filtro {
+    min-width: 150px;
+    height: 44px;
+    border: 1px solid #d9e1ef;
+    background: #ffffff;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 16px;
+    cursor: pointer;
+    color: #5c6785;
+    font-size: 16px;
+    font-weight: 500;
+    box-shadow: 0 4px 14px rgba(25, 55, 109, 0.06);
+    transition: all 0.22s ease;
+}
+
+.btn-filtro:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(25, 55, 109, 0.10);
+    border-color: #bfd1ee;
+}
+
+.btn-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.icone {
+    font-size: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.seta {
+    transition: transform 0.28s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    font-size: 16px;
+}
+
+.btn-filtro.ativo .seta {
+    transform: rotate(180deg);
+}
+
 .dropdown-filtro {
-    position: absolute;          /* Posiciona em relação ao botão */
-    top: calc(100% + 5px);       /* Logo abaixo do botão com pequeno espaçamento */
-    left: 0;                      /* Alinhado à esquerda do botão */
-    background: var(--branco);    /* Fundo branco */
-    border: 1px solid var(--cor-borda); /* Borda */
-    width: 220px;                 /* Largura fixa do dropdown */
-    display: none;                /* Inicialmente escondido */
-    flex-direction: column;       /* Mantém opções em coluna (vertical) */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12); /* Sombra leve */
-    z-index: 1000;                /* Fica sobre outros elementos */
-    border-radius: 4px;           /* Bordas arredondadas */
-    overflow: hidden; 
-    overflow-y: auto;             /* Permite scroll interno se necessário */
-    transition: opacity 0.2s ease, transform 0.2s ease; /* Animação suave */
-    transform-origin: top;        /* Origem da animação */
-    opacity: 0;                   /* Inicialmente invisível */
-    max-height: calc(90vh - 80px);             /* Não ultrapassa viewport */
-    right: auto;                  /* Reset */
-    /* Garante que não saia da tela */
-    max-width: 280px;
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 0;
+    width: 240px;
+    max-height: 320px;
+    background: #ffffff;
+    border: 1px solid #dfe6f3;
+    border-radius: 18px;
+    box-shadow: 0 18px 40px rgba(35, 56, 100, 0.16);
+    overflow: hidden;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 100;
+}
+
+.dropdown-filtro.mostrar {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.dropdown-filtro .opcao {
+    width: 100%;
+    border: none;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: #2f3b57;
+    cursor: pointer;
+    transition: background 0.22s ease;
+    border-bottom: 1px solid #edf1f7;
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.dropdown-filtro.mostrar .opcao {
+    animation: subirItem 0.30s ease forwards;
+}
+
+.dropdown-filtro.mostrar .opcao:nth-child(1) { animation-delay: 0.04s; }
+.dropdown-filtro.mostrar .opcao:nth-child(2) { animation-delay: 0.07s; }
+.dropdown-filtro.mostrar .opcao:nth-child(3) { animation-delay: 0.10s; }
+.dropdown-filtro.mostrar .opcao:nth-child(4) { animation-delay: 0.13s; }
+.dropdown-filtro.mostrar .opcao:nth-child(5) { animation-delay: 0.16s; }
+.dropdown-filtro.mostrar .opcao.limpar-filtro { animation-delay: 0.19s; }
+
+@keyframes subirItem {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-filtro .opcao:hover {
+    background: #f7faff;
+}
+
+.dropdown-filtro .opcao.selecionada {
+    background: #eef5ff;
+}
+
+.dropdown-filtro .estrelas {
+    color: #f4bf3a;
+    letter-spacing: 1px;
+    font-size: 18px;
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.dropdown-filtro .texto-opcao {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-filtro .check {
+    opacity: 0;
+    transform: scale(0.7);
+    transition: all 0.2s ease;
+    color: #007aff;
+    font-weight: bold;
+}
+
+.dropdown-filtro .opcao.selecionada .check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.dropdown-filtro .limpar-filtro {
+    width: 100%;
+    border: none;
+    background: #ffffff;
+    padding: 16px 18px;
+    font-size: 17px;
+    color: #6c7897;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.22s ease, color 0.22s ease;
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.dropdown-filtro .limpar-filtro:hover {
+    background: #fff4f4;
+    color: #d14b4b;
+}
+
+.filtros-consultas {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 15px 0 25px 0;
+}
+
+.filtro-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--cinza-borda);
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+    transition: .2s ease;
+}
+
+.filtro-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+}
+
+.filtro-btn.ativo {
+    background: var(--azul-claro);
+    color: white;
+    border-color: var(--azul-claro);
+}
+
+@media (max-width: 768px) {
+    .filtros-consultas {
+        justify-content: center;
+    }
+    .filtro-btn {
+        flex: 1 1 45%;
+        text-align: center;
+    }
 }
 
 /* Dropdown visível */
-.dropdown-filtro.mostrar {
-    display: flex; /* Mostra o dropdown */
-    opacity: 1;    /* Torna visível */
-    transform: scaleY(1); /* Animação de abertura */
-}
-
-/* Cada opção dentro do dropdown */
-.dropdown-filtro .opcao {
-    padding: 12px 16px;  /* Espaçamento interno */
-    cursor: pointer;      /* Cursor de clique */
-    font-size: 14px;      /* Tamanho da fonte */
-    transition: background 0.2s ease; /* Transição suave */
-}
-
-/* Hover das opções */
-.dropdown-filtro .opcao:hover {
-    background: #f1f5f9;  /* Destaque ao passar o mouse */
-    font-weight: 500;     /* Texto um pouco mais bold */
-}
-
-/* Botões de filtro adicionais */
-.btn-filtro {
-    background: var(--branco);          /* Fundo branco */
-    border: 1px solid var(--cor-borda); /* Borda */
-    padding: 0 18px;                    /* Espaçamento horizontal */
-    height: 48px;                        /* Altura */
-    border-radius: 0px;                 /* Bordas quadradas */
-    cursor: pointer;                    /* Cursor de clique */
-    display: flex;                      /* Para alinhar ícones e texto */
-    align-items: center;                /* Centraliza verticalmente */
-    gap: 8px;                           /* Espaço entre ícones e texto */
-    font-size: 14px;                     /* Tamanho da fonte */
-    color: var(--texto-suave);          /* Cor do texto */
-    font-weight: 500;                    /* Negrito leve */
-    transition: 0.3s;                    /* Transição suave ao hover */
-    position: relative;                 /* Para posicionar dropdown */
-}
-
-/* Hover do botão */
-.btn-filtro:hover {
-    background: #f8fafc;                /* Fundo levemente cinza */
-    border-color: #cbd5e0;              /* Borda mais clara */
-}
+/* Este bloco estava duplicado e em conflito com o estilo do dropdown de estrelas. Removido para garantir apenas um conjunto de regras válidas. */
 
 /* ================= DROPDOWN DE LOCALIZAÇÃO ================= */
 #dropdownFiltroLocalizacao {
@@ -535,8 +737,8 @@ body {
 
 .card-clinica {
     background: var(--branco);
-    border-radius: 10px;
-    overflow: visible;
+    border-radius: 20px;
+    overflow: hidden;
     /* IMPORTANTE: Permite que a foto de perfil "flutue" */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
     display: flex;
@@ -555,13 +757,15 @@ body {
     height: 150px;
     position: relative;
     border-radius: 20px 20px 0 0;
-    /* Corta apenas a imagem interna */
+    overflow: visible;
+    /* Permite que a logo sobreposta fique à frente */
 }
 
 .fundo-banner {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 20px 20px 0 0;
 }
 
 .perfil-clinica-container {
@@ -1091,7 +1295,6 @@ body {
         flex-direction: column;
         gap: 8px;
     }
-<<<<<<< HEAD
 }
 
 .status-badge.agendado {
@@ -1113,8 +1316,6 @@ body {
 .realizado-card,
 .cancelado-card {
     border-color: #f1f3f5;
-=======
->>>>>>> 544fa02a069330e915d658a9a0ca60946682dc17
 }
 
 .cancelado-card .corpo-agendamento h3,
@@ -2592,6 +2793,189 @@ body {
     font-size: 14px;
     color: #5f6e84;
     text-align: center;
+}
+
+/* Estilo do modal de detalhes da consulta */
+.modal.modal-consulta {
+    background-color: rgba(0, 0, 0, 0.55);
+}
+
+.modal.modal-consulta .modal-conteudo {
+    width: 100%;
+    max-width: 520px;
+    background: var(--branco);
+    border-radius: 20px;
+    padding: 22px 22px 18px;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+    font-family: 'Poppins', sans-serif;
+    color: var(--texto-principal);
+}
+
+.modal.modal-consulta h3 {
+    margin: 0 0 16px;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--texto-principal);
+    line-height: 1.1;
+    text-align: left;
+}
+
+.modal.modal-consulta .status-consulta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, rgba(77, 184, 255, 0.95), var(--azul-claro));
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+}
+
+.modal.modal-consulta .status-consulta i,
+.modal.modal-consulta .status-consulta svg {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.modal.modal-consulta .card-info-consulta {
+    border: 1px solid var(--cor-borda);
+    border-radius: 20px;
+    padding: 12px 16px;
+    background: #fcfdff;
+}
+
+.modal.modal-consulta .info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e8eef5;
+}
+
+.modal.modal-consulta .info-item:last-child {
+    border-bottom: none;
+}
+
+.modal.modal-consulta .info-item .icone {
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--azul-claro);
+    font-size: 28px;
+    margin-top: 2px;
+}
+
+.modal.modal-consulta .info-item .icone i,
+.modal.modal-consulta .info-item .icone svg {
+    width: 28px;
+    height: 28px;
+}
+
+.modal.modal-consulta .info-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modal.modal-consulta .info-texto .label,
+.modal.modal-consulta .info-inline .label-inline {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--texto-principal);
+    line-height: 1.1;
+}
+
+.modal.modal-consulta .info-texto .valor,
+.modal.modal-consulta .info-inline .valor-inline {
+    font-size: 15px;
+    font-weight: 400;
+    color: #2a3444;
+    line-height: 1.3;
+}
+
+.modal.modal-consulta .info-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal.modal-consulta .acoes-consulta {
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
+}
+
+.modal.modal-consulta .btn-fechar-consulta {
+    min-width: 180px;
+    height: 48px;
+    border: 1px solid var(--cor-borda);
+    background: #f7fafe;
+    color: var(--texto-principal);
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal.modal-consulta .btn-fechar-consulta:hover {
+    background: #eef5fc;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .modal.modal-consulta .modal-conteudo {
+        max-width: 95%;
+        padding: 24px 18px 20px;
+        border-radius: 22px;
+    }
+
+    .modal.modal-consulta h3 {
+        font-size: 24px;
+        margin-bottom: 16px;
+    }
+
+    .modal.modal-consulta .status-consulta {
+        font-size: 18px;
+        padding: 10px 18px;
+        margin-bottom: 20px;
+    }
+
+    .modal.modal-consulta .card-info-consulta {
+        padding: 8px 18px;
+        border-radius: 18px;
+    }
+
+    .modal.modal-consulta .info-item {
+        gap: 14px;
+        padding: 18px 0;
+    }
+
+    .modal.modal-consulta .info-item .icone {
+        min-width: 34px;
+        font-size: 26px;
+    }
+
+    .modal.modal-consulta .info-texto .label,
+    .modal.modal-consulta .info-inline .label-inline {
+        font-size: 20px;
+    }
+
+    .modal.modal-consulta .info-texto .valor,
+    .modal.modal-consulta .info-inline .valor-inline {
+        font-size: 18px;
+    }
+
+    .modal.modal-consulta .btn-fechar-consulta {
+        min-width: 220px;
+        height: 56px;
+        font-size: 20px;
+        border-radius: 16px;
+    }
 }
 
 button.btn-avaliado:disabled {

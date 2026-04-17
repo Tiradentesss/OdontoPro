@@ -3,6 +3,13 @@
  * Calendário interativo com seletor de horários
  */
 
+// Protege caso alguma biblioteca externa chame mgt.clearMarks (error no console)
+if (typeof window !== 'undefined' && window.mgt && typeof window.mgt.clearMarks !== 'function') {
+  window.mgt.clearMarks = function () {
+    console.warn('mgt.clearMarks não está disponível nesta versão. Execução ignorada.');
+  };
+}
+
 class CalendarTimeSelector {
   constructor(options = {}) {
     this.currentDate = new Date();
