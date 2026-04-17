@@ -207,6 +207,13 @@ class Paciente(models.Model):
 # ESPECIALIDADE
 # -------------------------
 class Especialidade(models.Model):
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name='especialidades',
+        null=True,
+        blank=True
+    )
     nome = models.CharField(max_length=80)
     preco = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
 
@@ -234,7 +241,7 @@ class Medico(models.Model):
     especialidades = models.ManyToManyField(
         Especialidade,
         related_name="medicos",
-        through='MedicoEspecialidade'
+        blank=True
     )
 
     avaliacao = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True, default=5.0)
@@ -245,32 +252,6 @@ class Medico(models.Model):
     def __str__(self):
         return f"{self.nome} - {self.crm_cro}"
 
-
-class MedicoEspecialidade(models.Model):
-    medico = models.ForeignKey(
-        Medico,
-        on_delete=models.CASCADE,
-        related_name='medico_especialidades'
-    )
-    especialidade = models.ForeignKey(
-        Especialidade,
-        on_delete=models.CASCADE,
-        related_name='medico_especialidades'
-    )
-
-    class Meta:
-        unique_together = ('medico', 'especialidade')
-        verbose_name = 'Especialidade do Médico'
-        verbose_name_plural = 'Especialidades do Médico'
-
-    def clean(self):
-        if self.medico.clinica_id != self.especialidade.clinica_id:
-            raise ValidationError(
-                {'especialidade': 'A especialidade deve pertencer à mesma clínica do médico.'}
-            )
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
         super().save(*args, **kwargs)
 
 
@@ -305,19 +286,6 @@ class Servico(models.Model):
 
 
 # -------------------------
-# CLINICA – SERVIÇO
-# -------------------------
-class ClinicaServico(models.Model):
-    clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE)
-    servico = models.ForeignKey(Servico, on_delete=models.CASCADE)
-    preco = models.DecimalField(max_digits=7, decimal_places=2)
-    forma_pagamento = models.CharField(max_length=45)
-
-    def __str__(self):
-        return f"{self.clinica.nome} - {self.servico.tipo}"
-
-
-# -------------------------
 # Consulta (agendamento)
 # -------------------------
 class Consulta(models.Model):
@@ -344,6 +312,21 @@ class Consulta(models.Model):
     observacoes = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS, default="agendada")
     criado_em = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        if self.medico and self.clinica and self.medico.clinica_id != self.clinica_id:
+            raise ValidationError(
+                {'medico': 'O médico deve pertencer à mesma clínica da consulta.'}
+            )
+
+        if self.especialidade and self.clinica and self.especialidade.clinica_id != self.clinica_id:
+            raise ValidationError(
+                {'especialidade': 'A especialidade deve pertencer à mesma clínica da consulta.'}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.nome} - {self.medico.nome} ({self.data_hora.strftime('%Y-%m-%d %H:%M')})"
