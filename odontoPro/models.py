@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 # -------------------------
@@ -230,7 +231,11 @@ class Medico(models.Model):
     ativo = models.BooleanField(default=True)
     clinica = models.ForeignKey(Clinica, on_delete=models.PROTECT)
 
-    especialidades = models.ManyToManyField(Especialidade, related_name="medicos")
+    especialidades = models.ManyToManyField(
+        Especialidade,
+        related_name="medicos",
+        through='MedicoEspecialidade'
+    )
 
     avaliacao = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True, default=5.0)
     num_avaliacoes = models.IntegerField(default=0)
@@ -239,6 +244,34 @@ class Medico(models.Model):
 
     def __str__(self):
         return f"{self.nome} - {self.crm_cro}"
+
+
+class MedicoEspecialidade(models.Model):
+    medico = models.ForeignKey(
+        Medico,
+        on_delete=models.CASCADE,
+        related_name='medico_especialidades'
+    )
+    especialidade = models.ForeignKey(
+        Especialidade,
+        on_delete=models.CASCADE,
+        related_name='medico_especialidades'
+    )
+
+    class Meta:
+        unique_together = ('medico', 'especialidade')
+        verbose_name = 'Especialidade do Médico'
+        verbose_name_plural = 'Especialidades do Médico'
+
+    def clean(self):
+        if self.medico.clinica_id != self.especialidade.clinica_id:
+            raise ValidationError(
+                {'especialidade': 'A especialidade deve pertencer à mesma clínica do médico.'}
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 # -------------------------
@@ -301,7 +334,12 @@ class Consulta(models.Model):
     telefone = models.CharField(max_length=20)
     clinica = models.ForeignKey(Clinica, on_delete=models.CASCADE)
     medico = models.ForeignKey(Medico, on_delete=models.CASCADE)
-    especialidade = models.CharField(max_length=120, null=True, blank=True)
+    especialidade = models.ForeignKey(
+        Especialidade,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
     data_hora = models.DateTimeField()
     observacoes = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS, default="agendada")
