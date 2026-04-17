@@ -39,6 +39,7 @@ class Clinica(models.Model):
         null=True,
         blank=True
     )
+    ativo = models.BooleanField(default=True)
 
     # 🔹 NOVO: logo da clínica (perfil)
     logo = models.ImageField(
@@ -85,6 +86,33 @@ class ClinicaImagem(models.Model):
 
     def __str__(self):
         return f"{self.clinica.nome} - Imagem {self.ordem}"
+
+
+class Contato(models.Model):
+    TIPOS_CONTATO = (
+        ("telefone", "Telefone"),
+        ("whatsapp", "WhatsApp"),
+        ("facebook", "Facebook"),
+        ("instagram", "Instagram"),
+        ("email", "Email"),
+        ("outro", "Outro"),
+    )
+
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name='contatos'
+    )
+    tipo = models.CharField(max_length=20, choices=TIPOS_CONTATO)
+    valor = models.CharField(max_length=120)
+    descricao = models.CharField(max_length=120, null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Contato da Clínica'
+        verbose_name_plural = 'Contatos da Clínica'
+
+    def __str__(self):
+        return f"{self.clinica.nome} - {self.get_tipo_display()}: {self.valor}"
 
 
 # -------------------------
@@ -167,6 +195,7 @@ class Paciente(models.Model):
     data_nascimento = models.DateField(null=True, blank=True)
     senha = models.CharField(max_length=255)  # hash
     telefone = models.CharField(max_length=14)
+    ativo = models.BooleanField(default=True)
 
     foto = models.ImageField(upload_to='pacientes/', null=True, blank=True)
 
@@ -178,6 +207,7 @@ class Paciente(models.Model):
 # -------------------------
 class Especialidade(models.Model):
     nome = models.CharField(max_length=80)
+    preco = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return self.nome
@@ -197,6 +227,7 @@ class Medico(models.Model):
     senha = models.CharField(max_length=255)
     crm_cro = models.CharField(max_length=60)
     telefone = models.CharField(max_length=14)
+    ativo = models.BooleanField(default=True)
     clinica = models.ForeignKey(Clinica, on_delete=models.PROTECT)
 
     especialidades = models.ManyToManyField(Especialidade, related_name="medicos")
