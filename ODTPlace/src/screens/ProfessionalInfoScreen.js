@@ -5,6 +5,8 @@ import BottomNavBar from '../components/BottomNavBar';
 
 export default function ProfessionalInfoScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
+  const clinic = route?.params?.clinic ?? {};
+  const user = route?.params?.user;
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   const description = professional.description ||
@@ -28,8 +30,8 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
             <View style={styles.profileImage}>
               <Text style={styles.profileInitial}>{professional.name ? professional.name.charAt(0) : 'P'}</Text>
             </View>
-            <Text style={styles.professionalName}>{professional.name ?? 'Nome do Profissional'}</Text>
-            <Text style={styles.professionalSpecialty}>{professional.specialty ?? 'Especialidade'}</Text>
+            <Text style={styles.professionalName}>{professional.nome ?? professional.name ?? 'Nome do Profissional'}</Text>
+            <Text style={styles.professionalSpecialty}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
           </View>
 
           <View style={styles.metricRow}>
@@ -65,7 +67,7 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
           <TouchableOpacity
             style={styles.bookButton}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('AppointmentBooking', { professional })}
+            onPress={() => navigation.navigate('AppointmentBooking', { professional, clinic, user })}
           >
             <Text style={styles.bookButtonText}>Agendar</Text>
           </TouchableOpacity>

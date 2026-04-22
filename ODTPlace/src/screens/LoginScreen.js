@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, ImageBackground } from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
+import { loginPatient } from '../services/api';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (email === '' || senha === '') {
       Alert.alert('Erro', 'Preencha todos os campos!');
       return;
@@ -18,8 +19,18 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
-    const userName = email.split('@')[0];
-    navigation.replace('Home', { userName });
+    try {
+      const user = await loginPatient(email, senha);
+      if (user && user.id) {
+        navigation.replace('Home', { user });
+      } else {
+        Alert.alert('Erro', 'Resposta inválida do servidor.');
+      }
+    } catch (error) {
+      console.log('Login error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Falha ao fazer login.';
+      Alert.alert('Erro', errorMessage);
+    }
   };
 
   return (

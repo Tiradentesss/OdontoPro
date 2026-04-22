@@ -1,45 +1,35 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, ImageBackground } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, ImageBackground, ActivityIndicator } from 'react-native';
 import HomeHeader from '../components/HomeHeader';
 import BottomNavBar from '../components/BottomNavBar';
+import { getClinics } from '../services/api';
 
 export default function HomeScreen({ route, navigation, showBottomNav = true }) {
-    const usuario = route?.params?.userName ?? 'Paciente';
+    const user = route?.params?.user;
+    const usuario = user?.nome ?? route?.params?.userName ?? 'Paciente';
     const [search, setSearch] = useState('');
-    const [clinicas] = useState([
-        {
-            id: '1',
-            nome: 'Clínica Sorriso Vivo',
-            descricao: 'Clínica com equipamentos modernos e equipe preparada para resolver seu caso.',
-            especialidade: 'Odontologia',
-            avaliacao: '5.0',
-            avaliacoes: '83',
-            preco: 'R$ 250,00',
-            modalidades: 'Online',
-            dia: 'Terça 14 - Dezembro',
-            horarios: ['11:00', '12:00'],
-            services: [
-                {
-                    name: 'Ortodontia',
-                    price: 'R$ 280,00',
-                    availability: ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
-                },
-                {
-                    name: 'Odontopediatria',
-                    price: 'R$ 170,00',
-                    availability: ['Ter. 14 - Dez • 10:30', 'Qui. 16 - Dez • 11:00'],
-                },
-                {
-                    name: 'Periodontia',
-                    price: 'R$ 210,00',
-                    availability: ['Qua. 15 - Dez • 14:00', 'Sex. 17 - Dez • 15:30'],
-                },
-            ],
-        },
-    ]);
+    const [clinicas, setClinicas] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const loadClinicas = async () => {
+            try {
+                const data = await getClinics();
+                setClinicas(data);
+                setError(null);
+            } catch (err) {
+                setError('Não foi possível carregar as clínicas.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadClinicas();
+    }, []);
 
     const dadosFiltrados = clinicas.filter((clinica) =>
-        clinica.nome.toLowerCase().startsWith(search.toLowerCase())
+        clinica.nome?.toLowerCase().includes(search.toLowerCase())
     );
 
     return (
@@ -57,57 +47,70 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
                     onFilterPress={() => {}}
                 />
 
-                <FlatList
-                    data={dadosFiltrados}
-                    keyExtractor={(item) => item.id}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.listContent}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={styles.card}
-                            activeOpacity={0.85}
-                            onPress={() => navigation.navigate('ClinicDetail', { clinic: item })}
-                        >
-                            <View style={styles.cardHeader}>
-                                <View style={styles.clinicLogo} />
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#0ea5e9" />
+                        <Text style={styles.loadingText}>Carregando clínicas...</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={dadosFiltrados}
+                        keyExtractor={(item) => String(item.id)}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={styles.listContent}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity
+                                style={styles.card}
+                                activeOpacity={0.85}
+                                onPress={() => navigation.navigate('ClinicDetail', { clinic: item, user })}
+                            >
+                                <View style={styles.cardHeader}>
+                                    <View style={styles.clinicLogo} />
 
-                                <View style={styles.infoBlock}>
-                                    <Text style={styles.clinicName}>{item.nome}</Text>
-                                    <Text style={styles.clinicSpecialty}>{item.especialidade}</Text>
-                                </View>
-
-                                <View style={styles.ratingBox}>
-                                    <Text style={styles.ratingValue}>{item.avaliacao}</Text>
-                                    <Text style={styles.ratingCount}>{item.avaliacoes} avaliações</Text>
-                                </View>
-                            </View>
-
-                            <Text style={styles.paymentText}>
-                                Forma de pagamento: {item.modalidades}
-                            </Text>
-                            <Text style={styles.priceText}>Consulta: {item.preco}</Text>
-
-                            <Text style={styles.scheduleTitle}>{item.dia}</Text>
-
-                            <View style={styles.hours}>
-                                {item.horarios.map((hora, index) => (
-                                    <View
-                                        key={hora}
-                                        style={[
-                                            styles.hourBadge,
-                                            index < item.horarios.length - 1 && styles.hourMargin,
-                                        ]}
-                                    >
-                                        <Text style={styles.hourText}>{hora}</Text>
+                                    <View style={styles.infoBlock}>
+                                        <Text style={styles.clinicName}>{item.nome}</Text>
+                                        <Text style={styles.clinicSpecialty}>{item.descricao ?? item.especialidade}</Text>
                                     </View>
-                                ))}
-                            </View>
-                        </TouchableOpacity>
-                    )}
-                    ListEmptyComponent={
-                        <Text style={styles.emptyText}>Nenhuma clínica encontrada.</Text>
-                    }
-                />
+
+                                    <View style={styles.ratingBox}>
+                                        <Text style={styles.ratingValue}>{item.avaliacao ?? '4.9'}</Text>
+                                        <Text style={styles.ratingCount}>{item.num_avaliacoes ?? item.avaliacoes ?? '0'} avaliações</Text>
+                                    </View>
+                                </View>
+
+                                <Text style={styles.paymentText}>
+                                    Forma de pagamento: {item.modalidades ?? 'Cartão ou Dinheiro'}
+                                </Text>
+                                <Text style={styles.priceText}>Consulta: {item.preco ?? 'R$ 150,00'}</Text>
+
+                                <Text style={styles.scheduleTitle}>{item.dia ?? 'Horários disponíveis'}</Text>
+
+                                <View style={styles.hours}>
+                                    {(item.horarios || []).length > 0 ? (
+                                        item.horarios.map((hora, index) => (
+                                            <View
+                                                key={hora}
+                                                style={[
+                                                    styles.hourBadge,
+                                                    index < item.horarios.length - 1 && styles.hourMargin,
+                                                ]}
+                                            >
+                                                <Text style={styles.hourText}>{hora}</Text>
+                                            </View>
+                                        ))
+                                    ) : (
+                                        <View style={styles.hourBadge}>
+                                            <Text style={styles.hourText}>Ver horários</Text>
+                                        </View>
+                                    )}
+                                </View>
+                            </TouchableOpacity>
+                        )}
+                        ListEmptyComponent={
+                            <Text style={styles.emptyText}>{error ?? 'Nenhuma clínica encontrada.'}</Text>
+                        }
+                    />
+                )}
 
                 {showBottomNav && (
                     <BottomNavBar

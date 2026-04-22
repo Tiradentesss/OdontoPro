@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
+import { createAppointment } from '../services/api';
 
 const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -31,9 +32,11 @@ const getMonthDays = (year, month) => {
 
 export default function AppointmentBookingScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const clinic = route?.params?.clinic ?? {};
+  const user = route?.params?.user ?? {};
+  const [firstName, setFirstName] = useState(user.nome?.split(' ')[0] ?? '');
+  const [lastName, setLastName] = useState(user.nome?.split(' ').slice(1).join(' ') ?? '');
+  const [email, setEmail] = useState(user.email ?? '');
   const [phone, setPhone] = useState('');
   const [reason, setReason] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('Janeiro - 02 - 2024 - 09:00 AM');
@@ -72,8 +75,44 @@ export default function AppointmentBookingScreen({ route, navigation }) {
     setPickerVisible(false);
   };
 
-  const handleConfirmBooking = () => {
-    setConfirmationVisible(true);
+  const formatDateTime = (date, time) => {
+    const [timePart, period] = time.split(' ');
+    const [hourString, minuteString] = timePart.split(':');
+    let hour = Number(hourString);
+    const minute = Number(minuteString);
+
+    if (period === 'PM' && hour !== 12) {
+      hour += 12;
+    }
+    if (period === 'AM' && hour === 12) {
+      hour = 0;
+    }
+
+    return `${date} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!firstName || !lastName || !email || !phone) {
+      Alert.alert('Erro', 'Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    try {
+      const data_hora = formatDateTime(selectedDate, selectedTime);
+      await createAppointment({
+        data_hora,
+        clinica_id: clinic.id,
+        profissional_id: professional.id,
+        paciente_email: email,
+        especialidade_id: route?.params?.selectedSpecialtyId ?? null,
+        motivo: reason,
+        contato: phone,
+        status: 'Agendado',
+      });
+      setConfirmationVisible(true);
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.error ?? 'Falha ao agendar consulta.');
+    }
   };
 
   const closeConfirmation = () => {
@@ -97,8 +136,8 @@ export default function AppointmentBookingScreen({ route, navigation }) {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.headerCard}>
             <Text style={styles.headerLabel}>Profissional</Text>
-            <Text style={styles.headerTitle}>{professional.name ?? 'Dr. Nome Sobrenome'}</Text>
-            <Text style={styles.headerSubtitle}>{professional.specialty ?? 'Especialidade'}</Text>
+            <Text style={styles.headerTitle}>{professional.nome ?? professional.name ?? 'Dr. Nome Sobrenome'}</Text>
+            <Text style={styles.headerSubtitle}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
           </View>
 
           <View style={styles.formGroup}>
@@ -259,16 +298,14 @@ export default function AppointmentBookingScreen({ route, navigation }) {
 
               <View style={styles.confirmationProfileCard}>
                 <View style={styles.confirmationProfileImage}>
-                  <Text style={styles.confirmationProfileInitial}>{professional.name ? professional.name.charAt(0) : 'P'}</Text>
+                  <Text style={styles.confirmationProfileInitial}>{(professional.nome ?? professional.name)?.charAt(0) ?? 'P'}</Text>
                 </View>
-                <Text style={styles.confirmationProfileName}>{professional.name ?? 'Dr. Nome Sobrenome'}</Text>
-                <Text style={styles.confirmationProfileSpecialty}>{professional.specialty ?? 'Especialidade'}</Text>
+                <Text style={styles.confirmationProfileName}>{professional.nome ?? professional.name ?? 'Dr. Nome Sobrenome'}</Text>
+                <Text style={styles.confirmationProfileSpecialty}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
               </View>
 
               <View style={styles.confirmationDetailsRow}>
-                <Text style={styles.confirmationDetailText}>Terça, 14 de Dezembro</Text>
-                <View style={styles.confirmationSeparator} />
-                <Text style={styles.confirmationDetailText}>9:00 AM</Text>
+                <Text style={styles.confirmationDetailText}>{selectedSlot}</Text>
               </View>
 
               <TouchableOpacity style={styles.changeLink} activeOpacity={0.85} onPress={closeConfirmation}>

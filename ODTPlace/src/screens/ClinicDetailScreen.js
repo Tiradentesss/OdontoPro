@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -11,20 +11,51 @@ import {
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
+import { getClinicSpecialties } from '../services/api';
 
 export default function ClinicDetailScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
+    const user = route?.params?.user;
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showAllSpecialties, setShowAllSpecialties] = useState(false);
+    const [specialties, setSpecialties] = useState([]);
+    const [loadingSpecialties, setLoadingSpecialties] = useState(true);
+    const [specialtiesError, setSpecialtiesError] = useState(null);
 
-    const services = clinic.services ?? [
-        {
-            name: clinic.especialidade ?? 'Especialidade',
+    useEffect(() => {
+        const loadSpecialties = async () => {
+            if (!clinic.id) {
+                setLoadingSpecialties(false);
+                return;
+            }
+            try {
+                const data = await getClinicSpecialties(clinic.id);
+                setSpecialties(data || []);
+                setSpecialtiesError(null);
+            } catch (error) {
+                setSpecialtiesError('Não foi possível carregar especialidades.');
+            } finally {
+                setLoadingSpecialties(false);
+            }
+        };
+
+        loadSpecialties();
+    }, [clinic.id]);
+
+    const services = specialties.length > 0
+        ? specialties.map((specialty) => ({
+            name: specialty.nome,
             price: clinic.preco ?? 'R$ 250,00',
-            availability: ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
-        },
-    ];
+            availability: clinic.horarios ?? ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
+        }))
+        : clinic.services ?? [
+            {
+                name: clinic.especialidade ?? 'Especialidade',
+                price: clinic.preco ?? 'R$ 250,00',
+                availability: ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
+            },
+        ];
 
     const filteredServices = services.filter((item) =>
         item.name.toLowerCase().startsWith(searchQuery.toLowerCase())
@@ -98,7 +129,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                     key={service.name}
                                     style={styles.serviceCard}
                                     activeOpacity={0.85}
-                                    onPress={() => navigation.navigate('Professionals', { clinic, selectedSpecialty: service.name })}
+                                    onPress={() => navigation.navigate('Professionals', { clinic, user, selectedSpecialty: service.name })}
                                 >
                                     <Text style={styles.serviceName}>{service.name}</Text>
                                     <Text style={styles.servicePrice}>{service.price}</Text>
@@ -130,7 +161,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
                     <TouchableOpacity
                         style={styles.chooseButton}
                         activeOpacity={0.85}
-                        onPress={() => navigation.navigate('Professionals', { clinic })}
+                        onPress={() => navigation.navigate('Professionals', { clinic, user })}
                     >
                         <Text style={styles.chooseButtonText}>Escolher Profissional</Text>
                     </TouchableOpacity>

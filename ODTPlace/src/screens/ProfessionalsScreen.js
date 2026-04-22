@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ImageBackground, FlatList, TextInput, Image } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
+import { getClinicDoctors } from '../services/api';
 
 const sampleProfessionals = [
     { id: '1', name: 'Lucas Castro', specialty: 'Ortodontista', rating: 5, reviews: 120 },
@@ -14,12 +15,36 @@ const ratingFilters = [5, 4, 3, 2, 1];
 
 export default function ProfessionalsScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
+    const user = route?.params?.user;
     const selectedSpecialty = route?.params?.selectedSpecialty ?? null;
     const [search, setSearch] = useState('');
     const [activeSpecialty, setActiveSpecialty] = useState(selectedSpecialty);
     const [activeRating, setActiveRating] = useState(null);
     const [showSpecialtyFilters, setShowSpecialtyFilters] = useState(true);
     const [showRatingFilters, setShowRatingFilters] = useState(false);
+    const [doctorList, setDoctorList] = useState(sampleProfessionals);
+    const [loadingDoctors, setLoadingDoctors] = useState(true);
+    const [doctorsError, setDoctorsError] = useState(null);
+
+    useEffect(() => {
+        const loadDoctors = async () => {
+            if (!clinic.id) {
+                setLoadingDoctors(false);
+                return;
+            }
+            try {
+                const data = await getClinicDoctors(clinic.id);
+                setDoctorList(data.length ? data : sampleProfessionals);
+                setDoctorsError(null);
+            } catch (error) {
+                setDoctorsError('Não foi possível carregar profissionais.');
+            } finally {
+                setLoadingDoctors(false);
+            }
+        };
+
+        loadDoctors();
+    }, [clinic.id]);
 
     const specialtyOptions = useMemo(() => {
         const services = clinic.services ?? [];
@@ -28,17 +53,20 @@ export default function ProfessionalsScreen({ route, navigation }) {
     }, [clinic.services]);
 
     const professionals = useMemo(() => {
-        return sampleProfessionals.filter((professional) => {
+        const source = doctorList.length ? doctorList : sampleProfessionals;
+        return source.filter((professional) => {
+            const professionalName = (professional.nome ?? professional.name ?? '').toString();
+            const professionalSpecialty = (professional.specialty ?? professional.especialidades?.[0] ?? '').toString();
             const matchesSearch =
                 search.length === 0 ||
-                professional.name.toLowerCase().startsWith(search.toLowerCase());
+                professionalName.toLowerCase().startsWith(search.toLowerCase());
             const matchesSpecialty =
                 !activeSpecialty ||
-                professional.specialty.toLowerCase().includes(activeSpecialty.toLowerCase());
+                professionalSpecialty.toLowerCase().includes(activeSpecialty.toLowerCase());
             const matchesRating = !activeRating || professional.rating === activeRating;
             return matchesSearch && matchesSpecialty && matchesRating;
         });
-    }, [search, activeSpecialty, activeRating]);
+    }, [search, activeSpecialty, activeRating, doctorList]);
 
     return (
         <ImageBackground
@@ -156,27 +184,31 @@ export default function ProfessionalsScreen({ route, navigation }) {
 
                     <FlatList
                         data={professionals}
-                        keyExtractor={(item) => item.id}
+                        keyExtractor={(item) => String(item.id)}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.listContent}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                style={styles.professionalCard}
-                                activeOpacity={0.86}
-                                onPress={() => navigation.navigate('ProfessionalInfo', { professional: item })}
-                            >
-                                <View style={styles.avatarPlaceholder}>
-                                    <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
-                                </View>
-                                <View style={styles.professionalInfo}>
-                                    <Text style={styles.professionalName}>{item.name}</Text>
-                                    <Text style={styles.professionalSpecialty}>{item.specialty}</Text>
-                                    <Text style={styles.reviewText}>{item.reviews} avaliações</Text>
-                                </View>
-                            </TouchableOpacity>
-                        )}
+                        renderItem={({ item }) => {
+                            const name = item.nome ?? item.name ?? 'Profissional';
+                            const specialty = item.specialty ?? item.especialidades?.[0] ?? 'Especialista';
+                            return (
+                                <TouchableOpacity
+                                    style={styles.professionalCard}
+                                    activeOpacity={0.86}
+                                    onPress={() => navigation.navigate('ProfessionalInfo', { professional: item, clinic, user })}
+                                >
+                                    <View style={styles.avatarPlaceholder}>
+                                        <Text style={styles.avatarText}>{name.charAt(0)}</Text>
+                                    </View>
+                                    <View style={styles.professionalInfo}>
+                                        <Text style={styles.professionalName}>{name}</Text>
+                                        <Text style={styles.professionalSpecialty}>{specialty}</Text>
+                                        <Text style={styles.reviewText}>{item.reviews ?? 0} avaliações</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        }}
                         ListEmptyComponent={
-                            <Text style={styles.emptyText}>Nenhum profissional encontrado.</Text>
+                            <Text style={styles.emptyText}>{doctorsError ?? 'Nenhum profissional encontrado.'}</Text>
                         }
                     />
                 </View>

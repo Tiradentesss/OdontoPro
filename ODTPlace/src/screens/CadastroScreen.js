@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
+import { registerPatient } from '../services/api';
 
 export default function RegisterScreen({ navigation }) {
   const [nome, setNome] = useState('');
@@ -18,7 +19,7 @@ export default function RegisterScreen({ navigation }) {
   const [telefone, setTelefone] = useState('');
   const [senha, setSenha] = useState('');
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (
       !nome ||
       !sobrenome ||
@@ -36,8 +37,21 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    const userName = nome || 'Paciente';
-    navigation.replace('Home', { userName });
+    try {
+      const nomeCompleto = `${nome.trim()} ${sobrenome.trim()}`;
+      await registerPatient({
+        nome: nomeCompleto,
+        email,
+        senha,
+        telefone,
+        cpf: '',
+        data_nascimento: dataNascimento,
+        sexo: '',
+      });
+      navigation.replace('Home', { user: { nome: nomeCompleto, email } });
+    } catch (error) {
+      Alert.alert('Erro', error.response?.data?.error ?? 'Falha ao registrar o usuário.');
+    }
   };
 
   return (
