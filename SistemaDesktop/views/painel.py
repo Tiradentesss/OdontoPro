@@ -1,6 +1,6 @@
 from .base import BaseScreen
 import customtkinter as ctk
-from .theme import font, ICON_SIZE
+from .theme import font, ICON_SIZE, COLORS
 
 class Painel(BaseScreen):
     def __init__(self, parent):
@@ -14,10 +14,10 @@ class Painel(BaseScreen):
         # ---- Próximas Consultas ----
         consultas = ctk.CTkFrame(
             dashboard,
-            fg_color="white",
+            fg_color=COLORS["card"],
             corner_radius=15,
             border_width=1,
-            border_color="#E5E7EB"
+            border_color=COLORS["border"]
         )
         consultas.grid(row=0, column=0, sticky="nsew", padx=(0, 15))
 
@@ -38,15 +38,15 @@ class Painel(BaseScreen):
             row.pack(fill="x", padx=20, pady=8)
 
             ctk.CTkLabel(row, text=nome, font=font("text", "bold")).pack(anchor="w")
-            ctk.CTkLabel(row, text=horario, text_color="#6B7280", font=font("small")).pack(anchor="w")
+            ctk.CTkLabel(row, text=horario, text_color=COLORS["text_secondary"], font=font("small")).pack(anchor="w")
 
         # ---- Relatório ----
         relatorio = ctk.CTkFrame(
             dashboard,
-            fg_color="white",
+            fg_color=COLORS["card"],
             corner_radius=15,
             border_width=1,
-            border_color="#E5E7EB"
+            border_color=COLORS["border"]
         )
         relatorio.grid(row=0, column=1, sticky="nsew", padx=(15, 0))
 
@@ -60,7 +60,7 @@ class Painel(BaseScreen):
             relatorio,
             width=220,
             height=14,
-            progress_color="#FACC15"
+            progress_color=COLORS["warning"]
         )
         progresso.set(0.92)
         progresso.pack(pady=25)
@@ -78,10 +78,17 @@ class Painel(BaseScreen):
             ("Faltas", "#A78BFA"),
         ]
 
-        for texto, cor in legendas:
+        legenda_cores = [
+            ("Agendados", COLORS["success"]),
+            ("Atendidos", COLORS["warning"]),
+            ("Primeira vez", COLORS["primary"]),
+            ("Faltas", COLORS["secondary"]),
+        ]
+
+        for texto, cor in legenda_cores:
             item = ctk.CTkFrame(relatorio, fg_color="transparent")
             item.pack(anchor="w", padx=20, pady=4)
 
             ctk.CTkLabel(item, text="●", text_color=cor, font=font("text")).pack(side="left")
-            ctk.CTkLabel(item, text=f" {texto}", text_color="#374151", font=font("text")).pack(side="left")
+            ctk.CTkLabel(item, text=f" {texto}", text_color=COLORS["text_secondary"], font=font("text")).pack(side="left")
     pass

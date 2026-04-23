@@ -5,7 +5,8 @@ from tkinter import messagebox
 
 from controllers.auth_controller import AuthController
 from controllers.gerenciamento_controller import GerenciamentoController
-from .theme import font, ICON_SIZE
+from services.remember_me_service import carregar_credenciais, salvar_credenciais, limpar_credenciais
+from .theme import font, ICON_SIZE, COLORS
 
 
 class Login(ctk.CTk):
@@ -20,7 +21,7 @@ class Login(ctk.CTk):
 
         self.geometry(f"{largura}x{altura}+0+0")
 
-        self.configure(fg_color="#F2F3F5")
+        self.configure(fg_color=COLORS["content_bg"])
 
         BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -58,7 +59,7 @@ class Login(ctk.CTk):
 
 
         # ================= ESQUERDA =================
-        frame_img = ctk.CTkFrame(self, fg_color="#F2F3F5", corner_radius=0)
+        frame_img = ctk.CTkFrame(self, fg_color=COLORS["content_bg"], corner_radius=0)
         frame_img.grid(row=0, column=0, sticky="nsew")
 
         ctk.CTkLabel(
@@ -68,7 +69,7 @@ class Login(ctk.CTk):
         ).place(relx=0.5, rely=0.5, anchor="center")
 
         # ================= DIREITA =================
-        frame_login = ctk.CTkFrame(self, fg_color="#F2F3F5", corner_radius=0)
+        frame_login = ctk.CTkFrame(self, fg_color=COLORS["content_bg"], corner_radius=0)
         frame_login.grid(row=0, column=1, sticky="nsew")
 
         # 🔑 SCROLL REAL (FUNCIONA)
@@ -93,14 +94,14 @@ class Login(ctk.CTk):
             conteudo,
             text="Acesse sua conta",
             font=font("title", "bold"),
-            text_color="#1C1C1C"
+            text_color=COLORS["text"]
         ).pack(anchor="w")
 
         ctk.CTkLabel(
             conteudo,
             text="Bem-vindo de volta! Entre com seus dados.",
             font=font("subtitle"),
-            text_color="#666666"
+            text_color=COLORS["muted"]
         ).pack(anchor="w", pady=(0, 25))
 
         self.ent_user = ctk.CTkEntry(
@@ -108,7 +109,7 @@ class Login(ctk.CTk):
             width=420,
             height=50,
             placeholder_text="Usuário",
-            fg_color="white",
+            fg_color=COLORS["card"],
             border_width=0
         )
         self.ent_user.pack(pady=10, anchor="w")
@@ -119,19 +120,20 @@ class Login(ctk.CTk):
             height=50,
             placeholder_text="Senha",
             show="*",
-            fg_color="white",
+            fg_color=COLORS["card"],
             border_width=0
         )
         self.ent_pass.pack(pady=10, anchor="w")
 
+        self.remember_var = ctk.BooleanVar(value=False)
         linha = ctk.CTkFrame(conteudo, fg_color="transparent")
         linha.pack(fill="x", pady=10)
 
-        ctk.CTkCheckBox(linha, text="Lembrar-me").grid(row=0, column=0, sticky="w")
+        ctk.CTkCheckBox(linha, text="Lembrar-me", variable=self.remember_var).grid(row=0, column=0, sticky="w")
         ctk.CTkLabel(
             linha,
             text="Esqueci minha senha",
-            text_color="#0A66C2"
+            text_color=COLORS["primary"]
         ).grid(row=0, column=1, sticky="e")
         linha.grid_columnconfigure(1, weight=1)
 
@@ -140,8 +142,8 @@ class Login(ctk.CTk):
             text="ENTRAR",
             width=420,
             height=50,
-            fg_color="#0A66C2",
-            hover_color="#0959A8",
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
             font=font("button", "bold"),
             command=self.autenticar
         ).pack(pady=15, anchor="w")
@@ -149,7 +151,7 @@ class Login(ctk.CTk):
         ctk.CTkLabel(
             conteudo,
             text="────────────  ou continue com  ────────────",
-            text_color="#999"
+            text_color=COLORS["muted"]
         ).pack(pady=15)
 
         ctk.CTkButton(
@@ -157,8 +159,8 @@ class Login(ctk.CTk):
             text="Entrar com Google",
             width=420,
             height=48,
-            fg_color="#0A66C2",
-            hover_color="#0959A8",
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
             font=font("button", "bold")
         ).pack(pady=5)
 
@@ -167,8 +169,8 @@ class Login(ctk.CTk):
             text="Entrar com Facebook",
             width=420,
             height=48,
-            fg_color="#0A66C2",
-            hover_color="#0959A8",
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
             font=font("button", "bold")
         ).pack(pady=5)
 
@@ -179,27 +181,52 @@ class Login(ctk.CTk):
         ctk.CTkLabel(
             rodape,
             text=" Cadastre-se",
-            text_color="#0A66C2",
-            font=("Arial", 13, "bold")
+            text_color=COLORS["primary"],
+            font=font("button", "bold")
         ).grid(row=0, column=1)
 
-    def autenticar(self):
+        self._carregar_credenciais_salvas()
+
+    def _carregar_credenciais_salvas(self):
+        dados = carregar_credenciais()
+        if not dados:
+            return
+
+        email = dados.get("email", "")
+        senha = dados.get("senha", "")
+        if not email or not senha:
+            return
+
+        self.ent_user.insert(0, email)
+        self.ent_pass.insert(0, senha)
+        self.remember_var.set(True)
+        self.after(300, lambda: self.autenticar(auto_login=True))
+
+    def autenticar(self, auto_login=False):
         email = self.ent_user.get().strip()
         senha = self.ent_pass.get().strip()
 
         if not email or not senha:
-            messagebox.showwarning("Atenção", "Preencha e-mail e senha")
+            if not auto_login:
+                messagebox.showwarning("Atenção", "Preencha e-mail e senha")
             return
 
         try:
             resultado = AuthController.autenticar(email, senha)
         except Exception as e:
-            messagebox.showerror("Erro de conexão", f"Falha ao conectar ao banco: {e}")
+            if not auto_login:
+                messagebox.showerror("Erro de conexão", f"Falha ao conectar ao banco: {e}")
             return
 
         if not resultado:
-            messagebox.showwarning("Atenção", "E-mail ou senha inválidos ou servidor indisponível")
+            if not auto_login:
+                messagebox.showwarning("Atenção", "E-mail ou senha inválidos ou servidor indisponível")
             return
+
+        if self.remember_var.get():
+            salvar_credenciais(email, senha)
+        else:
+            limpar_credenciais()
 
         usuario = resultado["usuario"]
 

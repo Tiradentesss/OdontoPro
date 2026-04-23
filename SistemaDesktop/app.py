@@ -7,9 +7,11 @@ from views.agenda import Agenda
 from views.financeiro import Financeiro
 from views.cadastro import Cadastro
 from views.configuracoes import Configuracoes
+from views.gerenciamento import Gerenciamento
 from views.login import Login
 from views.permissao import Permissoes
 from controllers.gerenciamento_controller import GerenciamentoController
+from views.theme import COLORS
 
 from PIL import Image
 import customtkinter as ctk
@@ -51,7 +53,8 @@ class App(ctk.CTk):
             "financeiro": "Financeiro",
             "config": "Configurações",
             "cadastro": "Cadastro",
-            "permissao": "Permissões"
+            "permissao": "Permissões",
+            "gerenciamento": "Gerenciamento"
         }
         
         perm_necessaria = mapa_permissoes.get(tela)
@@ -81,7 +84,7 @@ class App(ctk.CTk):
 
         self.geometry(f"{largura}x{altura}+0+0")
         self.minsize(1000, 650)
-        self.configure(fg_color="#F5F6FA")
+        self.configure(fg_color=COLORS["bg"])
 
         # Grid principal
         self.grid_columnconfigure(1, weight=1)
@@ -92,9 +95,9 @@ class App(ctk.CTk):
             self,
             width=240,
             corner_radius=0,
-            fg_color="#FFFFFF",
+            fg_color=COLORS["card"],
             border_width=1,
-            border_color="#E5E7EB"
+            border_color=COLORS["border"]
         )
         self.sidebar.grid(row=0, column=0, sticky="nsew")
         self.sidebar.grid_propagate(False)
@@ -104,14 +107,14 @@ class App(ctk.CTk):
             self.sidebar,
             text="OdontoPro",
             font=ctk.CTkFont(size=24, weight="bold"),
-            text_color="#0d99c7"
+            text_color=COLORS["primary"]
         ).pack(pady=(40, 5))
 
         ctk.CTkLabel(
             self.sidebar,
             text="Clinical Management",
             font=ctk.CTkFont(size=11),
-            text_color="#9CA3AF"
+            text_color=COLORS["text_secondary"]
         ).pack(pady=(0, 30))
 
         # Menu
@@ -122,9 +125,10 @@ class App(ctk.CTk):
                 ("▣  Painel", "painel"),
                 ("🗓  Agenda", "agenda"),
                 ("💰  Financeiro", "financeiro"),
-                ("⚙  Configurações", "config"),
-                ("👤  Cadastro", "cadastro"),
+                ("👔  Gerenciamento", "gerenciamento"),
                 ("🔒  Permissões", "permissao"),
+                ("👤  Cadastro", "cadastro"),
+                ("⚙  Configurações", "config"),
             ]
             # Filtrar apenas os que o gerente tem permissão
             self.menu_items = [item for item in todos_itens if self.tem_permissao(item[1])]
@@ -133,9 +137,10 @@ class App(ctk.CTk):
                 ("▣  Painel", "painel"),
                 ("🗓  Agenda", "agenda"),
                 ("💰  Financeiro", "financeiro"),
-                ("⚙  Configurações", "config"),
-                ("👤  Cadastro", "cadastro"),
+                ("👔  Gerenciamento", "gerenciamento"),
                 ("🔒  Permissões", "permissao"),
+                ("👤  Cadastro", "cadastro"),
+                ("⚙  Configurações", "config"),
             ]
 
         for text, name in self.menu_items:
@@ -146,7 +151,7 @@ class App(ctk.CTk):
             self.sidebar,
             text="⎋  Sair do Sistema",
             fg_color="transparent",
-            text_color="#EF4444",
+            text_color=COLORS["danger"],
             hover_color="#FEE2E2",
             font=ctk.CTkFont(size=13, weight="bold"),
             command=self.logout
@@ -162,8 +167,18 @@ class App(ctk.CTk):
             "financeiro": Financeiro(self.container),
             "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id),
             "cadastro": Cadastro(self.container, self.clinica_id),
+            "gerenciamento": Gerenciamento(self.container, self.clinica_id),
             "permissao": Permissoes(self.container, self.clinica_id),
         }
+
+        # ================= Configuração de Padding/Espaçamento da Agenda =================
+        # Ajustar espaçamento INDIVIDUAL de cada coluna (esquerda, direita)
+        # Os números representam pixels de espaço dentro de cada célula
+        self.frames["agenda"].set_column_padding('nome', padx_left=2, padx_right=2)
+        self.frames["agenda"].set_column_padding('especialidade', padx_left=2, padx_right=2)
+        self.frames["agenda"].set_column_padding('medico', padx_left=2, padx_right=2)
+        self.frames["agenda"].set_column_padding('data', padx_left=2, padx_right=2)
+        self.frames["agenda"].set_column_padding('hora', padx_left=2, padx_right=2)
 
         self.current_frame = None
         self.show_frame("painel")
@@ -174,8 +189,8 @@ class App(ctk.CTk):
             text=text,
             anchor="w",
             fg_color="transparent",
-            text_color="#4B5563",
-            hover_color="#F0F9FF",
+            text_color=COLORS["text_secondary"],
+            hover_color=COLORS["hover"],
             height=46,
             corner_radius=10,
             font=ctk.CTkFont(size=14),
@@ -202,15 +217,15 @@ class App(ctk.CTk):
         for name, btn in self.buttons.items():
             if name == active:
                 btn.configure(
-                    fg_color="#0d99c7",
+                    fg_color=COLORS["primary"],
                     text_color="white",
-                    hover_color="#0b86af"
+                    hover_color=COLORS["primary_dark"]
                 )
             else:
                 btn.configure(
                     fg_color="transparent",
-                    text_color="#4B5563",
-                    hover_color="#F0F9FF"
+                    text_color=COLORS["text_secondary"],
+                    hover_color=COLORS["hover"]
                 )
 
     pass

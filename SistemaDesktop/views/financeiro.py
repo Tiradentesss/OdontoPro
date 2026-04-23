@@ -1,6 +1,6 @@
 from .base import BaseScreen
 import customtkinter as ctk
-from .theme import font, ICON_SIZE
+from .theme import font, ICON_SIZE, COLORS
 
 class Financeiro(BaseScreen):
     def __init__(self, parent):
@@ -41,10 +41,10 @@ class Financeiro(BaseScreen):
         # =============================
         grafico_card = ctk.CTkFrame(
             main_container,
-            fg_color="white",
+            fg_color=COLORS["card"],
             corner_radius=15,
             border_width=1,
-            border_color="#E5E7EB"
+            border_color=COLORS["border"]
         )
         grafico_card.pack(fill="both", expand=True, pady=(0, 20))
 
@@ -101,7 +101,7 @@ class Financeiro(BaseScreen):
             
             barra = ctk.CTkFrame(
                 barra_frame,
-                fg_color="#0EA5E9",
+                fg_color=COLORS["primary"],
                 height=int(150 * (valor / 100)),
                 width=30,
                 corner_radius=4
@@ -113,7 +113,7 @@ class Financeiro(BaseScreen):
                 coluna,
                 text=f"R$ {valor*100}",
                 font=font("small", "bold"),
-                text_color="#0EA5E9"
+                text_color=COLORS["primary"]
             ).pack(pady=(5, 0))
             
             # Dia
@@ -121,7 +121,7 @@ class Financeiro(BaseScreen):
                 coluna,
                 text=dia,
                 font=font("small"),
-                text_color="#6B7280"
+                text_color=COLORS["text_secondary"]
             ).pack()
 
         # =============================
@@ -152,19 +152,19 @@ class Financeiro(BaseScreen):
             text="Ver todas",
             font=font("small", "bold"),
             fg_color="transparent",
-            text_color="#0EA5E9",
-            hover_color="#F3F4F6",
+            text_color=COLORS["primary"],
+            hover_color=COLORS["hover"],
             width=80,
             height=30,
             corner_radius=5
         ).pack(side="right")
 
         # Linha divisória
-        divider = ctk.CTkFrame(tabela_card, height=1, fg_color="#E5E7EB")
+        divider = ctk.CTkFrame(tabela_card, height=1, fg_color=COLORS["border"])
         divider.pack(fill="x")
 
         # Cabeçalhos da tabela
-        headers_frame = ctk.CTkFrame(tabela_card, fg_color="#F9FAFB", height=40)
+        headers_frame = ctk.CTkFrame(tabela_card, fg_color=COLORS["bg_soft"], height=40)
         headers_frame.pack(fill="x")
         headers_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
@@ -174,7 +174,7 @@ class Financeiro(BaseScreen):
                 headers_frame,
                 text=header,
                 font=font("small", "bold"),
-                text_color="#374151"
+                text_color=COLORS["text_secondary"]
             ).grid(row=0, column=i, padx=20, pady=10, sticky="w")
 
         # Linhas da tabela
@@ -188,7 +188,7 @@ class Financeiro(BaseScreen):
 
         for i, trans in enumerate(transacoes):
             # Linha alternada para melhor legibilidade
-            bg_color = "white" if i % 2 == 0 else "#F9FAFB"
+            bg_color = COLORS["card"] if i % 2 == 0 else COLORS["bg_soft"]
             
             linha = ctk.CTkFrame(tabela_card, fg_color=bg_color, height=45)
             linha.pack(fill="x")
@@ -199,7 +199,7 @@ class Financeiro(BaseScreen):
                 linha,
                 text=trans["data"],
                 font=font("small"),
-                text_color="#6B7280"
+                text_color=COLORS["text_secondary"]
             ).grid(row=0, column=0, padx=20, pady=12, sticky="w")
 
             # Descrição
@@ -207,7 +207,7 @@ class Financeiro(BaseScreen):
                 linha,
                 text=trans["descricao"],
                 font=font("small"),
-                text_color="#111827"
+                text_color=COLORS["text"]
             ).grid(row=0, column=1, padx=20, pady=12, sticky="w")
 
             # Tipo
@@ -238,10 +238,10 @@ class Financeiro(BaseScreen):
         """Cria um card de resumo padronizado"""
         card = ctk.CTkFrame(
             parent,
-            fg_color="white",
+            fg_color=COLORS["card"],
             corner_radius=15,
             border_width=1,
-            border_color="#E5E7EB"
+            border_color=COLORS["border"]
         )
         
         # Container interno
@@ -270,7 +270,7 @@ class Financeiro(BaseScreen):
         ctk.CTkLabel(
             container,
             text=valor,
-            font=("Poppins", 24, "bold"),
+            font=font("title", "bold"),
             text_color=cor
         ).pack(anchor="w")
 

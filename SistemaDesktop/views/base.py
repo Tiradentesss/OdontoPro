@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from .theme import font
+from .theme import font, COLORS
 
 class BaseScreen(ctk.CTkFrame):
     def __init__(self, parent, title):
@@ -9,14 +9,14 @@ class BaseScreen(ctk.CTkFrame):
             self,
             text=title,
             font=font("title", "bold"),
-            text_color="#1F2937"
+            text_color=COLORS["text"]
         ).pack(anchor="w", pady=(0, 20))
 
         self.content_card = ctk.CTkFrame(
             self,
-            fg_color="white",
-            corner_radius=18,
+            fg_color=COLORS["card"],
+            corner_radius=15,
             border_width=1,
-            border_color="#E5E7EB"
+            border_color=COLORS["border"]
         )
-        self.content_card.pack(expand=True, fill="both")
+        self.content_card.pack(expand=True, fill="both", padx=20, pady=20)

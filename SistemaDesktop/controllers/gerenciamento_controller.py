@@ -398,6 +398,7 @@ class GerenciamentoController:
             "Financeiro",
             "Configurações",
             "Cadastro",
+            "Gerenciamento",
             "Permissões"
         ]
         

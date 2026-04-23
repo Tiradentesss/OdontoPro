@@ -2,7 +2,8 @@ import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
 from tkinter import messagebox, filedialog
-from .theme import font, ICON_SIZE
+from .base import BaseScreen
+from .theme import COLORS, font, ICON_SIZE
 from controllers.gerenciamento_controller import GerenciamentoController
 
 # Classe ImagePreview movida para o topo para ser reutilizada
@@ -47,9 +48,6 @@ except ImportError:
     def carregar_permissoes(): return {}
     def salvar_permissoes(data): pass
 
-# Configuração de aparência global
-ctk.set_appearance_mode("light")
-ctk.set_default_color_theme("blue")
 
 class ModernAvatar:
     """Classe utilitária para gerenciar avatares"""
@@ -181,14 +179,14 @@ class AdminListFrame(ctk.CTkFrame):
             title_frame, 
             text="Administradores", 
             font=font("subtitle", "bold"), 
-            text_color="#1E293B"
+            text_color=COLORS["text"]
         )
         self.lbl_title.pack(side="left")
 
         self.lbl_count = ctk.CTkLabel(
             header_content, 
             text=f"{len(self.admins_data)} ativos", 
-            text_color="#64748B", 
+            text_color=COLORS["muted"], 
             font=font("small")
         )
         self.lbl_count.pack(side="left", padx=15)
@@ -201,8 +199,8 @@ class AdminListFrame(ctk.CTkFrame):
             height=36,
             font=font("text"),
             fg_color="transparent",
-            text_color="#64748B",
-            hover_color="#F1F5F9",
+            text_color=COLORS["muted"],
+            hover_color=COLORS["hover"],
             corner_radius=8,
             command=self.refresh_list
         )
@@ -217,7 +215,7 @@ class AdminListFrame(ctk.CTkFrame):
         # --- Cabeçalho da Tabela ---
         header_bg = ctk.CTkFrame(
             table_container, 
-            fg_color="#F8FAFC", 
+            fg_color=COLORS["content_bg"], 
             height=48, 
             corner_radius=10
         )
@@ -236,7 +234,7 @@ class AdminListFrame(ctk.CTkFrame):
                 header_bg, 
                 text=text, 
                 font=font("small", "bold"), 
-                text_color="#475569",
+                text_color=COLORS["text_secondary"],
                 anchor=anchors[i]
             ).grid(row=0, column=i, sticky="ew", padx=(15 if i == 0 else 10, 10), pady=12)
 
@@ -246,7 +244,7 @@ class AdminListFrame(ctk.CTkFrame):
         self.scroll_list.grid_columnconfigure(0, weight=1) 
 
         # --- Rodapé com Paginação ---
-        self.footer_frame = ctk.CTkFrame(self, fg_color="#F8FAFC", corner_radius=15, height=70)
+        self.footer_frame = ctk.CTkFrame(self, fg_color=COLORS["content_bg"], corner_radius=15, height=70)
         self.footer_frame.grid(row=2, column=0, padx=20, pady=(10, 20), sticky="ew")
         self.footer_frame.grid_propagate(False)
 
@@ -257,7 +255,7 @@ class AdminListFrame(ctk.CTkFrame):
             footer_content, 
             text="", 
             font=font("small"), 
-            text_color="#475569"
+            text_color=COLORS["text_secondary"]
         )
         self.lbl_pagination.pack(side="left")
 
@@ -271,11 +269,11 @@ class AdminListFrame(ctk.CTkFrame):
             width=100, 
             height=36, 
             font=font("small"), 
-            fg_color="white", 
+            fg_color=COLORS["card"], 
             border_width=1, 
-            border_color="#E2E8F0", 
-            text_color="#334155", 
-            hover_color="#F1F5F9",
+            border_color=COLORS["border"], 
+            text_color=COLORS["text"], 
+            hover_color=COLORS["hover"],
             corner_radius=8,
             command=self.previous_page
         )
@@ -287,11 +285,11 @@ class AdminListFrame(ctk.CTkFrame):
             width=100, 
             height=36, 
             font=font("small"), 
-            fg_color="white", 
+            fg_color=COLORS["card"], 
             border_width=1, 
-            border_color="#E2E8F0", 
-            text_color="#334155", 
-            hover_color="#F1F5F9",
+            border_color=COLORS["border"], 
+            text_color=COLORS["text"], 
+            hover_color=COLORS["hover"],
             corner_radius=8,
             command=self.next_page
         )
@@ -345,8 +343,8 @@ class AdminListFrame(ctk.CTkFrame):
 
         # --- Avatar (Coluna 0) ---
         colors = [
-            "#EF4444", "#F97316", "#EAB308", "#22C55E", 
-            "#3B82F6", "#8B5CF6", "#EC4899", "#6366F1"
+            COLORS["danger"], COLORS["warning"], COLORS["warning"], COLORS["success"],
+            COLORS["accent"], COLORS["secondary"], COLORS["accent"], COLORS["secondary"]
         ]
         color_hex = colors[hash(nome) % len(colors)]
         color_rgb = tuple(int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
@@ -382,7 +380,7 @@ class AdminListFrame(ctk.CTkFrame):
             row_frame, 
             text=nome, 
             font=font("text", "bold"), 
-            text_color="#0F172A", 
+            text_color=COLORS["text"], 
             anchor="w"
         )
         nome_label.grid(row=0, column=1, sticky="w", padx=10, pady=10)
@@ -393,7 +391,7 @@ class AdminListFrame(ctk.CTkFrame):
             row_frame, 
             text=email, 
             font=font("small"), 
-            text_color="#475569", 
+            text_color=COLORS["text_secondary"], 
             anchor="w"
         )
         email_label.grid(row=0, column=2, sticky="w", padx=10, pady=10)
@@ -404,7 +402,7 @@ class AdminListFrame(ctk.CTkFrame):
             row_frame, 
             text=level, 
             font=font("small"), 
-            text_color="#475569", 
+            text_color=COLORS["text_secondary"], 
             anchor="w"
         )
         nivel_label.grid(row=0, column=3, sticky="w", padx=10, pady=10)
@@ -413,9 +411,9 @@ class AdminListFrame(ctk.CTkFrame):
         # --- Status (Coluna 4) ---
         status = info.get("status", "Ativo")
         status_config = {
-            "Ativo": {"color": "#22C55E", "bg": "#F0FDF4", "icon": "●"},
-            "Pendente": {"color": "#F59E0B", "bg": "#FFFBEB", "icon": "●"},
-            "Inativo": {"color": "#EF4444", "bg": "#FEF2F2", "icon": "●"}
+            "Ativo": {"color": COLORS["success"], "bg": COLORS["success_light"], "icon": "●"},
+            "Pendente": {"color": COLORS["warning"], "bg": COLORS["warning_light"], "icon": "●"},
+            "Inativo": {"color": COLORS["danger"], "bg": COLORS["danger_light"], "icon": "●"}
         }
         config = status_config.get(status, status_config["Ativo"])
         
@@ -444,7 +442,7 @@ class AdminListFrame(ctk.CTkFrame):
                 self.selected_row_frame.configure(fg_color="transparent")
             except:
                 pass 
-        frame_to_select.configure(fg_color="#EFF6FF") 
+        frame_to_select.configure(fg_color=COLORS["selected_row"]) 
         self.selected_row_frame = frame_to_select
 
     def next_page(self):
@@ -481,9 +479,9 @@ class AdminListFrame(ctk.CTkFrame):
                 messagebox.showerror("Erro", f"Erro ao processar imagem: {str(e)}")
 
 
-class Permissoes(ctk.CTkFrame):
+class Permissoes(BaseScreen):
     def __init__(self, parent, clinica_id=None):
-        super().__init__(parent, fg_color="#F1F5F9")
+        super().__init__(parent, "Permissões")
 
         self.clinica_id = clinica_id
         
@@ -492,15 +490,14 @@ class Permissoes(ctk.CTkFrame):
         if not resultado_perms.get("sucesso"):
             print(f"[AVISO PERMISSÃO] Falha ao inicializar permissões: {resultado_perms.get('mensagem')}")
         
-        self.grid_columnconfigure(0, weight=4)
-        self.grid_columnconfigure(1, weight=5)
-        self.grid_rowconfigure(0, weight=0)
-        self.grid_rowconfigure(1, weight=1)
+        self.content_card.grid_columnconfigure(0, weight=4)
+        self.content_card.grid_columnconfigure(1, weight=5)
+        self.content_card.grid_rowconfigure(0, weight=1)
 
         self.selected_admin_name = None
         self.selected_admin_id = None  # Novo: armazenar ID do gerente
         self.switch_widgets = {}
-        self.permissions_list = ["Painel", "Agenda", "Financeiro", "Configurações", "Cadastro", "Permissões"]
+        self.permissions_list = ["Painel", "Agenda", "Financeiro", "Configurações", "Cadastro", "Gerenciamento", "Permissões"]
 
         # Carregar gerentes do banco de dados
         self.admins_data = self.load_gerentes_from_database()
@@ -583,28 +580,19 @@ class Permissoes(ctk.CTkFrame):
         }
 
     def setup_ui(self):
-        # Título da Página
-        page_title = ctk.CTkLabel(
-            self,
-            text="Gerenciamento de Permissões",
-            font=ctk.CTkFont(size=24, weight="bold"),
-            text_color="#0F172A"
-        )
-        page_title.grid(row=0, column=0, columnspan=2, sticky="w", padx=20, pady=(25, 0))
-
         # COLUNA ESQUERDA
         self.admin_list_panel = AdminListFrame(
-            self, 
+            self.content_card, 
             admins_data=self.admins_data, 
             on_click_callback=self.on_admin_click, 
-            fg_color="white", 
+            fg_color=COLORS["card"], 
             corner_radius=20
         )
-        self.admin_list_panel.grid(row=1, column=0, sticky="nsew", padx=20, pady=20)
+        self.admin_list_panel.grid(row=0, column=0, sticky="nsew", padx=(20, 10), pady=20)
 
         # COLUNA DIREITA
-        self.right_card = ctk.CTkFrame(self, fg_color="white", corner_radius=20)
-        self.right_card.grid(row=1, column=1, sticky="nsew", padx=(0, 20), pady=20)
+        self.right_card = ctk.CTkFrame(self.content_card, fg_color=COLORS["card"], corner_radius=20)
+        self.right_card.grid(row=0, column=1, sticky="nsew", padx=(10, 20), pady=20)
         self.right_card.grid_rowconfigure(3, weight=1)
         self.right_card.grid_columnconfigure(0, weight=1)
 
@@ -615,7 +603,7 @@ class Permissoes(ctk.CTkFrame):
         ctk.CTkLabel(
             header_frame, 
             text="🔐", 
-            font=font(28)
+            font=font("large_title")
         ).pack(side="left", padx=(0, 15))
         
         title_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
@@ -625,7 +613,7 @@ class Permissoes(ctk.CTkFrame):
             title_frame, 
             text="Permissões", 
             font=font("subtitle", "bold"), 
-            text_color="#0F172A",
+            text_color=COLORS["text"],
             anchor="w"
         ).pack(anchor="w")
         
@@ -633,7 +621,7 @@ class Permissoes(ctk.CTkFrame):
             title_frame, 
             text="Nenhum administrador selecionado", 
             font=font("small"), 
-            text_color="#64748B",
+            text_color=COLORS["muted"],
             anchor="w"
         )
         self.selected_admin_label.pack(anchor="w")
@@ -655,25 +643,26 @@ class Permissoes(ctk.CTkFrame):
         
         # Mapeamento de ícones e descrições
         permissions_config = {
-            "Painel": {"icon": "📊", "desc": "Acesso ao dashboard", "color": "#3B82F6"},
-            "Agenda": {"icon": "📅", "desc": "Gerenciar eventos", "color": "#8B5CF6"},
-            "Financeiro": {"icon": "💰", "desc": "Transações e relatórios", "color": "#10B981"},
-            "Configurações": {"icon": "⚙️", "desc": "Configurações do sistema", "color": "#F59E0B"},
-            "Cadastro": {"icon": "📝", "desc": "CRUD de usuários", "color": "#EF4444"},
-            "Permissões": {"icon": "🔐", "desc": "Controle de acesso", "color": "#EC4899"}
+            "Painel": {"icon": "📊", "desc": "Acesso ao dashboard", "color": COLORS["accent"]},
+            "Agenda": {"icon": "📅", "desc": "Gerenciar eventos", "color": COLORS["secondary"]},
+            "Financeiro": {"icon": "💰", "desc": "Transações e relatórios", "color": COLORS["success"]},
+            "Configurações": {"icon": "⚙️", "desc": "Configurações do sistema", "color": COLORS["warning"]},
+            "Cadastro": {"icon": "📝", "desc": "CRUD de usuários", "color": COLORS["danger"]},
+            "Gerenciamento": {"icon": "👔", "desc": "Controle administrativo", "color": COLORS["secondary"]},
+            "Permissões": {"icon": "🔐", "desc": "Controle de acesso", "color": COLORS["accent"]}
         }
 
         for index, perm_name in enumerate(self.permissions_list):
             row, col = divmod(index, 2)
-            config = permissions_config.get(perm_name, {"icon": "🛡️", "desc": "", "color": "#64748B"})
+            config = permissions_config.get(perm_name, {"icon": "🛡️", "desc": "", "color": COLORS["muted"]})
             
             # Card de permissão - COM ALTURA REDUZIDA PARA CABER NA TELA
             card = ctk.CTkFrame(
                 self.permissions_container, 
-                fg_color="#F8FAFC", 
+                fg_color=COLORS["content_bg"], 
                 corner_radius=16,
                 border_width=1,
-                border_color="#E2E8F0",
+                border_color=COLORS["border"],
                 height=85
             )
             card.grid(row=row, column=col, sticky="ew", padx=8, pady=8)
@@ -683,7 +672,7 @@ class Permissoes(ctk.CTkFrame):
             # Ícone colorido
             icon_frame = ctk.CTkFrame(
                 card, 
-                fg_color="#F1F5F9",
+                fg_color=COLORS["hover"],
                 width=44, 
                 height=44,
                 corner_radius=12
@@ -703,7 +692,7 @@ class Permissoes(ctk.CTkFrame):
                 card, 
                 text=perm_name, 
                 font=font("text", "bold"), 
-                text_color="#0F172A"
+                text_color=COLORS["text"]
             ).grid(row=0, column=1, sticky="w", padx=(0, 5), pady=(10, 0))
 
             # Descrição
@@ -711,7 +700,7 @@ class Permissoes(ctk.CTkFrame):
                 card, 
                 text=config["desc"], 
                 font=font("small"), 
-                text_color="#64748B"
+                text_color=COLORS["muted"]
             ).grid(row=1, column=1, sticky="w", padx=(0, 5), pady=(0, 10))
 
             # Switch
@@ -721,8 +710,8 @@ class Permissoes(ctk.CTkFrame):
                 width=40, 
                 height=22, 
                 progress_color=config['color'],
-                button_color="white",
-                button_hover_color="#F1F5F9",
+                button_color=COLORS["card"],
+                button_hover_color=COLORS["hover"],
                 command=lambda p=perm_name: self.sync_permission(p)
             )
             sw.grid(row=0, column=2, rowspan=2, padx=(5, 15), sticky="e")
@@ -731,10 +720,10 @@ class Permissoes(ctk.CTkFrame):
         # Área de status da conta
         self.account_status_container = ctk.CTkFrame(
             self.right_card, 
-            fg_color="#F8FAFC", 
+            fg_color=COLORS["content_bg"], 
             corner_radius=16,
             border_width=1,
-            border_color="#E2E8F0"
+            border_color=COLORS["border"]
         )
         self.account_status_container.grid(row=2, column=0, sticky="ew", padx=20, pady=(10, 10))
         self.account_status_container.grid_columnconfigure(1, weight=1)
@@ -742,7 +731,7 @@ class Permissoes(ctk.CTkFrame):
         # Ícone de status
         status_icon_frame = ctk.CTkFrame(
             self.account_status_container, 
-            fg_color="#F1F5F9",
+            fg_color=COLORS["hover"],
             width=44, 
             height=44,
             corner_radius=12
@@ -754,7 +743,7 @@ class Permissoes(ctk.CTkFrame):
             status_icon_frame, 
             text="👤", 
             font=font(ICON_SIZE),
-            text_color="#6366F1"
+            text_color=COLORS["accent"]
         ).place(relx=0.5, rely=0.5, anchor="center")
 
         # Texto do status
@@ -762,14 +751,14 @@ class Permissoes(ctk.CTkFrame):
             self.account_status_container, 
             text="Status da Conta", 
             font=font("text", "bold"), 
-            text_color="#0F172A"
+            text_color=COLORS["text"]
         ).grid(row=0, column=1, sticky="w", padx=(0, 5), pady=(10, 0))
 
         ctk.CTkLabel(
             self.account_status_container, 
             text="Ativar ou desativar o acesso à conta", 
             font=font("small"), 
-            text_color="#64748B"
+            text_color=COLORS["muted"]
         ).grid(row=1, column=1, sticky="w", padx=(0, 5), pady=(0, 10))
 
         # Switch para status da conta
@@ -778,29 +767,29 @@ class Permissoes(ctk.CTkFrame):
             text="", 
             width=40, 
             height=22, 
-            progress_color="#6366F1",
-            button_color="white",
-            button_hover_color="#F1F5F9",
+            progress_color=COLORS["accent"],
+            button_color=COLORS["card"],
+            button_hover_color=COLORS["hover"],
             command=self.sync_account_status
         )
         self.account_status_switch.grid(row=0, column=2, rowspan=2, padx=(5, 15), sticky="e")
 
         # Botão Salvar
         button_frame = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        button_frame.grid(row=3, column=0, pady=(0, 25))
+        button_frame.grid(row=3, column=0, pady=(0, 25), padx=20, sticky="e")
         
         self.save_btn = ctk.CTkButton(
             button_frame, 
             text="💾 Salvar Alterações", 
             font=font("text", "bold"), 
-            fg_color="#2563EB", 
+            fg_color=COLORS["secondary"], 
             height=48, 
             width=260, 
             corner_radius=12,
-            hover_color="#0EA5E9",
+            hover_color=COLORS["accent_hover"],
             command=self.save_to_database
         )
-        self.save_btn.pack()
+        self.save_btn.pack(anchor="e")
 
         self.toggle_switches_state("disabled")
 

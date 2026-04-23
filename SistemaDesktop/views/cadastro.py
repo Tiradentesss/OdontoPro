@@ -1,5 +1,5 @@
 from .base import BaseScreen
-from .theme import font, ICON_SIZE
+from .theme import font, ICON_SIZE, COLORS
 import customtkinter as ctk
 from controllers.paciente_controller import PacienteController
 from controllers.medico_controller import MedicoController
@@ -12,16 +12,16 @@ class Cadastro(BaseScreen):
         self.clinica_id = clinica_id
 
         # Configuração de cores - PALETA MAIS MODERNA
-        self.cor_fundo_card = "#FFFFFF"
-        self.cor_aba_ativa = "#FFFFFF"
-        self.cor_aba_inativa = "#F3F4F6"
-        self.cor_texto_ativo = "#0EA5E9"
-        self.cor_texto_inativo = "#6B7280"
-        self.cor_borda = "#E5E7EB"
-        self.cor_primaria = "#0EA5E9"
-        self.cor_primaria_hover = "#0284C7"
+        self.cor_fundo_card = COLORS["card"]
+        self.cor_aba_ativa = COLORS["card"]
+        self.cor_aba_inativa = COLORS["bg_soft"]
+        self.cor_texto_ativo = COLORS["primary"]
+        self.cor_texto_inativo = COLORS["text_secondary"]
+        self.cor_borda = COLORS["border"]
+        self.cor_primaria = COLORS["primary"]
+        self.cor_primaria_hover = COLORS["primary_dark"]
         
-        self.padding_lateral = 60
+        self.padding_lateral = 25
 
         self.paciente_entries = []
         self.profissional_entries = []
@@ -30,11 +30,11 @@ class Cadastro(BaseScreen):
         # 1. BARRA DE ABAS (TOPO) - AUMENTO MODERADO
         # =============================
         self.tab_bar = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)  # 40 -> 44
-        self.tab_bar.pack(fill="x", padx=125, pady=(9, 0), anchor="nw")  # 8 -> 9
+        self.tab_bar.pack(fill="x", padx=25, pady=(9, 0), anchor="nw")  # 8 -> 9
 
         self.btn_pacientes = ctk.CTkButton(
             self.tab_bar, text="👤   Pacientes",  # 2 espaços -> 3 espaços
-            font=("Poppins", 15, "bold"),  # 14 -> 15
+            font=font("button_large", "bold"),  # 14 -> 15
             width=135, height=37, corner_radius=6,  # 125x34 -> 135x37
             command=lambda: self._trocar_aba("Pacientes")
         )
@@ -42,7 +42,7 @@ class Cadastro(BaseScreen):
 
         self.btn_profissionais = ctk.CTkButton(
             self.tab_bar, text="📋   Profissionais",  # 2 espaços -> 3 espaços
-            font=("Poppins", 15, "bold"),  # 14 -> 15
+            font=font("button_large", "bold"),  # 14 -> 15
             width=135, height=37, corner_radius=6,  # 125x34 -> 135x37
             command=lambda: self._trocar_aba("Profissionais")
         )
@@ -56,7 +56,7 @@ class Cadastro(BaseScreen):
             fg_color="transparent",
             corner_radius=20
         )
-        self.container_outer.pack(fill="both", expand=True, padx=80, pady=(6, 8))
+        self.container_outer.pack(fill="both", expand=True, padx=25, pady=25)
 
         self.container_conteudo = ctk.CTkFrame(
             self.container_outer,
@@ -140,8 +140,8 @@ class Cadastro(BaseScreen):
         ctk.CTkLabel(
             container,
             text=texto,
-            font=("Poppins", 16, "bold"),  # 15 -> 16
-            text_color="#374151"
+            font=font("subtitle", "bold"),  # 15 -> 16
+            text_color=COLORS["text_secondary"]
         ).pack(anchor="w")
 
         linha = ctk.CTkFrame(container, height=2, width=52, fg_color=self.cor_primaria, corner_radius=1)  # 48 -> 52
@@ -157,8 +157,8 @@ class Cadastro(BaseScreen):
         ctk.CTkLabel(
             frame1,
             text=label1,
-            font=("Poppins", 14),  # 13 -> 14
-            text_color="#4B5563",
+            font=font("text"),  # 13 -> 14
+            text_color=COLORS["text_secondary"],
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))  # 2 -> 3
 
@@ -166,12 +166,12 @@ class Cadastro(BaseScreen):
             frame1,
             placeholder_text=f"Digite {label1.lower()}",
             height=44, show=show1,  # 40 -> 44
-            fg_color="#F9FAFB",
-            border_color="#E5E7EB",
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
             border_width=1,
             corner_radius=5,  # 4 -> 5
-            text_color="#111827",
-            placeholder_text_color="#9CA3AF"
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"]
         )
         entry1.pack(fill="x")
 
@@ -181,8 +181,8 @@ class Cadastro(BaseScreen):
         ctk.CTkLabel(
             frame2,
             text=label2,
-            font=("Poppins", 14),  # 13 -> 14
-            text_color="#4B5563",
+            font=font("text"),  # 13 -> 14
+            text_color=COLORS["text_secondary"],
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))  # 2 -> 3
 
@@ -190,12 +190,12 @@ class Cadastro(BaseScreen):
             frame2,
             placeholder_text=f"Digite {label2.lower()}",
             height=44, show=show2,  # 40 -> 44
-            fg_color="#F9FAFB",
-            border_color="#E5E7EB",
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
             border_width=1,
             corner_radius=5,  # 4 -> 5
-            text_color="#111827",
-            placeholder_text_color="#9CA3AF"
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"]
         )
         entry2.pack(fill="x")
 
@@ -213,7 +213,7 @@ class Cadastro(BaseScreen):
             ctk.CTkLabel(
                 frame_i,
                 text=label,
-                font=("Poppins", 14),  # 13 -> 14
+                font=font("text"),  # 13 -> 14
                 text_color="#4B5563",
                 anchor="w"
             ).pack(anchor="w", pady=(0, 3))  # 2 -> 3
@@ -253,7 +253,7 @@ class Cadastro(BaseScreen):
         ctk.CTkLabel(
             frame_nome,
             text="Nome completo",
-            font=("Poppins", 14),
+            font=font("text"),
             text_color="#4B5563",
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))
@@ -279,7 +279,7 @@ class Cadastro(BaseScreen):
         ctk.CTkLabel(
             frame_senha,
             text="Senha",
-            font=("Poppins", 14),
+            font=font("text"),
             text_color="#4B5563",
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))
@@ -311,7 +311,7 @@ class Cadastro(BaseScreen):
         ctk.CTkLabel(
             frame_email,
             text="Email",
-            font=("Poppins", 14),
+            font=font("text"),
             text_color="#4B5563",
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))
@@ -337,7 +337,7 @@ class Cadastro(BaseScreen):
         ctk.CTkLabel(
             frame_confirma_senha,
             text="Confirmar Senha",
-            font=("Poppins", 14),
+            font=font("text"),
             text_color="#4B5563",
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))
@@ -365,7 +365,7 @@ class Cadastro(BaseScreen):
         ctk.CTkLabel(
             tipo_container, 
             text="Selecione o tipo", 
-            font=("Poppins", 14),
+            font=font("text"),
             text_color="#4B5563"
         ).pack(anchor="w", pady=(0, 3))
         
@@ -379,7 +379,7 @@ class Cadastro(BaseScreen):
             text_color="#111827", 
             dropdown_fg_color="#FFFFFF", 
             dropdown_text_color="#111827",
-            dropdown_font=("Poppins", 14),
+            dropdown_font=font("text"),
             command=self._ao_mudar_tipo_profissional
         )
         self.tipo_profissional.pack(fill="x")
@@ -429,7 +429,7 @@ class Cadastro(BaseScreen):
         ctk.CTkButton(
             container,
             text=texto_principal.upper(),
-            font=("Poppins", 15, "bold"),  # 14 -> 15
+            font=font("button_large", "bold"),  # 14 -> 15
             height=44,  # 40 -> 44
             width=220,  # 200 -> 220
             fg_color=self.cor_primaria,
@@ -453,7 +453,7 @@ class Cadastro(BaseScreen):
         limpar_btn = ctk.CTkButton(
             container,
             text="LIMPAR",
-            font=("Poppins", 15),  # 14 -> 15
+            font=font("button_large"),  # 14 -> 15
             height=44,  # 40 -> 44
             width=125,  # 115 -> 125
             fg_color="transparent",
@@ -471,7 +471,7 @@ class Cadastro(BaseScreen):
     # =====================================================
     def _titulo(self, parent, texto):
         ctk.CTkLabel(
-            parent, text=texto, font=("Poppins", 24, "bold"),  # 22 -> 24
+            parent, text=texto, font=font("title", "bold"),  # 22 -> 24
             text_color="#111827"
         ).pack(anchor="w", padx=self.padding_lateral, pady=(24, 17))  # (22,15) -> (24,17)
 
@@ -486,7 +486,7 @@ class Cadastro(BaseScreen):
 
     def _botao_salvar(self, parent, texto="Salvar"):
         ctk.CTkButton(
-            parent, text=texto.upper(), font=("Poppins", 15, "bold"),  # 14 -> 15
+            parent, text=texto.upper(), font=font("button_large", "bold"),  # 14 -> 15
             height=44, width=330,  # 40x310 -> 44x330
             fg_color="#06B6D4", hover_color="#0891B2", text_color="#FFFFFF",
             corner_radius=5  # 4 -> 5
@@ -623,7 +623,7 @@ class Cadastro(BaseScreen):
             self.content_card,
             text=mensagem,
             text_color=cor,
-            font=("Poppins", 13, "bold")
+            font=font("text", "bold")
         )
         msg_label.pack(pady=10)
         
