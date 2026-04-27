@@ -9,6 +9,7 @@ import {
   ScrollView,
   Modal,
   ImageBackground,
+  Alert,
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
@@ -100,14 +101,14 @@ export default function AppointmentBookingScreen({ route, navigation }) {
     try {
       const data_hora = formatDateTime(selectedDate, selectedTime);
       await createAppointment({
-        data_hora,
+        nome: `${firstName} ${lastName}`.trim(),
+        email,
+        telefone: phone,
         clinica_id: clinic.id,
-        profissional_id: professional.id,
-        paciente_email: email,
+        medico_id: professional.id,
         especialidade_id: route?.params?.selectedSpecialtyId ?? null,
-        motivo: reason,
-        contato: phone,
-        status: 'Agendado',
+        data_hora,
+        observacoes: reason,
       });
       setConfirmationVisible(true);
     } catch (error) {

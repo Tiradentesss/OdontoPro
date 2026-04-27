@@ -8,13 +8,16 @@ import {
     ScrollView,
     Modal,
     ImageBackground,
+    ActivityIndicator,
 } from 'react-native';
 import ScheduleHeaderNoBack from '../components/ScheduleHeaderNoBack';
 import BottomNavBar from '../components/BottomNavBar';
+import { getPatientAppointments } from '../services/api';
 
 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const weekdays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
+// Dados mockados como fallback
 const appointmentDays = ['2026-04-11', '2026-04-16'];
 
 const appointmentsByDate = {
@@ -56,7 +59,17 @@ const toDateOnly = (dateId) => {
 const today = new Date();
 const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-const getUpcomingAppointmentDate = () => {
+const getUpcomingAppointmentDate = (appointmentsData = []) => {
+    // Se tiver dados reais, usa eles
+    if (appointmentsData.length > 0) {
+        const futureDates = appointmentsData
+            .map(apt => ({ id: new Date(apt.data_hora).toISOString().split('T')[0], date: new Date(apt.data_hora) }))
+            .filter(({ date }) => date >= todayStart)
+            .sort((a, b) => a.date - b.date)
+            .map(({ id }) => id);
+        if (futureDates.length > 0) return futureDates[0];
+    }
+    // Fallback para dados mockados
     const futureDates = appointmentDays
         .map((id) => ({ id, date: toDateOnly(id) }))
         .filter(({ date }) => date >= todayStart)
@@ -65,7 +78,7 @@ const getUpcomingAppointmentDate = () => {
     return futureDates[0] ?? appointmentDays.slice().sort()[0] ?? `${todayStart.getFullYear()}-${String(todayStart.getMonth() + 1).padStart(2, '0')}-${String(todayStart.getDate()).padStart(2, '0')}`;
 };
 
-const getMonthDays = (year, month) => {
+const getMonthDays = (year, month, appointmentDatesSet = new Set()) => {
     const days = new Date(year, month, 0).getDate();
     return Array.from({ length: days }, (_, index) => {
         const day = index + 1;
@@ -75,35 +88,81 @@ const getMonthDays = (year, month) => {
             id,
             day: String(day),
             weekday: weekdays[date.getDay()],
-            hasAppointments: appointmentDays.includes(id),
+            hasAppointments: appointmentDatesSet.has(id) || appointmentDays.includes(id),
             isPast: toDateOnly(id) < todayStart,
         };
     });
 };
 
-export default function ScheduleScreen({ navigation, activeTab, showBottomNav = true }) {
+export default function ScheduleScreen({ navigation, activeTab, showBottomNav = true, route }) {
+    const user = route?.params?.user || {};
     const [search, setSearch] = useState('');
     const [shouldResetPosition, setShouldResetPosition] = useState(true);
     const lastActiveTab = useRef(activeTab);
-    const usuario = 'Paciente';
-    const initialSelectedDate = getUpcomingAppointmentDate();
+    const usuario = user?.nome ?? 'Paciente';
     const [currentMonth, setCurrentMonth] = useState({
-        year: Number(initialSelectedDate.split('-')[0]),
-        month: Number(initialSelectedDate.split('-')[1]),
+        year: today.getFullYear(),
+        month: today.getMonth() + 1,
     });
-    const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
+    const [selectedDate, setSelectedDate] = useState(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
     const [pickerVisible, setPickerVisible] = useState(false);
     const [actionModalVisible, setActionModalVisible] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [swipeStartX, setSwipeStartX] = useState(null);
     const [carouselWidth, setCarouselWidth] = useState(0);
+    const [appointmentsData, setAppointmentsData] = useState([]);
+    const [loadingAppointments, setLoadingAppointments] = useState(true);
     const scrollViewRef = useRef(null);
     const dayButtonWidth = 58;
     const dayButtonSpacing = 8;
-    const monthDays = getMonthDays(currentMonth.year, currentMonth.month);
+    const monthDays = getMonthDays(currentMonth.year, currentMonth.month, appointmentDatesSet);
     const calendarStartOffset = new Date(currentMonth.year, currentMonth.month - 1, 1).getDay();
     const calendarCells = [...Array(calendarStartOffset).fill(null), ...monthDays];
-    const appointments = appointmentsByDate[selectedDate] ?? [];
+
+    // Datas que têm consultas (para marcar no calendário)
+    const appointmentDatesSet = new Set(
+        appointmentsData.map(apt => new Date(apt.data_hora).toISOString().split('T')[0])
+    );
+
+    // Carregar consultas do backend
+    useEffect(() => {
+        const loadAppointments = async () => {
+            if (user.email) {
+                try {
+                    const data = await getPatientAppointments(user.email);
+                    setAppointmentsData(data || []);
+                } catch (error) {
+                    console.log('Error loading appointments:', error);
+                } finally {
+                    setLoadingAppointments(false);
+                }
+            } else {
+                setLoadingAppointments(false);
+            }
+        };
+        loadAppointments();
+    }, [user.email]);
+
+    // Converter dados da API para formato do calendário
+    const getAppointmentsForDate = (dateId) => {
+        if (appointmentsData.length > 0) {
+            return appointmentsData
+                .filter(apt => {
+                    const aptDate = new Date(apt.data_hora).toISOString().split('T')[0];
+                    return aptDate === dateId;
+                })
+                .map(apt => ({
+                    id: String(apt.id),
+                    time: new Date(apt.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    clinic: apt.clinica_nome || 'Clínica',
+                    specialty: apt.especialidade_nome || 'Especialidade',
+                    confirmed: apt.status === 'confirmada',
+                }));
+        }
+        return appointmentsByDate[dateId] ?? [];
+    };
+
+    const appointments = getAppointmentsForDate(selectedDate);
 
     const monthLabel = `${monthNames[currentMonth.month - 1]}, ${currentMonth.year}`;
 

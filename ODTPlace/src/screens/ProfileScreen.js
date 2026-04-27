@@ -1,10 +1,30 @@
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Button, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { getPatientAppointments } from '../services/api';
 
 // Tela de perfil
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen({ navigation, route }) {
+  const user = route?.params?.user || {};
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllSpecialties, setShowAllSpecialties] = useState(false);
+  const [appointments, setAppointments] = useState([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(true);
+
+  useEffect(() => {
+    const loadAppointments = async () => {
+      if (user.email) {
+        try {
+          const data = await getPatientAppointments(user.email);
+          setAppointments(data);
+        } catch (error) {
+          console.log('Error loading appointments:', error);
+        } finally {
+          setLoadingAppointments(false);
+        }
+      }
+    };
+    loadAppointments();
+  }, [user.email]);
 
   const specialties = [
     'Ortodontia',
@@ -28,20 +48,48 @@ export default function ProfileScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.profileHeader}>
         <View style={styles.profileInfo}>
-          <Image style={styles.imagem2} source={require('../../assets/profile.png')} />
-          <Text style={styles.titulo}>AAA</Text>
+          <Image 
+            style={styles.imagem2} 
+            source={user.foto ? { uri: user.foto } : require('../../assets/profile.png')} 
+          />
+          <Text style={styles.titulo}>{user.nome || 'Paciente'}</Text>
         </View>
 
-        <Image style={styles.imagem} source={require('../../assets/profile.png')} />
-        <Text style={styles.titulo}>Nome: AAA</Text>
+        <Image 
+          style={styles.imagem} 
+          source={user.foto ? { uri: user.foto } : require('../../assets/profile.png')} 
+        />
+        <Text style={styles.titulo}>Nome: {user.nome || 'Não informado'}</Text>
       </View>
       <View style={{ alignItems: 'right', marginBottom: 20}}>
 
-        <Text style={styles.titulo}>Email: AAA@gmail.com</Text>
+        <Text style={styles.titulo}>Email: {user.email || 'Não informado'}</Text>
 
-        <Text style={styles.titulo}>Senha: ********</Text>
+        <Text style={styles.titulo}>Telefone: {user.telefone || 'Não informado'}</Text>
 
-        <Text style={styles.titulo}>Numero: 3914148128</Text>
+        {user.cpf && <Text style={styles.titulo}>CPF: {user.cpf}</Text>}
+      </View>
+
+      {/* Consultas do paciente */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Minhas Consultas</Text>
+        {loadingAppointments ? (
+          <ActivityIndicator size="small" color="#3b65c0" />
+        ) : appointments.length > 0 ? (
+          <ScrollView style={styles.specialtyList} nestedScrollEnabled>
+            {appointments.slice(0, 5).map((apt) => (
+              <View key={apt.id} style={styles.specialtyItem}>
+                <Text style={styles.specialtyText}>{apt.medico_nome || 'Médico'}</Text>
+                <Text style={styles.appointmentDate}>
+                  {new Date(apt.data_hora).toLocaleDateString('pt-BR')}
+                </Text>
+                <Text style={styles.appointmentStatus}>{apt.status}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
+          <Text style={styles.noResultsText}>Nenhuma consulta agendada.</Text>
+        )}
       </View>
 
       <View style={styles.section}>

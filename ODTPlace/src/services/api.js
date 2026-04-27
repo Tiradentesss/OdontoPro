@@ -94,3 +94,13 @@ export const createAppointment = async (appointmentData) => {
     throw error;
   }
 };
+
+export const getPatientAppointments = async (email) => {
+  try {
+    const response = await api.get(`/appointments/${email}`);
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
