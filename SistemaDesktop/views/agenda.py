@@ -75,6 +75,8 @@ class Agenda(BaseScreen):
         self._auto_refresh_ms = 10000
         self.details_panel = None
         self.row_widgets = {}
+        self._update_details_pending = False
+        self._detail_update_id = None
 
         self.colors = {
             'page_bg': COLORS['bg'],
@@ -96,15 +98,15 @@ class Agenda(BaseScreen):
             'avatar_colors': ['#F59E0B', '#EF4444', '#EC4899', '#10B981', '#3B82F6']
         }
 
-        # Configuração limpa e original para renderizar APENAS OS DADOS (as linhas coloridas)
+        # Configuração das colunas
         self.col_config = [
             {'key': 'avatar',        'minsize': 52,  'weight': 0, 'title': '',               'anchor': 'center', 'padx_left': 12, 'padx_right': 4},
-            {'key': 'nome',          'minsize': 150, 'weight': 1, 'title': 'Nome',           'anchor': 'w',      'padx_left': 12, 'padx_right': 8}, 
+            {'key': 'nome',          'minsize': 150, 'weight': 1, 'title': 'Nome',           'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
             {'key': 'especialidade', 'minsize': 120, 'weight': 1, 'title': 'Especialidade', 'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
             {'key': 'medico',        'minsize': 130, 'weight': 1, 'title': 'Médico',         'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
-            {'key': 'data',          'minsize': 100, 'weight': 0, 'title': 'Data',           'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
-            {'key': 'hora',          'minsize': 80,  'weight': 0, 'title': 'Hora',           'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
-            {'key': 'status',        'minsize': 130, 'weight': 0, 'title': 'Status',         'anchor': 'center', 'padx_left': 12, 'padx_right': 12}, 
+            {'key': 'data',          'minsize': 100, 'weight': 0, 'title': 'Data',           'anchor': 'center', 'padx_left': 12, 'padx_right': 8},
+            {'key': 'hora',          'minsize': 80,  'weight': 0, 'title': 'Hora',           'anchor': 'center', 'padx_left': 12, 'padx_right': 8},
+            {'key': 'status',        'minsize': 130, 'weight': 0, 'title': 'Status',         'anchor': 'center', 'padx_left': 12, 'padx_right': 12},
         ]
 
         self.col_widths = {conf['key']: conf['minsize'] for conf in self.col_config}
@@ -122,7 +124,7 @@ class Agenda(BaseScreen):
             return None
 
     def set_column_spacing(self, column_key, minsize=None, weight=None):
-        pass # Ignorado temporariamente para evitar loops desnecessários no exemplo
+        pass
 
     def set_column_padding(self, column_key, padx_left=None, padx_right=None):
         pass 
@@ -297,6 +299,9 @@ class Agenda(BaseScreen):
         self._render_filtros(left, datas, medicos, especialidades)
         self._render_info_top(left, total)
 
+        # ==============================
+        # TABELA (SEM CABEÇALHO)
+        # ==============================
         content_frame = ctk.CTkFrame(
             left,
             fg_color='#ffffff',
@@ -306,76 +311,19 @@ class Agenda(BaseScreen):
         )
         content_frame.grid(row=3, column=0, sticky='nsew', pady=(0, 10))
         content_frame.grid_columnconfigure(0, weight=1)
-        content_frame.grid_rowconfigure(0, weight=1)  
+        content_frame.grid_rowconfigure(0, weight=1)
 
         table_container = ctk.CTkFrame(content_frame, fg_color='transparent')
-        table_container.grid(row=0, column=0, sticky='nsew', padx=8, pady=0)
+        table_container.grid(row=0, column=0, sticky='nsew', padx=8)
         table_container.grid_columnconfigure(0, weight=1)
-        
-        table_container.grid_rowconfigure(0, weight=0) # Cabeçalho
-        table_container.grid_rowconfigure(1, weight=1) # Lista
+        table_container.grid_rowconfigure(0, weight=1)
 
-        # =========================================================================
-        # 1. CABEÇALHO 100% MANUAL, INDEPENDENTE E AJUSTÁVEL
-        # =========================================================================
-        header_frame = ctk.CTkFrame(table_container, fg_color='transparent', height=35, border_width=0)
-        header_frame.grid(row=0, column=0, sticky='ew', padx=0, pady=(12, 4))
-        header_frame.grid_propagate(False)
-        header_frame.grid_rowconfigure(0, weight=1)
-
-        # Configuramos a grade matemática exatamente igual à da lista para acompanhar telas
-        header_frame.grid_columnconfigure(0, minsize=52,  weight=0)
-        header_frame.grid_columnconfigure(1, minsize=150, weight=1)
-        header_frame.grid_columnconfigure(2, minsize=120, weight=1)
-        header_frame.grid_columnconfigure(3, minsize=130, weight=1)
-        header_frame.grid_columnconfigure(4, minsize=100, weight=0)
-        header_frame.grid_columnconfigure(5, minsize=80,  weight=0)
-        header_frame.grid_columnconfigure(6, minsize=130, weight=0)
-
-        h_font = ctk.CTkFont(size=13, weight='bold')
-        h_color = self.colors.get('text_muted', '#9CA3AF')
-
-        # COLUNA 0: Fica vazia para compensar o espaço da bolinha (Avatar)
-
-        # COLUNA 1: Nome 
-        lbl_nome = ctk.CTkLabel(header_frame, text="Nome", font=h_font, text_color=h_color, anchor='w')
-        # <- MUDE O VALOR AQUI: Se "Nome" estiver para a esquerda, aumente o 58. Se estiver para direita, diminua.
-        lbl_nome.grid(row=0, column=1, sticky='ew', padx=(58, 8)) 
-
-        # COLUNA 2: Especialidade
-        lbl_esp = ctk.CTkLabel(header_frame, text="Especialidade", font=h_font, text_color=h_color, anchor='w')
-        # <- MUDE O VALOR AQUI
-        lbl_esp.grid(row=0, column=2, sticky='ew', padx=(12, 8))
-
-        # COLUNA 3: Médico
-        lbl_med = ctk.CTkLabel(header_frame, text="Médico", font=h_font, text_color=h_color, anchor='w')
-        # <- MUDE O VALOR AQUI
-        lbl_med.grid(row=0, column=3, sticky='ew', padx=(12, 8))
-
-        # COLUNA 4: Data
-        lbl_data = ctk.CTkLabel(header_frame, text="Data", font=h_font, text_color=h_color, anchor='w')
-        # <- MUDE O VALOR AQUI
-        lbl_data.grid(row=0, column=4, sticky='ew', padx=(12, 8))
-
-        # COLUNA 5: Hora
-        lbl_hora = ctk.CTkLabel(header_frame, text="Hora", font=h_font, text_color=h_color, anchor='w')
-        # <- MUDE O VALOR AQUI
-        lbl_hora.grid(row=0, column=5, sticky='ew', padx=(12, 8))
-
-        # COLUNA 6: Status
-        lbl_status = ctk.CTkLabel(header_frame, text="Status", font=h_font, text_color=h_color, anchor='center')
-        # <- MUDE O VALOR AQUI: O status foi colocado como 'center' para se alinhar com a cor de fundo do status.
-        lbl_status.grid(row=0, column=6, sticky='ew', padx=(12, 12))
-
-
-        # ==========================================
-        # 2. LISTA DE CONSULTAS
-        # ==========================================
+        # LISTA APENAS - SEM CABEÇALHO
         list_area = ctk.CTkFrame(
             table_container,
             fg_color='transparent',
         )
-        list_area.grid(row=1, column=0, sticky='nsew', padx=0, pady=0)
+        list_area.grid(row=0, column=0, sticky='nsew')
         list_area.grid_columnconfigure(0, weight=1)
 
         if not consultas:
@@ -391,7 +339,7 @@ class Agenda(BaseScreen):
 
             ctk.CTkLabel(
                 empty_box,
-                text='Tente ajustar os filtros ou recarregar a agenda.',
+                text='Tente ajustar os filtros.',
                 text_color=self.colors['text_muted'],
                 font=ctk.CTkFont(size=13)
             ).pack()
@@ -665,7 +613,6 @@ class Agenda(BaseScreen):
                 height=30
             )
             
-            # Como alteramos o anchor de status para 'center', essa badge será centralizada na coluna
             if status_conf['anchor'] == 'center':
                 badge.pack(expand=True, pady=14)
             else:
@@ -769,8 +716,12 @@ class Agenda(BaseScreen):
             ).pack(side='left', padx=3)
 
     def render_details_panel(self, parent):
+        # Limpa o painel sem destruição abrupta
         for w in parent.winfo_children():
             w.destroy()
+        
+        # Força atualização da UI para evitar flicker
+        parent.update_idletasks()
 
         card = ctk.CTkFrame(
             parent,
@@ -907,8 +858,13 @@ class Agenda(BaseScreen):
         for cid, row in self.row_widgets.items():
             row.configure(fg_color=self.colors['selected'] if cid == consulta_id else '#FFFFFF')
 
+        # Cancela qualquer atualização pendente
+        if self._detail_update_id is not None:
+            self.after_cancel(self._detail_update_id)
+        
+        # Agenda a atualização do painel com debounce (reduz flicker)
         if self.details_panel:
-            self.render_details_panel(self.details_panel)
+            self._detail_update_id = self.after(50, lambda: self.render_details_panel(self.details_panel))
 
     def mudar_pagina(self, pagina):
         self.pagina_atual = pagina

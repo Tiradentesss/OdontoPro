@@ -13,9 +13,13 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.clinica_id = clinica_id
         self.selected_medico = None
         self.selected_date = datetime.now().date()
+        self.selected_dates = set()  # Múltiplas datas selecionadas
+        self.last_selected_date = None  # Para Shift+Click em datas
         self.selected_slots = set()
+        self.last_selected_slot = None  # Para Shift+Click em horários
         self.current_month = self.selected_date.month
         self.current_year = self.selected_date.year
+        self.date_buttons = {}  # Para armazenar botões de datas
 
         self.colors = {
             "bg": COLORS["bg"],
@@ -267,6 +271,15 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             text_color=self.colors["muted"]
         )
         self.right_subtitle.pack(anchor="w", pady=(4, 0))
+        
+        # Dica de uso
+        tip_label = ctk.CTkLabel(
+            title_frame,
+            text="💡 Dica: Use Shift + Clique para selecionar intervalos de datas/horários",
+            font=ctk.CTkFont(size=11),
+            text_color=self.colors["success"]
+        )
+        tip_label.pack(anchor="w", pady=(6, 0))
 
         # Calendário
         self.calendar_card = ctk.CTkFrame(
@@ -428,13 +441,15 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         start_weekday = first_day.weekday()
         last_day = self._last_day_of_month(self.current_year, self.current_month)
         
+        self.date_buttons = {}  # Limpar botões anteriores
         row = 1
         col = start_weekday
         
         for day_num in range(1, last_day + 1):
             current_date = datetime(self.current_year, self.current_month, day_num).date()
             is_today = current_date == datetime.now().date()
-            is_selected = current_date == self.selected_date
+            is_selected = current_date in self.selected_dates
+            is_sunday = current_date.weekday() == 6  # 6 = Domingo
             
             btn = ctk.CTkButton(
                 days_frame,
@@ -442,15 +457,20 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 width=40,
                 height=36,
                 corner_radius=10,
-                fg_color=self.colors["primary"] if is_selected else ("#F0F8FF" if is_today else "#FFFFFF"),
-                text_color="#FFFFFF" if is_selected else self.colors["text"],
+                fg_color=self.colors["primary"] if is_selected else ("#E5E5E5" if is_sunday else ("#F0F8FF" if is_today else "#FFFFFF")),
+                text_color="#FFFFFF" if is_selected else ("#A0A0A0" if is_sunday else self.colors["text"]),
                 border_width=1,
-                border_color=self.colors["primary"] if is_selected else self.colors["border"],
-                hover_color=self.colors["hover"],
+                border_color=self.colors["primary"] if is_selected else ("#D0D0D0" if is_sunday else self.colors["border"]),
+                hover_color=self.colors["hover"] if not is_sunday else ("#E5E5E5"),
                 font=ctk.CTkFont(size=13),
-                command=lambda d=current_date: self._select_date(d)
+                state="disabled" if is_sunday else "normal"
             )
             btn.grid(row=row, column=col, padx=4, pady=4, sticky="nsew")
+            
+            if not is_sunday:
+                btn.bind("<Button-1>", lambda e, d=current_date: self._on_date_clicked(e, d))
+            
+            self.date_buttons[current_date] = btn
             
             col += 1
             if col > 6:
@@ -465,9 +485,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             widget.destroy()
         
         self.slot_buttons = {}
-        self.selected_slots.clear()
         
-        # Horários disponíveis (baseado na imagem)
+        # Horários disponíveis
         horarios = [
             "08:00", "08:30", "09:00", "09:30",
             "10:00", "10:30", "11:00", "11:30",
@@ -480,26 +499,131 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             row = index // 4
             col = index % 4
             
+            is_selected = horario in self.selected_slots
+            
             btn = ctk.CTkButton(
                 self.slots_grid,
                 text=horario,
                 height=38,
                 corner_radius=10,
-                fg_color="#FFFFFF",
-                text_color=self.colors["text"],
+                fg_color=self.colors["primary"] if is_selected else "#FFFFFF",
+                text_color="#FFFFFF" if is_selected else self.colors["text"],
                 border_width=1,
-                border_color=self.colors["border"],
+                border_color=self.colors["primary"] if is_selected else self.colors["border"],
                 hover_color=self.colors["hover"],
-                font=ctk.CTkFont(size=13),
-                command=lambda h=horario: self._toggle_slot(h)
+                font=ctk.CTkFont(size=13)
             )
             btn.grid(row=row, column=col, padx=6, pady=6, sticky="ew")
+            btn.bind("<Button-1>", lambda e, h=horario: self._on_slot_clicked(e, h))
             
             self.slot_buttons[horario] = btn
 
     # =========================================================
     # AÇÕES
     # =========================================================
+    def _on_date_clicked(self, event, selected_date):
+        """Manipula clique em data com suporte a Shift+Click para intervalo"""
+        shift_pressed = (event.state & 0x1) != 0  # 0x1 é a flag Shift
+        
+        if shift_pressed and self.last_selected_date:
+            # Shift+Click: selecionar intervalo
+            self._select_date_range(self.last_selected_date, selected_date)
+        else:
+            # Click normal: selecionar/desselecionar única data
+            if selected_date in self.selected_dates:
+                self.selected_dates.remove(selected_date)
+            else:
+                self.selected_dates.add(selected_date)
+        
+        self.last_selected_date = selected_date
+        self._update_calendar_display()
+        self._update_date_info()
+
+    def _select_date_range(self, start_date, end_date):
+        """Seleciona intervalo de datas entre start_date e end_date"""
+        if start_date > end_date:
+            start_date, end_date = end_date, start_date
+        
+        current = start_date
+        while current <= end_date:
+            self.selected_dates.add(current)
+            current += timedelta(days=1)
+
+    def _update_calendar_display(self):
+        """Atualiza a visualização do calendário para refletir datas selecionadas"""
+        for date, btn in self.date_buttons.items():
+            is_selected = date in self.selected_dates
+            is_today = date == datetime.now().date()
+            
+            btn.configure(
+                fg_color=self.colors["primary"] if is_selected else ("#F0F8FF" if is_today else "#FFFFFF"),
+                text_color="#FFFFFF" if is_selected else self.colors["text"],
+                border_color=self.colors["primary"] if is_selected else self.colors["border"]
+            )
+
+    def _update_date_info(self):
+        """Atualiza o label de informação de datas selecionadas"""
+        if not self.selected_dates:
+            self.date_info_label.configure(text="Nenhuma data selecionada")
+        elif len(self.selected_dates) == 1:
+            date = list(self.selected_dates)[0]
+            self.date_info_label.configure(text=self._format_date(date))
+        else:
+            dates_sorted = sorted(list(self.selected_dates))
+            primeira = dates_sorted[0]
+            ultima = dates_sorted[-1]
+            self.date_info_label.configure(
+                text=f"Período: {primeira.strftime('%d/%m/%Y')} até {ultima.strftime('%d/%m/%Y')} ({len(self.selected_dates)} dias)"
+            )
+
+    def _on_slot_clicked(self, event, horario):
+        """Manipula clique em horário com suporte a Shift+Click para intervalo"""
+        shift_pressed = (event.state & 0x1) != 0  # 0x1 é a flag Shift
+        
+        horarios_list = [
+            "08:00", "08:30", "09:00", "09:30",
+            "10:00", "10:30", "11:00", "11:30",
+            "12:00", "12:30", "13:00", "13:30",
+            "14:00", "14:30", "15:00", "15:30",
+            "16:00", "16:30", "17:00", "17:30"
+        ]
+        
+        if shift_pressed and self.last_selected_slot and self.last_selected_slot in horarios_list:
+            # Shift+Click: selecionar intervalo de horários
+            start_idx = horarios_list.index(self.last_selected_slot)
+            end_idx = horarios_list.index(horario)
+            
+            if start_idx > end_idx:
+                start_idx, end_idx = end_idx, start_idx
+            
+            for idx in range(start_idx, end_idx + 1):
+                self.selected_slots.add(horarios_list[idx])
+        else:
+            # Click normal: selecionar/desselecionar único horário
+            if horario in self.selected_slots:
+                self.selected_slots.remove(horario)
+            else:
+                self.selected_slots.add(horario)
+        
+        self.last_selected_slot = horario
+        self._update_slots_display()
+
+    def _update_slots_display(self):
+        """Atualiza a visualização dos horários para refletir seleção"""
+        for horario, btn in self.slot_buttons.items():
+            is_selected = horario in self.selected_slots
+            
+            btn.configure(
+                fg_color=self.colors["primary"] if is_selected else "#FFFFFF",
+                text_color="#FFFFFF" if is_selected else self.colors["text"],
+                border_color=self.colors["primary"] if is_selected else self.colors["border"]
+            )
+        
+        qtd = len(self.selected_slots)
+        self.selection_label.configure(
+            text=f"{qtd} horário{'s' if qtd != 1 else ''} selecionado{'s' if qtd != 1 else ''}"
+        )
+
     def _select_medico(self, medico):
         self.selected_medico = medico
         self.right_subtitle.configure(
@@ -541,17 +665,26 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             messagebox.showwarning("Aviso", "Selecione um médico primeiro.")
             return
         
+        if not self.selected_dates:
+            messagebox.showwarning("Aviso", "Selecione pelo menos uma data.")
+            return
+        
         if not self.selected_slots:
             messagebox.showwarning("Aviso", "Selecione pelo menos um horário.")
             return
         
         horarios = ", ".join(sorted(self.selected_slots))
-        data_formatada = self.selected_date.strftime("%d/%m/%Y")
+        datas_sorted = sorted(list(self.selected_dates))
+        
+        if len(datas_sorted) == 1:
+            datas_str = datas_sorted[0].strftime("%d/%m/%Y")
+        else:
+            datas_str = f"{datas_sorted[0].strftime('%d/%m/%Y')} até {datas_sorted[-1].strftime('%d/%m/%Y')} ({len(datas_sorted)} dias)"
         
         messagebox.showinfo(
             "Disponibilidade salva",
             f"Médico: {self.selected_medico['nome']}\n"
-            f"Data: {data_formatada}\n"
+            f"Datas: {datas_str}\n"
             f"Horários: {horarios}"
         )
 
@@ -574,6 +707,13 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
     # =========================================================
     # HELPERS
     # =========================================================
+    def _format_date(self, date):
+        """Formata uma data para exibição"""
+        dias = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", 
+                "Sexta-feira", "Sábado", "Domingo"]
+        nome_dia = dias[date.weekday()]
+        return f"Data selecionada: {nome_dia}, {date.strftime('%d/%m/%Y')}"
+
     def _hover_row(self, row, is_selected, entering):
         if entering:
             if not is_selected:

@@ -1,277 +1,425 @@
 from .base import BaseScreen
 import customtkinter as ctk
-from .theme import font, ICON_SIZE, COLORS
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from .theme import font, COLORS
+from datetime import datetime, timedelta
+from collections import defaultdict
+
 
 class Financeiro(BaseScreen):
     def __init__(self, parent):
         super().__init__(parent, "Financeiro")
 
-        # MAIN CONTAINER - Seguindo padrão do Painel
-        main_container = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        main_container.pack(expand=True, fill="both", padx=25, pady=25)
-
-        # =============================
-        # CARDS DE RESUMO
-        # =============================
-        cards_container = ctk.CTkFrame(main_container, fg_color="transparent")
-        cards_container.pack(fill="x", pady=(0, 25))
-        
-        # Configurar grid para 3 colunas iguais
-        for i in range(3):
-            cards_container.grid_columnconfigure(i, weight=1, uniform="cards")
-
-        dados = [
-            {"label": "Faturamento Mensal", "valor": "R$ 25.480", "cor": "#22C55E", "icone": "📈"},
-            {"label": "Despesas", "valor": "R$ 9.320", "cor": "#EF4444", "icone": "📉"},
-            {"label": "Lucro Líquido", "valor": "R$ 16.160", "cor": "#0EA5E9", "icone": "💰"},
+        # Transações iniciais (serão sincronizadas com a tabela)
+        self.transacoes = [
+            ("04/05", "Consulta Odontológica", "Receita", 250),
+            ("03/05", "Materiais de Limpeza", "Despesa", 450),
+            ("02/05", "Manutenção Ar Condicionado", "Despesa", 300),
         ]
 
-        for i, item in enumerate(dados):
-            card = self._criar_card_resumo(
-                cards_container,
-                icone=item["icone"],
-                label=item["label"],
-                valor=item["valor"],
-                cor=item["cor"]
-            )
-            card.grid(row=0, column=i, padx=(0 if i == 0 else 15, 0 if i == 2 else 0), sticky="ew")
+        self.main_container = ctk.CTkScrollableFrame(self.content_card, fg_color="transparent")
+        self.main_container.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # =============================
-        # GRÁFICO SIMULADO
-        # =============================
-        grafico_card = ctk.CTkFrame(
-            main_container,
-            fg_color=COLORS["card"],
-            corner_radius=15,
-            border_width=1,
-            border_color=COLORS["border"]
-        )
-        grafico_card.pack(fill="both", expand=True, pady=(0, 20))
+        self.setup_ui()
 
-        # Header do gráfico
-        header = ctk.CTkFrame(grafico_card, fg_color="transparent")
-        header.pack(fill="x", padx=20, pady=15)
+    def setup_ui(self):
+        self.create_kpi_section()
+        self.create_chart_section()
+        self.create_transactions_section()
 
-        ctk.CTkLabel(
-            header,
-            text="📊 Fluxo de Caixa",
-            font=font("subtitle", "bold")
-        ).pack(side="left")
-
-        # Seletor de período
-        periodo_btn = ctk.CTkOptionMenu(
-            header,
-            values=["Últimos 30 dias", "Últimos 90 dias", "Este ano"],
-            font=font("small"),
-            fg_color="#F9FAFB",
-            button_color="#E5E7EB",
-            button_hover_color="#D1D5DB",
-            text_color="#111827",
-            dropdown_fg_color="white",
-            dropdown_text_color="#111827",
-            dropdown_font=font("small"),
-            width=120,
-            height=30
-        )
-        periodo_btn.pack(side="right")
-        periodo_btn.set("Últimos 30 dias")
-
-        # Container do gráfico
-        grafico_container = ctk.CTkFrame(grafico_card, fg_color="transparent")
-        grafico_container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
-
-        # Simulação de gráfico de barras
-        barras_container = ctk.CTkFrame(grafico_container, fg_color="transparent")
-        barras_container.pack(fill="x", pady=(20, 30))
+    def processar_transacoes_por_periodo(self, periodo):
+        """Processa transações e agrupa por período"""
+        transacoes_agrupadas = defaultdict(lambda: {"receita": 0, "despesa": 0})
         
-        # Configurar grid para 7 colunas (dias da semana)
-        for i in range(7):
-            barras_container.grid_columnconfigure(i, weight=1)
-
-        dias = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
-        valores = [85, 70, 95, 80, 90, 65, 55]  # Percentuais para as barras
-
-        for i, (dia, valor) in enumerate(zip(dias, valores)):
-            coluna = ctk.CTkFrame(barras_container, fg_color="transparent")
-            coluna.grid(row=0, column=i, padx=5)
+        for data_str, descricao, tipo, valor in self.transacoes:
+            try:
+                data = datetime.strptime(data_str, "%d/%m")
+                # Assumindo ano atual
+                data = data.replace(year=datetime.now().year)
+            except:
+                continue
             
-            # Barra
-            barra_frame = ctk.CTkFrame(coluna, fg_color="transparent", height=150)
-            barra_frame.pack(fill="x")
-            
-            barra = ctk.CTkFrame(
-                barra_frame,
-                fg_color=COLORS["primary"],
-                height=int(150 * (valor / 100)),
-                width=30,
-                corner_radius=4
-            )
-            barra.pack(side="bottom", pady=(0, 5))
-            
-            # Valor
-            ctk.CTkLabel(
-                coluna,
-                text=f"R$ {valor*100}",
-                font=font("small", "bold"),
-                text_color=COLORS["primary"]
-            ).pack(pady=(5, 0))
-            
-            # Dia
-            ctk.CTkLabel(
-                coluna,
-                text=dia,
-                font=font("small"),
-                text_color=COLORS["text_secondary"]
-            ).pack()
+            if tipo.lower() == "receita":
+                transacoes_agrupadas[data]["receita"] += valor
+            else:
+                transacoes_agrupadas[data]["despesa"] += valor
+        
+        # Gerar dados do gráfico baseado no período
+        if periodo == "Últimos 7 dias":
+            return self._gerar_dados_7_dias(transacoes_agrupadas)
+        elif periodo == "Últimos 30 dias":
+            return self._gerar_dados_30_dias(transacoes_agrupadas)
+        elif periodo == "Este Ano":
+            return self._gerar_dados_ano(transacoes_agrupadas)
+        
+        return self._gerar_dados_7_dias(transacoes_agrupadas)
+    
+    def _gerar_dados_7_dias(self, transacoes_agrupadas):
+        """Gera dados para os últimos 7 dias"""
+        hoje = datetime.now()
+        datas = [(hoje - timedelta(days=i)).date() for i in range(6, -1, -1)]
+        nomes_dias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+        
+        receitas = []
+        despesas = []
+        
+        for data in datas:
+            data_obj = datetime.combine(data, datetime.min.time())
+            if data_obj in transacoes_agrupadas:
+                receitas.append(transacoes_agrupadas[data_obj]["receita"])
+                despesas.append(transacoes_agrupadas[data_obj]["despesa"])
+            else:
+                receitas.append(0)
+                despesas.append(0)
+        
+        return nomes_dias, receitas, despesas
+    
+    def _gerar_dados_30_dias(self, transacoes_agrupadas):
+        """Gera dados para os últimos 30 dias agrupados por semana"""
+        hoje = datetime.now()
+        semanas_labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4']
+        receitas = [0, 0, 0, 0]
+        despesas = [0, 0, 0, 0]
+        
+        for data_obj, valores in transacoes_agrupadas.items():
+            dias_atras = (hoje.date() - data_obj.date()).days
+            if dias_atras <= 30:
+                semana_idx = min(dias_atras // 7, 3)
+                receitas[3 - semana_idx] += valores["receita"]
+                despesas[3 - semana_idx] += valores["despesa"]
+        
+        return semanas_labels, receitas, despesas
+    
+    def _gerar_dados_ano(self, transacoes_agrupadas):
+        """Gera dados para o ano agrupados por mês"""
+        meses_labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+        receitas = [0] * 12
+        despesas = [0] * 12
+        
+        for data_obj, valores in transacoes_agrupadas.items():
+            mes_idx = data_obj.month - 1
+            receitas[mes_idx] += valores["receita"]
+            despesas[mes_idx] += valores["despesa"]
+        
+        return meses_labels, receitas, despesas
+    
+    def calcular_kpis(self):
+        """Calcula os KPIs baseado nas transações"""
+        total_receita = sum(valor for _, _, tipo, valor in self.transacoes if tipo.lower() == "receita")
+        total_despesa = sum(valor for _, _, tipo, valor in self.transacoes if tipo.lower() == "despesa")
+        lucro = total_receita - total_despesa
+        
+        return total_receita, total_despesa, lucro
 
-        # =============================
-        # TABELA DE ÚLTIMAS TRANSAÇÕES
-        # =============================
-        tabela_card = ctk.CTkFrame(
-            main_container,
-            fg_color="white",
-            corner_radius=15,
-            border_width=1,
-            border_color="#E5E7EB"
-        )
-        tabela_card.pack(fill="x")
+    def create_kpi_section(self):
+        total_receita, total_despesa, lucro = self.calcular_kpis()
+        
+        kpi_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
+        kpi_frame.pack(fill="x", pady=(0, 15))
+        kpi_frame.columnconfigure((0, 1, 2), weight=1, uniform="a")
 
-        # Header da tabela
-        tabela_header = ctk.CTkFrame(tabela_card, fg_color="transparent")
-        tabela_header.pack(fill="x", padx=20, pady=15)
+        # Definir cor do lucro baseado no valor (positivo = azul, negativo = vermelho)
+        cor_lucro = COLORS["primary"] if lucro >= 0 else COLORS["danger"]
 
-        ctk.CTkLabel(
-            tabela_header,
-            text="📋 Últimas Transações",
-            font=font("subtitle", "bold")
-        ).pack(side="left")
-
-        # Botão ver todas
-        ctk.CTkButton(
-            tabela_header,
-            text="Ver todas",
-            font=font("small", "bold"),
-            fg_color="transparent",
-            text_color=COLORS["primary"],
-            hover_color=COLORS["hover"],
-            width=80,
-            height=30,
-            corner_radius=5
-        ).pack(side="right")
-
-        # Linha divisória
-        divider = ctk.CTkFrame(tabela_card, height=1, fg_color=COLORS["border"])
-        divider.pack(fill="x")
-
-        # Cabeçalhos da tabela
-        headers_frame = ctk.CTkFrame(tabela_card, fg_color=COLORS["bg_soft"], height=40)
-        headers_frame.pack(fill="x")
-        headers_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
-
-        headers = ["Data", "Descrição", "Tipo", "Valor"]
-        for i, header in enumerate(headers):
-            ctk.CTkLabel(
-                headers_frame,
-                text=header,
-                font=font("small", "bold"),
-                text_color=COLORS["text_secondary"]
-            ).grid(row=0, column=i, padx=20, pady=10, sticky="w")
-
-        # Linhas da tabela
-        transacoes = [
-            {"data": "15/03/2024", "descricao": "Consulta - Victor Araújo", "tipo": "Receita", "valor": "R$ 250,00", "cor": "#22C55E"},
-            {"data": "15/03/2024", "descricao": "Compra de materiais", "tipo": "Despesa", "valor": "R$ 450,00", "cor": "#EF4444"},
-            {"data": "14/03/2024", "descricao": "Consulta - Natália Silva", "tipo": "Receita", "valor": "R$ 300,00", "cor": "#22C55E"},
-            {"data": "14/03/2024", "descricao": "Pagamento fornecedor", "tipo": "Despesa", "valor": "R$ 1.200,00", "cor": "#EF4444"},
-            {"data": "13/03/2024", "descricao": "Procedimento - Hugo Pontes", "tipo": "Receita", "valor": "R$ 800,00", "cor": "#22C55E"},
+        kpis = [
+            ("📊 Faturamento", f"R$ {total_receita:,.2f}".replace(",", "."), COLORS["primary"]),
+            ("📉 Despesas", f"R$ {total_despesa:,.2f}".replace(",", "."), COLORS["danger"]),
+            ("💰 Lucro", f"R$ {lucro:,.2f}".replace(",", "."), cor_lucro)
         ]
 
-        for i, trans in enumerate(transacoes):
-            # Linha alternada para melhor legibilidade
-            bg_color = COLORS["card"] if i % 2 == 0 else COLORS["bg_soft"]
-            
-            linha = ctk.CTkFrame(tabela_card, fg_color=bg_color, height=45)
-            linha.pack(fill="x")
-            linha.grid_columnconfigure((0, 1, 2, 3), weight=1)
+        for i, (title, value, color) in enumerate(kpis):
+            card = ctk.CTkFrame(kpi_frame, fg_color=COLORS["card"], corner_radius=12,
+                                border_width=1, border_color=COLORS["border"])
+            card.grid(row=0, column=i, sticky="ew", padx=8)
 
-            # Data
-            ctk.CTkLabel(
-                linha,
-                text=trans["data"],
-                font=font("small"),
-                text_color=COLORS["text_secondary"]
-            ).grid(row=0, column=0, padx=20, pady=12, sticky="w")
+            ctk.CTkLabel(card, text=title, font=font("small"),
+                         text_color=COLORS["text_secondary"]).pack(anchor="w", padx=15, pady=(10, 2))
 
-            # Descrição
-            ctk.CTkLabel(
-                linha,
-                text=trans["descricao"],
-                font=font("small"),
-                text_color=COLORS["text"]
-            ).grid(row=0, column=1, padx=20, pady=12, sticky="w")
+            ctk.CTkLabel(card, text=value, font=font("title", "bold"),
+                         text_color=color).pack(anchor="w", padx=15, pady=(0, 10))
 
-            # Tipo
-            tipo_frame = ctk.CTkFrame(linha, fg_color="transparent")
-            tipo_frame.grid(row=0, column=2, padx=20, pady=12, sticky="w")
-            
-            tipo_label = ctk.CTkLabel(
-                tipo_frame,
-                text=trans["tipo"],
-                font=font("small", "bold"),
-                text_color="white",
-                fg_color=trans["cor"],
-                corner_radius=4,
-                padx=8,
-                pady=2
-            )
-            tipo_label.pack()
+    def create_chart_section(self):
+        container = ctk.CTkFrame(self.main_container, fg_color=COLORS["card"],
+                                 corner_radius=12, border_width=1, border_color=COLORS["border"])
+        container.pack(fill="x", pady=(0, 15))
 
-            # Valor
-            ctk.CTkLabel(
-                linha,
-                text=trans["valor"],
-                font=font("small", "bold"),
-                text_color=trans["cor"]
-            ).grid(row=0, column=3, padx=20, pady=12, sticky="w")
+        header = ctk.CTkFrame(container, fg_color="transparent")
+        header.pack(fill="x", padx=15, pady=15)
 
-    def _criar_card_resumo(self, parent, icone, label, valor, cor):
-        """Cria um card de resumo padronizado"""
-        card = ctk.CTkFrame(
-            parent,
-            fg_color=COLORS["card"],
-            corner_radius=15,
-            border_width=1,
-            border_color=COLORS["border"]
-        )
+        ctk.CTkLabel(header, text="📈 Entradas vs Saídas",
+                     font=font("subtitle", "bold")).pack(side="left")
+
+        periodos = ["Últimos 7 dias", "Últimos 30 dias", "Este Ano"]
+        combo = ctk.CTkComboBox(header,
+                                values=periodos,
+                                command=self.update_chart,
+                                width=140,
+                                font=font("small"))
+        combo.set("Últimos 7 dias")
+        combo.pack(side="right")
+
+        self.plot_area = ctk.CTkFrame(container, fg_color="transparent")
+        self.plot_area.pack(fill="both", expand=True, padx=10, pady=(0, 15))
+
+        self.update_chart("Últimos 7 dias")
+
+    def update_chart(self, selection):
+        for widget in self.plot_area.winfo_children():
+            widget.destroy()
+
+        labels, receitas, despesas = self.processar_transacoes_por_periodo(selection)
         
-        # Container interno
-        container = ctk.CTkFrame(card, fg_color="transparent")
-        container.pack(expand=True, fill="both", padx=20, pady=20)
+        # Calcular valores formatados para o título
+        total_receitas = sum(receitas)
+        total_despesas = sum(despesas)
+        lucro = total_receitas - total_despesas
 
-        # Linha superior com ícone e label
-        linha_superior = ctk.CTkFrame(container, fg_color="transparent")
-        linha_superior.pack(fill="x", pady=(0, 10))
+        # Criar figura
+        fig, ax = plt.subplots(figsize=(8, 3.5), dpi=100)
+        fig.patch.set_facecolor(COLORS["card"])
+        ax.set_facecolor(COLORS["card"])
 
+        # Criar gráfico de linha com área preenchida
+        x = range(len(labels))
+        
+        # Linha e área para Receitas (azul primário)
+        ax.plot(x, receitas, marker='o', linewidth=2.5, markersize=6,
+                color=COLORS["primary"], label='📈 Entradas', alpha=1)
+        ax.fill_between(x, receitas, alpha=0.2, color=COLORS["primary"])
+        
+        # Linha e área para Despesas (vermelho)
+        ax.plot(x, despesas, marker='s', linewidth=2.5, markersize=6,
+                color=COLORS["danger"], label='📉 Saídas', alpha=1)
+        ax.fill_between(x, despesas, alpha=0.2, color=COLORS["danger"])
+        
+        # Adicionar valores nos pontos com ajuste para valores negativos
+        for i, (rec, desp) in enumerate(zip(receitas, despesas)):
+            # Ajustar posição do texto da receita
+            if rec > 0:
+                y_offset_rec = 10
+            else:
+                y_offset_rec = -15
+            
+            # Ajustar posição do texto da despesa
+            if desp > 0:
+                y_offset_desp = -15
+            else:
+                y_offset_desp = 10
+            
+            # Só adiciona anotação se o valor não for zero
+            if rec != 0:
+                ax.annotate(f'R${rec:,.0f}'.replace(',', '.'), 
+                           xy=(i, rec), xytext=(0, y_offset_rec),
+                           textcoords="offset points", ha='center', fontsize=6.5,
+                           color=COLORS["primary"], fontweight='bold')
+            
+            if desp != 0:
+                ax.annotate(f'R${desp:,.0f}'.replace(',', '.'), 
+                           xy=(i, desp), xytext=(0, y_offset_desp),
+                           textcoords="offset points", ha='center', fontsize=6.5,
+                           color=COLORS["danger"], fontweight='bold')
+        
+        # Configurar eixo X
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, fontsize=8, color=COLORS["text_secondary"])
+        
+        # Ajustar limites do eixo Y para dar espaço para valores negativos
+        y_min = min(min(receitas), min(despesas), 0)
+        y_max = max(max(receitas), max(despesas), 0)
+        y_range = y_max - y_min
+        if y_range == 0:
+            y_range = 100  # Valor padrão se todos os dados forem zero
+        
+        # Adicionar padding de 20% acima e abaixo
+        ax.set_ylim(y_min - y_range * 0.2, y_max + y_range * 0.2)
+        
+        # Configurar eixo Y
+        ax.yaxis.set_tick_params(labelsize=7, colors=COLORS["text_secondary"])
+        
+        # Formatar valores do eixo Y
+        def format_y(value, _):
+            if value >= 1000:
+                return f'R${value/1000:.0f}K'
+            return f'R${value:.0f}'
+        
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(format_y))
+        
+        # Adicionar linha horizontal em zero para destacar valores negativos
+        ax.axhline(y=0, color=COLORS["border"], linestyle='-', linewidth=0.8, alpha=0.5)
+        
+        # Remover spines desnecessários
+        ax.spines[['top', 'right']].set_visible(False)
+        ax.spines['left'].set_color(COLORS["border"])
+        ax.spines['bottom'].set_color(COLORS["border"])
+        
+        # Adicionar grid sutil
+        ax.grid(axis='y', alpha=0.3, color=COLORS["border"], linestyle='--', linewidth=0.5)
+        ax.grid(axis='x', alpha=0.1, color=COLORS["border"], linestyle='--', linewidth=0.5)
+        ax.set_axisbelow(True)
+        
+        # Adicionar título com resumo
+        titulo = f'Total: R$ {total_receitas:,.0f} | Despesas: R$ {total_despesas:,.0f} | Lucro: R$ {lucro:,.0f}'
+        titulo = titulo.replace(',', '.')
+        ax.set_title(titulo, fontsize=8, color=COLORS["text_secondary"], pad=15, loc='center', fontweight='bold')
+        
+        # Legenda
+        legend = ax.legend(loc='upper left', frameon=True, fancybox=True, shadow=False,
+                          fontsize=7, facecolor=COLORS["card"], edgecolor=COLORS["border"])
+        
+        # Ajustar layout
+        plt.tight_layout()
+
+        canvas = FigureCanvasTkAgg(fig, master=self.plot_area)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        plt.close(fig)
+
+    def create_transactions_section(self):
+        container = ctk.CTkFrame(self.main_container, fg_color=COLORS["card"],
+                                corner_radius=12, border_width=1, border_color=COLORS["border"])
+        container.pack(fill="both", expand=True)
+
+        header = ctk.CTkFrame(container, fg_color="transparent")
+        header.pack(fill="x", padx=15, pady=(10, 5))
+
+        ctk.CTkLabel(header, text="🧾 Transações",
+                     font=font("subtitle", "bold")).pack(side="left")
+
+        self.render_table(container)
+
+    def render_table(self, container):
+        table_container = ctk.CTkFrame(container, fg_color="transparent")
+        table_container.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Configuração de colunas
+        def configure_table_grid(frame):
+            frame.columnconfigure(0, weight=1, uniform="col")  # Data
+            frame.columnconfigure(1, weight=4, uniform="col")  # Descrição
+            frame.columnconfigure(2, weight=1, uniform="col")  # Tipo
+            frame.columnconfigure(3, weight=1, uniform="col")  # Valor
+        
+        # ========== CABEÇALHO ==========
+        headers_frame = ctk.CTkFrame(table_container, fg_color="transparent")
+        headers_frame.pack(fill="x", pady=(0, 5))
+        configure_table_grid(headers_frame)
+        
+        # Data
         ctk.CTkLabel(
-            linha_superior,
-            text=icone,
-            font=font("title"),
-            width=30
-        ).pack(side="left", padx=(0, 5))
-
+            headers_frame, 
+            text="Data", 
+            font=font("small", "bold"), 
+            text_color=COLORS["text_secondary"],
+            anchor="w"
+        ).grid(row=0, column=0, sticky="w", padx=15, pady=8)
+        
+        # Descrição
         ctk.CTkLabel(
-            linha_superior,
-            text=label,
-            font=font("text"),
-            text_color="#6B7280"
-        ).pack(side="left")
-
+            headers_frame, 
+            text="Descrição", 
+            font=font("small", "bold"), 
+            text_color=COLORS["text_secondary"],
+            anchor="w"
+        ).grid(row=0, column=1, sticky="w", padx=15, pady=8)
+        
+        # Tipo
+        ctk.CTkLabel(
+            headers_frame, 
+            text="Tipo", 
+            font=font("small", "bold"), 
+            text_color=COLORS["text_secondary"],
+            anchor="center"
+        ).grid(row=0, column=2, sticky="we", padx=0, pady=8)
+        
         # Valor
         ctk.CTkLabel(
-            container,
-            text=valor,
-            font=font("title", "bold"),
-            text_color=cor
-        ).pack(anchor="w")
+            headers_frame, 
+            text="Valor", 
+            font=font("small", "bold"), 
+            text_color=COLORS["text_secondary"],
+            anchor="e"
+        ).grid(row=0, column=3, sticky="e", padx=15, pady=8)
+        
+        # Linha separadora
+        ctk.CTkFrame(table_container, height=1, fg_color=COLORS["border"]).pack(fill="x", pady=5)
+        
+        # ========== DADOS DA TABELA ==========
+        for i, (data, descricao, tipo, valor) in enumerate(self.transacoes):
+            # Definir cor baseado no tipo
+            cor = COLORS["primary"] if tipo.lower() == "receita" else COLORS["danger"]
+            
+            # Cor de fundo alternada
+            bg = COLORS["bg_soft"] if i % 2 == 0 else "transparent"
+            row_frame = ctk.CTkFrame(table_container, fg_color=bg, corner_radius=8)
+            row_frame.pack(fill="x", pady=2)
+            configure_table_grid(row_frame)
+            
+            # Data
+            ctk.CTkLabel(
+                row_frame, 
+                text=data, 
+                font=font("small"),
+                anchor="w"
+            ).grid(row=0, column=0, sticky="w", padx=15, pady=8)
+            
+            # Descrição
+            ctk.CTkLabel(
+                row_frame, 
+                text=descricao, 
+                font=font("small"),
+                anchor="w"
+            ).grid(row=0, column=1, sticky="w", padx=15, pady=8)
+            
+            # Tipo (com badge)
+            ctk.CTkLabel(
+                row_frame, 
+                text=tipo, 
+                font=font("small", "bold"),
+                text_color="white",
+                fg_color=cor,
+                corner_radius=10,
+                anchor="center",
+                width=55,
+                height=22
+            ).grid(row=0, column=2, sticky="we", padx=0, pady=8)
+            
+            # Valor
+            ctk.CTkLabel(
+                row_frame, 
+                text=f"R$ {valor:,.2f}".replace(",", "."), 
+                font=font("small", "bold"), 
+                text_color=cor,
+                anchor="e"
+            ).grid(row=0, column=3, sticky="e", padx=15, pady=8)
 
-        return card
+    def adicionar_transacao(self, data, descricao, tipo, valor):
+        """Adiciona uma nova transação e sincroniza a interface"""
+        self.transacoes.append((data, descricao, tipo, valor))
+        self.atualizar_interface()
+    
+    def remover_transacao(self, indice):
+        """Remove uma transação pelo índice e sincroniza a interface"""
+        if 0 <= indice < len(self.transacoes):
+            del self.transacoes[indice]
+            self.atualizar_interface()
+    
+    def atualizar_interface(self):
+        """Sincroniza todos os componentes da interface com os dados atuais"""
+        # Limpar e reconstruir a interface
+        for widget in self.main_container.winfo_children():
+            widget.destroy()
+        self.setup_ui()
+    
+    def obter_transacoes(self):
+        """Retorna a lista de transações"""
+        return self.transacoes
+    
+    def obter_totais(self):
+        """Retorna os totais de receita e despesa"""
+        total_receita, total_despesa, lucro = self.calcular_kpis()
+        return {
+            "receita": total_receita,
+            "despesa": total_despesa,
+            "lucro": lucro
+        }
