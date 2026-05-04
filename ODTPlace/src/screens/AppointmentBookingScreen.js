@@ -40,8 +40,24 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   // Data atual
   const today = new Date();
   
-  // Lista de especialidades do médico (pode vir da API ou ser passada como parâmetro)
-  const doctorSpecialties = professional.especialidades || [professional.specialty || 'Consulta'];
+  // Converter especialidades em formato com ID e nome
+  const getDoctorSpecialties = () => {
+    if (Array.isArray(professional.especialidades) && professional.especialidades.length > 0) {
+      // Se as especialidades já tiverem ID e nome
+      return professional.especialidades.map((spec, index) => {
+        if (typeof spec === 'object' && spec.id && spec.nome) {
+          return { id: spec.id, nome: spec.nome };
+        }
+        // Se for apenas string, criar objeto com ID sequencial
+        return { id: String(index + 1), nome: spec };
+      });
+    }
+    // Fallback para specialty ou valor padrão
+    const specialty = professional.specialty || 'Consulta';
+    return [{ id: professional.especialidade_id || '1', nome: specialty }];
+  };
+  
+  const doctorSpecialties = getDoctorSpecialties();
   
   const [nomeCompleto, setNomeCompleto] = useState(user?.nome ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
@@ -54,7 +70,8 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   const [currentMonth, setCurrentMonth] = useState({ year: today.getFullYear(), month: today.getMonth() + 1 });
   const [selectedDate, setSelectedDate] = useState(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
   const [selectedTime, setSelectedTime] = useState('09:00');
-  const [selectedSpecialty, setSelectedSpecialty] = useState(doctorSpecialties[0] || 'Consulta');
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(doctorSpecialties[0]?.id || '1');
+  const [selectedSpecialtyName, setSelectedSpecialtyName] = useState(doctorSpecialties[0]?.nome || 'Consulta');
   
   // Preço da consulta (pode ser mock ou vir da API)
   const consultationPrice = professional.preco || 150.00;
@@ -102,6 +119,11 @@ export default function AppointmentBookingScreen({ route, navigation }) {
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios.');
       return;
     }
+    
+    if (!selectedSlot) {
+      Alert.alert('Erro', 'Selecione uma data e horário para a consulta.');
+      return;
+    }
 
     try {
       const data_hora = formatDateTime(selectedDate, selectedTime);
@@ -111,7 +133,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
         telefone: phone,
         clinica_id: clinic.id,
         medico_id: professional.id,
-        especialidade_id: professional.especialidade_id ?? route?.params?.selectedSpecialtyId ?? null,
+        especialidade_id: selectedSpecialtyId,
         data_hora,
         observacoes: reason,
         paciente_id: user.id,
@@ -193,7 +215,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
           </View>
 
           {/* Seleção de Especialidade */}
-          {doctorSpecialties.length > 1 && (
+          {doctorSpecialties.length > 0 && (
             <View style={styles.formGroup}>
               <Text style={styles.fieldLabel}>Especialidade</Text>
               <TouchableOpacity 
@@ -201,9 +223,12 @@ export default function AppointmentBookingScreen({ route, navigation }) {
                 activeOpacity={0.85} 
                 onPress={() => setSpecialtyPickerVisible(true)}
               >
-                <Text style={styles.slotText}>{selectedSpecialty}</Text>
+                <Text style={styles.slotText}>{selectedSpecialtyName}</Text>
                 <Text style={styles.slotArrow}>⌄</Text>
               </TouchableOpacity>
+              {doctorSpecialties.length > 1 && (
+                <Text style={styles.slotHelp}>Toque para escolher uma especialidade.</Text>
+              )}
             </View>
           )}
 
@@ -229,21 +254,27 @@ export default function AppointmentBookingScreen({ route, navigation }) {
                 <ScrollView style={styles.specialtyList}>
                   {doctorSpecialties.map((specialty) => (
                     <TouchableOpacity
-                      key={specialty}
+                      key={specialty.id}
                       style={[
                         styles.specialtyOption,
-                        selectedSpecialty === specialty && styles.specialtyOptionActive
+                        selectedSpecialtyId === specialty.id && styles.specialtyOptionActive
                       ]}
                       onPress={() => {
-                        setSelectedSpecialty(specialty);
+                        setSelectedSpecialtyId(specialty.id);
+                        setSelectedSpecialtyName(specialty.nome);
                         setSpecialtyPickerVisible(false);
                       }}
                       activeOpacity={0.85}
                     >
-                      <Text style={[
-                        styles.specialtyOptionText,
-                        selectedSpecialty === specialty && styles.specialtyOptionTextActive
-                      ]}>{specialty}</Text>
+                      <View style={styles.specialtyOptionContent}>
+                        <Text style={[
+                          styles.specialtyOptionText,
+                          selectedSpecialtyId === specialty.id && styles.specialtyOptionTextActive
+                        ]}>{specialty.nome}</Text>
+                        {selectedSpecialtyId === specialty.id && (
+                          <Text style={styles.specialtyCheckmark}>✓</Text>
+                        )}
+                      </View>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -517,13 +548,25 @@ const styles = StyleSheet.create({
   specialtyOptionActive: {
     backgroundColor: '#f0f9ff',
   },
+  specialtyOptionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   specialtyOptionText: {
     fontSize: 16,
     color: '#334155',
+    flex: 1,
   },
   specialtyOptionTextActive: {
     color: '#0284c7',
     fontWeight: '700',
+  },
+  specialtyCheckmark: {
+    fontSize: 18,
+    color: '#0284c7',
+    fontWeight: '700',
+    marginLeft: 12,
   },
   pickerCloseButton: {
     padding: 8,
