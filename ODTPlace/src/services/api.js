@@ -104,3 +104,23 @@ export const getPatientAppointments = async (email) => {
     throw error;
   }
 };
+
+export const getPatientProfile = async (patientId) => {
+  try {
+    const response = await api.get(`/patients/${patientId}`);
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+export const updatePatientProfile = async (patientId, profileData) => {
+  try {
+    const response = await api.put(`/patients/${patientId}`, profileData);
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};

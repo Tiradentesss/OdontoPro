@@ -2,8 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ImageBackground } from 'react-native';
 import ScheduleHeaderNoBack from '../components/ScheduleHeaderNoBack';
 import BottomNavBar from '../components/BottomNavBar';
+import { useAuth } from '../context/AuthContext';
 
 export default function SettingsScreen({ navigation, showBottomNav = true }) {
+  const { user } = useAuth();
+
   return (
     <ImageBackground
       source={require('../../assets/imagem background.png')}
@@ -16,7 +19,8 @@ export default function SettingsScreen({ navigation, showBottomNav = true }) {
         <View style={styles.content}>
           <View style={styles.topCard}>
             <View style={styles.iconWrapper} />
-            <Text style={styles.profileName}>Nome da Conta</Text>
+            <Text style={styles.profileName}>{user?.nome ?? user?.name ?? 'Nome da Conta'}</Text>
+            <Text style={styles.profileSubtitle}>{user?.email ?? 'Email não informado'}</Text>
           </View>
 
           <View style={styles.optionCard}>
@@ -143,6 +147,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0f172a',
     marginTop: -8,
+    marginBottom: 4,
+  },
+  profileSubtitle: {
+    fontSize: 14,
+    color: '#64748b',
     marginBottom: 16,
   },
   optionTitle: {

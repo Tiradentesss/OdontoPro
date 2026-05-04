@@ -8,6 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
+      "image": "./assets/LogoODTPlace2.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

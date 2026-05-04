@@ -19,7 +19,7 @@ const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set
 const weekdays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
 // Dados mockados como fallback
-const appointmentDays = ['2026-04-11', '2026-04-16'];
+const appointmentDays = [];
 
 const appointmentsByDate = {
     '2026-04-11': [
@@ -27,9 +27,14 @@ const appointmentsByDate = {
             id: '1',
             time: '10:00',
             endTime: '10:30',
+            date: '11/04/2026',
             clinic: 'Clínica Sorriso Vivo',
             specialty: 'Odontopediatria',
+            doctor: 'Maria Silva',
+            status: 'confirmada',
             confirmed: true,
+            observations: 'Consulta de rotina para avaliação dentária infantil',
+            patientNotes: 'Lembrar de trazer a carteirinha de vacinação',
         },
     ],
     '2026-04-16': [
@@ -37,17 +42,27 @@ const appointmentsByDate = {
             id: '2',
             time: '09:00',
             endTime: '09:30',
+            date: '16/04/2026',
             clinic: 'Clínica Sorriso Vivo',
             specialty: 'Ortodontia',
+            doctor: 'João Santos',
+            status: 'agendada',
             confirmed: true,
+            observations: 'Avaliação para aparelho ortodôntico',
+            patientNotes: '',
         },
         {
             id: '3',
             time: '12:00',
             endTime: '12:30',
+            date: '16/04/2026',
             clinic: 'Clínica Sorriso Vivo',
             specialty: 'Periodontia',
+            doctor: 'Ana Costa',
+            status: 'realizada',
             confirmed: false,
+            observations: 'Tratamento de gengivite - limpeza profunda realizada',
+            patientNotes: 'Retorno em 6 meses',
         },
     ],
 };
@@ -167,12 +182,49 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                 .map(apt => ({
                     id: String(apt.id),
                     time: new Date(apt.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    endTime: new Date(apt.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    date: new Date(apt.data_hora).toLocaleDateString('pt-BR'),
                     clinic: apt.clinica_nome || 'Clínica',
                     specialty: apt.especialidade_nome || 'Especialidade',
-                    confirmed: apt.status === 'confirmada',
+                    doctor: apt.medico_nome || 'Dr. Médico',
+                    status: apt.status || 'agendada',
+                    confirmed: apt.status === 'confirmada' || apt.status === 'agendada',
+                    observations: apt.observacoes || 'Nenhuma observação',
+                    patientNotes: apt.notas_paciente || '',
                 }));
         }
         return appointmentsByDate[dateId] ?? [];
+    };
+
+    const getStatusBorderColor = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'agendada':
+            case 'confirmada':
+                return '#FCD34D'; // Amarelo
+            case 'realizada':
+            case 'completa':
+                return '#10B981'; // Verde
+            case 'cancelada':
+                return '#EF4444'; // Vermelho
+            case 'perdida':
+                return '#1F2937'; // Preto/Cinza escuro
+            default:
+                return '#FCD34D'; // Amarelo padrão
+        }
+    };
+
+    const getStatusInfo = (status) => {
+        const normalized = status?.toLowerCase();
+        if (normalized === 'cancelada') {
+            return { label: 'CANCELADA', color: '#B91C1C', bg: '#FEE2E2', border: '#FECACA' };
+        }
+        if (normalized === 'realizada' || normalized === 'completa') {
+            return { label: 'COMPLETA', color: '#047857', bg: '#DCFCE7', border: '#BBF7D0' };
+        }
+        if (normalized === 'perdida') {
+            return { label: 'PERDIDA', color: '#111827', bg: '#E5E7EB', border: '#D1D5DB' };
+        }
+        return { label: 'PENDENTE', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A' };
     };
 
     const appointments = getAppointmentsForDate(selectedDate);
@@ -332,8 +384,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                                     <View
                                         style={[
                                             styles.appointmentDot,
-                                            isSelected && styles.appointmentDotSelected,
-                                            date.isPast && !isSelected && styles.appointmentDotPast,
+                                            date.isPast && styles.appointmentDotPast,
                                         ]}
                                     />
                                 )}
@@ -348,30 +399,50 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                 </View>
 
                 <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-                    {appointments.map((item) => (
-                        <View key={item.id} style={styles.appointmentRow}>
-                            <View style={styles.timeColumn}>
-                                <Text style={styles.timeText}>{item.time}</Text>
-                                <Text style={styles.timeSub}>{item.endTime}</Text>
-                            </View>
-                            <View style={styles.appointmentCard}>
-                                <View style={styles.cardHeader}>
-                                    <Text style={styles.cardLabel}>{item.clinic}</Text>
-                                    <View style={styles.cardRightActions}>
-                                        <View style={[styles.statusDot, item.confirmed && styles.statusDotActive]} />
-                                        <TouchableOpacity
-                                            style={styles.actionMenuButton}
-                                            onPress={() => handleOpenAppointmentActions(item)}
-                                            activeOpacity={0.8}
-                                        >
-                                            <Text style={styles.actionMenuText}>...</Text>
-                                        </TouchableOpacity>
-                                    </View>
+                    {appointments.map((item) => {
+                        const statusInfo = getStatusInfo(item.status);
+                        return (
+                            <View key={item.id} style={styles.appointmentRow}>
+                                <View style={styles.timeColumn}>
+                                    <Text style={styles.timeText}>{item.time}</Text>
+                                    <Text style={styles.timeSub}>{item.date}</Text>
                                 </View>
-                                <Text style={styles.patientName}>{item.specialty}</Text>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.appointmentCard,
+                                        { borderLeftColor: getStatusBorderColor(item.status) }
+                                    ]}
+                                    activeOpacity={0.85}
+                                    onPress={() => handleOpenAppointmentActions(item)}
+                                >
+                                    <View style={styles.cardHeader}>
+                                        <View style={styles.cardTitleSection}>
+                                            <Text style={styles.cardLabel}>{item.clinic}</Text>
+                                            <Text style={styles.doctorName}>Dr. {item.doctor}</Text>
+                                        </View>
+                                        <View style={[styles.statusPill, { backgroundColor: statusInfo.bg, borderColor: statusInfo.border }]}>
+                                            <Text style={[styles.statusPillText, { color: statusInfo.color }]}>{statusInfo.label}</Text>
+                                        </View>
+                                    </View>
+                                    <Text style={styles.specialtyText}>{item.specialty}</Text>
+                                    <View style={styles.cardDetails}>
+                                        <Text style={styles.detailLabel}>Observações:</Text>
+                                        <Text style={styles.detailText} numberOfLines={2}>
+                                            {item.observations}
+                                        </Text>
+                                    </View>
+                                    {item.patientNotes && (
+                                        <View style={styles.cardDetails}>
+                                            <Text style={styles.detailLabel}>Suas notas:</Text>
+                                            <Text style={styles.detailText} numberOfLines={2}>
+                                                {item.patientNotes}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
                             </View>
-                        </View>
-                    ))}
+                        );
+                    })}
                     {appointments.length === 0 && (
                         <View style={styles.emptyState}>
                             <Text style={styles.emptyText}>Nenhuma consulta agendada para este dia.</Text>
@@ -382,21 +453,57 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                 <Modal visible={actionModalVisible} transparent animationType="fade">
                     <View style={styles.modalOverlay}>
                         <View style={styles.actionModalContent}>
-                            <Text style={styles.actionModalTitle}>Informações da consulta</Text>
-                            <Text style={styles.actionModalLabel}>{selectedAppointment?.clinic}</Text>
-                            <Text style={styles.actionModalSubtitle}>{selectedAppointment?.specialty}</Text>
-                            <Text style={styles.actionModalTime}>{selectedAppointment?.time} - {selectedAppointment?.endTime}</Text>
+                            <Text style={styles.actionModalTitle}>Detalhes da Consulta</Text>
+
+                            <View style={styles.modalInfoSection}>
+                                <Text style={styles.modalInfoLabel}>Clínica</Text>
+                                <Text style={styles.modalInfoValue}>{selectedAppointment?.clinic}</Text>
+                            </View>
+
+                            <View style={styles.modalInfoSection}>
+                                <Text style={styles.modalInfoLabel}>Especialidade</Text>
+                                <Text style={styles.modalInfoValue}>{selectedAppointment?.specialty}</Text>
+                            </View>
+
+                            <View style={styles.modalInfoSection}>
+                                <Text style={styles.modalInfoLabel}>Médico</Text>
+                                <Text style={styles.modalInfoValue}>Dr. {selectedAppointment?.doctor}</Text>
+                            </View>
+
+                            <View style={styles.modalInfoSection}>
+                                <Text style={styles.modalInfoLabel}>Data e Hora</Text>
+                                <Text style={styles.modalInfoValue}>{selectedAppointment?.date} às {selectedAppointment?.time}</Text>
+                            </View>
+
+                            <View style={styles.modalInfoSection}>
+                                <Text style={styles.modalInfoLabel}>Observações</Text>
+                                <Text style={styles.modalInfoValue}>{selectedAppointment?.observations}</Text>
+                            </View>
+
+                            {selectedAppointment?.patientNotes && (
+                                <View style={styles.modalInfoSection}>
+                                    <Text style={styles.modalInfoLabel}>Suas Notas</Text>
+                                    <Text style={styles.modalInfoValue}>{selectedAppointment?.patientNotes}</Text>
+                                </View>
+                            )}
+
                             <View style={styles.actionButtonsRow}>
                                 <TouchableOpacity style={styles.cancelButton} activeOpacity={0.8} onPress={closeActionModal}>
-                                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                    <Text style={styles.cancelButtonText}>Fechar</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.rescheduleButton} activeOpacity={0.8} onPress={closeActionModal}>
-                                    <Text style={styles.rescheduleButtonText}>Reagendar</Text>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.rescheduleButton,
+                                        selectedAppointment?.status?.toLowerCase() === 'realizada' && styles.evaluateButton
+                                    ]}
+                                    activeOpacity={0.8}
+                                    onPress={closeActionModal}
+                                >
+                                    <Text style={styles.rescheduleButtonText}>
+                                        {selectedAppointment?.status?.toLowerCase() === 'realizada' ? 'Avaliar' : 'Reagendar'}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
-                            <TouchableOpacity style={styles.closeButton} onPress={closeActionModal} activeOpacity={0.8}>
-                                <Text style={styles.closeButtonText}>Fechar</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
                 </Modal>
@@ -626,7 +733,7 @@ const styles = StyleSheet.create({
     dateCarousel: {
         paddingHorizontal: 18,
         paddingTop: 6,
-        paddingBottom: 4,
+        paddingBottom: 0,
     },
     dateItem: {
         width: 58,
@@ -642,9 +749,13 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowRadius: 8,
         elevation: 4,
+        borderWidth: 1,
+        borderColor: 'transparent',
     },
     dateItemActive: {
-        backgroundColor: '#0ea5e9',
+        backgroundColor: '#ffffff',
+        borderColor: '#0ea5e9',
+        borderWidth: 2,
     },
     dateItemPast: {
         backgroundColor: '#f1f5f9',
@@ -655,7 +766,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     dateWeekdayActive: {
-        color: '#ffffff',
+        color: '#0ea5e9',
     },
     dateWeekdayPast: {
         color: '#94a3b8',
@@ -667,7 +778,7 @@ const styles = StyleSheet.create({
         fontWeight: '800',
     },
     dateDayActive: {
-        color: '#ffffff',
+        color: '#0ea5e9',
     },
     dateDayPast: {
         color: '#0f172a',
@@ -681,7 +792,7 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     appointmentDotSelected: {
-        backgroundColor: '#ffffff',
+        backgroundColor: '#0ea5e9',
     },
     appointmentDotPast: {
         backgroundColor: '#0b4a88',
@@ -711,74 +822,100 @@ const styles = StyleSheet.create({
     appointmentRow: {
         flexDirection: 'row',
         marginBottom: 16,
+        alignItems: 'center',
     },
     timeColumn: {
-        width: 68,
+        width: 50,
         alignItems: 'flex-start',
+        justifyContent: 'center',
     },
     timeText: {
-        fontSize: 18,
+        fontSize: 14,
         fontWeight: '700',
         color: '#0f172a',
+        textAlign: 'left',
     },
     timeSub: {
         color: '#94a3b8',
-        marginTop: 6,
+        fontSize: 12,
+        marginTop: 2,
     },
     appointmentCard: {
         flex: 1,
         backgroundColor: '#ffffff',
-        borderRadius: 24,
-        padding: 16,
-        marginLeft: 12,
+        borderRadius: 26,
+        paddingVertical: 22,
+        paddingHorizontal: 18,
+        marginLeft: 14,
         shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 16,
-        elevation: 6,
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: 10 },
+        shadowRadius: 22,
+        elevation: 10,
+        borderLeftWidth: 6,
+        borderLeftColor: '#FCD34D',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        minHeight: 160,
     },
     cardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
+        alignItems: 'flex-start',
+        marginBottom: 12,
     },
-    cardRightActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    actionMenuButton: {
-        marginLeft: 10,
-        width: 34,
-        height: 34,
-        borderRadius: 12,
-        backgroundColor: '#f1f5f9',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    actionMenuText: {
-        fontSize: 18,
-        color: '#0f172a',
-        fontWeight: '700',
+    cardTitleSection: {
+        flex: 1,
+        marginRight: 12,
     },
     cardLabel: {
-        fontSize: 14,
-        fontWeight: '700',
+        fontSize: 18,
+        fontWeight: '800',
         color: '#0f172a',
+        marginBottom: 4,
     },
-    statusDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: '#dcdcdc',
+    doctorName: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#0ea5e9',
     },
-    statusDotActive: {
-        backgroundColor: '#34d399',
+    specialtyText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#475569',
+        marginBottom: 12,
+    },
+    cardDetails: {
+        marginBottom: 8,
+    },
+    detailLabel: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#64748b',
+        marginBottom: 2,
+    },
+    detailText: {
+        fontSize: 14,
+        color: '#374151',
+        lineHeight: 18,
+    },
+    statusPill: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 14,
+        borderWidth: 1,
+        alignSelf: 'flex-start',
+    },
+    statusPillText: {
+        fontSize: 12,
+        fontWeight: '800',
+        textTransform: 'uppercase',
     },
     patientName: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#0f172a',
+        color: '#475569',
+        marginTop: 12,
     },
     emptyState: {
         paddingVertical: 40,
@@ -799,41 +936,47 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: '#ffffff',
         borderRadius: 24,
-        padding: 20,
+        padding: 24,
+        maxHeight: '80%',
     },
     actionModalTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: '800',
         color: '#0f172a',
-        marginBottom: 10,
+        marginBottom: 20,
+        textAlign: 'center',
     },
-    actionModalLabel: {
-        fontSize: 16,
+    modalInfoSection: {
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    modalInfoLabel: {
+        fontSize: 12,
         fontWeight: '700',
-        color: '#0f172a',
+        color: '#64748b',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
         marginBottom: 4,
     },
-    actionModalSubtitle: {
-        fontSize: 14,
-        color: '#64748b',
-        marginBottom: 8,
-    },
-    actionModalTime: {
-        fontSize: 14,
-        color: '#64748b',
-        marginBottom: 18,
+    modalInfoValue: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#0f172a',
+        lineHeight: 22,
     },
     actionButtonsRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 14,
+        marginTop: 24,
     },
     cancelButton: {
         flex: 1,
         marginRight: 10,
         backgroundColor: '#f8fafc',
         borderRadius: 16,
-        paddingVertical: 14,
+        paddingVertical: 16,
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#cbd5e1',
@@ -841,17 +984,22 @@ const styles = StyleSheet.create({
     cancelButtonText: {
         color: '#0f172a',
         fontWeight: '700',
+        fontSize: 16,
     },
     rescheduleButton: {
         flex: 1,
         backgroundColor: '#0ea5e9',
         borderRadius: 16,
-        paddingVertical: 14,
+        paddingVertical: 16,
         alignItems: 'center',
+    },
+    evaluateButton: {
+        backgroundColor: '#10B981', // Green for evaluate
     },
     rescheduleButtonText: {
         color: '#ffffff',
         fontWeight: '700',
+        fontSize: 16,
     },
     modalContent: {
         width: '100%',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,16 +8,65 @@ import {
     SafeAreaView,
     ImageBackground,
     ScrollView,
+    Alert,
+    ActivityIndicator,
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
+import { useAuth } from '../context/AuthContext';
+import { getPatientProfile, updatePatientProfile } from '../services/api';
 
 export default function PersonalInfoScreen({ navigation }) {
-    const [fullName, setFullName] = useState('Gabriel Gomes Matos');
-    const [cpf, setCpf] = useState('000.000.000-01');
-    const [email, setEmail] = useState('gabrielgomes@gmail.com');
-    const [phone, setPhone] = useState('(91) 0000 - 0000');
-    const [gender, setGender] = useState('Masculino');
-    const [address, setAddress] = useState('45 Nova Batista Campos, Belém Pará');
+    const { user, login } = useAuth();
+    const [fullName, setFullName] = useState('');
+    const [cpf, setCpf] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [gender, setGender] = useState('');
+    const [address, setAddress] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        // Use user data from AuthContext instead of fetching from API
+        // since the backend doesn't have patients endpoint yet
+        if (user) {
+            setFullName(user.nome || user.fullName || '');
+            setCpf(user.cpf || '');
+            setEmail(user.email || '');
+            setPhone(user.telefone || user.phone || '');
+            setGender(user.genero || user.gender || '');
+            setAddress(user.endereco || user.address || '');
+        }
+    }, [user]);
+
+    const handleSave = async () => {
+        if (!user?.id) return;
+        setLoading(true);
+        try {
+            const profileData = {
+                nome: fullName,
+                cpf,
+                email,
+                telefone: phone,
+                genero: gender,
+                endereco: address,
+            };
+            const updatedProfile = await updatePatientProfile(user.id, profileData);
+            login({ ...user, ...updatedProfile });
+            Alert.alert('Sucesso', 'Informações atualizadas com sucesso.');
+        } catch (error) {
+            console.log('Profile update error:', error);
+            if (error.response?.status === 404) {
+                Alert.alert('Aviso', 'Funcionalidade de atualização ainda não implementada no backend. Os dados foram salvos localmente.');
+                // Update local context anyway
+                login({ ...user, nome: fullName, cpf, email, telefone: phone, genero: gender, endereco: address });
+            } else {
+                const errorMessage = error.response?.data?.error || error.message || 'Não foi possível salvar as informações.';
+                Alert.alert('Erro', errorMessage);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <ImageBackground
@@ -30,6 +79,10 @@ export default function PersonalInfoScreen({ navigation }) {
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <Text style={styles.heading}>Editar Informações</Text>
+
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#0ea5e9" style={{ marginTop: 32 }} />
+                    ) : null}
 
                     <View style={styles.fieldGroup}>
                         <Text style={styles.label}>Nome Completo</Text>
@@ -95,7 +148,7 @@ export default function PersonalInfoScreen({ navigation }) {
                         />
                     </View>
 
-                    <TouchableOpacity style={styles.saveButton} activeOpacity={0.85} onPress={() => {}}>
+                    <TouchableOpacity style={styles.saveButton} activeOpacity={0.85} onPress={handleSave} disabled={loading}>
                         <Text style={styles.saveButtonText}>Alterar Informações</Text>
                     </TouchableOpacity>
                 </ScrollView>
@@ -164,3 +217,4 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
 });
+
