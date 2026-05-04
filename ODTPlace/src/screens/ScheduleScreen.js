@@ -13,6 +13,7 @@ import {
 import ScheduleHeaderNoBack from '../components/ScheduleHeaderNoBack';
 import BottomNavBar from '../components/BottomNavBar';
 import { getPatientAppointments } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const weekdays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -95,7 +96,7 @@ const getMonthDays = (year, month, appointmentDatesSet = new Set()) => {
 };
 
 export default function ScheduleScreen({ navigation, activeTab, showBottomNav = true, route }) {
-    const user = route?.params?.user || {};
+    const { user } = useAuth();
     const [search, setSearch] = useState('');
     const [shouldResetPosition, setShouldResetPosition] = useState(true);
     const lastActiveTab = useRef(activeTab);
@@ -115,19 +116,31 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
     const scrollViewRef = useRef(null);
     const dayButtonWidth = 58;
     const dayButtonSpacing = 8;
-    const monthDays = getMonthDays(currentMonth.year, currentMonth.month, appointmentDatesSet);
-    const calendarStartOffset = new Date(currentMonth.year, currentMonth.month - 1, 1).getDay();
-    const calendarCells = [...Array(calendarStartOffset).fill(null), ...monthDays];
 
-    // Datas que têm consultas (para marcar no calendário)
+    // Datas que têm consultas (para marcar no calendário) - deve vir antes do monthDays
     const appointmentDatesSet = new Set(
         appointmentsData.map(apt => new Date(apt.data_hora).toISOString().split('T')[0])
     );
 
+    const monthDays = getMonthDays(currentMonth.year, currentMonth.month, appointmentDatesSet);
+    const calendarStartOffset = new Date(currentMonth.year, currentMonth.month - 1, 1).getDay();
+    const calendarCells = [...Array(calendarStartOffset).fill(null), ...monthDays];
+
     // Carregar consultas do backend
     useEffect(() => {
         const loadAppointments = async () => {
-            if (user.email) {
+            // Usar paciente_id (número) primeiro, depois email como fallback
+            const patientId = user.id;
+            if (patientId) {
+                try {
+                    const data = await getPatientAppointments(String(patientId));
+                    setAppointmentsData(data || []);
+                } catch (error) {
+                    console.log('Error loading appointments:', error);
+                } finally {
+                    setLoadingAppointments(false);
+                }
+            } else if (user.email) {
                 try {
                     const data = await getPatientAppointments(user.email);
                     setAppointmentsData(data || []);
@@ -141,7 +154,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
             }
         };
         loadAppointments();
-    }, [user.email]);
+    }, [user.id, user.email]);
 
     // Converter dados da API para formato do calendário
     const getAppointmentsForDate = (dateId) => {

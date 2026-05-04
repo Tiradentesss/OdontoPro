@@ -3,10 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, Image
 import HomeHeader from '../components/HomeHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getClinics } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function HomeScreen({ route, navigation, showBottomNav = true }) {
-    const user = route?.params?.user;
-    const usuario = user?.nome ?? route?.params?.userName ?? 'Paciente';
+    const { user } = useAuth();
+    const usuario = user?.nome ?? 'Paciente';
     const [search, setSearch] = useState('');
     const [clinicas, setClinicas] = useState([]);
     const [loading, setLoading] = useState(true);

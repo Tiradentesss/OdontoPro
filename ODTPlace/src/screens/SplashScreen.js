@@ -39,7 +39,7 @@ export default function SplashScreen({ navigation }) {
       style={styles.container}
     >
       <Image 
-        source={require('../../assets/LogoODTPlace.png')} 
+        source={require('../../assets/LogoODTPlace2.png')} 
         style={{ width: 150, height: 150, marginBottom: 20 }} 
       />
       <Text style={styles.logo}>Odonto Place</Text>

@@ -3,6 +3,9 @@ App.js
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+// Importando contexto de autenticação
+import { AuthProvider } from './src/context/AuthContext';
+
 // Importando telas
 import MainTabs from './src/components/MainTabs';
 import LoginScreen from './src/screens/LoginScreen';
@@ -25,28 +28,26 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer>
-
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-
-        <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Cadastro" component={CadastroScreen} />
-        <Stack.Screen name="Home" component={MainTabs} />
-        <Stack.Screen name="Schedule" component={ScheduleScreen} />
-        <Stack.Screen name="ClinicDetail" component={ClinicDetailScreen} />
-        <Stack.Screen name="Professionals" component={ProfessionalsScreen} />
-        <Stack.Screen name="ProfessionalInfo" component={ProfessionalInfoScreen} />
-        <Stack.Screen name="AppointmentBooking" component={AppointmentBookingScreen} />
-        <Stack.Screen name="Notifications" component={NotificationsScreen} />
-        <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
-        <Stack.Screen name="System" component={SystemScreen} />
-        <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
-        {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
-
-      </Stack.Navigator>
-
-    </NavigationContainer>
+    <AuthProvider>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Cadastro" component={CadastroScreen} />
+          <Stack.Screen name="Home" component={MainTabs} />
+          <Stack.Screen name="Schedule" component={ScheduleScreen} />
+          <Stack.Screen name="ClinicDetail" component={ClinicDetailScreen} />
+          <Stack.Screen name="Professionals" component={ProfessionalsScreen} />
+          <Stack.Screen name="ProfessionalInfo" component={ProfessionalInfoScreen} />
+          <Stack.Screen name="AppointmentBooking" component={AppointmentBookingScreen} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+          <Stack.Screen name="System" component={SystemScreen} />
+          <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+          {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
   );
 }

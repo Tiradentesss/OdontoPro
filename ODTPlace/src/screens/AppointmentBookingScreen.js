@@ -14,6 +14,7 @@ import {
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { createAppointment } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -34,18 +35,29 @@ const getMonthDays = (year, month) => {
 export default function AppointmentBookingScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
   const clinic = route?.params?.clinic ?? {};
-  const user = route?.params?.user ?? {};
-  const [firstName, setFirstName] = useState(user.nome?.split(' ')[0] ?? '');
-  const [lastName, setLastName] = useState(user.nome?.split(' ').slice(1).join(' ') ?? '');
-  const [email, setEmail] = useState(user.email ?? '');
-  const [phone, setPhone] = useState('');
+  const { user } = useAuth();
+  
+  // Data atual
+  const today = new Date();
+  
+  // Lista de especialidades do médico (pode vir da API ou ser passada como parâmetro)
+  const doctorSpecialties = professional.especialidades || [professional.specialty || 'Consulta'];
+  
+  const [nomeCompleto, setNomeCompleto] = useState(user?.nome ?? '');
+  const [email, setEmail] = useState(user?.email ?? '');
+  const [phone, setPhone] = useState(user?.telefone ?? '');
   const [reason, setReason] = useState('');
-  const [selectedSlot, setSelectedSlot] = useState('Janeiro - 02 - 2024 - 09:00 AM');
+  const [selectedSlot, setSelectedSlot] = useState('');
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState({ year: 2025, month: 1 });
-  const [selectedDate, setSelectedDate] = useState('2025-01-02');
-  const [selectedTime, setSelectedTime] = useState('09:00 AM');
+  const [specialtyPickerVisible, setSpecialtyPickerVisible] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState({ year: today.getFullYear(), month: today.getMonth() + 1 });
+  const [selectedDate, setSelectedDate] = useState(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
+  const [selectedTime, setSelectedTime] = useState('09:00');
+  const [selectedSpecialty, setSelectedSpecialty] = useState(doctorSpecialties[0] || 'Consulta');
+  
+  // Preço da consulta (pode ser mock ou vir da API)
+  const consultationPrice = professional.preco || 150.00;
 
   const monthDays = getMonthDays(currentMonth.year, currentMonth.month);
   const monthLabel = `${monthNames[currentMonth.month - 1]} ${currentMonth.year}`;
@@ -72,28 +84,21 @@ export default function AppointmentBookingScreen({ route, navigation }) {
 
   const confirmDateTime = () => {
     const [year, month, day] = selectedDate.split('-');
-    setSelectedSlot(`${monthNames[Number(month) - 1]} - ${String(day).padStart(2, '0')} - ${selectedTime}`);
+    setSelectedSlot(`${monthNames[Number(month) - 1]} - ${String(day).padStart(2, '0')} - ${currentMonth.year} ${selectedTime}`);
     setPickerVisible(false);
   };
 
   const formatDateTime = (date, time) => {
-    const [timePart, period] = time.split(' ');
-    const [hourString, minuteString] = timePart.split(':');
-    let hour = Number(hourString);
+    // Formato: HH:MM (sem AM/PM)
+    const [hourString, minuteString] = time.split(':');
+    const hour = Number(hourString);
     const minute = Number(minuteString);
-
-    if (period === 'PM' && hour !== 12) {
-      hour += 12;
-    }
-    if (period === 'AM' && hour === 12) {
-      hour = 0;
-    }
 
     return `${date} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
   };
 
   const handleConfirmBooking = async () => {
-    if (!firstName || !lastName || !email || !phone) {
+    if (!nomeCompleto || !email || !phone) {
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios.');
       return;
     }
@@ -101,14 +106,15 @@ export default function AppointmentBookingScreen({ route, navigation }) {
     try {
       const data_hora = formatDateTime(selectedDate, selectedTime);
       await createAppointment({
-        nome: `${firstName} ${lastName}`.trim(),
+        nome: nomeCompleto.trim(),
         email,
         telefone: phone,
         clinica_id: clinic.id,
         medico_id: professional.id,
-        especialidade_id: route?.params?.selectedSpecialtyId ?? null,
+        especialidade_id: professional.especialidade_id ?? route?.params?.selectedSpecialtyId ?? null,
         data_hora,
         observacoes: reason,
+        paciente_id: user.id,
       });
       setConfirmationVisible(true);
     } catch (error) {
@@ -142,24 +148,13 @@ export default function AppointmentBookingScreen({ route, navigation }) {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.fieldLabel}>Primeiro Nome</Text>
+            <Text style={styles.fieldLabel}>Nome Completo</Text>
             <TextInput
               style={styles.input}
-              placeholder="Primeiro Nome"
+              placeholder="Seu nome completo"
               placeholderTextColor="#9ca3af"
-              value={firstName}
-              onChangeText={setFirstName}
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.fieldLabel}>Sobrenome</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Sobrenome"
-              placeholderTextColor="#9ca3af"
-              value={lastName}
-              onChangeText={setLastName}
+              value={nomeCompleto}
+              onChangeText={setNomeCompleto}
             />
           </View>
 
@@ -196,6 +191,65 @@ export default function AppointmentBookingScreen({ route, navigation }) {
             </TouchableOpacity>
             <Text style={styles.slotHelp}>Toque para escolher o dia e o horário.</Text>
           </View>
+
+          {/* Seleção de Especialidade */}
+          {doctorSpecialties.length > 1 && (
+            <View style={styles.formGroup}>
+              <Text style={styles.fieldLabel}>Especialidade</Text>
+              <TouchableOpacity 
+                style={styles.slotInput} 
+                activeOpacity={0.85} 
+                onPress={() => setSpecialtyPickerVisible(true)}
+              >
+                <Text style={styles.slotText}>{selectedSpecialty}</Text>
+                <Text style={styles.slotArrow}>⌄</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Preço da Consulta */}
+          <View style={styles.priceCard}>
+            <Text style={styles.priceLabel}>Valor da Consulta</Text>
+            <Text style={styles.priceValue}>R$ {consultationPrice.toFixed(2).replace('.', ',')}</Text>
+          </View>
+
+          <Modal visible={specialtyPickerVisible} transparent animationType="fade">
+            <View style={styles.pickerOverlay}>
+              <View style={styles.pickerCard}>
+                <View style={styles.pickerHeader}>
+                  <Text style={styles.pickerTitle}>Selecione a Especialidade</Text>
+                  <TouchableOpacity 
+                    style={styles.pickerCloseButton} 
+                    onPress={() => setSpecialtyPickerVisible(false)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.pickerCloseText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+                <ScrollView style={styles.specialtyList}>
+                  {doctorSpecialties.map((specialty) => (
+                    <TouchableOpacity
+                      key={specialty}
+                      style={[
+                        styles.specialtyOption,
+                        selectedSpecialty === specialty && styles.specialtyOptionActive
+                      ]}
+                      onPress={() => {
+                        setSelectedSpecialty(specialty);
+                        setSpecialtyPickerVisible(false);
+                      }}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={[
+                        styles.specialtyOptionText,
+                        selectedSpecialty === specialty && styles.specialtyOptionTextActive
+                      ]}>{specialty}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
 
           <Modal visible={pickerVisible} transparent animationType="fade">
             <View style={styles.pickerOverlay}>
@@ -239,7 +293,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
 
                 <Text style={styles.timeSectionTitle}>Horário</Text>
                 <View style={styles.timeRow}>
-                  {['09:00 AM', '09:30 AM', '12:00 PM', '12:30 PM', '03:00 PM', '04:30 PM'].map((time) => {
+                  {['09:00', '09:30', '12:00', '12:30', '15:00', '16:30'].map((time) => {
                     const isActive = selectedTime === time;
                     return (
                       <TouchableOpacity
@@ -429,6 +483,54 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#94a3b8',
     fontSize: 12,
+  },
+  priceCard: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 18,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  priceLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#166534',
+  },
+  priceValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#16a34a',
+  },
+  specialtyList: {
+    maxHeight: 300,
+  },
+  specialtyOption: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  specialtyOptionActive: {
+    backgroundColor: '#f0f9ff',
+  },
+  specialtyOptionText: {
+    fontSize: 16,
+    color: '#334155',
+  },
+  specialtyOptionTextActive: {
+    color: '#0284c7',
+    fontWeight: '700',
+  },
+  pickerCloseButton: {
+    padding: 8,
+  },
+  pickerCloseText: {
+    fontSize: 20,
+    color: '#64748b',
   },
   reasonInput: {
     minHeight: 120,

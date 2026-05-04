@@ -107,8 +107,19 @@ app.get('/api/clinics/:clinicId/doctors', (req, res) => {
 
 app.get('/api/appointments/:patientEmail', (req, res) => {
   const patientEmail = req.params.patientEmail;
-  const query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id WHERE c.email = ? ORDER BY c.data_hora DESC`;
-  db.query(query, [patientEmail], (err, results) => {
+  // Tentar buscar por paciente_id primeiro (número), depois por email
+  const isNumericId = /^\d+$/.test(patientEmail);
+  let query, params;
+  
+  if (isNumericId) {
+    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id WHERE c.paciente_id = ? ORDER BY c.data_hora DESC`;
+    params = [parseInt(patientEmail)];
+  } else {
+    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id WHERE c.email = ? ORDER BY c.data_hora DESC`;
+    params = [patientEmail];
+  }
+  
+  db.query(query, params, (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -117,9 +128,9 @@ app.get('/api/appointments/:patientEmail', (req, res) => {
 });
 
 app.post('/api/appointments', (req, res) => {
-  const { nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes } = req.body;
-  const query = `INSERT INTO odontoPro_consulta (nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, status, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'agendada', NOW())`;
-  db.query(query, [nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes], (err, result) => {
+  const { nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, paciente_id } = req.body;
+  const query = `INSERT INTO odontoPro_consulta (nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, status, paciente_id, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'agendada', ?, NOW())`;
+  db.query(query, [nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, paciente_id], (err, result) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }

@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ImageBackground, FlatList, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ImageBackground, FlatList, TextInput, Image, ScrollView } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getClinicDoctors } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const sampleProfessionals = [
     { id: '1', name: 'Lucas Castro', specialty: 'Ortodontista', rating: 5, reviews: 120 },
@@ -14,8 +15,8 @@ const sampleProfessionals = [
 const ratingFilters = [5, 4, 3, 2, 1];
 
 export default function ProfessionalsScreen({ route, navigation }) {
+    const { user } = useAuth();
     const clinic = route?.params?.clinic ?? {};
-    const user = route?.params?.user;
     const selectedSpecialty = route?.params?.selectedSpecialty ?? null;
     const [search, setSearch] = useState('');
     const [activeSpecialty, setActiveSpecialty] = useState(selectedSpecialty);
@@ -47,10 +48,11 @@ export default function ProfessionalsScreen({ route, navigation }) {
     }, [clinic.id]);
 
     const specialtyOptions = useMemo(() => {
-        const services = clinic.services ?? [];
-        const unique = Array.from(new Set(services.map((service) => service.name)));
+        // Usar as especialidades dos médicos retornados pela API
+        const allSpecialties = doctorList.flatMap(doc => doc.especialidades || []);
+        const unique = Array.from(new Set(allSpecialties));
         return unique.length ? unique : ['Ortodontia', 'Odontopediatria', 'Endodontia'];
-    }, [clinic.services]);
+    }, [doctorList]);
 
     const professionals = useMemo(() => {
         const source = doctorList.length ? doctorList : sampleProfessionals;
@@ -125,7 +127,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                 <View style={styles.content}>
                     {showSpecialtyFilters && (
                         <View style={styles.filterSection}>
-                            <View style={styles.filterRow}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRowScroll}>
                                 {specialtyOptions.map((specialty) => (
                                     <TouchableOpacity
                                         key={specialty}
@@ -146,13 +148,13 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
-                            </View>
+                            </ScrollView>
                         </View>
                     )}
 
                     {showRatingFilters && (
                         <View style={styles.filterSection}>
-                            <View style={styles.filterRow}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRowScroll}>
                                 {ratingFilters.map((rating) => (
                                     <TouchableOpacity
                                         key={rating}
@@ -173,7 +175,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
-                            </View>
+                            </ScrollView>
                         </View>
                     )}
 
@@ -349,6 +351,10 @@ const styles = StyleSheet.create({
     filterRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
+    },
+    filterRowScroll: {
+        flexDirection: 'row',
+        paddingVertical: 4,
     },
     filterChip: {
         backgroundColor: '#ffffff',

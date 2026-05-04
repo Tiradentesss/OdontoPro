@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, ImageBackground
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 import { loginPatient } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     if (email === '' || senha === '') {
@@ -22,7 +24,8 @@ export default function LoginScreen({ navigation }) {
     try {
       const user = await loginPatient(email, senha);
       if (user && user.id) {
-        navigation.replace('Home', { user });
+        login(user);
+        navigation.replace('Home');
       } else {
         Alert.alert('Erro', 'Resposta inválida do servidor.');
       }
