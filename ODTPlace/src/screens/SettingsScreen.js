@@ -18,7 +18,11 @@ export default function SettingsScreen({ navigation, showBottomNav = true }) {
 
         <View style={styles.content}>
           <View style={styles.topCard}>
-            <View style={styles.iconWrapper} />
+            <View style={styles.iconWrapper}>
+              <Text style={styles.iconInitial}>
+                {(user?.nome ?? user?.name ?? 'N').charAt(0).toUpperCase()}
+              </Text>
+            </View>
             <Text style={styles.profileName}>{user?.nome ?? user?.name ?? 'Nome da Conta'}</Text>
             <Text style={styles.profileSubtitle}>{user?.email ?? 'Email não informado'}</Text>
           </View>
@@ -98,6 +102,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 18,
+  },
+  iconInitial: {
+    fontSize: 48,
+    color: '#0ea5e9',
+    fontWeight: '800',
   },
   icon: {
     width: 0,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -72,6 +72,28 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   const [selectedTime, setSelectedTime] = useState('09:00');
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(doctorSpecialties[0]?.id || '1');
   const [selectedSpecialtyName, setSelectedSpecialtyName] = useState(doctorSpecialties[0]?.nome || 'Consulta');
+  
+  const selectedRouteSpecialty = route?.params?.selectedSpecialty ?? null;
+  const selectedRouteSpecialtyId = route?.params?.selectedSpecialtyId ?? null;
+  
+  useEffect(() => {
+    if (selectedRouteSpecialtyId) {
+      const match = doctorSpecialties.find(spec => String(spec.id) === String(selectedRouteSpecialtyId));
+      if (match) {
+        setSelectedSpecialtyId(match.id);
+        setSelectedSpecialtyName(match.nome);
+        return;
+      }
+    }
+
+    if (selectedRouteSpecialty) {
+      const match = doctorSpecialties.find(spec => String(spec.nome).toLowerCase() === String(selectedRouteSpecialty).toLowerCase());
+      if (match) {
+        setSelectedSpecialtyId(match.id);
+        setSelectedSpecialtyName(match.nome);
+      }
+    }
+  }, [doctorSpecialties, selectedRouteSpecialty, selectedRouteSpecialtyId]);
   
   // Preço da consulta (pode ser mock ou vir da API)
   const consultationPrice = professional.preco || 150.00;

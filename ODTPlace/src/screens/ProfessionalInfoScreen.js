@@ -67,7 +67,7 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
           <TouchableOpacity
             style={styles.bookButton}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('AppointmentBooking', { professional, clinic, user })}
+            onPress={() => navigation.navigate('AppointmentBooking', { professional, clinic, user, selectedSpecialty: route?.params?.selectedSpecialty })}
           >
             <Text style={styles.bookButtonText}>Agendar</Text>
           </TouchableOpacity>

@@ -9,6 +9,7 @@ import {
     Modal,
     ImageBackground,
     ActivityIndicator,
+    Alert,
 } from 'react-native';
 import ScheduleHeaderNoBack from '../components/ScheduleHeaderNoBack';
 import BottomNavBar from '../components/BottomNavBar';
@@ -124,6 +125,10 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
     const [pickerVisible, setPickerVisible] = useState(false);
     const [actionModalVisible, setActionModalVisible] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [cancelModalVisible, setCancelModalVisible] = useState(false);
+    const [rescheduleModalVisible, setRescheduleModalVisible] = useState(false);
+    const [newSelectedDate, setNewSelectedDate] = useState(selectedDate);
+    const [newSelectedTime, setNewSelectedTime] = useState('09:00');
     const [swipeStartX, setSwipeStartX] = useState(null);
     const [carouselWidth, setCarouselWidth] = useState(0);
     const [appointmentsData, setAppointmentsData] = useState([]);
@@ -318,6 +323,86 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
         setSelectedAppointment(null);
     };
 
+    const handleCancelAppointment = () => {
+        setCancelModalVisible(true);
+    };
+
+    const confirmCancelAppointment = async () => {
+        if (!selectedAppointment) return;
+
+        try {
+            // Aqui você pode adicionar a chamada para a API de cancelamento
+            // await cancelAppointment(selectedAppointment.id);
+            console.log('Cancelando consulta:', selectedAppointment.id);
+
+            // Simular alteração do status localmente
+            setAppointmentsData(prevData =>
+                prevData.map(apt =>
+                    apt.id === selectedAppointment.id
+                        ? { ...apt, status: 'cancelada' }
+                        : apt
+                )
+            );
+
+            // Por enquanto, apenas fecha os modais e mostra mensagem
+            setCancelModalVisible(false);
+            setActionModalVisible(false);
+            setSelectedAppointment(null);
+
+            Alert.alert('Sucesso', 'Consulta cancelada com sucesso.');
+        } catch (error) {
+            console.log('Error canceling appointment:', error);
+            Alert.alert('Erro', 'Não foi possível cancelar a consulta.');
+        }
+    };
+
+    const closeCancelModal = () => {
+        setCancelModalVisible(false);
+    };
+
+    const handleRescheduleAppointment = () => {
+        // Inicializar com a data e hora atuais da consulta
+        setNewSelectedDate(selectedAppointment?.date ? selectedAppointment.date.split('/').reverse().join('-') : selectedDate);
+        setNewSelectedTime(selectedAppointment?.time || '09:00');
+        setRescheduleModalVisible(true);
+    };
+
+    const confirmRescheduleAppointment = async () => {
+        if (!selectedAppointment) return;
+
+        try {
+            const newDataHora = formatDateTime(newSelectedDate, newSelectedTime);
+            console.log('Reagendando consulta:', selectedAppointment.id, 'para:', newDataHora);
+
+            // Simular alteração da data/hora localmente
+            setAppointmentsData(prevData =>
+                prevData.map(apt =>
+                    apt.id === selectedAppointment.id
+                        ? {
+                            ...apt,
+                            data_hora: newDataHora,
+                            time: new Date(newDataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                            date: new Date(newDataHora).toLocaleDateString('pt-BR')
+                        }
+                        : apt
+                )
+            );
+
+            setRescheduleModalVisible(false);
+            setActionModalVisible(false);
+            setSelectedAppointment(null);
+
+            Alert.alert('Sucesso', 'Consulta reagendada com sucesso.');
+        } catch (error) {
+            console.log('Error rescheduling appointment:', error);
+            Alert.alert('Erro', 'Não foi possível reagendar a consulta.');
+        }
+    };
+
+    const closeRescheduleModal = () => {
+        setRescheduleModalVisible(false);
+    };
+
     return (
         <ImageBackground
             source={require('../../assets/imagem background.png')}
@@ -487,21 +572,133 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                                 </View>
                             )}
 
-                            <View style={styles.actionButtonsRow}>
-                                <TouchableOpacity style={styles.cancelButton} activeOpacity={0.8} onPress={closeActionModal}>
-                                    <Text style={styles.cancelButtonText}>Fechar</Text>
+                            {selectedAppointment?.status?.toLowerCase() !== 'realizada' && selectedAppointment?.status?.toLowerCase() !== 'cancelada' && (
+                                <View style={styles.actionButtonsRow}>
+                                    <TouchableOpacity
+                                        style={styles.cancelAppointmentButton}
+                                        activeOpacity={0.8}
+                                        onPress={handleCancelAppointment}
+                                    >
+                                        <Text style={styles.cancelAppointmentButtonText}>Cancelar Consulta</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.rescheduleButton}
+                                        activeOpacity={0.8}
+                                        onPress={handleRescheduleAppointment}
+                                    >
+                                        <Text style={styles.rescheduleButtonText}>Reagendar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            <TouchableOpacity style={styles.closeButton} activeOpacity={0.8} onPress={closeActionModal}>
+                                <Text style={styles.closeButtonText}>Fechar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
+                <Modal visible={cancelModalVisible} transparent animationType="fade">
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.cancelModalContent}>
+                            <View style={styles.cancelModalIcon}>
+                                <Text style={styles.cancelModalIconText}>⚠️</Text>
+                            </View>
+                            <Text style={styles.cancelModalTitle}>Cancelar Consulta</Text>
+                            <Text style={styles.cancelModalMessage}>
+                                Tem certeza que deseja cancelar esta consulta? Esta ação não pode ser desfeita.
+                            </Text>
+                            <View style={styles.cancelModalDetails}>
+                                <Text style={styles.cancelModalDetailText}>
+                                    {selectedAppointment?.clinic} - {selectedAppointment?.specialty}
+                                </Text>
+                                <Text style={styles.cancelModalDetailText}>
+                                    {selectedAppointment?.date} às {selectedAppointment?.time}
+                                </Text>
+                            </View>
+                            <View style={styles.cancelModalButtonsRow}>
+                                <TouchableOpacity
+                                    style={styles.cancelModalCancelButton}
+                                    activeOpacity={0.8}
+                                    onPress={closeCancelModal}
+                                >
+                                    <Text style={styles.cancelModalCancelText}>Manter Consulta</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[
-                                        styles.rescheduleButton,
-                                        selectedAppointment?.status?.toLowerCase() === 'realizada' && styles.evaluateButton
-                                    ]}
+                                    style={styles.cancelModalConfirmButton}
                                     activeOpacity={0.8}
-                                    onPress={closeActionModal}
+                                    onPress={confirmCancelAppointment}
                                 >
-                                    <Text style={styles.rescheduleButtonText}>
-                                        {selectedAppointment?.status?.toLowerCase() === 'realizada' ? 'Avaliar' : 'Reagendar'}
+                                    <Text style={styles.cancelModalConfirmText}>Cancelar Consulta</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+
+                <Modal visible={rescheduleModalVisible} transparent animationType="fade">
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.pickerCard}>
+                            <View style={styles.pickerHeader}>
+                                <Text style={styles.pickerTitle}>Reagendar Consulta</Text>
+                                <TouchableOpacity
+                                    style={styles.pickerCloseButton}
+                                    onPress={closeRescheduleModal}
+                                    activeOpacity={0.8}
+                                >
+                                    <Text style={styles.pickerCloseText}>✕</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <Text style={styles.rescheduleInfo}>
+                                {selectedAppointment?.clinic} - {selectedAppointment?.specialty}
+                            </Text>
+                            <Text style={styles.rescheduleInfo}>
+                                Dr. {selectedAppointment?.doctor}
+                            </Text>
+
+                            <Text style={styles.timeSectionTitle}>Nova Data</Text>
+                            <View style={styles.dateTimeSelector}>
+                                <TouchableOpacity
+                                    style={styles.dateTimeButton}
+                                    onPress={() => {
+                                        // Simples seleção de data - em produção, usar um date picker
+                                        const tomorrow = new Date();
+                                        tomorrow.setDate(tomorrow.getDate() + 1);
+                                        setNewSelectedDate(tomorrow.toISOString().split('T')[0]);
+                                    }}
+                                    activeOpacity={0.8}
+                                >
+                                    <Text style={styles.dateTimeButtonText}>
+                                        {new Date(newSelectedDate).toLocaleDateString('pt-BR')}
                                     </Text>
+                                    <Text style={styles.dateTimeButtonIcon}>📅</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <Text style={styles.timeSectionTitle}>Novo Horário</Text>
+                            <View style={styles.timeRow}>
+                                {['09:00', '09:30', '12:00', '12:30', '15:00', '16:30'].map((time) => {
+                                    const isActive = newSelectedTime === time;
+                                    return (
+                                        <TouchableOpacity
+                                            key={time}
+                                            style={[styles.timeChip, isActive && styles.timeChipActive]}
+                                            activeOpacity={0.85}
+                                            onPress={() => setNewSelectedTime(time)}
+                                        >
+                                            <Text style={[styles.timeChipText, isActive && styles.timeChipTextActive]}>{time}</Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+
+                            <View style={styles.pickerActionsRow}>
+                                <TouchableOpacity style={styles.pickerCancelButton} onPress={closeRescheduleModal} activeOpacity={0.85}>
+                                    <Text style={styles.pickerCancelText}>Cancelar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.pickerConfirmButton} onPress={confirmRescheduleAppointment} activeOpacity={0.85}>
+                                    <Text style={styles.pickerConfirmText}>Confirmar Reagendamento</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -1109,5 +1306,130 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 15,
         fontWeight: '700',
+    },
+    cancelAppointmentButton: {
+        flex: 1,
+        marginHorizontal: 6,
+        backgroundColor: '#dc2626',
+        borderRadius: 16,
+        paddingVertical: 14,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#b91c1c',
+    },
+    cancelAppointmentButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    cancelModalContent: {
+        width: '90%',
+        backgroundColor: '#ffffff',
+        borderRadius: 24,
+        padding: 24,
+        alignItems: 'center',
+    },
+    cancelModalIcon: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#fef3c7',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    cancelModalIconText: {
+        fontSize: 24,
+    },
+    cancelModalTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#0f172a',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    cancelModalMessage: {
+        fontSize: 16,
+        color: '#374151',
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 20,
+    },
+    cancelModalDetails: {
+        backgroundColor: '#f8fafc',
+        borderRadius: 12,
+        padding: 16,
+        width: '100%',
+        marginBottom: 24,
+    },
+    cancelModalDetailText: {
+        fontSize: 14,
+        color: '#64748b',
+        textAlign: 'center',
+        marginBottom: 4,
+    },
+    cancelModalButtonsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    cancelModalCancelButton: {
+        flex: 1,
+        marginRight: 8,
+        backgroundColor: '#f1f5f9',
+        borderRadius: 16,
+        paddingVertical: 14,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#cbd5e1',
+    },
+    cancelModalCancelText: {
+        color: '#0f172a',
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    cancelModalConfirmButton: {
+        flex: 1,
+        marginLeft: 8,
+        backgroundColor: '#dc2626',
+        borderRadius: 16,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+    cancelModalConfirmText: {
+        color: '#ffffff',
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    rescheduleInfo: {
+        fontSize: 14,
+        color: '#64748b',
+        textAlign: 'center',
+        marginBottom: 4,
+    },
+    dateTimeSelector: {
+        marginBottom: 20,
+    },
+    dateTimeButton: {
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOpacity: 0.04,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 10,
+        elevation: 4,
+    },
+    dateTimeButtonText: {
+        fontSize: 16,
+        color: '#0f172a',
+        fontWeight: '600',
+    },
+    dateTimeButtonIcon: {
+        fontSize: 18,
     },
 });

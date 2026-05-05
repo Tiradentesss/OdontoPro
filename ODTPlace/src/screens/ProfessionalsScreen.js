@@ -196,7 +196,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                 <TouchableOpacity
                                     style={styles.professionalCard}
                                     activeOpacity={0.86}
-                                    onPress={() => navigation.navigate('ProfessionalInfo', { professional: item, clinic, user })}
+                                    onPress={() => navigation.navigate('ProfessionalInfo', { professional: item, clinic, user, selectedSpecialty: activeSpecialty })}
                                 >
                                     <View style={styles.avatarPlaceholder}>
                                         <Text style={styles.avatarText}>{name.charAt(0)}</Text>

@@ -88,7 +88,7 @@ export default function NotificationsScreen({ navigation, showBottomNav = true }
             title: 'Consulta Hoje',
             message: `Sua consulta com ${apt.medico_nome || 'o médico'} é às ${aptTimeStr} na ${apt.clinica_nome || 'clínica'}.`,
             time: aptTimeStr,
-            icon: '📅',
+            icon: '',
             aptData: apt,
           });
         }
