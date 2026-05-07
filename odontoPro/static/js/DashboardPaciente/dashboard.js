@@ -463,11 +463,13 @@ function inicializarFiltrosConsultas() {
     const cards = document.querySelectorAll(".card-agendamento");
     const selectEspecialidade = document.getElementById("selectFiltroEspecialidade");
     const inputData = document.getElementById("inputFiltroData");
+    const inputFiltroTexto = document.getElementById("inputFiltroTexto");
 
     const aplicarFiltrosConsultas = () => {
         const filtroStatus = document.querySelector(".filtro-btn.ativo")?.dataset.filtro || "todas";
         const especialidadeSelecionada = selectEspecialidade?.value || "";
         const dataSelecionada = inputData?.value || "";
+        const pesquisa = inputFiltroTexto?.value.trim().toLowerCase() || "";
 
         const agora = new Date();
 
@@ -476,6 +478,7 @@ function inicializarFiltrosConsultas() {
             const especialidade = card.dataset.especialidade || "";
             const dataHora = card.dataset.dataHora || "";
             const dataConsulta = dataHora ? new Date(dataHora) : null;
+            const textoCard = card.textContent.toLowerCase();
 
             const statusMatch = filtroStatus === "todas"
                 || filtroStatus === status
@@ -483,8 +486,9 @@ function inicializarFiltrosConsultas() {
 
             const especialidadeMatch = !especialidadeSelecionada || especialidade === especialidadeSelecionada;
             const dataMatch = !dataSelecionada || (dataHora ? dataHora.startsWith(dataSelecionada) : false);
+            const pesquisaMatch = !pesquisa || textoCard.includes(pesquisa);
 
-            card.style.display = statusMatch && especialidadeMatch && dataMatch ? "block" : "none";
+            card.style.display = statusMatch && especialidadeMatch && dataMatch && pesquisaMatch ? "block" : "none";
         });
     };
 
@@ -502,6 +506,10 @@ function inicializarFiltrosConsultas() {
 
     if (inputData) {
         inputData.addEventListener("change", aplicarFiltrosConsultas);
+    }
+
+    if (inputFiltroTexto) {
+        inputFiltroTexto.addEventListener("input", aplicarFiltrosConsultas);
     }
 
     aplicarFiltrosConsultas();

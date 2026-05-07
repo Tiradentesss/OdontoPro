@@ -1747,9 +1747,55 @@ body {
 
 .filtros-consultas {
     display: flex;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 20px;
     flex-wrap: wrap;
     margin: 15px 0 25px 0;
+    align-items: center;
+}
+
+.filtros-consultas-status {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filtros-consultas-controles {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filtros-consultas-controles input[type="search"],
+.filtros-consultas-controles select,
+.filtros-consultas-controles input[type="date"] {
+    padding: 10px 14px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 10px;
+    background: white;
+    color: #243b53;
+    min-width: 220px;
+    max-width: 280px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.filtros-consultas-controles select,
+.filtros-consultas-controles input[type="date"] {
+    min-width: 180px;
+}
+
+.filtros-consultas-controles input[type="search"] {
+    min-width: 220px;
+}
+
+.filtros-consultas-controles input[type="search"]:focus,
+.filtros-consultas-controles select:focus,
+.filtros-consultas-controles input[type="date"]:focus {
+    border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12);
+    outline: none;
 }
 
 .filtro-btn {

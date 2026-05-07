@@ -493,13 +493,16 @@
     <h2 class="titulo-pagina">Minhas Consultas</h2>
 
     <div class="filtros-consultas">
-        <button class="filtro-btn ativo" data-filtro="todas">Todas</button>
-        <button class="filtro-btn" data-filtro="agendada">Agendadas</button>
-        <button class="filtro-btn" data-filtro="realizada">Realizadas</button>
-        <button class="filtro-btn" data-filtro="cancelada">Canceladas</button>
-        <button class="filtro-btn" data-filtro="perdidas">Perdidas</button>
+        <div class="filtros-consultas-status">
+            <button class="filtro-btn ativo" data-filtro="todas">Todas</button>
+            <button class="filtro-btn" data-filtro="agendada">Agendadas</button>
+            <button class="filtro-btn" data-filtro="realizada">Realizadas</button>
+            <button class="filtro-btn" data-filtro="cancelada">Canceladas</button>
+            <button class="filtro-btn" data-filtro="perdidas">Perdidas</button>
+        </div>
 
-        <div class="filtros-adicionais">
+        <div class="filtros-consultas-controles">
+            <input type="search" id="inputFiltroTexto" placeholder="Buscar consultas..." aria-label="Buscar consultas" />
             <select id="selectFiltroEspecialidade" aria-label="Filtrar por especialidade">
                 <option value="">Todas as especialidades</option>
                 {% for esp_id, esp_nome in especialidades_consultas %}
