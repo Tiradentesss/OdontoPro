@@ -572,6 +572,8 @@ def configuracoes_conta(request):
         email = request.POST.get('email', '').strip()
         cpf = request.POST.get('cpf', '').strip()
         telefone = request.POST.get('telefone', '').strip()
+        sexo = request.POST.get('sexo', '').strip()
+        data_nascimento = request.POST.get('data_nascimento', '').strip()
 
         # Validar campos obrigatórios
         if not nome:
@@ -593,6 +595,10 @@ def configuracoes_conta(request):
                             paciente.cpf = cpf
                         if telefone:
                             paciente.telefone = telefone
+                        if sexo:
+                            paciente.sexo = sexo
+                        if data_nascimento:
+                            paciente.data_nascimento = data_nascimento
 
                         # Processar foto
                         if 'foto' in request.FILES and request.FILES['foto'].size > 0:
@@ -641,6 +647,10 @@ def configuracoes_conta(request):
                         paciente.cpf = cpf
                     if telefone:
                         paciente.telefone = telefone
+                    if sexo:
+                        paciente.sexo = sexo
+                    if data_nascimento:
+                        paciente.data_nascimento = data_nascimento
 
                     # Processar foto
                     if 'foto' in request.FILES and request.FILES['foto'].size > 0:

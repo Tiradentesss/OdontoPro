@@ -612,6 +612,16 @@
                                 </div>
                             </div>
 
+                            {% if cons.especialidade %}
+                            <div class="info-item">
+                                <div class="icone"><i class="fa-solid fa-stethoscope"></i></div>
+                                <div class="info-texto">
+                                    <span class="label">Especialidade</span>
+                                    <span class="valor">{{ cons.especialidade.nome }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+
                             <div class="info-item">
                                 <div class="icone"><i class="fa-regular fa-calendar"></i></div>
                                 <div class="info-inline">
@@ -707,6 +717,20 @@
                 <div class="input-grupo">
                     <label for="telefonePaciente">Telefone</label>
                     <input type="text" id="telefonePaciente" name="telefone" value="{{ paciente.telefone|default:'' }}">
+                </div>
+
+                <div class="input-grupo">
+                    <label for="sexoPaciente">Sexo</label>
+                    <select id="sexoPaciente" name="sexo">
+                        <option value="">Selecione</option>
+                        <option value="M" {% if paciente.sexo|upper == 'M' %}selected{% endif %}>Masculino</option>
+                        <option value="F" {% if paciente.sexo|upper == 'F' %}selected{% endif %}>Feminino</option>
+                    </select>
+                </div>
+
+                <div class="input-grupo">
+                    <label for="dataNascimentoPaciente">Data de Nascimento</label>
+                    <input type="date" id="dataNascimentoPaciente" name="data_nascimento" value="{{ paciente.data_nascimento|date:'Y-m-d'|default:'' }}">
                 </div>
 
                 <button type="submit" class="btn-salvar" id="btnSalvarConfig">

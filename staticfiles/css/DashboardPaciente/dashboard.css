@@ -1233,6 +1233,16 @@ body {
     font-size: 14px;
 }
 
+.input-grupo select {
+    background: #EDF2F7;
+    border: none;
+    padding: 15px;
+    border-radius: 0px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+}
+
 /* Botão Salvar */
 .btn-salvar {
     background: #00B9E8;
