@@ -411,19 +411,19 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
                     <div>
                         <label style="display: block; font-size: 12px; color: #00407b; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">📅 Data</label>
-                        <div id="dataSelecionadaDisplay" class="date-time-field" onclick="abrirModalCalendario()" style="cursor: pointer;">
+                        <button id="dataSelecionadaDisplay" type="button" class="date-time-field" onclick="abrirModalCalendario()" style="cursor: pointer; text-align: left; width: 100%;">
                             <span>Selecione a Data</span>
                             <i class="fa-solid fa-calendar" style="margin-left: 10px; color: #00BCD4;"></i>
-                        </div>
+                        </button>
                         <input type="date" id="inputData" name="data" required style="display: none;">
                     </div>
 
                     <div>
                         <label style="display: block; font-size: 12px; color: #00407b; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">⏰ Hora</label>
-                        <div id="horaSelecionadaDisplay" class="date-time-field" onclick="abrirModalHorario()">
+                        <button id="horaSelecionadaDisplay" type="button" class="date-time-field" onclick="abrirModalHorario()" style="width: 100%; text-align: left;">
                             <span>Selecione a Hora</span>
                             <i class="fa-solid fa-clock" style="margin-left: 10px; color: #00BCD4;"></i>
-                        </div>
+                        </button>
                         <select id="selectHorario" name="horario" required style="display: none;">
                             <option value="">Selecione o Horário</option>
                         </select>
@@ -443,7 +443,10 @@
 
         <!-- MODAL DO CALENDÁRIO -->
         <div id="modal-calendario" class="modal">
-            <div class="modal-content" style="max-width: 700px; padding: 30px;">
+            <div class="modal-content" style="max-width: 700px; padding: 30px; position: relative;">
+                <button id="btn-fechar-calendario" class="btn-close-modal" type="button" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; color: #666; cursor: pointer; z-index: 10;">
+                    <i class="fa-solid fa-times"></i>
+                </button>
                 <div class="calendar-header">
                     <h3 class="calendar-title">Selecione a Data</h3>
                     <div class="calendar-controls">
@@ -462,7 +465,6 @@
 
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
                     <button id="btn-confirmar-data" class="btn-cyan btn-confirmar-data" disabled>Confirmar Data</button>
-                    <button id="btn-fechar-calendario" class="btn-cinza" type="button">Fechar</button>
                 </div>
             </div>
         </div>
@@ -524,11 +526,21 @@
                     <h3>{{ cons.clinica.nome }}</h3>
                     <p><i class="fa-solid fa-user-doctor"></i> {{ cons.medico.nome }}</p>
                     <p><i class="fa-regular fa-clock"></i> {{ cons.data_hora|time:"H:i" }}</p>
+                    <p style="color: red; font-size: 12px;">DEBUG: Status = "{{ cons.status }}"</p>
                 </div>
 
                 <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
                     Ver Detalhes
                 </button>
+
+                <!-- Botão de Cancelar (só para consultas agendadas ou confirmadas) -->
+                {% if cons.status == 'agendada' or cons.status == 'confirmada' %}
+                    <button class="btn-cancelar-consulta" onclick="confirmarCancelamentoConsulta('{{ cons.id }}')">
+                        Cancelar Consulta
+                    </button>
+                {% else %}
+                    <!-- DEBUG: Status atual: {{ cons.status }} -->
+                {% endif %}
 
                 <!-- Botão de Avaliar (só para consultas realizadas) -->
                 {% if cons.status == 'realizada' and not cons.avaliacao %}

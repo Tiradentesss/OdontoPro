@@ -2,10 +2,11 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
 
 # =========================
 # BASE
+# =========================
 # =========================
 
 OPTIONS = {
@@ -145,11 +146,25 @@ TEMPLATES = [
 
 
 # =========================
-# DATABASE (Aiven / Railway)
+# DATABASE (Local / Aiven / Railway)
 # =========================
 
-if DEBUG:
-    # Desenvolvimento local - usar SQLite
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+        )
+    }
+    if not DEBUG:
+        DATABASES['default']['OPTIONS'] = {
+            'ssl': {},
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
+elif DEBUG:
+    # Desenvolvimento local sem DATABASE_URL - usar SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -157,18 +172,7 @@ if DEBUG:
         }
     }
 else:
-    # Produção - usar Aiven/Railway
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
-            conn_max_age=600,
-        )
-    }
-
-    DATABASES['default']['OPTIONS'] = {
-        'ssl': {},
-        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-    }
+    raise Exception("DATABASE_URL não está definida. Configure o .env para produção.")
 
 import logging
 logger = logging.getLogger(__name__)

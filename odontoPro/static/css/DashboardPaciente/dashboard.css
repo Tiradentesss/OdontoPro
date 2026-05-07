@@ -974,6 +974,30 @@ body {
     color: white;
 }
 
+/* ================= BOTÃO DE CANCELAR CONSULTA ================= */
+.btn-cancelar-consulta {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #FF4444;
+    background: transparent;
+    color: #FF4444;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.btn-cancelar-consulta:hover {
+    background: #FF4444;
+    color: white;
+}
+
+.btn-cancelar-consulta:active {
+    transform: scale(0.98);
+}
+
 /* ================= SEÇÃO DE AVALIAÇÃO COM ESTRELAS ================= */
 .avaliacao-section {
     border: 2px solid #FFB800;
@@ -2206,9 +2230,24 @@ body {
     }
 
     .date-time-field {
-        padding: 20px;
-        font-size: 18px;
-        min-height: 60px;
+        padding: 15px;
+        font-size: 16px;
+        min-height: 50px;
+        background-color: #33CCFF;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: bold;
+    }
+
+    .date-time-field:hover {
+        background-color: #00BBEE;
+        transform: translateY(-1px);
     }
 
     .modal-header-tag {

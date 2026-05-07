@@ -14,7 +14,7 @@ from django.core.management import call_command
 from django.templatetags.static import static
 from django.core.files.storage import default_storage
 
-from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco
+from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
@@ -71,10 +71,23 @@ def horarios_clinica(request, clinica_id):
 
 
 # -------- CANCELAR CONSULTA --------
+@require_POST
 def cancelar_consulta(request, consulta_id):
     consulta = get_object_or_404(Consulta, id=consulta_id)
+    
+    # Validar se pode cancelar (só agendada ou confirmada)
+    if consulta.status not in ["agendada", "confirmada"]:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({"success": False, "error": f"Não é possível cancelar uma consulta {consulta.get_status_display().lower()}"})
+        messages.error(request, f"Não é possível cancelar uma consulta {consulta.get_status_display().lower()}")
+        return redirect("dashboard_paciente")
+    
     consulta.status = "cancelada"
     consulta.save()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({"success": True, "message": "Consulta cancelada com sucesso!"})
+    
     messages.success(request, "Consulta cancelada com sucesso!")
     return redirect("dashboard_paciente")
 
@@ -366,7 +379,8 @@ def clinica_detalhes(request, clinica_id):
         {
             "id": m.id,
             "nome": m.nome,
-            "foto_url": m.foto.url if m.foto else None
+            "foto_url": m.foto.url if m.foto else None,
+            "especialidades": [esp.id for esp in m.especialidades.all()]
         }
         for m in clinica.medico_set.all()
     ]
@@ -447,11 +461,11 @@ def agendar_consulta(request):
 
     clinica_id = request.POST.get("clinica_id")
     medico_id = request.POST.get("medico_id")
-    especialidade = request.POST.get("especialidade")
+    especialidade_id = request.POST.get("especialidade")
     data_hora_str = request.POST.get("data_hora")
     observacoes = request.POST.get("observacoes", "")
 
-    if not all([clinica_id, medico_id, data_hora_str]):
+    if not all([clinica_id, medico_id, data_hora_str, especialidade_id]):
         return JsonResponse({"success": False, "error": "Dados incompletos"})
 
     data_hora = parse_datetime(data_hora_str)
@@ -463,6 +477,14 @@ def agendar_consulta(request):
         medico = Medico.objects.get(id=medico_id)
     except (Clinica.DoesNotExist, Medico.DoesNotExist):
         return JsonResponse({"success": False, "error": "Clínica ou médico não encontrado"}, status=404)
+
+    try:
+        especialidade = Especialidade.objects.get(id=especialidade_id, clinica=clinica)
+    except Especialidade.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Especialidade não encontrada"}, status=404)
+
+    if not medico.especialidades.filter(id=especialidade.id).exists():
+        return JsonResponse({"success": False, "error": "Médico não atende à especialidade selecionada"}, status=400)
 
     # 🔒 evita conflito de horário
     if Consulta.objects.filter(medico=medico, data_hora=data_hora).exists():

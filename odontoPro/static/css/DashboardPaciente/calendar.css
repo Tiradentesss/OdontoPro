@@ -347,6 +347,24 @@
   margin: 30px 0;
 }
 
+/* Botão de fechar (X) no modal do calendário */
+#modal-calendario .btn-close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.3s ease;
+}
+
+#modal-calendario .btn-close-modal:hover {
+  color: #333;
+}
+
 /* BUTTONS */
 .btn-confirm {
   width: 100%;
