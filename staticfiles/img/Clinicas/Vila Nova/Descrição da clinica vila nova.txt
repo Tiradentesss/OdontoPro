@@ -1,0 +1,156 @@
+Descrição da clinica---------------
+
+A Clínica Villanova redefine a experiência odontológica ao integrar protocolos de biotecnologia avançada com um atendimento humanizado e exclusivo. Localizada em um ambiente planejado para o máximo conforto sensorial, nossa unidade foca na precisão diagnóstica através de escaneamento digital e planejamento 3D. Nossa missão é elevar a saúde sistêmica e a autoestima de nossos pacientes através de reabilitações que unem funcionalidade biológica e estética de alto padrão.
+
+Localização--------------
+
+Alameda das Orquídeas, 1042, Edifício Platinum, 12º Andar, Bairro Batel, Curitiba - PR, CEP 80420-000
+
+clinicos------------
+
+1- Dra. Heloísa Meirelles
+
+Periodontia e Implantodontia
+
+2- Dr. Fabrício Lancellotti
+
+Estética Orofacial
+
+3- Dr. Fabrício Lancellotti
+
+Estética Orofacial
+
+4- Dr. Tiago Arantes
+
+Endodontia Microscópica
+
+5- Dra. Camila Siqueira
+
+Reabilitação Oral de Alta Complexidade
+
+Avaliações----------------
+
+"A tecnologia de escaneamento 3D deles é surreal, finalmente um lugar onde não precisei usar aquelas massinhas de moldagem horríveis."
+
+"Dra. Yasmin tem um jeito incrível com crianças; meu filho saiu da consulta perguntando quando poderia voltar."
+
+"Ambiente extremamente luxuoso e profissionais muito capacitados, senti que o investimento na minha saúde valeu cada centavo."
+
+"Fiz minhas lentes de contato dental com o Dr. Fabrício e o resultado ficou muito natural, exatamente como eu desejava."
+
+"Excelente suporte desde a recepção até o pós-operatório, senti total segurança durante minha cirurgia de implante."
+
+
+================================================================================= BANCO  ====================================
+
+
+-- ===============================
+-- 1) ENDEREÇOS
+-- ===============================
+INSERT INTO odontopro_endereco (cep, numero, quadra, rua, bairro, cidade, estado)
+VALUES  
+('80420000', '1042', 'Edifício Platinum 12º Andar', 'Alameda das Orquídeas', 'Batel', 'Curitiba', 'PR');
+
+
+-- ===============================
+-- 2) CLÍNICAS
+-- ===============================
+INSERT INTO odontopro_clinica 
+(cnpj, nome, descricao, telefone, email, senha, conta_bancaria_juridica, endereco_id, imagem, preco_consulta, avaliacao, num_avaliacoes)
+VALUES
+('55555555000100', 'Clínica Villanova',
+'A Clínica Villanova redefine a experiência odontológica ao integrar protocolos de biotecnologia avançada com um atendimento humanizado e exclusivo. Localizada em um ambiente planejado para o máximo conforto sensorial, nossa unidade foca na precisão diagnóstica através de escaneamento digital e planejamento 3D. Nossa missão é elevar a saúde sistêmica e a autoestima de nossos pacientes através de reabilitações que unem funcionalidade biológica e estética de alto padrão.',
+'(41) 90000-0010',
+'contato@villanova.com',
+'123456',
+'7766554433',
+5,
+NULL,
+220.00,
+5.0,
+5);
+
+
+-- ===============================
+-- 3) DIAS DA SEMANA DISPONÍVEIS
+-- ===============================
+INSERT INTO odontopro_diasemanadisponivel (clinica_id, dia)
+VALUES
+(5, 'domingo'),
+(5, 'segunda'),
+(5, 'terca'),
+(5, 'quarta'),
+(5, 'quinta'),
+(5, 'sexta'),
+(5, 'sabado');
+
+
+-- ===============================
+-- 4) HORÁRIOS (08:00–12:00 e 14:00–18:00)
+-- ===============================
+INSERT INTO odontopro_horarioaberto (dia_id, hora_inicio, hora_fim)
+VALUES
+(29, '08:00', '12:00'), (29, '14:00', '18:00'),
+(30, '08:00', '12:00'), (30, '14:00', '18:00'),
+(31, '08:00', '12:00'), (31, '14:00', '18:00'),
+(32, '08:00', '12:00'), (32, '14:00', '18:00'),
+(33, '08:00', '12:00'), (33, '14:00', '18:00'),
+(34, '08:00', '12:00'), (34, '14:00', '18:00'),
+(35, '08:00', '12:00'), (35, '14:00', '18:00');
+
+
+-- ===============================
+-- 5) ESPECIALIDADES
+-- ===============================
+INSERT INTO odontopro_especialidade (nome) VALUES
+('Estética Orofacial'),
+('Reabilitação Oral de Alta Complexidade');
+
+
+-- ===============================
+-- 6) MÉDICOS
+-- ===============================
+INSERT INTO odontopro_medico
+(nome, cpf, sexo, email, data_nascimento, senha, crm_cro, telefone, clinica_id)
+VALUES
+
+('Dra. Heloísa Meirelles', '22211133344', 'f', 'heloisa@villanova.com', '1986-05-18',
+'hash123', 'CRO-60001', '(41)90000-0011', 5),
+
+('Dr. Fabrício Lancellotti', '33322244455', 'm', 'fabricio@villanova.com', '1983-09-07',
+'hash123', 'CRO-60002', '(41)90000-0012', 5),
+
+('Dr. Tiago Arantes', '44433355566', 'm', 'tiago@villanova.com', '1988-01-29',
+'hash123', 'CRO-60003', '(41)90000-0013', 5),
+
+('Dra. Camila Siqueira', '55544466677', 'f', 'camila@villanova.com', '1990-11-14',
+'hash123', 'CRO-60004', '(41)90000-0014', 5);
+
+
+-- ===============================
+-- 7) GERENCIAMENTO
+-- ===============================
+INSERT INTO odontopro_gerenciamento
+(nome, email, senha, clinica_id)
+VALUES
+('Eduardo Pires', 'eduardo@villanova.com', '123456', 5),
+('Marina Tavares', 'marina@villanova.com', '123456', 5);
+
+
+-- ===============================
+-- 8) RELAÇÃO MEDICO–ESPECIALIDADES
+-- ===============================
+INSERT INTO odontopro_medico_especialidades (medico_id, especialidade_id) VALUES
+
+-- Dra Heloísa
+(16, 5),
+(16, 3),
+
+-- Dr Fabrício
+(17, 8),
+
+-- Dr Tiago
+(18, 4),
+
+-- Dra Camila
+(19, 9);

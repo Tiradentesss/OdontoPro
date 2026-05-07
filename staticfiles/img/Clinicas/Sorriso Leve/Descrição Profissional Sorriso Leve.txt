@@ -1,0 +1,158 @@
+Descrição Profissional-----
+
+A Sorriso Leve redefine o conceito de bem-estar bucal ao integrar tecnologias de ponta com um atendimento humanizado e acolhedor. Nossa missão é proporcionar transformações estéticas e funcionais que elevam a autoestima através de protocolos personalizados e minimamente invasivos. Aqui, cada detalhe foi planejado para que sua visita seja marcada pelo conforto e pela segurança de um sorriso saudável.
+
+Localização--------
+
+Alameda das Orquídeas, 842, Edifício Platinum, Sala 504, Setor Bueno, Goiânia - GO, CEP 74210-010
+
+
+
+Clinicos---------
+
+Dr. Renato Alencar
+
+Implantodontia Avançada
+
+Dra. Beatriz Valente
+
+Odontopediatria Lúdica
+
+Dr. Hugo Fontana
+
+Ortodontia Digital
+
+Dra. Clarice Mendes
+
+Harmonização Orofacial
+
+Dr. Samuel Porto
+
+Endodontia Microscópica
+
+
+Comentarios ---------
+
+"Fiquei impressionado com a tecnologia da clínica; o scanner 3D facilitou muito meu tratamento ortodôntico."
+
+"A Dra. Beatriz tem um dom com crianças! Meu filho agora pede para ir ao dentista sem medo algum."
+
+"Ambiente impecável e equipe muito atenciosa, embora o estacionamento estivesse bem cheio na hora do meu agendamento."
+
+"Fiz um clareamento e o resultado superou minhas expectativas. Atendimento VIP do início ao fim."
+
+"O Dr. Samuel resolveu meu problema de canal em uma única sessão e sem dor nenhuma. Recomendo demais!"
+
+
+
+============================ Banco ==========================
+
+
+-- ===============================
+-- 1) ENDEREÇOS
+-- ===============================
+INSERT INTO odontopro_endereco (cep, numero, quadra, rua, bairro, cidade, estado)
+VALUES  
+('74210010', '842', 'Edifício Platinum Sala 504', 'Alameda das Orquídeas', 'Setor Bueno', 'Goiânia', 'GO');
+
+
+-- ===============================
+-- 2) CLÍNICAS
+-- ===============================
+INSERT INTO odontopro_clinica 
+(cnpj, nome, descricao, telefone, email, senha, conta_bancaria_juridica, endereco_id, imagem, preco_consulta, avaliacao, num_avaliacoes)
+VALUES
+('44444444000100', 'Sorriso Leve',
+'A Sorriso Leve redefine o conceito de bem-estar bucal ao integrar tecnologias de ponta com um atendimento humanizado e acolhedor. Nossa missão é proporcionar transformações estéticas e funcionais que elevam a autoestima através de protocolos personalizados e minimamente invasivos. Aqui, cada detalhe foi planejado para que sua visita seja marcada pelo conforto e pela segurança de um sorriso saudável.',
+'(62) 90000-0001',
+'contato@sorrisoleve.com',
+'123456',
+'3344556677',
+4,
+NULL,
+170.00,
+4.8,
+5);
+
+
+-- ===============================
+-- 3) DIAS DA SEMANA DISPONÍVEIS
+-- ===============================
+INSERT INTO odontopro_diasemanadisponivel (clinica_id, dia)
+VALUES
+(4, 'domingo'),
+(4, 'segunda'),
+(4, 'terca'),
+(4, 'quarta'),
+(4, 'quinta'),
+(4, 'sexta'),
+(4, 'sabado');
+
+
+-- ===============================
+-- 4) HORÁRIOS (08:00–12:00 e 14:00–18:00)
+-- ===============================
+INSERT INTO odontopro_horarioaberto (dia_id, hora_inicio, hora_fim)
+VALUES
+(22, '08:00', '12:00'), (22, '14:00', '18:00'),
+(23, '08:00', '12:00'), (23, '14:00', '18:00'),
+(24, '08:00', '12:00'), (24, '14:00', '18:00'),
+(25, '08:00', '12:00'), (25, '14:00', '18:00'),
+(26, '08:00', '12:00'), (26, '14:00', '18:00'),
+(27, '08:00', '12:00'), (27, '14:00', '18:00'),
+(28, '08:00', '12:00'), (28, '14:00', '18:00');
+
+
+-- ===============================
+-- 6) MÉDICOS
+-- ===============================
+INSERT INTO odontopro_medico
+(nome, cpf, sexo, email, data_nascimento, senha, crm_cro, telefone, clinica_id)
+VALUES
+
+('Dr. Renato Alencar', '66677788899', 'm', 'renato@sorrisoleve.com', '1981-04-15',
+'hash123', 'CRO-11111', '(62)90000-0002', 4),
+
+('Dra. Beatriz Valente', '77788899900', 'f', 'beatriz@sorrisoleve.com', '1990-08-11',
+'hash123', 'CRO-22223', '(62)90000-0003', 4),
+
+('Dr. Hugo Fontana', '88899900011', 'm', 'hugo@sorrisoleve.com', '1987-01-22',
+'hash123', 'CRO-33334', '(62)90000-0004', 4),
+
+('Dra. Clarice Mendes', '99900011122', 'f', 'clarice@sorrisoleve.com', '1992-06-09',
+'hash123', 'CRO-44445', '(62)90000-0005', 4),
+
+('Dr. Samuel Porto', '11100022233', 'm', 'samuel@sorrisoleve.com', '1984-12-03',
+'hash123', 'CRO-55556', '(62)90000-0006', 4);
+
+
+-- ===============================
+-- 7) GERENCIAMENTO
+-- ===============================
+INSERT INTO odontopro_gerenciamento
+(nome, email, senha, clinica_id)
+VALUES
+
+('Gabriel Nogueira', 'gabriel@sorrisoleve.com', '123456', 4),
+('Larissa Duarte', 'larissa@sorrisoleve.com', '123456', 4);
+
+
+-- ===============================
+-- 8) RELAÇÃO MEDICO–ESPECIALIDADES
+-- ===============================
+INSERT INTO odontopro_medico_especialidades (medico_id, especialidade_id) VALUES
+
+-- Dr Renato
+(11, 3),
+
+-- Dra Beatriz
+(12, 6),
+
+-- Dr Hugo
+(13, 2),
+
+-- Dra Clarice
+(14, 7),
+
+-- Dr Samuel
+(15, 4);
