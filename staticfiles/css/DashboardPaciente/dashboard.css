@@ -1841,12 +1841,131 @@ body {
 }
 
 @media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    .menu-lateral {
+        width: 100%;
+        padding: 16px 18px;
+        border-right: none;
+        border-bottom: 1px solid var(--cor-borda);
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .menu-lateral.aberto {
+        width: 100%;
+    }
+
+    .botao-seta {
+        position: relative;
+        right: auto;
+        top: auto;
+        margin: 0;
+        order: 0;
+        transform: none;
+    }
+
+    .menu-lateral.aberto .botao-seta {
+        transform: none;
+    }
+
+    .seccao-logo {
+        order: 1;
+        margin-bottom: 0;
+        justify-content: flex-start;
+        width: auto;
+    }
+
+    .logo-somente-icone {
+        display: none;
+    }
+
+    .logo-texto-completo {
+        display: block;
+        width: auto;
+    }
+
+    .botao-sair {
+        order: 2;
+        width: auto;
+        margin: 0;
+        padding: 10px 14px;
+        align-self: center;
+    }
+
+    .itens-navegacao {
+        order: 3;
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: space-between;
+        margin: 12px 0 0;
+    }
+
+    .item-menu {
+        flex: 1 1 calc(25% - 8px);
+        min-width: 80px;
+        max-width: calc(25% - 8px);
+        margin: 0;
+        padding: 8px 10px;
+        border-radius: 14px;
+    }
+
+    .menu-lateral.aberto .item-menu {
+        width: auto;
+        margin-left: 0;
+        justify-content: center;
+        padding-left: 0;
+    }
+
+    .botao-sair {
+        width: 100%;
+        margin: 12px 0 0;
+        justify-content: center;
+        padding: 12px 0;
+    }
+
+    .menu-lateral.aberto .botao-sair {
+        justify-content: center;
+        padding-left: 0;
+    }
+
     .filtros-consultas {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+    }
+
+    .filtros-consultas-status,
+    .filtros-consultas-controles {
+        width: 100%;
         justify-content: center;
     }
+
+    .filtros-consultas-status {
+        gap: 8px;
+    }
+
+    .filtros-consultas-controles {
+        gap: 8px;
+    }
+
+    .filtros-consultas-controles input[type="search"],
+    .filtros-consultas-controles select,
+    .filtros-consultas-controles input[type="date"] {
+        width: 100%;
+        max-width: none;
+    }
+
     .filtro-btn {
-        flex: 1 1 45%;
+        flex: 1 1 48%;
         text-align: center;
+        min-width: 150px;
     }
 }
 
