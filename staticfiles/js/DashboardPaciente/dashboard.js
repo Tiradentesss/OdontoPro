@@ -806,6 +806,36 @@ function carregarEspecialidadesEMedicos(clinicaId) {
                     selectEspecialidade.appendChild(option);
                 });
             }
+
+            // Preencher lista de serviços disponíveis com especialidades + número de médicos
+            const detalheServicos = document.getElementById('detalheServicosClinica');
+            if (detalheServicos) {
+                detalheServicos.innerHTML = '';
+                const medicosList = Array.isArray(data.medicos) ? data.medicos : [];
+                const countsByEspecialidade = {};
+
+                medicosList.forEach(medico => {
+                    if (Array.isArray(medico.especialidades)) {
+                        medico.especialidades.forEach(espId => {
+                            const key = String(espId);
+                            countsByEspecialidade[key] = (countsByEspecialidade[key] || 0) + 1;
+                        });
+                    }
+                });
+
+                if (Array.isArray(data.especialidades) && data.especialidades.length > 0) {
+                    data.especialidades.forEach(esp => {
+                        const espId = String(esp[0]);
+                        const espNome = esp[1];
+                        const count = countsByEspecialidade[espId] || 0;
+                        const item = document.createElement('li');
+                        item.textContent = `${espNome} (${count} médico${count === 1 ? '' : 's'})`;
+                        detalheServicos.appendChild(item);
+                    });
+                } else {
+                    detalheServicos.innerHTML = '<li>Nenhuma especialidade cadastrada.</li>';
+                }
+            }
             
             // Preencher médicos
             const selectProfissional = document.getElementById('selectProfissional');

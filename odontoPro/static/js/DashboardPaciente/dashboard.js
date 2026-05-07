@@ -267,6 +267,37 @@ function abrirModalAgendamento(clinicaId) {
                 selectEspecialidade.removeEventListener('change', atualizarMedicosPorEspecialidade);
                 selectEspecialidade.addEventListener('change', atualizarMedicosPorEspecialidade);
             }
+
+            // Preencher lista de serviços disponíveis com especialidades + número de médicos
+            const detalheServicos = document.getElementById("detalheServicosClinica");
+            if (detalheServicos) {
+                detalheServicos.innerHTML = "";
+                const medicosList = Array.isArray(data.medicos) ? data.medicos : [];
+                const countsByEspecialidade = {};
+
+                medicosList.forEach(function(medico) {
+                    if (Array.isArray(medico.especialidades)) {
+                        medico.especialidades.forEach(function(espId) {
+                            const key = String(espId);
+                            countsByEspecialidade[key] = (countsByEspecialidade[key] || 0) + 1;
+                        });
+                    }
+                });
+
+                if (Array.isArray(data.especialidades) && data.especialidades.length > 0) {
+                    data.especialidades.forEach(function(esp) {
+                        const espId = String(esp[0]);
+                        const espNome = esp[1];
+                        const count = countsByEspecialidade[espId] || 0;
+                        const item = document.createElement("li");
+                        item.textContent = `${espNome} (${count} médico${count === 1 ? "" : "s"})`;
+                        detalheServicos.appendChild(item);
+                    });
+                } else {
+                    detalheServicos.innerHTML = "<li>Nenhuma especialidade cadastrada.</li>";
+                }
+            }
+
             // Inicializar médicos globais (será atualizado pelo listener de especialidade)
             window.medicosClinica = data.medicos || [];
             atualizarMedicosPorEspecialidade();
