@@ -239,11 +239,24 @@ class Agenda(BaseScreen):
                 especialidade=self.filtro_especialidade,
             )
 
-            self.after(0, lambda: self._render_after_load(consultas, total, datas, medicos, especialidades, snapshot))
+            try:
+                self.after(0, lambda: self._render_after_load(consultas, total, datas, medicos, especialidades, snapshot))
+            except RuntimeError:
+                # Main loop pode ter terminado
+                pass
 
         except Exception as e:
-            print(f"[Agenda] _load_data_thread error: {e}")
-            self.after(0, lambda: self._render_error(f"Erro na carga de dados: {e}"))
+            error_msg = str(e)
+            print(f"[Agenda] _load_data_thread error: {error_msg}")
+            import traceback
+            traceback.print_exc()
+            
+            try:
+                self.after(0, lambda msg=error_msg: self._render_error(f"Erro na carga de dados: {msg}"))
+            except RuntimeError:
+                # Main loop pode ter terminado
+                pass
+
 
     def _render_error(self, message):
         self._loading = False
@@ -277,80 +290,83 @@ class Agenda(BaseScreen):
 
             for w in self.content_card.winfo_children():
                 w.destroy()
+
+            self.content_card.grid_columnconfigure(0, weight=4)
+            self.content_card.grid_columnconfigure(1, weight=1)
+            self.content_card.grid_rowconfigure(0, weight=1)
+
+            left = ctk.CTkFrame(self.content_card, fg_color='transparent')
+            left.grid(row=0, column=0, sticky='nsew', padx=(20, 10), pady=20)
+            left.grid_columnconfigure(0, weight=1)
+            left.grid_rowconfigure(3, weight=1)
+
+            right = ctk.CTkFrame(self.content_card, fg_color='#f8fafc', corner_radius=15)
+            right.grid(row=0, column=1, sticky='nsew', padx=(10, 20), pady=20)
+            right.grid_columnconfigure(0, weight=1)
+            self.details_panel = right
+
+            self._render_filtros(left, datas, medicos, especialidades)
+            self._render_info_top(left, total)
+
+            # ==============================
+            # TABELA (SEM CABEÇALHO)
+            # ==============================
+            content_frame = ctk.CTkFrame(
+                left,
+                fg_color='#ffffff',
+                corner_radius=15,
+                border_width=1,
+                border_color='#e2e8f0'
+            )
+            content_frame.grid(row=3, column=0, sticky='nsew', pady=(0, 10))
+            content_frame.grid_columnconfigure(0, weight=1)
+            content_frame.grid_rowconfigure(0, weight=1)
+
+            table_container = ctk.CTkFrame(content_frame, fg_color='transparent')
+            table_container.grid(row=0, column=0, sticky='nsew', padx=8)
+            table_container.grid_columnconfigure(0, weight=1)
+            table_container.grid_rowconfigure(0, weight=1)
+
+            # LISTA APENAS - SEM CABEÇALHO
+            list_area = ctk.CTkFrame(
+                table_container,
+                fg_color='transparent',
+            )
+            list_area.grid(row=0, column=0, sticky='nsew')
+            list_area.grid_columnconfigure(0, weight=1)
+
+            if not consultas:
+                empty_box = ctk.CTkFrame(list_area, fg_color='transparent')
+                empty_box.grid(row=0, column=0, sticky='nsew', pady=50)
+
+                ctk.CTkLabel(
+                    empty_box,
+                    text='Nenhuma consulta encontrada.',
+                    text_color=self.colors['text_secondary'],
+                    font=ctk.CTkFont(size=16, weight='bold')
+                ).pack(pady=(20, 6))
+
+                ctk.CTkLabel(
+                    empty_box,
+                    text='Tente ajustar os filtros.',
+                    text_color=self.colors['text_muted'],
+                    font=ctk.CTkFont(size=13)
+                ).pack()
+            else:
+                self._render_rows(list_area, consultas)
+
+            if self.paciente_selecionado and self.details_panel:
+                self.render_details_panel(self.details_panel)
+
+            self.render_pagination(left, total)
+            self.render_details_panel(right)
+
         except Exception as e:
             print(f"[Agenda] _render_after_load error: {e}")
-            self._render_error(f"Falha ao renderizar agenda: {e}")
-            return
-
-        self.content_card.grid_columnconfigure(0, weight=4)
-        self.content_card.grid_columnconfigure(1, weight=1)
-        self.content_card.grid_rowconfigure(0, weight=1)
-
-        left = ctk.CTkFrame(self.content_card, fg_color='transparent')
-        left.grid(row=0, column=0, sticky='nsew', padx=(20, 10), pady=20)
-        left.grid_columnconfigure(0, weight=1)
-        left.grid_rowconfigure(3, weight=1)
-
-        right = ctk.CTkFrame(self.content_card, fg_color='#f8fafc', corner_radius=15)
-        right.grid(row=0, column=1, sticky='nsew', padx=(10, 20), pady=20)
-        right.grid_columnconfigure(0, weight=1)
-        self.details_panel = right
-
-        self._render_filtros(left, datas, medicos, especialidades)
-        self._render_info_top(left, total)
-
-        # ==============================
-        # TABELA (SEM CABEÇALHO)
-        # ==============================
-        content_frame = ctk.CTkFrame(
-            left,
-            fg_color='#ffffff',
-            corner_radius=15,
-            border_width=1,
-            border_color='#e2e8f0'
-        )
-        content_frame.grid(row=3, column=0, sticky='nsew', pady=(0, 10))
-        content_frame.grid_columnconfigure(0, weight=1)
-        content_frame.grid_rowconfigure(0, weight=1)
-
-        table_container = ctk.CTkFrame(content_frame, fg_color='transparent')
-        table_container.grid(row=0, column=0, sticky='nsew', padx=8)
-        table_container.grid_columnconfigure(0, weight=1)
-        table_container.grid_rowconfigure(0, weight=1)
-
-        # LISTA APENAS - SEM CABEÇALHO
-        list_area = ctk.CTkFrame(
-            table_container,
-            fg_color='transparent',
-        )
-        list_area.grid(row=0, column=0, sticky='nsew')
-        list_area.grid_columnconfigure(0, weight=1)
-
-        if not consultas:
-            empty_box = ctk.CTkFrame(list_area, fg_color='transparent')
-            empty_box.grid(row=0, column=0, sticky='nsew', pady=50)
-
-            ctk.CTkLabel(
-                empty_box,
-                text='Nenhuma consulta encontrada.',
-                text_color=self.colors['text_secondary'],
-                font=ctk.CTkFont(size=16, weight='bold')
-            ).pack(pady=(20, 6))
-
-            ctk.CTkLabel(
-                empty_box,
-                text='Tente ajustar os filtros.',
-                text_color=self.colors['text_muted'],
-                font=ctk.CTkFont(size=13)
-            ).pack()
-        else:
-            self._render_rows(list_area, consultas)
-
-        if self.paciente_selecionado and self.details_panel:
-            self.render_details_panel(self.details_panel)
-
-        self.render_pagination(left, total)
-        self.render_details_panel(right)
+            import traceback
+            traceback.print_exc()
+            self._loading = False
+            self._render_error(f"Falha ao renderizar agenda: {str(e)}")
 
     def _render_filtros(self, parent, datas, medicos, especialidades):
         filtros_card = ctk.CTkFrame(

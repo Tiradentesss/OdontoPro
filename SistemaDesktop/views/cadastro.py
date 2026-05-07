@@ -27,29 +27,29 @@ class Cadastro(BaseScreen):
         self.profissional_entries = []
 
         # =============================
-        # 1. BARRA DE ABAS (TOPO) - AUMENTO MODERADO
+        # 1. BARRA DE ABAS (TOPO)
         # =============================
-        self.tab_bar = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)  # 40 -> 44
-        self.tab_bar.pack(fill="x", padx=25, pady=(9, 0), anchor="nw")  # 8 -> 9
+        self.tab_bar = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
+        self.tab_bar.pack(fill="x", padx=25, pady=(9, 0), anchor="nw")
 
         self.btn_pacientes = ctk.CTkButton(
-            self.tab_bar, text="👤   Pacientes",  # 2 espaços -> 3 espaços
-            font=font("button_large", "bold"),  # 14 -> 15
-            width=135, height=37, corner_radius=6,  # 125x34 -> 135x37
+            self.tab_bar, text="👤   Pacientes",
+            font=font("button_large", "bold"),
+            width=135, height=37, corner_radius=6,
             command=lambda: self._trocar_aba("Pacientes")
         )
-        self.btn_pacientes.pack(side="left", padx=(0, 5))  # 4 -> 5
+        self.btn_pacientes.pack(side="left", padx=(0, 5))
 
         self.btn_profissionais = ctk.CTkButton(
-            self.tab_bar, text="📋   Profissionais",  # 2 espaços -> 3 espaços
-            font=font("button_large", "bold"),  # 14 -> 15
-            width=135, height=37, corner_radius=6,  # 125x34 -> 135x37
+            self.tab_bar, text="📋   Profissionais",
+            font=font("button_large", "bold"),
+            width=135, height=37, corner_radius=6,
             command=lambda: self._trocar_aba("Profissionais")
         )
         self.btn_profissionais.pack(side="left")
 
         # =============================
-        # 2. ÁREA DE CONTEÚDO (CORPO BRANCO)
+        # 2. ÁREA DE CONTEÚDO (COM SCROLL)
         # =============================
         self.container_outer = ctk.CTkFrame(
             self.content_card,
@@ -58,12 +58,19 @@ class Cadastro(BaseScreen):
         )
         self.container_outer.pack(fill="both", expand=True, padx=25, pady=25)
 
-        self.container_conteudo = ctk.CTkFrame(
+        # Container com scroll para garantir que os botões apareçam
+        self.scroll_frame = ctk.CTkScrollableFrame(
             self.container_outer,
             fg_color=self.cor_fundo_card,
             corner_radius=12
         )
-        self.container_conteudo.pack(fill="both", expand=True, padx=2, pady=(2, 1))
+        self.scroll_frame.pack(fill="both", expand=True)
+
+        self.container_conteudo = ctk.CTkFrame(
+            self.scroll_frame,
+            fg_color="transparent"
+        )
+        self.container_conteudo.pack(fill="both", expand=True)
 
         self.frame_pacientes = self._criar_tela_pacientes()
         self.frame_profissionais = self._criar_tela_profissionais()
@@ -72,13 +79,18 @@ class Cadastro(BaseScreen):
 
     def _trocar_aba(self, aba_selecionada):
         self._atualizar_estilo_abas(aba_selecionada)
-        self.frame_pacientes.pack_forget()
-        self.frame_profissionais.pack_forget()
+        
+        if hasattr(self, 'frame_pacientes') and self.frame_pacientes:
+            self.frame_pacientes.pack_forget()
+        if hasattr(self, 'frame_profissionais') and self.frame_profissionais:
+            self.frame_profissionais.pack_forget()
 
         if aba_selecionada == "Pacientes":
-            self.frame_pacientes.pack(fill="both", expand=True)
+            if self.frame_pacientes:
+                self.frame_pacientes.pack(fill="both", expand=True)
         else:
-            self.frame_profissionais.pack(fill="both", expand=True)
+            if self.frame_profissionais:
+                self.frame_profissionais.pack(fill="both", expand=True)
 
     def _atualizar_estilo_abas(self, ativa):
         estilo_ativo = {
@@ -133,107 +145,6 @@ class Cadastro(BaseScreen):
 
         return frame
 
-    def _secao_titulo(self, parent, texto):
-        container = ctk.CTkFrame(parent, fg_color="transparent")
-        container.pack(fill="x", padx=self.padding_lateral, pady=(16, 8))  # (14,7) -> (16,8)
-
-        ctk.CTkLabel(
-            container,
-            text=texto,
-            font=font("subtitle", "bold"),  # 15 -> 16
-            text_color=COLORS["text_secondary"]
-        ).pack(anchor="w")
-
-        linha = ctk.CTkFrame(container, height=2, width=52, fg_color=self.cor_primaria, corner_radius=1)  # 48 -> 52
-        linha.pack(anchor="w", pady=(4, 0))  # 3 -> 4
-
-    def _campo_duplo(self, parent, label1, label2, show1=None, show2=None):
-        container = ctk.CTkFrame(parent, fg_color="transparent")
-        container.pack(fill="x", padx=self.padding_lateral, pady=5)  # 4 -> 5
-
-        frame1 = ctk.CTkFrame(container, fg_color="transparent")
-        frame1.pack(side="left", expand=True, fill="x", padx=(0, 5))
-
-        ctk.CTkLabel(
-            frame1,
-            text=label1,
-            font=font("text"),  # 13 -> 14
-            text_color=COLORS["text_secondary"],
-            anchor="w"
-        ).pack(anchor="w", pady=(0, 3))  # 2 -> 3
-
-        entry1 = ctk.CTkEntry(
-            frame1,
-            placeholder_text=f"Digite {label1.lower()}",
-            height=44, show=show1,  # 40 -> 44
-            fg_color=COLORS["input_bg"],
-            border_color=COLORS["border"],
-            border_width=1,
-            corner_radius=5,  # 4 -> 5
-            text_color=COLORS["text"],
-            placeholder_text_color=COLORS["text_muted"]
-        )
-        entry1.pack(fill="x")
-
-        frame2 = ctk.CTkFrame(container, fg_color="transparent")
-        frame2.pack(side="left", expand=True, fill="x", padx=(5, 0))
-
-        ctk.CTkLabel(
-            frame2,
-            text=label2,
-            font=font("text"),  # 13 -> 14
-            text_color=COLORS["text_secondary"],
-            anchor="w"
-        ).pack(anchor="w", pady=(0, 3))  # 2 -> 3
-
-        entry2 = ctk.CTkEntry(
-            frame2,
-            placeholder_text=f"Digite {label2.lower()}",
-            height=44, show=show2,  # 40 -> 44
-            fg_color=COLORS["input_bg"],
-            border_color=COLORS["border"],
-            border_width=1,
-            corner_radius=5,  # 4 -> 5
-            text_color=COLORS["text"],
-            placeholder_text_color=COLORS["text_muted"]
-        )
-        entry2.pack(fill="x")
-
-        return entry1, entry2
-
-    def _campo_triplo(self, parent, label1, label2, label3):
-        container = ctk.CTkFrame(parent, fg_color="transparent")
-        container.pack(fill="x", padx=self.padding_lateral, pady=5)  # 4 -> 5
-
-        entries_list = []
-        for label in (label1, label2, label3):
-            frame_i = ctk.CTkFrame(container, fg_color="transparent")
-            frame_i.pack(side="left", expand=True, fill="x", padx=5)
-
-            ctk.CTkLabel(
-                frame_i,
-                text=label,
-                font=font("text"),  # 13 -> 14
-                text_color="#4B5563",
-                anchor="w"
-            ).pack(anchor="w", pady=(0, 3))  # 2 -> 3
-
-            entry_i = ctk.CTkEntry(
-                frame_i,
-                placeholder_text=f"Digite {label.lower()}",
-                height=44,  # 40 -> 44
-                fg_color="#F9FAFB",
-                border_color="#E5E7EB",
-                border_width=1,
-                corner_radius=5,  # 4 -> 5
-                text_color="#111827",
-                placeholder_text_color="#9CA3AF"
-            )
-            entry_i.pack(fill="x")
-            entries_list.append(entry_i)
-
-        return tuple(entries_list)
-
     def _criar_tela_profissionais(self):
         frame = ctk.CTkFrame(self.container_conteudo, fg_color="transparent")
 
@@ -246,7 +157,7 @@ class Cadastro(BaseScreen):
         container1 = ctk.CTkFrame(frame, fg_color="transparent")
         container1.pack(fill="x", padx=self.padding_lateral, pady=(0, 0))
 
-        # Frame Nome (tamanho fixo)
+        # Frame Nome
         frame_nome = ctk.CTkFrame(container1, fg_color="transparent")
         frame_nome.pack(side="left", expand=True, fill="x", padx=(0, 5))
 
@@ -254,7 +165,7 @@ class Cadastro(BaseScreen):
             frame_nome,
             text="Nome completo",
             font=font("text"),
-            text_color="#4B5563",
+            text_color=COLORS["text_secondary"],
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))
 
@@ -262,17 +173,17 @@ class Cadastro(BaseScreen):
             frame_nome,
             placeholder_text="Digite seu nome",
             height=44,
-            fg_color="#F9FAFB",
-            border_color="#E5E7EB",
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
             border_width=1,
             corner_radius=5,
-            text_color="#111827",
-            placeholder_text_color="#9CA3AF"
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"]
         )
         nome_entry.pack(fill="x")
         entries.append(nome_entry)
 
-        # Frame Senha (tamanho fixo, maior)
+        # Frame Senha
         frame_senha = ctk.CTkFrame(container1, fg_color="transparent")
         frame_senha.pack(side="left", padx=(5, 0))
 
@@ -280,7 +191,7 @@ class Cadastro(BaseScreen):
             frame_senha,
             text="Senha",
             font=font("text"),
-            text_color="#4B5563",
+            text_color=COLORS["text_secondary"],
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))
 
@@ -290,12 +201,12 @@ class Cadastro(BaseScreen):
             height=44,
             width=200,
             show="*",
-            fg_color="#F9FAFB",
-            border_color="#E5E7EB",
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
             border_width=1,
             corner_radius=5,
-            text_color="#111827",
-            placeholder_text_color="#9CA3AF"
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"]
         )
         self.senha_entry.pack()
         entries.append(self.senha_entry)
@@ -304,7 +215,7 @@ class Cadastro(BaseScreen):
         container2 = ctk.CTkFrame(frame, fg_color="transparent")
         container2.pack(fill="x", padx=self.padding_lateral, pady=(0, 0))
 
-        # Frame Email (tamanho fixo)
+        # Frame Email
         frame_email = ctk.CTkFrame(container2, fg_color="transparent")
         frame_email.pack(side="left", expand=True, fill="x", padx=(0, 5))
 
@@ -312,7 +223,7 @@ class Cadastro(BaseScreen):
             frame_email,
             text="Email",
             font=font("text"),
-            text_color="#4B5563",
+            text_color=COLORS["text_secondary"],
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))
 
@@ -320,17 +231,17 @@ class Cadastro(BaseScreen):
             frame_email,
             placeholder_text="seu@email.com",
             height=44,
-            fg_color="#F9FAFB",
-            border_color="#E5E7EB",
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
             border_width=1,
             corner_radius=5,
-            text_color="#111827",
-            placeholder_text_color="#9CA3AF"
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"]
         )
         email_entry.pack(fill="x")
         entries.append(email_entry)
 
-        # Frame Confirmar Senha (tamanho fixo, maior)
+        # Frame Confirmar Senha
         frame_confirma_senha = ctk.CTkFrame(container2, fg_color="transparent")
         frame_confirma_senha.pack(side="left", padx=(5, 0))
 
@@ -338,7 +249,7 @@ class Cadastro(BaseScreen):
             frame_confirma_senha,
             text="Confirmar Senha",
             font=font("text"),
-            text_color="#4B5563",
+            text_color=COLORS["text_secondary"],
             anchor="w"
         ).pack(anchor="w", pady=(0, 3))
 
@@ -348,12 +259,12 @@ class Cadastro(BaseScreen):
             height=44,
             width=200,
             show="*",
-            fg_color="#F9FAFB",
-            border_color="#E5E7EB",
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
             border_width=1,
             corner_radius=5,
-            text_color="#111827",
-            placeholder_text_color="#9CA3AF"
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"]
         )
         self.confirma_senha_entry.pack()
         entries.append(self.confirma_senha_entry)
@@ -366,19 +277,19 @@ class Cadastro(BaseScreen):
             tipo_container, 
             text="Selecione o tipo", 
             font=font("text"),
-            text_color="#4B5563"
+            text_color=COLORS["text_secondary"]
         ).pack(anchor="w", pady=(0, 3))
         
         self.tipo_profissional = ctk.CTkOptionMenu(
             tipo_container,
             values=["Médico", "Gerente"],
             height=44,
-            fg_color="#F9FAFB", 
-            button_color="#E5E7EB", 
+            fg_color=COLORS["input_bg"], 
+            button_color=COLORS["border"], 
             button_hover_color="#D1D5DB",
-            text_color="#111827", 
+            text_color=COLORS["text"], 
             dropdown_fg_color="#FFFFFF", 
-            dropdown_text_color="#111827",
+            dropdown_text_color=COLORS["text"],
             dropdown_font=font("text"),
             command=self._ao_mudar_tipo_profissional
         )
@@ -397,7 +308,109 @@ class Cadastro(BaseScreen):
 
         self.profissional_entries = entries
         self._botoes_acao(frame, "Salvar Profissional", target_entries=self.profissional_entries)
+        
         return frame
+
+    def _secao_titulo(self, parent, texto):
+        container = ctk.CTkFrame(parent, fg_color="transparent")
+        container.pack(fill="x", padx=self.padding_lateral, pady=(16, 8))
+
+        ctk.CTkLabel(
+            container,
+            text=texto,
+            font=font("subtitle", "bold"),
+            text_color=COLORS["text_secondary"]
+        ).pack(anchor="w")
+
+        linha = ctk.CTkFrame(container, height=2, width=52, fg_color=self.cor_primaria, corner_radius=1)
+        linha.pack(anchor="w", pady=(4, 0))
+
+    def _campo_duplo(self, parent, label1, label2, show1=None, show2=None):
+        container = ctk.CTkFrame(parent, fg_color="transparent")
+        container.pack(fill="x", padx=self.padding_lateral, pady=5)
+
+        frame1 = ctk.CTkFrame(container, fg_color="transparent")
+        frame1.pack(side="left", expand=True, fill="x", padx=(0, 5))
+
+        ctk.CTkLabel(
+            frame1,
+            text=label1,
+            font=font("text"),
+            text_color=COLORS["text_secondary"],
+            anchor="w"
+        ).pack(anchor="w", pady=(0, 3))
+
+        entry1 = ctk.CTkEntry(
+            frame1,
+            placeholder_text=f"Digite {label1.lower()}",
+            height=44, show=show1,
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
+            border_width=1,
+            corner_radius=5,
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"]
+        )
+        entry1.pack(fill="x")
+
+        frame2 = ctk.CTkFrame(container, fg_color="transparent")
+        frame2.pack(side="left", expand=True, fill="x", padx=(5, 0))
+
+        ctk.CTkLabel(
+            frame2,
+            text=label2,
+            font=font("text"),
+            text_color=COLORS["text_secondary"],
+            anchor="w"
+        ).pack(anchor="w", pady=(0, 3))
+
+        entry2 = ctk.CTkEntry(
+            frame2,
+            placeholder_text=f"Digite {label2.lower()}",
+            height=44, show=show2,
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
+            border_width=1,
+            corner_radius=5,
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"]
+        )
+        entry2.pack(fill="x")
+
+        return entry1, entry2
+
+    def _campo_triplo(self, parent, label1, label2, label3):
+        container = ctk.CTkFrame(parent, fg_color="transparent")
+        container.pack(fill="x", padx=self.padding_lateral, pady=5)
+
+        entries_list = []
+        for label in (label1, label2, label3):
+            frame_i = ctk.CTkFrame(container, fg_color="transparent")
+            frame_i.pack(side="left", expand=True, fill="x", padx=5)
+
+            ctk.CTkLabel(
+                frame_i,
+                text=label,
+                font=font("text"),
+                text_color=COLORS["text_secondary"],
+                anchor="w"
+            ).pack(anchor="w", pady=(0, 3))
+
+            entry_i = ctk.CTkEntry(
+                frame_i,
+                placeholder_text=f"Digite {label.lower()}",
+                height=44,
+                fg_color=COLORS["input_bg"],
+                border_color=COLORS["border"],
+                border_width=1,
+                corner_radius=5,
+                text_color=COLORS["text"],
+                placeholder_text_color=COLORS["text_muted"]
+            )
+            entry_i.pack(fill="x")
+            entries_list.append(entry_i)
+
+        return tuple(entries_list)
 
     def _ao_mudar_tipo_profissional(self, choice):
         try:
@@ -408,9 +421,16 @@ class Cadastro(BaseScreen):
         if choice == "Médico":
             self.frame_medico.pack(fill="x")
 
+    # =====================================================
+    # BOTÕES DE AÇÃO - CORRIGIDO
+    # =====================================================
     def _botoes_acao(self, parent, texto_principal, target_entries=None):
+        # ESPAÇADOR PARA GARANTIR QUE OS BOTÕES APAREÇAM
+        espacador = ctk.CTkFrame(parent, fg_color="transparent", height=30)
+        espacador.pack(fill="x")
+        
         container = ctk.CTkFrame(parent, fg_color="transparent")
-        container.pack(side="bottom", fill="x", padx=self.padding_lateral, pady=14)  # 12 -> 14
+        container.pack(fill="x", padx=self.padding_lateral, pady=14)
 
         def _salvar():
             tipo_aba = "Pacientes" if hasattr(self, 'paciente_entries') and self.paciente_entries == target_entries else "Profissionais"
@@ -426,19 +446,20 @@ class Cadastro(BaseScreen):
             except Exception as e:
                 self._mostrar_mensagem(f"Erro: {str(e)}", sucesso=False)
 
-        ctk.CTkButton(
+        salvar_btn = ctk.CTkButton(
             container,
             text=texto_principal.upper(),
-            font=font("button_large", "bold"),  # 14 -> 15
-            height=44,  # 40 -> 44
-            width=220,  # 200 -> 220
+            font=font("button_large", "bold"),
+            height=44,
+            width=220,
             fg_color=self.cor_primaria,
             hover_color=self.cor_primaria_hover,
             text_color="#FFFFFF",
-            corner_radius=5,  # 4 -> 5
+            corner_radius=5,
             border_spacing=0,
             command=_salvar
-        ).pack(side="left", padx=(0, 8))  # 7 -> 8
+        )
+        salvar_btn.pack(side="left", padx=(0, 8))
 
         def _limpar():
             entries = target_entries or []
@@ -453,15 +474,15 @@ class Cadastro(BaseScreen):
         limpar_btn = ctk.CTkButton(
             container,
             text="LIMPAR",
-            font=font("button_large"),  # 14 -> 15
-            height=44,  # 40 -> 44
-            width=125,  # 115 -> 125
+            font=font("button_large"),
+            height=44,
+            width=125,
             fg_color="transparent",
             hover_color="#F3F4F6",
             text_color="#6B7280",
-            corner_radius=5,  # 4 -> 5
+            corner_radius=5,
             border_width=1,
-            border_color="#E5E7EB",
+            border_color=COLORS["border"],
             command=_limpar
         )
         limpar_btn.pack(side="left")
@@ -471,27 +492,23 @@ class Cadastro(BaseScreen):
     # =====================================================
     def _titulo(self, parent, texto):
         ctk.CTkLabel(
-            parent, text=texto, font=font("title", "bold"),  # 22 -> 24
-            text_color="#111827"
-        ).pack(anchor="w", padx=self.padding_lateral, pady=(24, 17))  # (22,15) -> (24,17)
+            parent, text=texto, font=font("title", "bold"),
+            text_color=COLORS["text"]
+        ).pack(anchor="w", padx=self.padding_lateral, pady=(24, 17))
 
     def _entry(self, parent, placeholder, show=None):
         entry = ctk.CTkEntry(
-            parent, placeholder_text=placeholder, height=44, show=show,  # 40 -> 44
-            fg_color="#F9FAFB", border_color="#E5E7EB", text_color="#111827",
-            placeholder_text_color="#9CA3AF", corner_radius=5  # 4 -> 5
+            parent, placeholder_text=placeholder, height=44, show=show,
+            fg_color=COLORS["input_bg"], border_color=COLORS["border"], 
+            text_color=COLORS["text"], placeholder_text_color=COLORS["text_muted"], 
+            corner_radius=5
         )
-        entry.pack(fill="x", padx=self.padding_lateral, pady=8)  # 7 -> 8
+        entry.pack(fill="x", padx=self.padding_lateral, pady=8)
         return entry
 
-    def _botao_salvar(self, parent, texto="Salvar"):
-        ctk.CTkButton(
-            parent, text=texto.upper(), font=font("button_large", "bold"),  # 14 -> 15
-            height=44, width=330,  # 40x310 -> 44x330
-            fg_color="#06B6D4", hover_color="#0891B2", text_color="#FFFFFF",
-            corner_radius=5  # 4 -> 5
-        ).pack(pady=22)  # 20 -> 22
-
+    # =====================================================
+    # MÉTODOS DE SALVAMENTO
+    # =====================================================
     def _salvar_paciente(self, entries):
         """Valida e salva paciente no banco de dados"""
         try:

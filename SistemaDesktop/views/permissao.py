@@ -774,19 +774,22 @@ class Permissoes(BaseScreen):
         )
         self.account_status_switch.grid(row=0, column=2, rowspan=2, padx=(5, 15), sticky="e")
 
-        # Botão Salvar
+        # =========================================================
+        # BOTÃO SALVAR - PADRONIZADO COM AS CORES DO SISTEMA
+        # =========================================================
         button_frame = ctk.CTkFrame(self.right_card, fg_color="transparent")
         button_frame.grid(row=3, column=0, pady=(0, 25), padx=20, sticky="e")
         
         self.save_btn = ctk.CTkButton(
             button_frame, 
             text="💾 Salvar Alterações", 
-            font=font("text", "bold"), 
-            fg_color=COLORS["secondary"], 
-            height=48, 
-            width=260, 
-            corner_radius=12,
-            hover_color=COLORS["accent_hover"],
+            font=font("button_large", "bold"),
+            fg_color=COLORS["primary"],  # Cor primária do sistema
+            hover_color=COLORS["primary_dark"],  # Cor hover
+            height=44,  # Altura padrão
+            width=220,  # Largura padrão
+            corner_radius=5,  # Bordas arredondadas
+            text_color="#FFFFFF",  # Texto branco
             command=self.save_to_database
         )
         self.save_btn.pack(anchor="e")
@@ -818,6 +821,11 @@ class Permissoes(BaseScreen):
             is_active = bool(self.account_status_switch.get())
             status = "Ativo" if is_active else "Inativo"
             self.admins_data[self.selected_admin_name]["status"] = status
+
+    def sync_permission(self, perm_name):
+        if self.selected_admin_name:
+            new_state = self.switch_widgets[perm_name].get()
+            self.admins_data[self.selected_admin_name]["perms"][perm_name] = new_state
 
     def toggle_switches_state(self, state):
         for sw in self.switch_widgets.values(): 
