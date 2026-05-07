@@ -2214,6 +2214,7 @@ body {
     #modal-agendamento-2 .modal-content {
         max-width: 1100px;
         padding: 50px;
+        position: relative;
     }
 
     #modal-horarios .modal-content {
@@ -2230,24 +2231,25 @@ body {
     }
 
     .date-time-field {
-        padding: 15px;
-        font-size: 16px;
-        min-height: 50px;
-        background-color: #33CCFF;
-        color: white;
-        border: none;
-        border-radius: 10px;
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        font-size: 14px;
+        background-color: #F9FAFB;
+        color: #333;
         cursor: pointer;
         transition: 0.3s;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        font-weight: bold;
+        font-weight: normal;
     }
 
     .date-time-field:hover {
-        background-color: #00BBEE;
-        transform: translateY(-1px);
+        background-color: #E5E7EB;
+        border-color: #9CA3AF;
     }
 
     .modal-header-tag {

@@ -1155,6 +1155,12 @@ function proximaEtapa() {
         modal2.classList.add('mostrar');
         modal2.style.display = 'flex';
         
+        // Adicionar event listener para o botão de fechar
+        const btnFechar = document.getElementById('btn-fechar-agendamento');
+        if (btnFechar) {
+            btnFechar.addEventListener('click', fecharModalAgendamento);
+        }
+        
         // Reinicializar o calendário quando o modal é aberto
         setTimeout(() => {
             if (typeof initializeCalendarSelector === 'function') {

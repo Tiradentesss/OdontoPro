@@ -397,6 +397,9 @@
 
         <div id="modal-agendamento-2" class="modal">
             <div class="modal-content">
+                <button id="btn-fechar-agendamento" class="btn-close-modal" type="button" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; color: #666; cursor: pointer; z-index: 10;">
+                    <i class="fa-solid fa-times"></i>
+                </button>
                 <span class="tag-online">📅 Agendamento Online</span>
                 <h3>Escolha o tipo de consulta e horário</h3>
 
@@ -525,6 +528,9 @@
                 <div class="corpo-agendamento">
                     <h3>{{ cons.clinica.nome }}</h3>
                     <p><i class="fa-solid fa-user-doctor"></i> {{ cons.medico.nome }}</p>
+                    {% if cons.especialidade %}
+                    <p><i class="fa-solid fa-stethoscope"></i> {{ cons.especialidade.nome }}</p>
+                    {% endif %}
                     <p><i class="fa-regular fa-clock"></i> {{ cons.data_hora|time:"H:i" }}</p>
                     <p style="color: red; font-size: 12px;">DEBUG: Status = "{{ cons.status }}"</p>
                 </div>
