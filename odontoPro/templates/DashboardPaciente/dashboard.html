@@ -353,22 +353,14 @@
                 <h3>Verifique seus dados</h3>
                 <p class="subtitle">Verifique se seus dados estão corretos antes de prosseguir</p>
 
-                <input type="text" id="inputNome" name="nome" placeholder="Digite seu nome completo" required value="{{ paciente.nome|default_if_none:''|escape }}">
+                <input type="text" id="inputNome" name="nome" placeholder="Digite seu nome completo" required value="{{ paciente.nome|default_if_none:''|escape }}" readonly>
 
                 <div class="selection-row">
                     <div class="selection-group">
                         <label class="group-title">Gênero</label>
                         <div class="radio-options">
-                            <label><input type="radio" name="gender" value="Masculino" {% if paciente.sexo|lower == 'masculino' or paciente.sexo|lower == 'm' %}checked{% endif %}> Masculino</label>
-                            <label><input type="radio" name="gender" value="Feminino" {% if paciente.sexo|lower == 'feminino' or paciente.sexo|lower == 'f' %}checked{% endif %}> Feminino</label>
-                        </div>
-                    </div>
-
-                    <div class="selection-group">
-                        <label class="group-title">Faixa Etária</label>
-                        <div class="radio-options">
-                            <label><input type="radio" name="age" value="Adulto"> Adulto</label>
-                            <label><input type="radio" name="age" value="Infantil"> Infantil</label>
+                            <label><input type="radio" name="gender" value="Masculino" {% if paciente.sexo|lower == 'masculino' or paciente.sexo|lower == 'm' %}checked{% endif %} disabled> Masculino</label>
+                            <label><input type="radio" name="gender" value="Feminino" {% if paciente.sexo|lower == 'feminino' or paciente.sexo|lower == 'f' %}checked{% endif %} disabled> Feminino</label>
                         </div>
                     </div>
                 </div>
@@ -376,12 +368,12 @@
                 <div class="input-group">
                     <div>
                         <label>Email</label>
-                        <input type="email" id="inputEmail" name="email" placeholder="Seu @gmail.com" required onchange="validarCampoEmail()" value="{{ paciente.email|default_if_none:''|escape }}">
+                        <input type="email" id="inputEmail" name="email" placeholder="Seu @gmail.com" required onchange="validarCampoEmail()" value="{{ paciente.email|default_if_none:''|escape }}" readonly>
                         <small id="emailError" style="color: #e74c3c; display: none; margin-top: 5px;">Email inválido. Use: usuario@email.com</small>
                     </div>
                     <div>
                         <label>Número de Telefone</label>
-                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required value="{{ paciente.telefone|default_if_none:''|escape }}">
+                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required value="{{ paciente.telefone|default_if_none:''|escape }}" readonly>
                     </div>
                 </div>
 

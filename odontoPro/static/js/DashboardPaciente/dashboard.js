@@ -1104,7 +1104,6 @@ function proximaEtapa() {
     const emailInput = document.getElementById('inputEmail');
     const telefoneInput = document.getElementById('inputTelefone');
     const genero = document.querySelector('input[name="gender"]:checked');
-    const idade = document.querySelector('input[name="age"]:checked');
     
     if (!nomeInput || !emailInput || !telefoneInput) {
         alert('Erro ao acessar formulário. Recarregue a página.');
@@ -1132,11 +1131,6 @@ function proximaEtapa() {
     
     if (!genero) {
         alert('Por favor, selecione um gênero.');
-        return;
-    }
-    
-    if (!idade) {
-        alert('Por favor, selecione uma faixa etária.');
         return;
     }
     
