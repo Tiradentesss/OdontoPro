@@ -497,6 +497,17 @@
         <button class="filtro-btn" data-filtro="agendada">Agendadas</button>
         <button class="filtro-btn" data-filtro="realizada">Realizadas</button>
         <button class="filtro-btn" data-filtro="cancelada">Canceladas</button>
+        <button class="filtro-btn" data-filtro="perdidas">Perdidas</button>
+
+        <div class="filtros-adicionais">
+            <select id="selectFiltroEspecialidade" aria-label="Filtrar por especialidade">
+                <option value="">Todas as especialidades</option>
+                {% for esp_id, esp_nome in especialidades_consultas %}
+                    <option value="{{ esp_id }}">{{ esp_nome }}</option>
+                {% endfor %}
+            </select>
+            <input type="date" id="inputFiltroData" aria-label="Filtrar por data" />
+        </div>
     </div>
 
     <div class="grid-agendamentos">
@@ -504,7 +515,9 @@
             {% for cons in consultas %}
             <div class="card-agendamento 
                         {% if cons.status == 'realizada' %}realizado-card{% elif cons.status == 'cancelada' %}cancelado-card{% endif %}"
-                 data-status="{{ cons.status }}">
+                 data-status="{{ cons.status }}"
+                 data-especialidade="{{ cons.especialidade.id|default:'' }}"
+                 data-data-hora="{{ cons.data_hora|date:'c' }}">
                 
                 <div class="header-agendamento">
                     <span class="status-badge {{ cons.status }}">
@@ -524,7 +537,6 @@
                     <p><i class="fa-solid fa-stethoscope"></i> {{ cons.especialidade.nome }}</p>
                     {% endif %}
                     <p><i class="fa-regular fa-clock"></i> {{ cons.data_hora|time:"H:i" }}</p>
-                    <p style="color: red; font-size: 12px;">DEBUG: Status = "{{ cons.status }}"</p>
                 </div>
 
                 <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">

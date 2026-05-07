@@ -295,6 +295,13 @@ def dashboard_paciente(request):
     if filtro_status and filtro_status != "todas":
         consultas = consultas.filter(status=filtro_status)
 
+    especialidades_consultas = Consulta.objects.filter(
+        paciente=paciente
+    ).exclude(especialidade__isnull=True).values_list(
+        "especialidade__id",
+        "especialidade__nome"
+    ).distinct().order_by("especialidade__nome")
+
     context = {
         "paciente": paciente,
         "clinicas": clinicas,
@@ -304,6 +311,7 @@ def dashboard_paciente(request):
         "tem_notificacao": tem_notificacao,
         "aba_ativa": aba_ativa,
         "uid_signed": uid_signed,
+        "especialidades_consultas": especialidades_consultas,
         "debug_mode": settings.DEBUG,
         "debug_session_key": request.session.session_key,
         "debug_cookie_session": request.COOKIES.get(settings.SESSION_COOKIE_NAME),

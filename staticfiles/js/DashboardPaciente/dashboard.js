@@ -320,20 +320,58 @@ function inicializarFechoDeModais() {
 function inicializarFiltrosConsultas() {
     const botoes = document.querySelectorAll(".filtro-btn");
     const cards = document.querySelectorAll(".card-agendamento");
+    const selectEspecialidade = document.getElementById("selectFiltroEspecialidade");
+    const inputData = document.getElementById("inputFiltroData");
+
+    const aplicarFiltrosConsultas = () => {
+        const filtroStatus = document.querySelector(".filtro-btn.ativo")?.dataset.filtro || "todas";
+        const especialidadeSelecionada = selectEspecialidade?.value || "";
+        const dataSelecionada = inputData?.value || "";
+
+        const agora = new Date();
+
+        cards.forEach(card => {
+            const status = card.dataset.status;
+            const especialidade = card.dataset.especialidade || "";
+            const dataHora = card.dataset.dataHora || "";
+            const dataConsulta = dataHora ? new Date(dataHora) : null;
+
+            const statusMatch = filtroStatus === "todas"
+                || filtroStatus === status
+                || (filtroStatus === "perdidas" && isConsultaPerdida(status, dataConsulta, agora));
+
+            const especialidadeMatch = !especialidadeSelecionada || especialidade === especialidadeSelecionada;
+            const dataMatch = !dataSelecionada || (dataHora ? dataHora.startsWith(dataSelecionada) : false);
+
+            card.style.display = statusMatch && especialidadeMatch && dataMatch ? "block" : "none";
+        });
+    };
 
     botoes.forEach(btn => {
         btn.addEventListener("click", () => {
             botoes.forEach(b => b.classList.remove("ativo"));
             btn.classList.add("ativo");
-
-            const filtro = btn.dataset.filtro;
-            cards.forEach(card => {
-                const status = card.dataset.status;
-                card.style.display =
-                    filtro === "todas" || filtro === status ? "block" : "none";
-            });
+            aplicarFiltrosConsultas();
         });
     });
+
+    if (selectEspecialidade) {
+        selectEspecialidade.addEventListener("change", aplicarFiltrosConsultas);
+    }
+
+    if (inputData) {
+        inputData.addEventListener("change", aplicarFiltrosConsultas);
+    }
+
+    aplicarFiltrosConsultas();
+}
+
+function isConsultaPerdida(status, dataConsulta, agora) {
+    if (!dataConsulta || isNaN(dataConsulta.getTime())) {
+        return false;
+    }
+
+    return (status === "agendada" || status === "confirmada") && dataConsulta < agora;
 }
 
 /* ================= CSRF ================= */

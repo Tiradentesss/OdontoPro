@@ -1762,6 +1762,27 @@ body {
     transition: .2s ease;
 }
 
+.filtros-adicionais {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filtros-adicionais select,
+.filtros-adicionais input[type="date"] {
+    padding: 10px 12px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 10px;
+    background: white;
+    color: #243b53;
+    min-width: 180px;
+}
+
+.filtros-adicionais input[type="date"] {
+    max-width: 200px;
+}
+
 .filtro-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0,0,0,.08);
