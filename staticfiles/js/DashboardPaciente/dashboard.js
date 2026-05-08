@@ -1,6 +1,13 @@
 /* ================= VARIÁVEIS GLOBAIS ================= */
 let filtroEstrelasSelecionado = 0;
 
+/* ================= FUNÇÃO PARA CARREGAR HORÁRIOS ================= */
+function carregarHorariosHandler() {
+    if (this.value && clinicaSelecionada) {
+        carregarHorarios(clinicaSelecionada, this.value);
+    }
+}
+
 /* ================= MENU LATERAL ================= */
 function alternarMenu() {
     document.getElementById("menuLateral").classList.toggle("aberto");
@@ -33,8 +40,10 @@ document.addEventListener("DOMContentLoaded", () => {
         inputBusca.addEventListener("input", function () {
             const termo = this.value.toLowerCase();
             document.querySelectorAll(".card-clinica").forEach(card => {
-                const nome = card.querySelector("h3").textContent.toLowerCase();
-                card.style.display = nome.includes(termo) ? "flex" : "none";
+                const nome = card.querySelector("h3")?.textContent?.toLowerCase() || "";
+                const local = card.querySelector("p")?.textContent?.toLowerCase() || "";
+                const matches = nome.includes(termo) || local.includes(termo);
+                card.style.display = matches ? "flex" : "none";
             });
         });
     }
@@ -52,11 +61,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Adicionar listener para carregamento de horários quando data é selecionada
     const inputData = document.getElementById('inputData');
     if (inputData) {
-        inputData.addEventListener('change', function() {
-            if (this.value && clinicaSelecionada) {
-                carregarHorarios(clinicaSelecionada, this.value);
-            }
-        });
+        // Remover listener anterior se existir
+        inputData.removeEventListener('change', carregarHorariosHandler);
+        // Adicionar novo listener
+        inputData.addEventListener('change', carregarHorariosHandler);
     }
     
     // Adicionar listener para validação de email em tempo real
@@ -152,6 +160,57 @@ function fecharDetalhes(id) {
     if (modal) modal.classList.remove("mostrar");
 }
 
+// ===== CANCELAMENTO DE CONSULTA COM POPUP =====
+function confirmarCancelamentoConsulta(consultaId) {
+    if (confirm('Tem certeza que deseja cancelar esta consulta?\n\nEsta ação não pode ser desfeita.')) {
+        cancelarConsulta(consultaId);
+    }
+}
+
+function cancelarConsulta(consultaId) {
+    fetch(`/consulta/${consultaId}/cancelar/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrfToken()
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Erro: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao cancelar consulta:', error);
+        alert('Erro ao cancelar a consulta');
+    });
+}
+
+// Função auxiliar para pegar CSRF token
+function getCsrfToken() {
+    let csrfToken = null;
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+        let c = cookies[i].trim();
+        if (c.startsWith('csrftoken=')) {
+            csrfToken = c.substring('csrftoken='.length);
+            break;
+        }
+    }
+    // Se não encontrar no cookie, tentar no formulário
+    if (!csrfToken) {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput) {
+            csrfToken = csrfInput.value;
+        }
+    }
+    return csrfToken || '';
+}
+
 /* ================= AGENDAMENTO ================= */
 let clinicaSelecionada = null;
 
@@ -183,7 +242,9 @@ function abrirModalAgendamento(clinicaId) {
 
             const logoImg = document.getElementById("detalheLogoClinica");
             if (logoImg) {
-                if (data.logo_url) {
+                if (data.banner_url) {
+                    logoImg.src = data.banner_url;
+                } else if (data.logo_url) {
                     logoImg.src = data.logo_url;
                 } else {
                     logoImg.src = "/static/img/default-banner.jpg";
@@ -192,30 +253,56 @@ function abrirModalAgendamento(clinicaId) {
 
 
             // ===== ESPECIALIDADES =====
-            const selectEspecialidade = document.getElementById("especialidade");
+            const selectEspecialidade = document.getElementById("selectEspecialidade");
             if (selectEspecialidade) {
                 selectEspecialidade.innerHTML = "<option value=''>Selecione</option>";
 
                 data.especialidades.forEach(function(esp) {
                     const option = document.createElement("option");
-                    option.value = esp[1];
+                    option.value = esp[0];
                     option.textContent = esp[1];
                     selectEspecialidade.appendChild(option);
                 });
+
+                selectEspecialidade.removeEventListener('change', atualizarMedicosPorEspecialidade);
+                selectEspecialidade.addEventListener('change', atualizarMedicosPorEspecialidade);
             }
 
-            // ===== MÉDICOS =====
-            const selectProfissional = document.getElementById("selectProfissional");
-            if (selectProfissional) {
-                selectProfissional.innerHTML = "<option value=''>Escolha um Profissional</option>";
+            // Preencher lista de serviços disponíveis com especialidades + número de médicos
+            const detalheServicos = document.getElementById("detalheServicosClinica");
+            if (detalheServicos) {
+                detalheServicos.innerHTML = "";
+                const medicosList = Array.isArray(data.medicos) ? data.medicos : [];
+                const countsByEspecialidade = {};
 
-                data.medicos.forEach(function(med) {
-                    const option = document.createElement("option");
-                    option.value = med.id;
-                    option.textContent = med.nome;
-                    selectProfissional.appendChild(option);
+                medicosList.forEach(function(medico) {
+                    if (Array.isArray(medico.especialidades)) {
+                        medico.especialidades.forEach(function(espId) {
+                            const key = String(espId);
+                            countsByEspecialidade[key] = (countsByEspecialidade[key] || 0) + 1;
+                        });
+                    }
                 });
+
+                if (Array.isArray(data.especialidades) && data.especialidades.length > 0) {
+                    data.especialidades.forEach(function(esp) {
+                        const espId = String(esp[0]);
+                        const espNome = esp[1];
+                        const espPreco = Number(esp[2] || 0);
+                        const count = countsByEspecialidade[espId] || 0;
+                        const item = document.createElement("li");
+                        item.textContent = `${espNome} - R$ ${espPreco.toFixed(2).replace('.', ',')} (${count} médico${count === 1 ? "" : "s"})`;
+                        detalheServicos.appendChild(item);
+                    });
+                } else {
+                    detalheServicos.innerHTML = "<li>Nenhuma especialidade cadastrada.</li>";
+                }
             }
+
+            // Inicializar médicos e especialidades globais
+            window.medicosClinica = data.medicos || [];
+            window.especialidadesClinica = data.especialidades || [];
+            atualizarMedicosPorEspecialidade();
 
             // ===== LISTA DE MÉDICOS (ABA PERFIL) =====
             const listaMedicos = document.getElementById("lista-medicos");
@@ -313,10 +400,66 @@ function abrirModalAgendamento(clinicaId) {
 
 
 /* Função para abrir o modal de agendamento na página de perfil da clínica */
+function calcularIdade(dataNascimentoStr) {
+    if (!dataNascimentoStr) return null;
+
+    const hoje = new Date();
+    const nasc = new Date(dataNascimentoStr);
+    if (Number.isNaN(nasc.getTime())) return null;
+
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    const mes = hoje.getMonth() - nasc.getMonth();
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nasc.getDate())) {
+        idade -= 1;
+    }
+    return idade;
+}
+
+function preencherFormularioAgendamentoComDadosUsuario() {
+    const pacienteNome = document.getElementById('pacienteNome')?.value || '';
+    const pacienteEmail = document.getElementById('pacienteEmail')?.value || '';
+    const pacienteTelefone = document.getElementById('pacienteTelefone')?.value || '';
+    const pacienteSexo = document.getElementById('pacienteSexo')?.value || '';
+    const pacienteDataNascimento = document.getElementById('pacienteDataNascimento')?.value || '';
+
+    const inputNome = document.getElementById('inputNome');
+    const inputEmail = document.getElementById('inputEmail');
+    const inputTelefone = document.getElementById('inputTelefone');
+
+    if (inputNome) inputNome.value = pacienteNome;
+    if (inputEmail) inputEmail.value = pacienteEmail;
+    if (inputTelefone) inputTelefone.value = pacienteTelefone;
+
+    // Gênero
+    document.querySelectorAll('input[name="gender"]').forEach(r => {
+        if (pacienteSexo && r.value.toLowerCase() === pacienteSexo.toLowerCase()) {
+            r.checked = true;
+        }
+    });
+
+    // Faixa etária (se tiver data_nascimento)
+    const idade = calcularIdade(pacienteDataNascimento);
+    if (idade !== null) {
+        const radioAdulto = document.querySelector('input[name="age"][value="Adulto"]');
+        const radioInfantil = document.querySelector('input[name="age"][value="Infantil"]');
+
+        if (radioAdulto && radioInfantil) {
+            if (idade >= 18) {
+                radioAdulto.checked = true;
+            } else {
+                radioInfantil.checked = true;
+            }
+        }
+    }
+}
+
 function abrirModalAgendamentoClinica() {
+    preencherFormularioAgendamentoComDadosUsuario();
+
     const modal = document.getElementById('modal-agendamento-1');
     if (modal) {
         modal.classList.add('mostrar');
+        modal.style.display = 'flex';
     }
 }
 
@@ -415,13 +558,18 @@ function getCookie(name) {
 }
 
 /* ================= LOGOUT ================= */
-const btnLogout = document.getElementById("btnLogout");
-if (btnLogout) {
-    btnLogout.addEventListener("click", e => {
-        e.preventDefault();
-        window.location.href = "../../Login_e_Cadastro/html/login.html";
-    });
-}
+document.addEventListener("DOMContentLoaded", () => {
+
+    const btnLogout = document.getElementById("btnLogout");
+
+    if (btnLogout) {
+        btnLogout.addEventListener("click", e => {
+            e.preventDefault();
+            window.location.href = "../../Login_e_Cadastro/html/login.html";
+        });
+    }
+
+});
 
 /* ================= CONFIGURAÇÕES / ABAS ================= */
 function trocarAba(event, abaId) {
@@ -469,17 +617,18 @@ function initFiltroEstrelas(btnId, dropdownId) {
             outroDropdown.classList.remove("mostrar");
         }
         
-        dropdown.classList.toggle("mostrar");
+        const estaAberto = dropdown.classList.toggle("mostrar");
+        btnFiltro.classList.toggle("ativo", estaAberto);
         
         // Ajustar posição do dropdown se necessário
-        if (dropdown.classList.contains("mostrar")) {
+        if (estaAberto) {
             setTimeout(() => ajustarPosicaoDropdown(dropdown, btnFiltro), 0);
         }
     });
 
     // Adicionar evento click em cada opção de estrelas
-    opcoes.forEach((opcao, index) => {
-        const estrelas = index + 1; // 1 a 5 estrelas
+    opcoes.forEach((opcao) => {
+        const estrelas = parseInt(opcao.dataset.value, 10) || 0;
         
         opcao.style.cursor = "pointer";
         opcao.addEventListener("click", (e) => {
@@ -490,34 +639,38 @@ function initFiltroEstrelas(btnId, dropdownId) {
             // Armazenar filtro selecionado
             filtroEstrelasSelecionado = estrelas;
             
+            // Atualizar opção selecionada
+            opcoes.forEach(item => item.classList.remove("selecionada"));
+            opcao.classList.add("selecionada");
+            
             // Filtrar clínicas
             aplicarFiltros();
             
             // Fechar dropdown
             dropdown.classList.remove("mostrar");
+            btnFiltro.classList.remove("ativo");
             
-            // Atualizar texto do botão - mantendo as estrelas douradas da opção
-            const textoOpcao = opcao.textContent.trim();
-            btnFiltro.innerHTML = `${textoOpcao} <i class="fa-solid fa-chevron-down"></i>`;
+            // Atualizar texto do botão mantendo o layout novo
+            const tituloFiltro = btnFiltro.querySelector("#tituloFiltro");
+            if (tituloFiltro) {
+                tituloFiltro.textContent = `${'⭐'.repeat(estrelas)} ${estrelas} estrela${estrelas > 1 ? "s" : ""}`;
+            }
         });
     });
 
     // Fechar dropdown ao clicar fora
     document.addEventListener("click", (e) => {
-        if (!dropdown.contains(e.target) && e.target !== btnFiltro) {
+        if (!dropdown.contains(e.target) && !btnFiltro.contains(e.target)) {
             dropdown.classList.remove("mostrar");
+            btnFiltro.classList.remove("ativo");
         }
     });
     
     // Adicionar opção "Limpar filtro" (opcional)
-    const opcaoLimpar = document.createElement("div");
-    opcaoLimpar.className = "opcao";
+    const opcaoLimpar = document.createElement("button");
+    opcaoLimpar.type = "button";
+    opcaoLimpar.className = "opcao limpar-filtro";
     opcaoLimpar.textContent = "✕ Limpar filtro";
-    opcaoLimpar.style.cursor = "pointer";
-    opcaoLimpar.style.color = "#666";
-    opcaoLimpar.style.borderTop = "1px solid #ddd";
-    opcaoLimpar.style.paddingTop = "8px";
-    opcaoLimpar.style.marginTop = "8px";
     
     opcaoLimpar.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -528,7 +681,13 @@ function initFiltroEstrelas(btnId, dropdownId) {
         filtroEstrelasSelecionado = 0;
         
         // Resetar texto do botão
-        btnFiltro.innerHTML = `<i class="fa-solid fa-star"></i> Avaliação <i class="fa-solid fa-chevron-down"></i>`;
+        const tituloFiltro = btnFiltro.querySelector("#tituloFiltro");
+        if (tituloFiltro) {
+            tituloFiltro.textContent = "Avaliação";
+        }
+        
+        // Limpar seleção visual
+        opcoes.forEach(item => item.classList.remove("selecionada"));
         
         // Aplicar filtros (agora sem filtro de estrelas)
         aplicarFiltros();
@@ -624,20 +783,23 @@ function initFiltroLocalizacao(btnId, dropdownId) {
         const outroDropdown = document.getElementById("dropdownFiltro");
         if (outroDropdown) {
             outroDropdown.classList.remove("mostrar");
+            document.getElementById("btnFiltro").classList.remove("ativo");
         }
         
-        dropdown.classList.toggle("mostrar");
+        const estaAberto = dropdown.classList.toggle("mostrar");
+        btnFiltro.classList.toggle("ativo", estaAberto);
         
         // Ajustar posição do dropdown se necessário
-        if (dropdown.classList.contains("mostrar")) {
+        if (estaAberto) {
             setTimeout(() => ajustarPosicaoDropdown(dropdown, btnFiltro), 0);
         }
     });
 
     // Fechar dropdown ao clicar fora
     document.addEventListener("click", (e) => {
-        if (!dropdown.contains(e.target) && e.target !== btnFiltro) {
+        if (!dropdown.contains(e.target) && !btnFiltro.contains(e.target)) {
             dropdown.classList.remove("mostrar");
+            btnFiltro.classList.remove("ativo");
         }
     });
 }
@@ -777,7 +939,7 @@ function enviarAvaliacao(consultaId, clinicaId, medicoId) {
             alert("Avaliação enviada com sucesso!");
             ocultarEstrelas(consultaId);
             // Desabilitar botão de avaliação
-            const btnAvaliar = document.querySelector(`button.btn-avaliar[onclick*="mostrarEstrelas('${consultaId}"]`);
+            const btnAvaliar = document.querySelector(`button[data-consulta-id="${consultaId}"]`);
             if (btnAvaliar) {
                 btnAvaliar.disabled = true;
                 btnAvaliar.textContent = "✅ Avaliado";
@@ -832,6 +994,7 @@ function carregarMedicosClinica(clinicaId) {
             
             if (data.medicos && data.medicos.length > 0) {
                 data.medicos.forEach(medico => {
+
                     const medicoCard = document.createElement("div");
 
                     const foto = medico.foto_url ? medico.foto_url : "/static/img/default-user.png";
@@ -881,6 +1044,9 @@ function carregarEspecialidadesEMedicos(clinicaId) {
     fetch(`/clinica/${clinicaId}/detalhes/`)
         .then(response => response.json())
         .then(data => {
+            console.log('[carregarEspecialidadesEMedicos] data:', data);
+            window.medicosClinica = data.medicos || [];
+
             // Preencher especialidades
             const selectEspecialidade = document.getElementById('selectEspecialidade');
             if (selectEspecialidade && data.especialidades) {
@@ -893,56 +1059,17 @@ function carregarEspecialidadesEMedicos(clinicaId) {
                     option.textContent = `${esp[1]}${precoFormatado}`; // Nome + Preço
                     selectEspecialidade.appendChild(option);
                 });
-
-                selectEspecialidade.removeEventListener('change', atualizarMedicosPorEspecialidadeClinica);
-                selectEspecialidade.addEventListener('change', atualizarMedicosPorEspecialidadeClinica);
-            }
-
-            window.medicosClinica = data.medicos || [];
-            window.especialidadesClinica = data.especialidades || [];
-            atualizarMedicosPorEspecialidadeClinica();
-
-            // Preencher lista de serviços disponíveis com especialidades + número de médicos
-            const detalheServicos = document.getElementById('detalheServicosClinica');
-            if (detalheServicos) {
-                detalheServicos.innerHTML = '';
-                const medicosList = Array.isArray(data.medicos) ? data.medicos : [];
-                const countsByEspecialidade = {};
-
-                medicosList.forEach(medico => {
-                    if (Array.isArray(medico.especialidades)) {
-                        medico.especialidades.forEach(espId => {
-                            const key = String(espId);
-                            countsByEspecialidade[key] = (countsByEspecialidade[key] || 0) + 1;
-                        });
-                    }
-                });
-
-                if (Array.isArray(data.especialidades) && data.especialidades.length > 0) {
-                    data.especialidades.forEach(esp => {
-                        const espId = String(esp[0]);
-                        const espNome = esp[1];
-                        const espPreco = Number(esp[2] || 0);
-                        const count = countsByEspecialidade[espId] || 0;
-                        const item = document.createElement('li');
-                        item.textContent = `${espNome} - R$ ${espPreco.toFixed(2).replace('.', ',')} (${count} médico${count === 1 ? '' : 's'})`;
-                        detalheServicos.appendChild(item);
-                    });
-                } else {
-                    detalheServicos.innerHTML = '<li>Nenhuma especialidade cadastrada.</li>';
-                }
+                
+                // Remover listener anterior para evitar duplicação
+                selectEspecialidade.removeEventListener('change', atualizarMedicosPorEspecialidade);
+                // Adicionar novo listener
+                selectEspecialidade.addEventListener('change', atualizarMedicosPorEspecialidade);
             }
             
-            // Preencher médicos
+            // Limpar médicos inicialmente
             const selectProfissional = document.getElementById('selectProfissional');
-            if (selectProfissional && data.medicos) {
-                selectProfissional.innerHTML = '<option value="">Escolha um Profissional</option>';
-                data.medicos.forEach(medico => {
-                    const option = document.createElement('option');
-                    option.value = medico.id;
-                    option.textContent = medico.nome;
-                    selectProfissional.appendChild(option);
-                });
+            if (selectProfissional) {
+                selectProfissional.innerHTML = '<option value="">Escolha uma especialidade primeiro</option>';
             }
         })
         .catch(error => {
@@ -951,20 +1078,22 @@ function carregarEspecialidadesEMedicos(clinicaId) {
         });
 }
 
-function atualizarMedicosPorEspecialidadeClinica() {
+function atualizarMedicosPorEspecialidade() {
     const selectEspecialidade = document.getElementById('selectEspecialidade');
     const selectProfissional = document.getElementById('selectProfissional');
-    const precoDisplay = document.getElementById('valorEspecialidadeSelecionada');
     if (!selectEspecialidade || !selectProfissional) return;
 
     const selectedEspecialidadeId = selectEspecialidade.value;
     const medicos = Array.isArray(window.medicosClinica) ? window.medicosClinica : [];
-    const especialidades = Array.isArray(window.especialidadesClinica) ? window.especialidadesClinica : [];
-
+    
+    console.log('[atualizarMedicosporEspecialidade] selectedId:', selectedEspecialidadeId, 'medicos:', medicos);
+    
     let filtrados = [];
     if (selectedEspecialidadeId) {
         filtrados = medicos.filter(med => {
-            return Array.isArray(med.especialidades) && med.especialidades.map(String).includes(String(selectedEspecialidadeId));
+            const temEspecialidade = Array.isArray(med.especialidades) && 
+                                     med.especialidades.map(String).includes(String(selectedEspecialidadeId));
+            return temEspecialidade;
         });
     }
 
@@ -984,14 +1113,24 @@ function atualizarMedicosPorEspecialidadeClinica() {
         selectProfissional.appendChild(option);
     }
 
+    const precoDisplay = document.getElementById('valorEspecialidadeSelecionada');
     if (precoDisplay) {
-        const especialidadeSelecionada = especialidades.find(e => String(e[0]) === String(selectedEspecialidadeId));
+        const especialidadeSelecionada = window.especialidadesClinica
+            ? window.especialidadesClinica.find(e => String(e[0]) === String(selectedEspecialidadeId))
+            : null;
         const preco = especialidadeSelecionada ? Number(especialidadeSelecionada[2] || 0) : 0;
         precoDisplay.textContent = `R$ ${preco.toFixed(2).replace('.', ',')}`;
     }
 }
 
 function carregarHorarios(clinicaId, data) {
+    // Prevenir múltiplas requisições simultâneas
+    if (carregarHorarios.isLoading) {
+        console.log('[dashboard] Requisição já em andamento, ignorando...');
+        return Promise.resolve([]);
+    }
+    carregarHorarios.isLoading = true;
+
     // Buscar horários disponíveis da clínica para a data selecionada
     return fetch(`/clinica/${clinicaId}/horarios/?data=${data}`)
         .then(response => response.json())
@@ -1015,6 +1154,7 @@ function carregarHorarios(clinicaId, data) {
                     window.calendarSelector.availableTimes = data.horarios;
                     window.calendarSelector.renderTimeSlots();
                 }
+                carregarHorarios.isLoading = false;
                 return Promise.resolve(data.horarios);
             } else {
                 const option = document.createElement('option');
@@ -1027,6 +1167,7 @@ function carregarHorarios(clinicaId, data) {
                     window.calendarSelector.availableTimes = [];
                     window.calendarSelector.renderTimeSlots();
                 }
+                carregarHorarios.isLoading = false;
                 return Promise.resolve([]);
             }
         })
@@ -1036,6 +1177,7 @@ function carregarHorarios(clinicaId, data) {
             if (selectHorario) {
                 selectHorario.innerHTML = '<option value="">Erro ao carregar horários</option>';
             }
+            carregarHorarios.isLoading = false;
             return Promise.reject(error);
         });
 }
@@ -1123,12 +1265,137 @@ function proximaEtapa() {
     const modal1 = document.getElementById('modal-agendamento-1');
     const modal2 = document.getElementById('modal-agendamento-2');
     
-    if (modal1) modal1.classList.remove('mostrar');
-    if (modal2) modal2.classList.add('mostrar');
+    if (modal1) {
+        modal1.classList.remove('mostrar');
+        setTimeout(() => {
+            modal1.style.display = 'none';
+        }, 100);
+    }
+    
+    if (modal2) {
+        modal2.classList.add('mostrar');
+        modal2.style.display = 'flex';
+        
+        // Adicionar event listener para o botão de fechar
+        const btnFechar = document.getElementById('btn-fechar-agendamento');
+        if (btnFechar) {
+            btnFechar.addEventListener('click', fecharModalAgendamento);
+        }
+        
+        // Reinicializar o calendário quando o modal é aberto
+        setTimeout(() => {
+            if (typeof initializeCalendarSelector === 'function') {
+                console.log('Reinicializando calendário no segundo modal...');
+                initializeCalendarSelector();
+            }
+        }, 300);
+    }
     
     // Carregar especialidades e médicos da clínica selecionada
     carregarEspecialidadesEMedicos(clinicaSelecionada);
 }
+
+function voltarAoFormulario() {
+    const modal1 = document.getElementById('modal-agendamento-1');
+    const modal2 = document.getElementById('modal-agendamento-2');
+    
+    if (modal2) {
+        modal2.classList.remove('mostrar');
+        setTimeout(() => {
+            modal2.style.display = 'none';
+        }, 100);
+    }
+    
+    if (modal1) {
+        modal1.classList.add('mostrar');
+        modal1.style.display = 'flex';
+    }
+}
+
+/* ======== FUNÇÕES PARA ABRIR/FECHAR MODAIS DE DATA E HORA ======== */
+
+function abrirModalCalendario() {
+    const modal = document.getElementById('modal-calendario');
+    const btnConfirm = document.getElementById('btn-confirmar-data');
+    if (btnConfirm) {
+        btnConfirm.style.display = 'inline-block';
+        btnConfirm.disabled = true;
+        btnConfirm.setAttribute('disabled', 'disabled');
+        btnConfirm.style.pointerEvents = 'none';
+        btnConfirm.textContent = 'Confirmar Data';
+        btnConfirm.style.opacity = '0.5';
+        btnConfirm.onclick = confirmarDataSelecionada;
+    }
+
+    if (modal) {
+        modal.classList.add('mostrar');
+        modal.style.display = 'flex';
+        
+        // Reinicializar calendário
+        setTimeout(() => {
+            if (typeof initializeCalendarSelector === 'function') {
+                initializeCalendarSelector();
+            }
+        }, 100);
+    }
+}
+
+function fecharModalCalendario() {
+    const modal = document.getElementById('modal-calendario');
+    if (modal) {
+        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
+    }
+}
+
+function abrirModalHorario() {
+    const inputData = document.getElementById('inputData');
+    
+    if (!inputData || !inputData.value) {
+        alert('Por favor, selecione uma data primeiro.');
+        return;
+    }
+    
+    const modal = document.getElementById('modal-horarios');
+    if (modal) {
+        modal.classList.add('mostrar');
+        modal.style.display = 'flex';
+    }
+}
+
+function fecharModalHorario() {
+    const modal = document.getElementById('modal-horarios');
+    if (modal) {
+        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
+    }
+}
+
+function vincularConfirmarDataBotao() {
+    const btn = document.getElementById('btn-confirmar-data');
+    if (!btn) return;
+
+    btn.removeEventListener('click', window.__confirmarDataFallback);
+
+    window.__confirmarDataFallback = (event) => {
+        if (btn.disabled) {
+            event.preventDefault();
+            return;
+        }
+        console.log('[global] Confirmar Data fallback clicked');
+        confirmarDataSelecionada();
+    };
+
+    btn.addEventListener('click', window.__confirmarDataFallback);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    vincularConfirmarDataBotao();
+});
+
+/**
+ * Função para confirmar agendamento
+ */
 
 function confirmarAgendamento() {
     // Validar campos do segundo modal
@@ -1248,8 +1515,7 @@ function fecharModalAgendamento() {
 /* Função para limpar o formulário de agendamento */
 function limparFormularioAgendamento() {
     const campos = [
-        'inputNome', 'inputEmail', 'inputTelefone', 'inputSintomas',
-        'selectEspecialidade', 'selectProfissional', 'inputData', 'selectHorario'
+        'inputSintomas', 'selectEspecialidade', 'selectProfissional', 'inputData', 'selectHorario'
     ];
     
     campos.forEach(id => {
@@ -1257,8 +1523,8 @@ function limparFormularioAgendamento() {
         if (campo) campo.value = '';
     });
     
-    // Limpar radio buttons
-    document.querySelectorAll('input[name="gender"]').forEach(r => r.checked = false);
+    // Recarregar informações do paciente para manter preenchimento automático
+    preencherFormularioAgendamentoComDadosUsuario();
 }
 
 /* ================= IR PARA MEUS AGENDAMENTOS ================= */
@@ -1274,17 +1540,22 @@ function irParaAjustes() {
 function abrirNotificacoes() {
     const modal = document.getElementById("modal-notificacoes");
     const ponto = document.querySelector(".ponto-alerta");
+    const botao = document.querySelector(".botao-notificacao");
 
-    modal.classList.add("ativo");
+    modal.classList.add("mostrar");
 
     if (ponto) {
         ponto.style.display = "none";
+    }
+
+    if (botao) {
+        botao.classList.remove("com-notificacao");
     }
 }
 
 function fecharNotificacoes() {
     document.getElementById("modal-notificacoes")
-            .classList.remove("ativo");
+            .classList.remove("mostrar");
 }
 
 document.getElementById("modal-notificacoes")
@@ -1307,5 +1578,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnFecharAgendamento2) {
         btnFecharAgendamento2.addEventListener('click', fecharModalAgendamento);
     }
-});
 
+    // Event listeners para os selects de data e hora abrirem os modais
+    const dataSelecionadaDisplay = document.getElementById('dataSelecionadaDisplay');
+    const horaSelecionadaDisplay = document.getElementById('horaSelecionadaDisplay');
+
+    if (dataSelecionadaDisplay) {
+        dataSelecionadaDisplay.addEventListener('click', function(e) {
+            e.preventDefault();
+            abrirModalCalendario();
+        });
+        dataSelecionadaDisplay.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+        });
+    }
+
+    if (horaSelecionadaDisplay) {
+        horaSelecionadaDisplay.addEventListener('click', function(e) {
+            e.preventDefault();
+            abrirModalHorario();
+        });
+        horaSelecionadaDisplay.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+        });
+    }
+});

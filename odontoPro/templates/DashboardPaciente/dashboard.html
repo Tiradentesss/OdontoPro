@@ -67,7 +67,7 @@
 
     <div class="controles-usuario">
         <button type="button"
-                class="botao-notificacao"
+                class="botao-notificacao{% if tem_notificacao %} com-notificacao{% endif %}"
                 onclick="abrirNotificacoes()">
 
             <i class="fa-regular fa-bell"></i>
@@ -809,23 +809,26 @@
 </main>
 </div>
 
-<div id="modal-notificacoes" class="modal-notificacoes">
-    <div class="modal-box">
+<div id="modal-notificacoes" class="modal">
+    <div class="modal-content">
 
         <div class="modal-header">
-            <h3>Consultas Agendadas</h3>
+            <h3>Notificações</h3>
             <button onclick="fecharNotificacoes()" class="fechar-modal">×</button>
         </div>
 
         <div class="modal-body">
-            {% for consulta in consultas_futuras %}
+            {% for consulta in notificacoes %}
                 <div class="item-notificacao">
                     <strong>{{ consulta.clinica.nome }}</strong><br>
                     {{ consulta.data_hora|date:"d/m/Y H:i" }}
+                    {% if consulta.status == "cancelada" %}
+                        <span style="color: red;">(Cancelada)</span>
+                    {% endif %}
                 </div>
             {% empty %}
                 <div class="item-notificacao">
-                    Nenhuma consulta futura.
+                    Nenhuma notificação no momento.
                 </div>
             {% endfor %}
         </div>

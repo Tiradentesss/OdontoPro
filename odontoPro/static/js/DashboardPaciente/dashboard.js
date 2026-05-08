@@ -1540,17 +1540,22 @@ function irParaAjustes() {
 function abrirNotificacoes() {
     const modal = document.getElementById("modal-notificacoes");
     const ponto = document.querySelector(".ponto-alerta");
+    const botao = document.querySelector(".botao-notificacao");
 
-    modal.classList.add("ativo");
+    modal.classList.add("mostrar");
 
     if (ponto) {
         ponto.style.display = "none";
+    }
+
+    if (botao) {
+        botao.classList.remove("com-notificacao");
     }
 }
 
 function fecharNotificacoes() {
     document.getElementById("modal-notificacoes")
-            .classList.remove("ativo");
+            .classList.remove("mostrar");
 }
 
 document.getElementById("modal-notificacoes")
@@ -1572,5 +1577,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnFecharAgendamento2 = document.getElementById('btn-fechar-agendamento');
     if (btnFecharAgendamento2) {
         btnFecharAgendamento2.addEventListener('click', fecharModalAgendamento);
+    }
+
+    // Event listeners para os selects de data e hora abrirem os modais
+    const dataSelecionadaDisplay = document.getElementById('dataSelecionadaDisplay');
+    const horaSelecionadaDisplay = document.getElementById('horaSelecionadaDisplay');
+
+    if (dataSelecionadaDisplay) {
+        dataSelecionadaDisplay.addEventListener('click', function(e) {
+            e.preventDefault();
+            abrirModalCalendario();
+        });
+        dataSelecionadaDisplay.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+        });
+    }
+
+    if (horaSelecionadaDisplay) {
+        horaSelecionadaDisplay.addEventListener('click', function(e) {
+            e.preventDefault();
+            abrirModalHorario();
+        });
+        horaSelecionadaDisplay.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+        });
     }
 });

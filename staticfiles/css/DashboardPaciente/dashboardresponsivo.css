@@ -1,3 +1,16 @@
+/* ajustes globais para todos os dispositivos */
+
+/* torna imagens e vídeos fluidos */
+img, video, iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+/* evita problemas de 100vh em navegadores móveis que escondem a barra de endereço */
+body {
+    min-height: 100vh;
+}
+
 /* --- AJUSTES PARA TELAS MÉDIAS (TABLETS) --- */
 @media (max-width: 992px) {
     .header-clinicas {
@@ -45,21 +58,44 @@
         background: white;
     }
 
-    .seccao-logo, .botao-seta, .email-usuario, .botao-sair, .info-usuario {
+    .seccao-logo, .botao-seta, .email-usuario, .info-usuario {
         display: none;
+    }
+
+    .botao-sair {
+        position: fixed !important;
+        bottom: 8px !important;
+        right: 75px !important; /* ao lado do ícone de ajustes, assumindo 3 itens */
+        width: 46px !important;
+        height: 46px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 50% !important;
+        background-color: #e74c3c !important;
+        color: #fff !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 18px !important;
+        border: none !important;
+        z-index: 1001 !important;
+    }
+
+    .botao-sair .legenda {
+        display: none !important;
     }
 
     .config-actions .botao-sair,
     .logout-form .botao-sair {
-        display: inline-flex !important;
         position: static !important;
         bottom: auto !important;
         right: auto !important;
-        width: 100% !important;
+        width: 50% !important;
         height: auto !important;
         padding: 8px 16px !important;
         margin: 15px 0 0 0 !important;
         border-radius: 14px !important;
+        display: inline-flex !important;
         justify-content: center !important;
         align-items: center !important;
         font-size: 12px !important;
@@ -173,6 +209,9 @@
         width: calc(100vw - 30px) !important;
         max-width: 100%;
     }
+
+    /* garante que grids internos, quando usados, se ajustem corretamente */
+    .dropdown-filtro .grid, .dropdown-filtro .row {
         grid-template-columns: 1fr;
     }
 
@@ -185,4 +224,35 @@
         justify-content: flex-start;
         -webkit-overflow-scrolling: touch;
     }
+
+    .container-pontos {
+        bottom: 10px;
+    }
+}
+
+/* --- AJUSTES PARA CELULARES PEQUENOS (576px e abaixo) --- */
+@media (max-width: 576px) {
+    .barra-topo {
+        padding: 0 10px;
+        height: 55px;
+    }
+
+    .titulo-pagina {
+        font-size: 18px;
+    }
+
+    .item-menu {
+        font-size: 18px;
+        padding: 8px;
+    }
+
+    .btn-agendar-green {
+        max-width: 100% !important;
+    }
+
+    .area-conteudo {
+        padding: 10px;
+        padding-bottom: 90px; /* espaço para o menu inferior */
+    }
+
 }

@@ -16,12 +16,12 @@ from django.core.files.storage import default_storage
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade
 from datetime import datetime, timedelta
+from django.utils import timezone
 from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
 from PIL import Image
 from django.core.exceptions import ValidationError
-from django.utils import timezone
-from datetime import timedelta
+from django.db import models
 
 import logging
 logger = logging.getLogger(__name__)
@@ -290,7 +290,23 @@ def dashboard_paciente(request):
         status__in=["agendada", "confirmada"]
     ).order_by("data_hora")
 
-    tem_notificacao = consultas_futuras.exists()
+    # Notificações: consultas próximas (1 dia antes, mesmo dia, 1 hora antes) ou canceladas recentemente
+    notificacoes = Consulta.objects.filter(
+        (
+            models.Q(
+                data_hora__gte=agora - timedelta(days=1),
+                data_hora__lte=agora + timedelta(days=1),
+                status__in=["agendada", "confirmada"]
+            ) |
+            models.Q(
+                status="cancelada",
+                criado_em__gte=agora - timedelta(days=7)  # canceladas nos últimos 7 dias
+            )
+        ),
+        paciente=paciente
+    ).order_by("-data_hora")
+
+    tem_notificacao = notificacoes.exists()
 
     if filtro_status and filtro_status != "todas":
         consultas = consultas.filter(status=filtro_status)
@@ -308,6 +324,7 @@ def dashboard_paciente(request):
         "consultas": consultas,
         "filtro_status": filtro_status or "todas",
         "consultas_futuras": consultas_futuras,
+        "notificacoes": notificacoes,
         "tem_notificacao": tem_notificacao,
         "aba_ativa": aba_ativa,
         "uid_signed": uid_signed,
