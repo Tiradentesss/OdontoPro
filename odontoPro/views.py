@@ -381,7 +381,7 @@ def clinica_detalhes(request, clinica_id):
     especialidades = set()
     for medico in clinica.medico_set.all():
         for esp in medico.especialidades.all():
-            especialidades.add((esp.id, esp.nome))
+            especialidades.add((esp.id, esp.nome, float(esp.preco) if esp.preco else 0))
 
     medicos = [
         {

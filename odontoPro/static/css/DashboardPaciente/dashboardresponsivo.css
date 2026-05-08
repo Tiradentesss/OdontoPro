@@ -85,6 +85,23 @@ body {
         display: none !important;
     }
 
+    .config-actions .botao-sair,
+    .logout-form .botao-sair {
+        position: static !important;
+        bottom: auto !important;
+        right: auto !important;
+        width: 50% !important;
+        height: auto !important;
+        padding: 8px 16px !important;
+        margin: 15px 0 0 0 !important;
+        border-radius: 14px !important;
+        display: inline-flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        font-size: 12px !important;
+        z-index: auto !important;
+    }
+
     .itens-navegacao {
         flex-direction: row;
         width: 100%;

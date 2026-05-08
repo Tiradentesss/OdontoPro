@@ -113,7 +113,7 @@ body {
     background: var(--branco);
     display: flex;
     flex-direction: column;
-    padding: 30px 0;
+    padding: 40px 0;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border-right: 1px solid var(--cor-borda);
     position: relative;
@@ -258,7 +258,8 @@ body {
 }
 
 .barra-topo {
-    height: 85px;
+    min-height: 100px;
+    height: auto;
     background: var(--branco);
     display: flex;
     align-items: center;
@@ -805,6 +806,7 @@ body {
         margin: 0;
         padding: 10px 14px;
         align-self: center;
+        justify-content: center;
     }
 
     .itens-navegacao {
@@ -831,13 +833,6 @@ body {
         margin-left: 0;
         justify-content: center;
         padding-left: 0;
-    }
-
-    .botao-sair {
-        width: 100%;
-        margin: 12px 0 0;
-        justify-content: center;
-        padding: 12px 0;
     }
 
     .menu-lateral.aberto .botao-sair {
@@ -1663,15 +1658,53 @@ body {
     color: white;
     border: none;
     padding: 12px 30px;
-    border-radius: 0px;
+    border-radius: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: 0.3s;
-    margin-top: 15px;
+    margin-top: 0;
 }
 
 .btn-salvar:hover {
     filter: brightness(1.1);
+}
+
+.config-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.logout-form {
+    margin: 0;
+}
+
+.btn-logout {
+    margin-top: 0;
+}
+
+@media (max-width: 768px) {
+    .config-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .btn-salvar {
+        width: 100%;
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .btn-logout {
+        width: 100%;
+        padding: 8px 16px;
+        font-size: 12px;
+        margin-top: 15px;
+    }
 }
 
 /* Lógica das Abas */
@@ -1850,6 +1883,40 @@ body {
     border-radius: 8px;
     font-size: 14px;
     background-color: #F9FAFB;
+}
+
+.modal-select {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #F9FAFB;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.modal-select:hover {
+    background-color: #E5E7EB;
+    border-color: #9CA3AF;
+}
+
+.btn-close-modal {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    z-index: 10;
+    transition: color 0.3s;
+}
+
+.btn-close-modal:hover {
+    color: #333;
 }
 
 .modal-content input:readonly {

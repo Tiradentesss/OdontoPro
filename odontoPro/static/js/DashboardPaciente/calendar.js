@@ -453,7 +453,17 @@ function initializeCalendarSelector() {
                            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
         const dateStr = `${dayName}, ${day} de ${monthNames[parseInt(month) - 1]} de ${year}`;
-        dataSelecionadaDisplay.innerHTML = `<span>${dateStr}</span><i class="fa-solid fa-calendar" style="margin-left: 10px; color: #00BCD4;"></i>`;
+        // Para select, definir o valor e texto da opção selecionada
+        dataSelecionadaDisplay.value = dateStr;
+        // Atualizar o texto exibido
+        const selectedOption = dataSelecionadaDisplay.querySelector(`option[value="${dateStr}"]`);
+        if (!selectedOption) {
+          const option = document.createElement('option');
+          option.value = dateStr;
+          option.textContent = dateStr;
+          dataSelecionadaDisplay.appendChild(option);
+        }
+        dataSelecionadaDisplay.value = dateStr;
       }
     },
     onTimeChange: (time) => {
@@ -477,7 +487,17 @@ function initializeCalendarSelector() {
       // Atualizar display da hora selecionada
       const horaSelecionadaDisplay = document.getElementById('horaSelecionadaDisplay');
       if (horaSelecionadaDisplay) {
-        horaSelecionadaDisplay.innerHTML = `<span>${time}</span><i class="fa-solid fa-clock" style="margin-left: 10px; color: #00BCD4;"></i>`;
+        // Para select, definir o valor e texto da opção selecionada
+        horaSelecionadaDisplay.value = time;
+        // Atualizar o texto exibido
+        const selectedOption = horaSelecionadaDisplay.querySelector(`option[value="${time}"]`);
+        if (!selectedOption) {
+          const option = document.createElement('option');
+          option.value = time;
+          option.textContent = time;
+          horaSelecionadaDisplay.appendChild(option);
+        }
+        horaSelecionadaDisplay.value = time;
       }
     }
   });

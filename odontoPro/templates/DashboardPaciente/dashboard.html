@@ -51,14 +51,6 @@
         </div>
     </div>
 
-    <form method="POST" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="botao-sair">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            <span class="legenda">Sair</span>
-        </button>
-    </form>
-
 </nav>
 
 <!-- CONTEÚDO -->
@@ -328,7 +320,7 @@
                 <div class="mapa-google">
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.513239247653!2d-48.4901!3d-1.4558!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMcKwMjcnMjAuOSJTIDQ4wrAyOScyNC40Ilc!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
-                        width="100%" height="300" style="border:0; border-radius: 15px;" allowfullscreen=""
+                        width="100%" height="450" style="border:0; border-radius: 15px;" allowfullscreen=""
                         loading="lazy">
                     </iframe>
                 </div>
@@ -341,6 +333,9 @@
 
         <div id="modal-agendamento-1" class="modal">
             <div class="modal-content">
+                <button id="btn-fechar-agendamento-1" class="btn-close-modal" type="button" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; color: #666; cursor: pointer; z-index: 10;">
+                    <i class="fa-solid fa-times"></i>
+                </button>
                 <!-- signed uid available here for JS fallback -->
                 <input type="hidden" id="signedUidForAgendar" value="{{ uid_signed }}">
                 <input type="hidden" id="pacienteNome" value="{{ paciente.nome|default_if_none:''|escape }}">
@@ -398,6 +393,9 @@
                 <select id="selectEspecialidade" name="especialidade" required>
                     <option value="">Selecione uma Especialidade</option>
                 </select>
+                <div id="precoEspecialidadeDisplay" style="margin-top: 8px; font-size: 14px; color: #00407b; font-weight: 700;">
+                    Preço: <span id="valorEspecialidadeSelecionada">R$ 0,00</span>
+                </div>
                 <select id="selectProfissional" name="profissional" required>
                     <option value="">Escolha um Profissional</option>
                 </select>
@@ -406,19 +404,17 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
                     <div>
                         <label style="display: block; font-size: 12px; color: #00407b; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">📅 Data</label>
-                        <button id="dataSelecionadaDisplay" type="button" class="date-time-field" onclick="abrirModalCalendario()" style="cursor: pointer; text-align: left; width: 100%;">
-                            <span>Selecione a Data</span>
-                            <i class="fa-solid fa-calendar" style="margin-left: 10px; color: #00BCD4;"></i>
-                        </button>
+                        <select id="dataSelecionadaDisplay" class="modal-select">
+                            <option value="">Selecione a Data</option>
+                        </select>
                         <input type="date" id="inputData" name="data" required style="display: none;">
                     </div>
 
                     <div>
                         <label style="display: block; font-size: 12px; color: #00407b; font-weight: 600; margin-bottom: 8px; text-transform: uppercase;">⏰ Hora</label>
-                        <button id="horaSelecionadaDisplay" type="button" class="date-time-field" onclick="abrirModalHorario()" style="width: 100%; text-align: left;">
-                            <span>Selecione a Hora</span>
-                            <i class="fa-solid fa-clock" style="margin-left: 10px; color: #00BCD4;"></i>
-                        </button>
+                        <select id="horaSelecionadaDisplay" class="modal-select">
+                            <option value="">Selecione a Hora</option>
+                        </select>
                         <select id="selectHorario" name="horario" required style="display: none;">
                             <option value="">Selecione o Horário</option>
                         </select>
@@ -740,10 +736,18 @@
                     <input type="date" id="dataNascimentoPaciente" name="data_nascimento" value="{{ paciente.data_nascimento|date:'Y-m-d'|default:'' }}">
                 </div>
 
-                <button type="submit" class="btn-salvar" id="btnSalvarConfig">
+            </form>
+
+            <div class="config-actions">
+                <button type="submit" class="btn-salvar" id="btnSalvarConfig" form="formConfiguracao">
                     Salvar alterações
                 </button>
-            </form>
+
+                <form method="POST" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="botao-sair btn-logout">Sair</button>
+                </form>
+            </div>
         </div>
 
 
