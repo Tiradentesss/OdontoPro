@@ -2380,10 +2380,10 @@ body {
 
 /* imagem da logo */
 .logo-sobreposta img {
-    width: 100%;
-    height: 100%;
+    width: 85%;
+    height: 85%;
 
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
 }
 
