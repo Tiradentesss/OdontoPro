@@ -392,7 +392,7 @@ function abrirModalAgendamento(clinicaId) {
                             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
                         `;
 
-                        const foto = med.foto_url ? med.foto_url : "/static/img/default-user.png";
+                        const foto = med.foto_url ? med.foto_url : "/static/img/SemIcon.png";
 
                         // Buscar nomes das especialidades
                         const especialidadesNomes = [];
@@ -413,7 +413,7 @@ function abrirModalAgendamento(clinicaId) {
 
                         card.innerHTML = `
                             <img src="${foto}" 
-                                style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;">
+                                style="width:80px;height:80px;border-radius:50%;object-fit:contain;margin-bottom:10px;" onerror="this.onerror=null;this.src='/static/img/SemIcon.png';">
                             <h4 style="margin-bottom: 5px;">Dr(a). ${med.nome}</h4>
                             ${especialidadesHtml}
                         `;
@@ -1144,7 +1144,7 @@ function carregarMedicosClinica(clinicaId) {
 
                     const medicoCard = document.createElement("div");
 
-                    const foto = medico.foto_url ? medico.foto_url : "/static/img/default-user.png";
+                    const foto = medico.foto_url ? medico.foto_url : "/static/img/SemIcon.png";
 
                     // Buscar nomes das especialidades
                     const especialidadesNomes = [];
@@ -1166,7 +1166,7 @@ function carregarMedicosClinica(clinicaId) {
 
                     medicoCard.innerHTML = `
                         <img src="${foto}" 
-                            style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;">
+                            style="width:80px;height:80px;border-radius:50%;object-fit:contain;margin-bottom:10px;" onerror="this.onerror=null;this.src='/static/img/SemIcon.png';">
                         <h4>${medico.nome}</h4>
                         ${especialidadesHtml}
                     `;
