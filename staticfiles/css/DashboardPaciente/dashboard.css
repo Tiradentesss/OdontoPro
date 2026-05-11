@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 :root {
     --cor-fundo: #f4f7fe;
     --branco: #ffffff;
@@ -7,6 +9,83 @@
     --gradiente-azul: linear-gradient(135deg, #4db8ff 0%, #4db8ff 100%);
     --cor-borda: #e2e8f0;
     --verde-sucesso: #2ecc71;
+}
+
+/* mensagens de feedback */
+.messages {
+    margin: 20px 0;
+}
+.message {
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.message.error {
+    background-color: #fdecea;
+    color: #e74c3c;
+    border: 1px solid #f5c6cb;
+}
+.message.success {
+    background-color: #e9f7ef;
+    color: #2ecc71;
+    border: 1px solid #c3e6cb;
+}
+
+/* boas-vindas personalizada */
+.mensagem-boas-vindas {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #eaf6ff 0%, #f7fbff 100%);
+    border: 1px solid #d6ebff;
+    border-left: 5px solid #4db8ff;
+    padding: 16px 18px;
+    border-radius: 14px;
+    margin: 20px 0;
+    box-shadow: 0 8px 24px rgba(77, 184, 255, 0.15);
+    animation: aparecerMensagem 0.4s ease;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.mensagem-boas-vindas.oculta {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    pointer-events: none;
+}
+
+.icone-boas-vindas {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4db8ff, #1BC3EA);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.texto-boas-vindas strong {
+    font-size: 15px;
+    color: #313131;
+}
+
+.texto-boas-vindas span {
+    display: block;
+    font-size: 13px;
+    color: #6C7293;
+}
+
+@keyframes aparecerMensagem {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -21,8 +100,8 @@
 body {
     background-color: var(--cor-fundo);
     display: flex;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh; /* permite scroll quando barra de endereço some */
+    overflow-x: hidden; /* apenas esconder rolagem horizontal */
     -webkit-font-smoothing: antialiased;
 }
 
@@ -432,78 +511,48 @@ body {
 
 /* Container do botão de filtro + dropdown */
 .filtro-container {
-    position: relative;     /* Necessário para posicionar o dropdown em relação ao botão */
-    display: inline-block;  /* Mantém botão e dropdown juntos */
-    flex-shrink: 0;         /* Não encolhe */
-    z-index: 1001;            /* Para garantir que o dropdown fica acima */
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    z-index: 1001;
 }
 
-/* Dropdown de avaliação */
-.dropdown-filtro {
-    position: absolute;          /* Posiciona em relação ao botão */
-    top: calc(100% + 5px);       /* Logo abaixo do botão com pequeno espaçamento */
-    left: 0;                      /* Alinhado à esquerda do botão */
-    background: var(--branco);    /* Fundo branco */
-    border: 1px solid var(--cor-borda); /* Borda */
-    width: 220px;                 /* Largura fixa do dropdown */
-    display: none;                /* Inicialmente escondido */
-    flex-direction: column;       /* Mantém opções em coluna (vertical) */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12); /* Sombra leve */
-    z-index: 1000;                /* Fica sobre outros elementos */
-    border-radius: 4px;           /* Bordas arredondadas */
-    overflow: hidden; 
-    overflow-y: auto;             /* Permite scroll interno se necessário */
-    transition: opacity 0.2s ease, transform 0.2s ease; /* Animação suave */
-    transform-origin: top;        /* Origem da animação */
-    opacity: 0;                   /* Inicialmente invisível */
-    max-height: calc(90vh - 80px);             /* Não ultrapassa viewport */
-    right: auto;                  /* Reset */
-    /* Garante que não saia da tela */
-    max-width: 280px;
-}
-
-/* Dropdown visível */
-.dropdown-filtro.mostrar {
-    display: flex; /* Mostra o dropdown */
-    opacity: 1;    /* Torna visível */
-    transform: scaleY(1); /* Animação de abertura */
-}
-
-/* Cada opção dentro do dropdown */
-.dropdown-filtro .opcao {
-    padding: 12px 16px;  /* Espaçamento interno */
-    cursor: pointer;      /* Cursor de clique */
-    font-size: 14px;      /* Tamanho da fonte */
-    transition: background 0.2s ease; /* Transição suave */
+.btn-filtro {
+    min-width: 150px;
+    height: 44px;
+    border: 1px solid #d9e1ef;
+    background: #ffffff;
+    border-radius: 14px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-/* Hover das opções */
-.dropdown-filtro .opcao:hover {
-    background: #f1f5f9;  /* Destaque ao passar o mouse */
-    font-weight: 500;     /* Texto um pouco mais bold */
-}
-
-/* Botões de filtro adicionais */
-.btn-filtro {
-    background: var(--branco);          /* Fundo branco */
-    border: 1px solid var(--cor-borda); /* Borda */
-    padding: 0 18px;                    /* Espaçamento horizontal */
-    height: 48px;                        /* Altura */
-    border-radius: 0px;                 /* Bordas quadradas */
-    cursor: pointer;                    /* Cursor de clique */
-    display: flex;                      /* Para alinhar ícones e texto */
-    align-items: center;                /* Centraliza verticalmente */
     justify-content: flex-start;
-    gap: 8px;                           /* Espaço entre ícones e texto */
-    font-size: 14px;                     /* Tamanho da fonte */
-    color: var(--texto-suave);          /* Cor do texto */
-    font-weight: 500;                    /* Negrito leve */
-    transition: 0.3s;                    /* Transição suave ao hover */
-    position: relative;                 /* Para posicionar dropdown */
+    gap: 10px;
+    padding: 0 16px;
+    cursor: pointer;
+    color: #5c6785;
+    font-size: 16px;
+    font-weight: 500;
+    box-shadow: 0 4px 14px rgba(25, 55, 109, 0.06);
+    transition: all 0.22s ease;
+}
+
+.btn-filtro:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(25, 55, 109, 0.10);
+    border-color: #bfd1ee;
+}
+
+.btn-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.icone {
+    font-size: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .seta {
@@ -515,6 +564,79 @@ body {
     font-size: 16px;
 }
 
+.btn-filtro.ativo .seta {
+    transform: rotate(180deg);
+}
+
+.dropdown-filtro {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 0;
+    width: 240px;
+    max-height: 320px;
+    background: #ffffff;
+    border: 1px solid #dfe6f3;
+    border-radius: 18px;
+    box-shadow: 0 18px 40px rgba(35, 56, 100, 0.16);
+    overflow: hidden;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 100;
+}
+
+.dropdown-filtro.mostrar {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.dropdown-filtro .opcao {
+    width: 100%;
+    border: none;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: #2f3b57;
+    cursor: pointer;
+    transition: background 0.22s ease;
+    border-bottom: 1px solid #edf1f7;
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.dropdown-filtro.mostrar .opcao {
+    animation: subirItem 0.30s ease forwards;
+}
+
+.dropdown-filtro.mostrar .opcao:nth-child(1) { animation-delay: 0.04s; }
+.dropdown-filtro.mostrar .opcao:nth-child(2) { animation-delay: 0.07s; }
+.dropdown-filtro.mostrar .opcao:nth-child(3) { animation-delay: 0.10s; }
+.dropdown-filtro.mostrar .opcao:nth-child(4) { animation-delay: 0.13s; }
+.dropdown-filtro.mostrar .opcao:nth-child(5) { animation-delay: 0.16s; }
+.dropdown-filtro.mostrar .opcao.limpar-filtro { animation-delay: 0.19s; }
+
+@keyframes subirItem {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-filtro .opcao:hover {
+    background: #f7faff;
+}
+
+.dropdown-filtro .opcao.selecionada {
+    background: #eef5ff;
+}
+
 .dropdown-filtro .estrelas {
     color: #f4bf3a;
     letter-spacing: 1px;
@@ -523,7 +645,6 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
-    margin-right: 4px;
 }
 
 .dropdown-filtro .texto-opcao {
@@ -535,11 +656,258 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Hover do botão */
-.btn-filtro:hover {
-    background: #f8fafc;                /* Fundo levemente cinza */
-    border-color: #cbd5e0;              /* Borda mais clara */
+.dropdown-filtro .check {
+    opacity: 0;
+    transform: scale(0.7);
+    transition: all 0.2s ease;
+    color: #007aff;
+    font-weight: bold;
 }
+
+.dropdown-filtro .opcao.selecionada .check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.dropdown-filtro .limpar-filtro {
+    width: 100%;
+    border: none;
+    background: #ffffff;
+    padding: 16px 18px;
+    font-size: 17px;
+    color: #6c7897;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.22s ease, color 0.22s ease;
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.dropdown-filtro .limpar-filtro:hover {
+    background: #fff4f4;
+    color: #d14b4b;
+}
+
+.filtros-consultas {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 15px 0 25px 0;
+    align-items: center;
+}
+
+.filtros-consultas-status {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filtros-consultas-controles {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filtros-consultas-controles input[type="search"],
+.filtros-consultas-controles select,
+.filtros-consultas-controles input[type="date"] {
+    padding: 10px 14px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 10px;
+    background: white;
+    color: #243b53;
+    min-width: 220px;
+    max-width: 280px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.filtros-consultas-controles select,
+.filtros-consultas-controles input[type="date"] {
+    min-width: 180px;
+}
+
+.filtros-consultas-controles input[type="search"] {
+    min-width: 220px;
+}
+
+.filtros-consultas-controles input[type="search"]:focus,
+.filtros-consultas-controles select:focus,
+.filtros-consultas-controles input[type="date"]:focus {
+    border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12);
+    outline: none;
+}
+
+.filtro-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--cinza-borda);
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+    transition: .2s ease;
+}
+
+.filtros-adicionais {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filtros-adicionais select,
+.filtros-adicionais input[type="date"] {
+    padding: 10px 12px;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 10px;
+    background: white;
+    color: #243b53;
+    min-width: 180px;
+}
+
+.filtros-adicionais input[type="date"] {
+    max-width: 200px;
+}
+
+.filtro-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+}
+
+.filtro-btn.ativo {
+    background: var(--azul-claro);
+    color: white;
+    border-color: var(--azul-claro);
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+
+    .menu-lateral {
+        width: 100%;
+        padding: 16px 18px;
+        border-right: none;
+        border-bottom: 1px solid var(--cor-borda);
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .menu-lateral.aberto {
+        width: 100%;
+    }
+
+    .botao-seta {
+        position: relative;
+        right: auto;
+        top: auto;
+        margin: 0;
+        order: 0;
+        transform: none;
+    }
+
+    .menu-lateral.aberto .botao-seta {
+        transform: none;
+    }
+
+    .seccao-logo {
+        order: 1;
+        margin-bottom: 0;
+        justify-content: flex-start;
+        width: auto;
+    }
+
+    .logo-somente-icone {
+        display: none;
+    }
+
+    .logo-texto-completo {
+        display: block;
+        width: auto;
+    }
+
+    .botao-sair {
+        order: 2;
+        width: auto;
+        margin: 0;
+        padding: 10px 14px;
+        align-self: center;
+        justify-content: center;
+    }
+
+    .itens-navegacao {
+        order: 3;
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: space-between;
+        margin: 12px 0 0;
+    }
+
+    .item-menu {
+        flex: 1 1 calc(25% - 8px);
+        min-width: 80px;
+        max-width: calc(25% - 8px);
+        margin: 0;
+        padding: 8px 10px;
+        border-radius: 14px;
+    }
+
+    .menu-lateral.aberto .item-menu {
+        width: auto;
+        margin-left: 0;
+        justify-content: center;
+        padding-left: 0;
+    }
+
+    .menu-lateral.aberto .botao-sair {
+        justify-content: center;
+        padding-left: 0;
+    }
+
+    .filtros-consultas {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+    }
+
+    .filtros-consultas-status,
+    .filtros-consultas-controles {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .filtros-consultas-status {
+        gap: 8px;
+    }
+
+    .filtros-consultas-controles {
+        gap: 8px;
+    }
+
+    .filtros-consultas-controles input[type="search"],
+    .filtros-consultas-controles select,
+    .filtros-consultas-controles input[type="date"] {
+        width: 100%;
+        max-width: none;
+    }
+
+    .filtro-btn {
+        flex: 1 1 48%;
+        text-align: center;
+        min-width: 150px;
+    }
+}
+
+/* Dropdown visível */
+/* Este bloco estava duplicado e em conflito com o estilo do dropdown de estrelas. Removido para garantir apenas um conjunto de regras válidas. */
 
 /* ================= DROPDOWN DE LOCALIZAÇÃO ================= */
 #dropdownFiltroLocalizacao {
@@ -582,8 +950,8 @@ body {
 
 .card-clinica {
     background: var(--branco);
-    border-radius: 10px;
-    overflow: visible;
+    border-radius: 20px;
+    overflow: hidden;
     /* IMPORTANTE: Permite que a foto de perfil "flutue" */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
     display: flex;
@@ -602,13 +970,15 @@ body {
     height: 150px;
     position: relative;
     border-radius: 20px 20px 0 0;
-    /* Corta apenas a imagem interna */
+    overflow: visible;
+    /* Permite que a logo sobreposta fique à frente */
 }
 
 .fundo-banner {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 20px 20px 0 0;
 }
 
 .perfil-clinica-container {
@@ -817,6 +1187,47 @@ body {
     color: white;
 }
 
+/* ================= BOTÃO DE CANCELAR CONSULTA ================= */
+.btn-cancelar-consulta {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #FF4444;
+    background: transparent;
+    color: #FF4444;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.btn-cancelar-consulta:hover {
+    background: #FF4444;
+    color: white;
+}
+
+.btn-cancelar-consulta:active {
+    transform: scale(0.98);
+}
+
+/* ================= BOTÃO CANCELAR NO MODAL ================= */
+.btn-cancelar {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-cancelar:hover {
+    background: #c0392b;
+    filter: brightness(1.1);
+}
+
 /* ================= SEÇÃO DE AVALIAÇÃO COM ESTRELAS ================= */
 .avaliacao-section {
     border: 2px solid #FFB800;
@@ -1003,7 +1414,6 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: none;
-    /* Escondido por padrão via JS */
     align-items: center;
     justify-content: center;
     z-index: 2000;
@@ -1025,7 +1435,6 @@ body {
         transform: scale(0.9);
         opacity: 0;
     }
-
     to {
         transform: scale(1);
         opacity: 1;
@@ -1047,7 +1456,6 @@ body {
     margin-top: 2px;
 }
 
-/* Opcional: Adicionar um ícone de pin antes do endereço via JS ou HTML */
 .detalhe-item span i {
     margin-right: 5px;
     color: var(--azul-claro);
@@ -1072,7 +1480,6 @@ body {
     font-size: 13px;
 }
 
-/* Estilos para o formulário de reagendar dentro do modal */
 .input-reagendar {
     width: 100%;
     padding: 12px;
@@ -1124,6 +1531,24 @@ body {
 
 .btn-secundario:hover {
     background: #e2e8f0;
+}
+
+/* Modal responsivo */
+@media (max-width: 768px) {
+    .modal-conteudo {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    .modal-header {
+        padding-bottom: 12px;
+        margin-bottom: 15px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
 }
 
 .status-badge.agendado {
@@ -1458,17 +1883,6 @@ body {
     background-color: #00BBEE;
 }
 
-/* Banner de Segurança */
-.security-banner {
-    background-color: #D1E9FF;
-    color: #1976D2;
-    padding: 10px;
-    border-radius: 8px;
-    margin-top: 15px;
-    font-size: 12px;
-}
-
-/* Tag Online */
 .tag-online {
     background: #E0F7FA;
     color: #00BCD4;
@@ -1477,90 +1891,6 @@ body {
     font-size: 12px;
     display: inline-block;
     margin-bottom: 15px;
-}
-
-/* Container do Modal (Background escurecido) */
-.modal {
-    display: none !important; /* Escondido por padrão */
-    position: fixed !important;
-    z-index: 999999 !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background-color: rgba(0, 0, 0, 0.4) !important;
-    justify-content: center !important;
-    align-items: center !important;
-    overflow: visible !important;
-}
-
-/* Mostrar modal quando tem classe mostrar */
-.modal.mostrar {
-    display: flex !important;
-}
-
-/* Caixa do Modal */
-.modal-content {
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 15px; /* Cantos arredondados conforme design */
-    width: min(600px, 90vw);
-    max-width: 580px;
-    max-height: calc(100vh - 40px);
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-    text-align: left;
-    color: #1a1a1a;
-    animation: fadeZoom 0.25s ease;
-}
-
-/* Botão fechar do modal */
-.modal-close {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: none;
-    background: #f5f5f5;
-    color: #555;
-    font-size: 18px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 2;
-}
-
-.modal-close:hover {
-    background: #e74c3c;
-    color: #fff;
-    transform: rotate(90deg);
-}
-
-/* Cabeçalho e Títulos */
-.modal-header-tag {
-    background-color: #E0F7FA;
-    color: #00BCD4;
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 12px;
-    display: inline-block;
-    margin-bottom: 15px;
-}
-
-.modal-content h3 {
-    margin: 0 0 10px 0;
-    font-size: 26px;
-    color: #0d2a4e;
-    text-align: center;
-}
-
-.modal-content .subtitle {
-    margin-bottom: 20px;
-    font-size: 14px;
-    color: #5f6e84;
-    text-align: center;
 }
 
 .selection-row {
@@ -1584,7 +1914,14 @@ body {
     cursor: pointer;
 }
 
-/* Inputs e Selects */
+.input-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.input-group > div { flex: 1; }
+
 .modal-content input, 
 .modal-content select, 
 .modal-content textarea {
@@ -1592,24 +1929,9 @@ body {
     padding: 12px;
     margin: 10px 0;
     border: 1px solid #D1D5DB;
-    border-radius: 8px; /* Borda suave */
+    border-radius: 8px;
     font-size: 14px;
     background-color: #F9FAFB;
-}
-
-.modal-content input:readonly {
-    background-color: #E5E7EB;
-    color: #6B7280;
-    cursor: not-allowed;
-}
-
-.modal-content input:disabled,
-.modal-content select:disabled,
-.modal-content textarea:disabled {
-    background-color: #E5E7EB;
-    color: #6B7280;
-    cursor: not-allowed;
-    opacity: 0.7;
 }
 
 .modal-select {
@@ -1646,62 +1968,21 @@ body {
     color: #333;
 }
 
-/* Grid para campos lado a lado (Email e Telefone) */
-.input-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
+.modal-content input:readonly {
+    background-color: #E5E7EB;
+    color: #6B7280;
+    cursor: not-allowed;
 }
 
-/* Botão de Ação (Azul claro do design) */
-.btn-continuar {
-    background-color: #26C6DA; /* Cor ciano/azul do protótipo */
-    color: white;
-    border: none;
-    padding: 15px;
-    width: 100%;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 15px;
-    transition: background 0.3s;
+.modal-content input:disabled,
+.modal-content select:disabled,
+.modal-content textarea:disabled {
+    background-color: #E5E7EB;
+    color: #6B7280;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
-.btn-continuar:hover {
-    background-color: #00ACC1;
-}
-
-.btn-success {
-    background-color: #00E676; /* Verde conforme o botão de agendar */
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-/* Container que coloca Email e Telefone lado a lado */
-.input-group {
-    display: flex;
-    gap: 15px;
-    text-align: left;
-}
-.input-group > div { flex: 1; }
-
-/* Botão Azul Ciano do Figma */
-.btn-cyan {
-    background-color: #33CCFF;
-    color: white;
-    border: none;
-    padding: 15px;
-    width: 100%;
-    border-radius: 10px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 15px;
-}
-
-/* Banner Azul Claro de Segurança */
 .security-banner {
     background-color: #D1E9FF;
     color: #1976D2;
@@ -1711,362 +1992,134 @@ body {
     font-size: 12px;
 }
 
-/* Estilo da Tag superior */
-.tag-online {
-    background: #E0F7FA;
-    color: #00BCD4;
-    padding: 5px 15px;
-    border-radius: 20px;
-    font-size: 12px;
-}
-
-.gender-container {
-    display: flex;
-    justify-content: center; /* Centraliza no modal */
-    gap: 40px;               /* Espaço entre eles */
-    margin: 15px 0;
-}
-
-.gender-container label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
-/* Botão Verde Principal (O que abre o pop-up) */
-/* Procure no seu HTML o botão "Agendar Consulta" e coloque essa classe nele */
-.btn-agendar-green {
-    background-color: #2ecc71 !important; /* Força o verde do Figma */
-    color: white !important;
-    border: none !important;
-    padding: 12px 25px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 16px;
-    display: inline-block;
-}
-
-.btn-agendar-green:hover {
-    background-color: #27ae60 !important;
-}
-
-.modal-content h3 {
-    margin: 20px 0 5px 0 !important; /* Respiro entre a tag azul e o subtítulo */
-    font-size: 20px;
-    color: #333;
-}
-
-.modal{
+/* ==========================================
+   MODAL (POP-UP) E REAGENDAMENTO
+   ========================================== */
+.modal-overlay {
     position: fixed;
-    top:0; left:0;
-    width:100%; height:100%;
-    background: rgba(0,0,0,.5);
-    display:none;
-    align-items:center;
-    justify-content:center;
-}
-
-.modal-conteudo{
-    background: var(--branco) !important;
-    padding: 30px !important;
-    border-radius: 15px !important;
-    width: min(560px, 90vw) !important;
-    max-height: calc(100vh - 40px) !important;
-    overflow-y: auto !important;
-    border: 1px solid var(--cor-borda) !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
-    z-index: 1000000 !important;
-}
-
-.modal-conteudo h3 {
-    font-size: 20px !important;
-    font-weight: 700 !important;
-    margin-bottom: 25px !important;
-    color: #333 !important;
-}
-
-.modal-conteudo p {
-    font-size: 15px !important;
-    color: #444 !important;
-    margin-bottom: 12px !important;
-    line-height: 1.8 !important;
-    display: grid !important;
-    grid-template-columns: 80px 1fr !important;
-    gap: 15px !important;
-    align-items: center !important;
-}
-
-.modal-conteudo p strong {
-    color: #222 !important;
-    font-weight: 700 !important;
-    text-align: left !important;
-}
-
-.modal-conteudo strong {
-    color: #333 !important;
-    font-weight: 600 !important;
-}
-
-.acoes-modal{
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-}
-
-.btn-cancelar{
-    background:#e74c3c;
-    color:#fff;
-    border:none;
-    padding:8px 14px;
-    border-radius:10px;
-}
-
-.btn-secundario{
-    background:#3498db;
-    color:#fff;
-    border:none;
-    padding:8px 14px;
-    border-radius:10px;
-}
-
-.btn-fechar {
+    top: 0;
+    left: 0;
     width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid var(--azul-claro);
-    background: var(--azul-claro);
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.3s;
-    font-size: 14px;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(4px);
 }
 
-.btn-fechar:hover {
-    background: transparent;
-    color: var(--azul-claro);
-    border: 1px solid var(--azul-claro);
+.modal-conteudo {
+    background: var(--branco);
+    width: 90%;
+    max-width: 450px;
+    border-radius: 20px;
+    padding: 25px;
+    position: relative;
+    animation: zoomIn 0.3s ease;
 }
 
-.filtros-consultas {
+@keyframes zoomIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-header {
     display: flex;
     justify-content: space-between;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin: 15px 0 25px 0;
     align-items: center;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
 }
 
-.filtros-consultas-status {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
+#modalEndereco {
+    display: block;
+    line-height: 1.4;
+    margin-top: 2px;
 }
 
-.filtros-consultas-controles {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
+.detalhe-item span i {
+    margin-right: 5px;
+    color: var(--azul-claro);
 }
 
-.filtros-consultas-controles input[type="search"],
-.filtros-consultas-controles select,
-.filtros-consultas-controles input[type="date"] {
-    padding: 10px 14px;
-    border: 1px solid var(--cinza-borda);
-    border-radius: 10px;
-    background: white;
-    color: #243b53;
-    min-width: 220px;
-    max-width: 280px;
-    transition: border-color .2s ease, box-shadow .2s ease;
-}
-
-.filtros-consultas-controles select,
-.filtros-consultas-controles input[type="date"] {
-    min-width: 180px;
-}
-
-.filtros-consultas-controles input[type="search"] {
-    min-width: 220px;
-}
-
-.filtros-consultas-controles input[type="search"]:focus,
-.filtros-consultas-controles select:focus,
-.filtros-consultas-controles input[type="date"]:focus {
-    border-color: #0066cc;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.12);
-    outline: none;
-}
-
-.filtro-btn {
-    padding: 10px 18px;
-    border-radius: 10px;
-    border: 1px solid var(--cinza-borda);
-    background: white;
+.fechar-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
     cursor: pointer;
-    font-weight: 500;
-    transition: .2s ease;
+    color: var(--texto-suave);
 }
 
-.filtros-adicionais {
+.detalhe-item {
+    margin-bottom: 15px;
+    font-size: 15px;
+}
+
+.detalhe-item strong {
+    display: block;
+    color: var(--texto-suave);
+    font-size: 13px;
+}
+
+.input-reagendar {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    margin-top: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: var(--texto-principal);
+    background: #f8fafc;
+}
+
+.input-reagendar:focus {
+    border-color: var(--azul-claro);
+    outline: none;
+    background: var(--branco);
+}
+
+.modal-footer {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
+    margin-top: 25px;
 }
 
-.filtros-adicionais select,
-.filtros-adicionais input[type="date"] {
-    padding: 10px 12px;
-    border: 1px solid var(--cinza-borda);
+.btn-principal,
+.btn-secundario {
+    flex: 1;
+    padding: 12px;
     border-radius: 10px;
-    background: white;
-    color: #243b53;
-    min-width: 180px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-.filtros-adicionais input[type="date"] {
-    max-width: 200px;
-}
-
-.filtro-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,.08);
-}
-
-.filtro-btn.ativo {
+.btn-principal {
     background: var(--azul-claro);
     color: white;
-    border-color: var(--azul-claro);
 }
 
-@media (max-width: 768px) {
-    body {
-        flex-direction: column;
-    }
+.btn-principal:hover {
+    filter: brightness(1.1);
+}
 
-    .menu-lateral {
-        width: 100%;
-        padding: 16px 18px;
-        border-right: none;
-        border-bottom: 1px solid var(--cor-borda);
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-    }
+.btn-secundario {
+    background: #f1f3f5;
+    color: var(--texto-suave);
+}
 
-    .menu-lateral.aberto {
-        width: 100%;
-    }
-
-    .botao-seta {
-        position: relative;
-        right: auto;
-        top: auto;
-        margin: 0;
-        order: 0;
-        transform: none;
-    }
-
-    .menu-lateral.aberto .botao-seta {
-        transform: none;
-    }
-
-    .seccao-logo {
-        order: 1;
-        margin-bottom: 0;
-        justify-content: flex-start;
-        width: auto;
-    }
-
-    .logo-somente-icone {
-        display: none;
-    }
-
-    .logo-texto-completo {
-        display: block;
-        width: auto;
-    }
-
-    .botao-sair {
-        order: 2;
-        width: auto;
-        margin: 0;
-        padding: 10px 14px;
-        align-self: center;
-        justify-content: center;
-    }
-
-    .itens-navegacao {
-        order: 3;
-        width: 100%;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: space-between;
-        margin: 12px 0 0;
-    }
-
-    .item-menu {
-        flex: 1 1 calc(25% - 8px);
-        min-width: 80px;
-        max-width: calc(25% - 8px);
-        margin: 0;
-        padding: 8px 10px;
-        border-radius: 14px;
-    }
-
-    .menu-lateral.aberto .item-menu {
-        width: auto;
-        margin-left: 0;
-        justify-content: center;
-        padding-left: 0;
-    }
-
-    .menu-lateral.aberto .botao-sair {
-        justify-content: center;
-        padding-left: 0;
-    }
-
-    .filtros-consultas {
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: flex-start;
-    }
-
-    .filtros-consultas-status,
-    .filtros-consultas-controles {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .filtros-consultas-status {
-        gap: 8px;
-    }
-
-    .filtros-consultas-controles {
-        gap: 8px;
-    }
-
-    .filtros-consultas-controles input[type="search"],
-    .filtros-consultas-controles select,
-    .filtros-consultas-controles input[type="date"] {
-        width: 100%;
-        max-width: none;
-    }
-
-    .filtro-btn {
-        flex: 1 1 48%;
-        text-align: center;
-        min-width: 150px;
-    }
+.btn-secundario:hover {
+    background: #e2e8f0;
 }
 
 /* BOTÃO */
@@ -2100,7 +2153,6 @@ body {
 
 /* ==================================================
    UPLOAD DE FOTO DE PERFIL (VERSÃO FINAL LIMPA)
-================================================== */
 
 /* Wrapper apenas para alinhamento */
 .foto-wrapper {
@@ -2477,6 +2529,273 @@ body {
     gap: 12px;
 }
 
+/* ===== MEDIA QUERIES COMPLETAS PARA MODAIS ===== */
+
+/* TELAS GIGANTES / TVs (acima de 1920px) */
+@media (min-width: 1921px) {
+    .modal-content {
+        padding: 40px;
+        max-width: 1000px;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        max-width: 1100px;
+        padding: 50px;
+        position: relative;
+    }
+
+    #modal-horarios .modal-content {
+        max-width: 1000px;
+        padding: 40px;
+    }
+
+    .modal-close {
+        width: 50px;
+        height: 50px;
+        font-size: 30px;
+        top: 20px;
+        right: 20px;
+    }
+
+    .date-time-field {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        font-size: 14px;
+        background-color: #F9FAFB;
+        color: #333;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: normal;
+    }
+
+    .date-time-field:hover {
+        background-color: #E5E7EB;
+        border-color: #9CA3AF;
+    }
+
+    .modal-header-tag {
+        font-size: 16px;
+        padding: 10px 25px;
+    }
+
+    .input-group {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .radio-options {
+        gap: 40px;
+        font-size: 18px;
+    }
+
+    .btn-continuar,
+    .btn-cyan,
+    .btn-success {
+        padding: 20px;
+        font-size: 18px;
+        min-height: 70px;
+    }
+
+    .selection-row {
+        margin: 30px 0;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        padding: 18px;
+        font-size: 16px;
+    }
+}
+
+/* DESKTOPS GRANDES (1441px - 1920px) */
+@media (min-width: 1441px) and (max-width: 1920px) {
+    .modal-content {
+        padding: 30px;
+        max-width: 900px;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        max-width: 1000px;
+    }
+
+    #modal-horarios .modal-content {
+        max-width: 800px;
+    }
+
+    .date-time-field {
+        padding: 16px;
+        font-size: 16px;
+    }
+
+    .btn-continuar,
+    .btn-cyan,
+    .btn-success {
+        padding: 16px;
+        font-size: 16px;
+    }
+}
+
+/* DESKTOPS NORMAIS (1025px - 1440px) */
+@media (min-width: 1025px) and (max-width: 1440px) {
+    .modal-content {
+        padding: 25px;
+        max-width: 800px;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        max-width: 850px;
+    }
+}
+
+/* TABLETS (769px - 1024px) */
+@media (max-width: 1024px) {
+    .modal-content {
+        padding: 20px;
+        max-width: 90vw;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        max-width: 95vw;
+        padding: 20px;
+    }
+
+    .modal-close {
+        width: 38px;
+        height: 38px;
+        font-size: 22px;
+    }
+
+    .input-group {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .input-group > div {
+        width: 100%;
+    }
+
+    .selection-row {
+        flex-direction: column;
+        margin: 15px 0;
+    }
+
+    .date-time-field {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+/* CELULARES MÉDIOS E PEQUENOS (até 768px) */
+@media (max-width: 768px) {
+    .modal-content {
+        padding: 18px;
+        width: 95%;
+        max-width: 100%;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        width: 98%;
+        padding: 16px;
+        max-height: 85vh;
+    }
+
+    #modal-horarios .modal-content {
+        max-width: 100%;
+        padding: 16px;
+    }
+
+    .input-group {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+
+    .radio-options {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        padding: 12px;
+        font-size: 16px;
+    }
+
+    .btn-continuar,
+    .btn-cyan,
+    .btn-success {
+        padding: 14px;
+        font-size: 14px;
+    }
+
+    .date-time-field {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .modal-header-tag {
+        font-size: 11px;
+        padding: 4px 12px;
+    }
+}
+
+/* CELULARES MUITO PEQUENOS (até 480px) */
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 15px;
+        width: 96%;
+    }
+
+    #modal-agendamento-2 .modal-content {
+        width: 97%;
+        padding: 12px;
+        max-height: 80vh;
+    }
+
+    .modal-close {
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+        top: 10px;
+        right: 10px;
+    }
+
+    .modal-content input,
+    .modal-content select,
+    .modal-content textarea {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .btn-continuar,
+    .btn-cyan,
+    .btn-success {
+        padding: 12px;
+        font-size: 12px;
+        margin-top: 10px;
+    }
+
+    .date-time-field {
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .radio-options {
+        gap: 10px;
+        font-size: 13px;
+    }
+
+    .selection-row {
+        margin: 12px 0;
+    }
+}
+
 .lista-servicos-bullets li::before {
     content: "•";
     color: #00b9e8;
@@ -2626,7 +2945,7 @@ body {
 
 /* ===== BANNER DE BOAS-VINDAS ===== */
 .welcome-banner-modern {
-    background: var(--gradient);
+    background: var(--gradiente-azul);
     border-radius: 24px;
     padding: 40px;
     display: flex;
@@ -2636,7 +2955,7 @@ body {
     margin-bottom: 40px;
     overflow: hidden;
     position: relative;
-    box-shadow: 0 20px 40px rgba(79, 70, 229, 0.2);
+    box-shadow: 0 20px 40px rgba(77, 184, 255, 0.2);
 }
 
 .banner-text {
@@ -2759,6 +3078,258 @@ body {
 .btn-avaliado:hover {
     background: var(--verde-sucesso);
     color: white;
+}
+
+/* Modal Aumento de compatibilidade */
+.modal {
+    display: none; /* Escondido por padrão */
+    position: fixed;
+    z-index: 9999;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45);
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+}
+
+.modal.mostrar {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    width: min(600px, 90vw);
+    max-width: 580px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    text-align: left;
+    animation: fadeZoom 0.25s ease;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: #f5f5f5;
+    color: #555;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.modal-close:hover {
+    background: #e74c3c;
+    color: #fff;
+    transform: rotate(90deg);
+}
+
+.modal-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 26px;
+    color: #0d2a4e;
+    text-align: center;
+}
+
+.modal-content .subtitle {
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #5f6e84;
+    text-align: center;
+}
+
+/* Estilo do modal de detalhes da consulta */
+.modal.modal-consulta {
+    background-color: rgba(0, 0, 0, 0.55);
+}
+
+.modal.modal-consulta .modal-conteudo {
+    width: 100%;
+    max-width: 520px;
+    background: var(--branco);
+    border-radius: 20px;
+    padding: 22px 22px 18px;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+    font-family: 'Poppins', sans-serif;
+    color: var(--texto-principal);
+}
+
+.modal.modal-consulta h3 {
+    margin: 0 0 16px;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--texto-principal);
+    line-height: 1.1;
+    text-align: left;
+}
+
+.modal.modal-consulta .status-consulta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, rgba(77, 184, 255, 0.95), var(--azul-claro));
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+}
+
+.modal.modal-consulta .status-consulta i,
+.modal.modal-consulta .status-consulta svg {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.modal.modal-consulta .card-info-consulta {
+    border: 1px solid var(--cor-borda);
+    border-radius: 20px;
+    padding: 12px 16px;
+    background: #fcfdff;
+}
+
+.modal.modal-consulta .info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e8eef5;
+}
+
+.modal.modal-consulta .info-item:last-child {
+    border-bottom: none;
+}
+
+.modal.modal-consulta .info-item .icone {
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--azul-claro);
+    font-size: 28px;
+    margin-top: 2px;
+}
+
+.modal.modal-consulta .info-item .icone i,
+.modal.modal-consulta .info-item .icone svg {
+    width: 28px;
+    height: 28px;
+}
+
+.modal.modal-consulta .info-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modal.modal-consulta .info-texto .label,
+.modal.modal-consulta .info-inline .label-inline {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--texto-principal);
+    line-height: 1.1;
+}
+
+.modal.modal-consulta .info-texto .valor,
+.modal.modal-consulta .info-inline .valor-inline {
+    font-size: 15px;
+    font-weight: 400;
+    color: #2a3444;
+    line-height: 1.3;
+}
+
+.modal.modal-consulta .info-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal.modal-consulta .acoes-consulta {
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
+}
+
+.modal.modal-consulta .btn-fechar-consulta {
+    min-width: 180px;
+    height: 48px;
+    border: 1px solid var(--cor-borda);
+    background: #f7fafe;
+    color: var(--texto-principal);
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal.modal-consulta .btn-fechar-consulta:hover {
+    background: #eef5fc;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .modal.modal-consulta .modal-conteudo {
+        max-width: 95%;
+        padding: 24px 18px 20px;
+        border-radius: 22px;
+    }
+
+    .modal.modal-consulta h3 {
+        font-size: 24px;
+        margin-bottom: 16px;
+    }
+
+    .modal.modal-consulta .status-consulta {
+        font-size: 18px;
+        padding: 10px 18px;
+        margin-bottom: 20px;
+    }
+
+    .modal.modal-consulta .card-info-consulta {
+        padding: 8px 18px;
+        border-radius: 18px;
+    }
+
+    .modal.modal-consulta .info-item {
+        gap: 14px;
+        padding: 18px 0;
+    }
+
+    .modal.modal-consulta .info-item .icone {
+        min-width: 34px;
+        font-size: 26px;
+    }
+
+    .modal.modal-consulta .info-texto .label,
+    .modal.modal-consulta .info-inline .label-inline {
+        font-size: 20px;
+    }
+
+    .modal.modal-consulta .info-texto .valor,
+    .modal.modal-consulta .info-inline .valor-inline {
+        font-size: 18px;
+    }
+
+    .modal.modal-consulta .btn-fechar-consulta {
+        min-width: 220px;
+        height: 56px;
+        font-size: 20px;
+        border-radius: 16px;
+    }
 }
 
 button.btn-avaliado:disabled {

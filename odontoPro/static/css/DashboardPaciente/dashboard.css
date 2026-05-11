@@ -960,7 +960,11 @@ body {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.card-clinica:hover {
+.card-clinica.card-clickable {
+    cursor: pointer;
+}
+
+.card-clinica.card-clickable:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
@@ -972,6 +976,114 @@ body {
     border-radius: 20px 20px 0 0;
     overflow: visible;
     /* Permite que a logo sobreposta fique à frente */
+}
+
+.banner-carousel {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.banner-slide {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.banner-slide.active {
+    display: block;
+}
+
+.banner-slide .fundo-banner {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px 20px 0 0;
+}
+
+.carousel-control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1d2939;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    transition: background 0.2s ease;
+    z-index: 5;
+}
+
+.carousel-control:hover {
+    background: #ffffff;
+}
+
+.carousel-control.prev {
+    left: 10px;
+}
+
+.carousel-control.next {
+    right: 10px;
+}
+
+.endereco-carousel {
+    width: 100%;
+    min-height: 220px;
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #f8fafc;
+    margin: 18px 0;
+    border: 1px solid #e2e8f0;
+}
+
+.endereco-carousel .endereco-slides {
+    width: 100%;
+    height: 220px;
+    position: relative;
+}
+
+.endereco-carousel .endereco-slide {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.endereco-carousel .endereco-slide.active {
+    display: block;
+}
+
+.endereco-carousel .endereco-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.endereco-carousel .carousel-control {
+    top: calc(50% - 10px);
+    width: 32px;
+    height: 32px;
+}
+
+.endereco-carousel .carousel-control.prev {
+    left: 8px;
+}
+
+.endereco-carousel .carousel-control.next {
+    right: 8px;
 }
 
 .fundo-banner {
@@ -1084,13 +1196,17 @@ body {
     color: white;
     border: none;
     padding: 14px;
-    border-radius: 0px;
+    border-radius: 18px;
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
     width: 100%;
-    transition: background 0.3s;
+    transition: background 0.3s, transform 0.2s;
     margin-top: 8px;
+}
+
+.btn-saiba-mais:hover {
+    transform: translateY(-1px);
 }
 
 .btn-saiba-mais:hover {
@@ -1209,6 +1325,23 @@ body {
 
 .btn-cancelar-consulta:active {
     transform: scale(0.98);
+}
+
+/* ================= BOTÃO CANCELAR NO MODAL ================= */
+.btn-cancelar {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-cancelar:hover {
+    background: #c0392b;
+    filter: brightness(1.1);
 }
 
 /* ================= SEÇÃO DE AVALIAÇÃO COM ESTRELAS ================= */
@@ -3139,179 +3272,248 @@ body {
 
 .modal.modal-consulta .modal-conteudo {
     width: 100%;
-    max-width: 520px;
+    max-width: 560px;
     background: var(--branco);
     border-radius: 20px;
-    padding: 22px 22px 18px;
+    padding: 20px;
     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
     font-family: 'Poppins', sans-serif;
     color: var(--texto-principal);
 }
 
-.modal.modal-consulta h3 {
-    margin: 0 0 16px;
-    font-size: 24px;
+/* Header do modal com título e status lado a lado */
+.modal.modal-consulta .modal-header-consulta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e8eef5;
+}
+
+.modal.modal-consulta .titulo-consulta h3 {
+    margin: 0;
+    font-size: 22px;
     font-weight: 700;
     color: var(--texto-principal);
     line-height: 1.1;
-    text-align: left;
+}
+
+.modal.modal-consulta .consulta-id {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+    margin-top: 4px;
 }
 
 .modal.modal-consulta .status-consulta {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: linear-gradient(135deg, rgba(77, 184, 255, 0.95), var(--azul-claro));
     color: #ffffff;
-    font-size: 16px;
-    font-weight: 500;
-    padding: 6px 14px;
-    border-radius: 14px;
-    margin-bottom: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(77, 184, 255, 0.25);
 }
 
-.modal.modal-consulta .status-consulta i,
-.modal.modal-consulta .status-consulta svg {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
+.modal.modal-consulta .status-consulta i {
+    font-size: 13px;
+    width: 13px;
+    height: 13px;
 }
 
-.modal.modal-consulta .card-info-consulta {
-    border: 1px solid var(--cor-borda);
-    border-radius: 20px;
-    padding: 12px 16px;
-    background: #fcfdff;
-}
-
-.modal.modal-consulta .info-item {
+/* Grid de informações organizadas */
+.modal.modal-consulta .consulta-info-grid {
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.modal.modal-consulta .info-section {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+}
+
+.modal.modal-consulta .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--texto-principal);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal.modal-consulta .section-title i {
+    color: var(--azul-claro);
+    font-size: 15px;
+}
+
+.modal.modal-consulta .info-cards {
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 10px;
-    padding: 12px 0;
-    border-bottom: 1px solid #e8eef5;
 }
 
-.modal.modal-consulta .info-item:last-child {
-    border-bottom: none;
+.modal.modal-consulta .info-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border-radius: 12px;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
 }
 
-.modal.modal-consulta .info-item .icone {
-    min-width: 36px;
+.modal.modal-consulta .info-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.modal.modal-consulta .info-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.modal.modal-consulta .card-icon {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, rgba(77, 184, 255, 0.1), rgba(77, 184, 255, 0.05));
+    border-radius: 10px;
     color: var(--azul-claro);
-    font-size: 28px;
-    margin-top: 2px;
+    font-size: 16px;
 }
 
-.modal.modal-consulta .info-item .icone i,
-.modal.modal-consulta .info-item .icone svg {
-    width: 28px;
-    height: 28px;
+.modal.modal-consulta .card-content {
+    flex: 1;
 }
 
-.modal.modal-consulta .info-texto {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.modal.modal-consulta .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
 }
 
-.modal.modal-consulta .info-texto .label,
-.modal.modal-consulta .info-inline .label-inline {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--texto-principal);
-    line-height: 1.1;
-}
-
-.modal.modal-consulta .info-texto .valor,
-.modal.modal-consulta .info-inline .valor-inline {
+.modal.modal-consulta .card-value {
     font-size: 15px;
-    font-weight: 400;
-    color: #2a3444;
+    font-weight: 500;
+    color: var(--texto-principal);
     line-height: 1.3;
 }
 
-.modal.modal-consulta .info-inline {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.modal.modal-consulta .acoes-consulta {
+.modal.modal-consulta .modal-actions {
     display: flex;
     justify-content: center;
-    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid #e8eef5;
 }
 
-.modal.modal-consulta .btn-fechar-consulta {
-    min-width: 180px;
-    height: 48px;
+/* Ações do modal */
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    padding-top: 16px;
+    border-top: 1px solid #e8eef5;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 140px;
+    height: 44px;
     border: 1px solid var(--cor-borda);
     background: #f7fafe;
     color: var(--texto-principal);
-    border-radius: 16px;
-    font-size: 16px;
+    border-radius: 12px;
+    font-size: 15px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.modal.modal-consulta .btn-fechar-consulta:hover {
+.btn-secondary:hover {
     background: #eef5fc;
     transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary i {
+    font-size: 14px;
 }
 
 @media (max-width: 768px) {
     .modal.modal-consulta .modal-conteudo {
         max-width: 95%;
-        padding: 24px 18px 20px;
-        border-radius: 22px;
-    }
-
-    .modal.modal-consulta h3 {
-        font-size: 24px;
-        margin-bottom: 16px;
-    }
-
-    .modal.modal-consulta .status-consulta {
-        font-size: 18px;
-        padding: 10px 18px;
-        margin-bottom: 20px;
-    }
-
-    .modal.modal-consulta .card-info-consulta {
-        padding: 8px 18px;
+        padding: 18px;
         border-radius: 18px;
     }
 
-    .modal.modal-consulta .info-item {
+    .modal.modal-consulta .modal-header-consulta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .modal.modal-consulta .titulo-consulta h3 {
+        font-size: 22px;
+    }
+
+    .modal.modal-consulta .status-consulta {
+        align-self: flex-end;
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+
+    .modal.modal-consulta .consulta-info-grid {
         gap: 14px;
-        padding: 18px 0;
     }
 
-    .modal.modal-consulta .info-item .icone {
-        min-width: 34px;
-        font-size: 26px;
+    .modal.modal-consulta .info-section {
+        padding: 12px;
     }
 
-    .modal.modal-consulta .info-texto .label,
-    .modal.modal-consulta .info-inline .label-inline {
-        font-size: 20px;
+    .modal.modal-consulta .info-cards {
+        gap: 10px;
     }
 
-    .modal.modal-consulta .info-texto .valor,
-    .modal.modal-consulta .info-inline .valor-inline {
-        font-size: 18px;
+    .modal.modal-consulta .info-card {
+        padding: 10px 12px;
     }
 
-    .modal.modal-consulta .btn-fechar-consulta {
-        min-width: 220px;
-        height: 56px;
-        font-size: 20px;
-        border-radius: 16px;
+    .modal.modal-consulta .card-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+    }
+
+    .modal.modal-consulta .card-value {
+        font-size: 14px;
+    }
+
+    .modal.modal-consulta .modal-actions {
+        padding-top: 12px;
+    }
+
+    .modal.modal-consulta .btn-secondary {
+        min-width: 120px;
+        height: 42px;
+        font-size: 14px;
     }
 }
 

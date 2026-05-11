@@ -160,10 +160,70 @@ function fecharDetalhes(id) {
     if (modal) modal.classList.remove("mostrar");
 }
 
-// ===== CANCELAMENTO DE CONSULTA COM POPUP =====
+// ===== CANCELAMENTO DE CONSULTA COM MODAL CUSTOMIZADO =====
+let consultaIdParaCancelar = null;
+
 function confirmarCancelamentoConsulta(consultaId) {
-    if (confirm('Tem certeza que deseja cancelar esta consulta?\n\nEsta ação não pode ser desfeita.')) {
-        cancelarConsulta(consultaId);
+    consultaIdParaCancelar = consultaId;
+    const modal = document.getElementById('modal-cancelar-consulta');
+    if (modal) {
+        modal.classList.add('mostrar');
+        modal.style.display = 'flex';
+    }
+}
+
+function fecharModalCancelar() {
+    const modal = document.getElementById('modal-cancelar-consulta');
+    if (modal) {
+        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
+    }
+    consultaIdParaCancelar = null;
+}
+
+function confirmarCancelamento() {
+    if (consultaIdParaCancelar) {
+        cancelarConsulta(consultaIdParaCancelar);
+        fecharModalCancelar();
+    }
+}
+
+// ===== MODAL GENÉRICO PARA MENSAGENS =====
+function mostrarMensagem(titulo, texto, tipo = 'info') {
+    const modal = document.getElementById('modal-mensagem');
+    const tituloEl = document.getElementById('modal-mensagem-titulo');
+    const iconeEl = document.getElementById('modal-mensagem-icone');
+    const textoEl = document.getElementById('modal-mensagem-texto');
+
+    if (modal && tituloEl && iconeEl && textoEl) {
+        tituloEl.textContent = titulo;
+        textoEl.textContent = texto;
+
+        // Define o ícone baseado no tipo
+        switch (tipo) {
+            case 'success':
+                iconeEl.textContent = '✅';
+                break;
+            case 'error':
+                iconeEl.textContent = '❌';
+                break;
+            case 'warning':
+                iconeEl.textContent = '⚠️';
+                break;
+            default:
+                iconeEl.textContent = 'ℹ️';
+        }
+
+        modal.classList.add('mostrar');
+        modal.style.display = 'flex';
+    }
+}
+
+function fecharModalMensagem() {
+    const modal = document.getElementById('modal-mensagem');
+    if (modal) {
+        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
     }
 }
 
@@ -178,15 +238,17 @@ function cancelarConsulta(consultaId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
-            location.reload();
+            mostrarMensagem('Consulta Cancelada', data.message, 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
         } else {
-            alert('Erro: ' + data.error);
+            mostrarMensagem('Erro', 'Erro: ' + data.error, 'error');
         }
     })
     .catch(error => {
         console.error('Erro ao cancelar consulta:', error);
-        alert('Erro ao cancelar a consulta');
+        mostrarMensagem('Erro', 'Erro ao cancelar a consulta', 'error');
     });
 }
 
@@ -904,7 +966,7 @@ function enviarAvaliacao(consultaId, clinicaId, medicoId) {
     const nota = avaliacoesSelecionadas[consultaId];
     
     if (!nota || nota === 0) {
-        alert("Por favor, selecione uma classificação em estrelas!");
+        mostrarMensagem('Atenção', 'Por favor, selecione uma classificação em estrelas!', 'warning');
         return;
     }
     
@@ -936,7 +998,7 @@ function enviarAvaliacao(consultaId, clinicaId, medicoId) {
     .then(data => {
         console.log("Dados da resposta:", data);
         if (data.success) {
-            alert("Avaliação enviada com sucesso!");
+            mostrarMensagem('Sucesso', 'Avaliação enviada com sucesso!', 'success');
             ocultarEstrelas(consultaId);
             // Desabilitar botão de avaliação
             const btnAvaliar = document.querySelector(`button[data-consulta-id="${consultaId}"]`);
@@ -946,12 +1008,12 @@ function enviarAvaliacao(consultaId, clinicaId, medicoId) {
                 btnAvaliar.style.opacity = "0.6";
             }
         } else {
-            alert(data.message || "Erro ao enviar avaliação");
+            mostrarMensagem('Erro', data.message || 'Erro ao enviar avaliação', 'error');
         }
     })
     .catch(err => {
         console.error("Erro na requisição:", err);
-        alert("Erro ao enviar avaliação! Verifique o console.");
+        mostrarMensagem('Erro', 'Erro ao enviar avaliação! Verifique o console.', 'error');
     });
 }
 
@@ -1352,7 +1414,7 @@ function abrirModalHorario() {
     const inputData = document.getElementById('inputData');
     
     if (!inputData || !inputData.value) {
-        alert('Por favor, selecione uma data primeiro.');
+        mostrarMensagem('Atenção', 'Por favor, selecione uma data primeiro.', 'warning');
         return;
     }
     
@@ -1408,7 +1470,7 @@ function confirmarAgendamento() {
     const inputTelefone = document.getElementById('inputTelefone');
     
     if (!selectEspecialidade || !selectProfissional || !inputData || !selectHorario) {
-        alert('Erro ao acessar formulário. Recarregue a página.');
+        mostrarMensagem('Erro', 'Erro ao acessar formulário. Recarregue a página.', 'error');
         return;
     }
     
@@ -1421,22 +1483,22 @@ function confirmarAgendamento() {
     const telefone = inputTelefone?.value || '';
     
     if (!especialidade) {
-        alert('Por favor, selecione uma especialidade.');
+        mostrarMensagem('Atenção', 'Por favor, selecione uma especialidade.', 'warning');
         return;
     }
     
     if (!medico_id) {
-        alert('Por favor, selecione um profissional.');
+        mostrarMensagem('Atenção', 'Por favor, selecione um profissional.', 'warning');
         return;
     }
     
     if (!data) {
-        alert('Por favor, selecione uma data.');
+        mostrarMensagem('Atenção', 'Por favor, selecione uma data.', 'warning');
         return;
     }
     
     if (!horario) {
-        alert('Por favor, selecione um horário.');
+        mostrarMensagem('Atenção', 'Por favor, selecione um horário.', 'warning');
         return;
     }
     

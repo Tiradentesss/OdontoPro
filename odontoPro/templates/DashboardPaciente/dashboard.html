@@ -213,20 +213,46 @@
 
     <div class="grid-clinicas" id="listaClinicas">
         {% for clinica in clinicas %}
-        <div class="card-clinica" data-avaliacao="{{ clinica.avaliacao|default:0 }}" data-estado="{{ clinica.endereco.estado|default:'' }}" data-cidade="{{ clinica.endereco.cidade|default:'' }}">
+        <div class="card-clinica card-clickable" data-avaliacao="{{ clinica.avaliacao|default:0 }}" data-estado="{{ clinica.endereco.estado|default:'' }}" data-cidade="{{ clinica.endereco.cidade|default:'' }}" onclick="abrirModalAgendamento('{{ clinica.id }}')">
 
             <!-- BANNER -->
             <div class="banner-card">
-                <img src="{{ clinica.banner_url }}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/default-banner.jpg' %}';">
+                <div class="banner-carousel">
+                    {% if clinica.imagens.all %}
+                        {% for imagem in clinica.imagens.all %}
+                            <div class="banner-slide {% if forloop.first %}active{% endif %}">
+                                <img src="{{ imagem.imagem.url }}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/default-banner.jpg' %}';">
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="banner-slide active">
+                            <img src="{% if clinica.imagem %}{{ clinica.imagem.url }}{% elif clinica.logo %}{{ clinica.logo.url }}{% else %}{% static 'img/default-banner.jpg' %}{% endif %}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/default-banner.jpg' %}';">
+                        </div>
+                    {% endif %}
 
-                    <!-- LOGO SOBREPOSTA -->
-                    <div class="logo-sobreposta">
-                        <img src="{{ clinica.logo_url }}" alt="Logo da clínica" onerror="this.onerror=null;this.src='{% static 'img/default-logo.png' %}';">
-                    </div>
+                    {% if clinica.imagens.count > 1 %}
+                        <button type="button" class="carousel-control prev" aria-label="Imagem anterior">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button type="button" class="carousel-control next" aria-label="Próxima imagem">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    {% endif %}
+                </div>
+
+                <!-- LOGO SOBREPOSTA -->
+                <div class="logo-sobreposta">
+                    <img src="{% if clinica.logo %}{{ clinica.logo.url }}{% elif clinica.imagem %}{{ clinica.imagem.url }}{% elif clinica.imagens.all %}{{ clinica.imagens.all.0.imagem.url }}{% else %}{% static 'img/SemIcon.png' %}{% endif %}" alt="Logo da clínica" onerror="this.onerror=null;this.src='{% static 'img/SemIcon.png' %}';">
+                </div>
             </div>
 
 
             <div class="info-card">
+                <div class="info-text">
+                    <h3>{{ clinica.nome }}</h3>
+                    <p>{{ clinica.endereco.bairro }}, {{ clinica.endereco.cidade }}</p>
+                </div>
+
                 <div class="rating-row">
                     <div class="rating-stars">
                         <i class="fa-solid fa-star star-yellow"></i>
@@ -234,12 +260,7 @@
                     </div>
                 </div>
 
-                <div class="info-text">
-                    <h3>{{ clinica.nome }}</h3>
-                    <p>{{ clinica.endereco.bairro }}, {{ clinica.endereco.cidade }}</p>
-                </div>
-
-                <button class="btn-saiba-mais" onclick="abrirModalAgendamento('{{ clinica.id }}')">
+                <button type="button" class="btn-saiba-mais" onclick="abrirModalAgendamento('{{ clinica.id }}')">
                     Saiba Mais
                 </button>
             </div>
@@ -256,7 +277,7 @@
         <h1 class="titulo-sessao">Sobre a Clinica</h1>
         <div class="card-branco header-clinica-detalhe">
             <div class="clinica-info-principal">
-                <img id="detalheLogoClinica" src="{% static 'img/default-banner.jpg' %}" class="logo-clinica-detalhe">
+                <img id="detalheLogoClinica" src="{% static 'img/SemIcon.png' %}" class="logo-clinica-detalhe" onerror="this.onerror=null;this.src='{% static 'img/SemIcon.png' %}';">
                 <div class="clinica-textos">
                     <h2 id="detalheNomeClinica">Nome da Clínica</h2>
                     <p><i class="fa-regular fa-envelope"></i>
@@ -316,6 +337,15 @@
                         </span>
                     </p>
                     <p><i class="fa-solid fa-clock"></i> Segunda a Sexta: 08h às 18h | Sábado: 08h às 12h</p>
+                </div>
+                <div class="endereco-carousel" id="enderecoCarousel">
+                    <div class="endereco-slides"></div>
+                    <button type="button" class="carousel-control prev" aria-label="Imagem anterior">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <button type="button" class="carousel-control next" aria-label="Próxima imagem">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
                 <div class="mapa-google">
                     <iframe
@@ -591,67 +621,113 @@
                 <!-- 🔹 Modal Detalhes -->
                 <div class="modal modal-consulta" id="modal-{{ cons.id }}">
                     <div class="modal-conteudo">
-                        <h3>Detalhes da Consulta</h3>
-
-                        <div class="status-consulta">
-                            <i class="fa-solid fa-check"></i>
-                            {{ cons.get_status_display }}
-                        </div>
-
-                        <div class="card-info-consulta">
-                            <div class="info-item">
-                                <div class="icone"><i class="fa-solid fa-hospital"></i></div>
-                                <div class="info-texto">
-                                    <span class="label">Clínica</span>
-                                    <span class="valor">{{ cons.clinica.nome }}</span>
-                                </div>
+                        <!-- Header com título e status lado a lado -->
+                        <div class="modal-header-consulta">
+                            <div class="titulo-consulta">
+                                <h3>Detalhes da Consulta</h3>
+                                <div class="consulta-id">#{{ cons.id }}</div>
                             </div>
-
-                            <div class="info-item">
-                                <div class="icone"><i class="fa-solid fa-user-doctor"></i></div>
-                                <div class="info-texto">
-                                    <span class="label">Médico</span>
-                                    <span class="valor">{{ cons.medico.nome }}</span>
-                                </div>
-                            </div>
-
-                            {% if cons.especialidade %}
-                            <div class="info-item">
-                                <div class="icone"><i class="fa-solid fa-stethoscope"></i></div>
-                                <div class="info-texto">
-                                    <span class="label">Especialidade</span>
-                                    <span class="valor">{{ cons.especialidade.nome }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-
-                            <div class="info-item">
-                                <div class="icone"><i class="fa-regular fa-calendar"></i></div>
-                                <div class="info-inline">
-                                    <span class="label-inline">Data:</span>
-                                    <span class="valor-inline">{{ cons.data_hora|date:"d/m/Y" }}</span>
-                                </div>
-                            </div>
-
-                            <div class="info-item">
-                                <div class="icone"><i class="fa-regular fa-clock"></i></div>
-                                <div class="info-inline">
-                                    <span class="label-inline">Hora:</span>
-                                    <span class="valor-inline">{{ cons.data_hora|time:"H:i" }}</span>
-                                </div>
-                            </div>
-
-                            <div class="info-item">
-                                <div class="icone"><i class="fa-solid fa-location-dot"></i></div>
-                                <div class="info-texto">
-                                    <span class="label">Endereço</span>
-                                    <span class="valor">{{ cons.clinica.endereco }}</span>
-                                </div>
+                            <div class="status-consulta">
+                                <i class="fa-solid fa-check"></i>
+                                {{ cons.get_status_display }}
                             </div>
                         </div>
 
-                        <div class="acoes-consulta">
-                            <button class="btn-fechar-consulta" onclick="fecharDetalhes('{{ cons.id }}')">Fechar</button>
+                        <!-- Informações organizadas em seções -->
+                        <div class="consulta-info-grid">
+                            <!-- Seção: Profissional e Especialidade -->
+                            <div class="info-section">
+                                <div class="section-title">
+                                    <i class="fa-solid fa-user-doctor"></i>
+                                    Profissional
+                                </div>
+                                <div class="info-cards">
+                                    <div class="info-card">
+                                        <div class="card-icon">
+                                            <i class="fa-solid fa-user-md"></i>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="card-label">Médico</div>
+                                            <div class="card-value">{{ cons.medico.nome }}</div>
+                                        </div>
+                                    </div>
+                                    {% if cons.especialidade %}
+                                    <div class="info-card">
+                                        <div class="card-icon">
+                                            <i class="fa-solid fa-stethoscope"></i>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="card-label">Especialidade</div>
+                                            <div class="card-value">{{ cons.especialidade.nome }}</div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Seção: Data e Hora -->
+                            <div class="info-section">
+                                <div class="section-title">
+                                    <i class="fa-solid fa-calendar-alt"></i>
+                                    Agendamento
+                                </div>
+                                <div class="info-cards">
+                                    <div class="info-card">
+                                        <div class="card-icon">
+                                            <i class="fa-regular fa-calendar"></i>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="card-label">Data</div>
+                                            <div class="card-value">{{ cons.data_hora|date:"d/m/Y" }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="info-card">
+                                        <div class="card-icon">
+                                            <i class="fa-regular fa-clock"></i>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="card-label">Horário</div>
+                                            <div class="card-value">{{ cons.data_hora|time:"H:i" }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Seção: Localização -->
+                            <div class="info-section">
+                                <div class="section-title">
+                                    <i class="fa-solid fa-map-marker-alt"></i>
+                                    Localização
+                                </div>
+                                <div class="info-cards">
+                                    <div class="info-card full-width">
+                                        <div class="card-icon">
+                                            <i class="fa-solid fa-hospital"></i>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="card-label">Clínica</div>
+                                            <div class="card-value">{{ cons.clinica.nome }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="info-card full-width">
+                                        <div class="card-icon">
+                                            <i class="fa-solid fa-location-dot"></i>
+                                        </div>
+                                        <div class="card-content">
+                                            <div class="card-label">Endereço</div>
+                                            <div class="card-value">{{ cons.clinica.endereco }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de ação -->
+                        <div class="modal-actions">
+                            <button class="btn-secondary" onclick="fecharDetalhes('{{ cons.id }}')">
+                                <i class="fa-solid fa-times"></i>
+                                Fechar
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -836,6 +912,52 @@
     </div>
 </div>
 
+<!-- MODAL GENÉRICO PARA MENSAGENS -->
+<div id="modal-mensagem" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-mensagem-titulo">Mensagem</h3>
+            <button onclick="fecharModalMensagem()" class="fechar-modal">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div id="modal-mensagem-icone" style="font-size: 48px; margin-bottom: 15px;">ℹ️</div>
+                <p id="modal-mensagem-texto" style="color: #5f6e84; font-size: 14px; line-height: 1.5;"></p>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-top: 25px;">
+                <button class="btn-principal" onclick="fecharModalMensagem()">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE CANCELAMENTO DE CONSULTA -->
+<div id="modal-cancelar-consulta" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Cancelar Consulta</h3>
+            <button onclick="fecharModalCancelar()" class="fechar-modal">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 48px; color: #e74c3c; margin-bottom: 15px;">⚠️</div>
+                <h4 style="color: #0d2a4e; margin-bottom: 10px;">Tem certeza que deseja cancelar esta consulta?</h4>
+                <p style="color: #5f6e84; font-size: 14px; line-height: 1.5;">
+                    Esta ação não pode ser desfeita. A consulta será cancelada permanentemente.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button class="btn-secundario" style="flex: 1;" onclick="fecharModalCancelar()">Voltar</button>
+                <button class="btn-cancelar" style="flex: 1;" onclick="confirmarCancelamento()">Sim, Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     // ===== FORMULÁRIO DE CONFIGURAÇÕES =====
@@ -859,19 +981,19 @@ document.addEventListener("DOMContentLoaded", function() {
             
             if (!senhaAtual || !novaSenha || !confirmarSenha) {
                 e.preventDefault();
-                alert("Todos os campos de senha são obrigatórios!");
+                mostrarMensagem("Atenção", "Todos os campos de senha são obrigatórios!", "warning");
                 return false;
             }
             
             if (novaSenha.length < 6) {
                 e.preventDefault();
-                alert("A nova senha deve ter no mínimo 6 caracteres!");
+                mostrarMensagem("Atenção", "A nova senha deve ter no mínimo 6 caracteres!", "warning");
                 return false;
             }
             
             if (novaSenha !== confirmarSenha) {
                 e.preventDefault();
-                alert("As senhas não coincidem!");
+                mostrarMensagem("Erro", "As senhas não coincidem!", "error");
                 return false;
             }
             

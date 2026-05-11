@@ -240,7 +240,7 @@ def _get_clinica_logo_url(clinica):
         if default_storage.exists(primeira.imagem.name):
             return primeira.imagem.url
 
-    return static('img/default-logo.png')
+    return static('img/SemIcon.png')
 
 
 def dashboard_paciente(request):
@@ -266,7 +266,7 @@ def dashboard_paciente(request):
         return redirect("login_paciente")
 
     paciente = Paciente.objects.get(id=paciente_id)
-    clinicas = Clinica.objects.all().order_by("nome")
+    clinicas = Clinica.objects.prefetch_related('imagens').all().order_by("nome")
 
     for c in clinicas:
         c.banner_url = _get_clinica_imagem_url(c)
@@ -429,12 +429,17 @@ def clinica_detalhes(request, clinica_id):
 
     # Prioridade lógica para imagem de banner
     banner_url = None
-    if clinica.imagem:
+    imagens = []
+
+    if clinica.imagens.exists():
+        imagens = [img.imagem.url for img in clinica.imagens.all() if img.imagem]
+        banner_url = imagens[0] if imagens else None
+    elif clinica.imagem:
+        imagens = [clinica.imagem.url]
         banner_url = clinica.imagem.url
     elif clinica.logo:
+        imagens = [clinica.logo.url]
         banner_url = clinica.logo.url
-    elif clinica.imagens.exists():
-        banner_url = clinica.imagens.first().imagem.url
 
     return JsonResponse({
     "nome": clinica.nome,
@@ -444,6 +449,7 @@ def clinica_detalhes(request, clinica_id):
     "logo_url": clinica.logo.url if clinica.logo else None,
     "imagem_url": clinica.imagem.url if clinica.imagem else None,
     "banner_url": banner_url,
+    "images": imagens,
     "rua": clinica.endereco.rua,
     "numero": clinica.endereco.numero,
     "bairro": clinica.endereco.bairro,
