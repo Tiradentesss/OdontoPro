@@ -48,6 +48,6 @@ function finishReset() {
 }
 
 document.getElementById("btnEntrarDashboard").addEventListener("click", function() {
-    // Caminho baseado na sua estrutura: Nova_OdontoPro > Dasboard_paciente > html > dasboard.html
+    // Caminho baseado na sua estrutura: Nova_OdontoPlace > Dasboard_paciente > html > dasboard.html
     window.location.href = "../../Dasboard_paciente/html/dasboard.html";
 });

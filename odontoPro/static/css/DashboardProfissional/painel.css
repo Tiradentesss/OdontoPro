@@ -29,15 +29,37 @@ body {
 }
 
 .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 3.5rem;
     padding-left: 0.75rem;
 }
 
 .logo-small {
     height: 45px;
-    /* Altura controlada */
     width: auto;
     object-fit: contain;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.logo-text {
+    font-size: 26px;
+    font-weight: 500;
+    color: #0E56A8;
+}
+
+.logo-subtitle {
+    font-size: 11px;
+    font-weight: 500;
+    color: #4D6B93;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .nav-title {

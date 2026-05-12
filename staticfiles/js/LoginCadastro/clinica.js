@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Sistema OdontoPro carregado!");
+    console.log("Sistema OdontoPlace carregado!");
 
     // --- 1. SELETORES DE SEÇÕES (TELAS) ---
     const secoes = {

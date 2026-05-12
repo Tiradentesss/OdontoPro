@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard do Paciente - OdontoPro</title>
+    <title>Dashboard do Paciente - OdontoPlace</title>
 
     <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboardresponsivo.css' %}">
@@ -30,8 +30,11 @@
     </button>
 
     <div class="seccao-logo">
-        <img src="{% static 'img/logo icon.png' %}" class="logo-somente-icone">
-        <img src="{% static 'img/logo_completa.png' %}" class="logo-texto-completo">
+        <img src="{% static 'img/logo icon.png' %}" class="logo-somente-icone" alt="OdontoPlace Logo">
+        <div class="brand-text">
+            <span class="logo-text">OdontoPlace</span>
+            <span class="logo-subtitle">Sistema de Agendamento</span>
+        </div>
     </div>
 
     <div class="itens-navegacao">
@@ -148,7 +151,7 @@
             <div class="filtro-container">
                 <button class="btn-filtro" id="btnFiltro" type="button">
                     <span class="btn-left">
-                        <span class="icone">⭐</span>
+                        <span class="icone"><i class="fa-solid fa-star star-yellow"></i></span>
                         <span id="tituloFiltro">Avaliação</span>
                     </span>
                     <i class="fa-solid fa-chevron-down seta"></i>
@@ -156,27 +159,27 @@
 
                 <div class="dropdown-filtro" id="dropdownFiltro">
                     <button class="opcao" type="button" data-value="1">
-                        <span class="estrelas">⭐</span>
+                        <span class="estrelas"><i class="fa-solid fa-star star-yellow"></i></span>
                         <span class="texto-opcao">1 estrela</span>
                         <span class="check">✓</span>
                     </button>
                     <button class="opcao" type="button" data-value="2">
-                        <span class="estrelas">⭐⭐</span>
+                        <span class="estrelas"><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i></span>
                         <span class="texto-opcao">2 estrelas</span>
                         <span class="check">✓</span>
                     </button>
                     <button class="opcao" type="button" data-value="3">
-                        <span class="estrelas">⭐⭐⭐</span>
+                        <span class="estrelas"><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i></span>
                         <span class="texto-opcao">3 estrelas</span>
                         <span class="check">✓</span>
                     </button>
                     <button class="opcao" type="button" data-value="4">
-                        <span class="estrelas">⭐⭐⭐⭐</span>
+                        <span class="estrelas"><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i></span>
                         <span class="texto-opcao">4 estrelas</span>
                         <span class="check">✓</span>
                     </button>
                     <button class="opcao" type="button" data-value="5">
-                        <span class="estrelas">⭐⭐⭐⭐⭐</span>
+                        <span class="estrelas"><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i><i class="fa-solid fa-star star-yellow"></i></span>
                         <span class="texto-opcao">5 estrelas</span>
                         <span class="check">✓</span>
                     </button>
@@ -819,10 +822,9 @@
                     Salvar alterações
                 </button>
 
-                <form method="POST" action="{% url 'logout' %}" class="logout-form">
-                    {% csrf_token %}
-                    <button type="submit" class="botao-sair btn-logout">Sair</button>
-                </form>
+                <button type="button" class="btn-salvar btn-logout" onclick="mostrarConfirmacaoLogout()">
+                    Sair
+                </button>
             </div>
         </div>
 
@@ -957,6 +959,35 @@
         </div>
     </div>
 </div>
+
+<!-- MODAL DE CONFIRMAÇÃO DE LOGOUT -->
+<div id="modal-logout" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Confirmar Logout</h3>
+            <button onclick="fecharModalLogout()" class="fechar-modal">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 48px; color: #e74c3c; margin-bottom: 15px;">🚪</div>
+                <h4 style="color: #0d2a4e; margin-bottom: 10px;">Tem certeza que deseja sair?</h4>
+                <p style="color: #5f6e84; font-size: 14px; line-height: 1.5;">
+                    Você será desconectado da sua conta.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button class="btn-secundario" style="flex: 1;" onclick="fecharModalLogout()">Cancelar</button>
+                <button class="btn-logout-confirmar" style="flex: 1;" onclick="confirmarLogout()">Sim, Sair</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="formLogout" method="POST" action="{% url 'logout' %}" style="display: none;">
+    {% csrf_token %}
+</form>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {

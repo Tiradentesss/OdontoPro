@@ -36,18 +36,38 @@ body {
     flex-direction: column;
 }
 
-.header-logo {
+.brand-logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     margin-bottom: 40px;
 }
 
-.header-logo img {
-    height: 45px;
-    max-width: 220px;
+.brand-logo img {
+    height: 48px;
     width: auto;
     display: block;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.logo-text {
+    font-size: 26px;
+    font-weight: 500;
+    color: #0E56A8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.logo-subtitle {
+    font-size: 11px;
+    font-weight: 500;
+    color: #4D6B93;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .form-content h1 {

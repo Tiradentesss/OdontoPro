@@ -57,8 +57,29 @@ html {
 }
 
 .logo-icone {
-    width: 200px;
+    width: 45px;
     height: auto;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.logo-text {
+    font-size: 26px;
+    font-weight: 500;
+    color: #0E56A8;
+    font-family: 'Poppins', sans-serif;
+}
+
+.logo-subtitle {
+    font-size: 11px;
+    font-weight: 500;
+    color: #4D6B93;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 

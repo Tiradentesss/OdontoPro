@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OdontoPro - Sistema de Gerenciamento</title>
+    <title>OdontoPlace - Sistema de Agendamento</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +27,11 @@
             <div class="conteudo-login">
 
                 <header class="logo-container">
-                    <img src="{% static 'img/Logo + icon.png' %}" alt="Logo OdontoPro" class="logo-icone">
+                    <img src="{% static 'img/logo icon.png' %}" alt="OdontoPlace Logo" class="logo-icone">
+                    <div class="brand-text">
+                        <span class="logo-text">OdontoPlace</span>
+                        <span class="logo-subtitle">Sistema de Agendamento</span>
+                    </div>
                 </header>
 
                 <!-- ================= LOGIN ================= -->
@@ -116,7 +120,7 @@
                 <!-- ================= PAGAMENTO ================= -->
                 <section id="secao-pagamento" class="hidden">
                     <div class="boas-vindas">
-                        <h2>Assinatura OdontoPro</h2>
+                        <h2>Assinatura OdontoPlace</h2>
                         <p>Escaneie o QR Code abaixo para ativar sua licença.</p>
                     </div>
 
@@ -124,7 +128,7 @@
                         <div class="valor-destaque">R$ 149,90/mês</div>
 
                         <div class="qr-code-box">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ChavePixOdontoPro"
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ChavePixOdontoPlace"
                                 alt="QR Code Pix">
                         </div>
 

@@ -227,6 +227,30 @@ function fecharModalMensagem() {
     }
 }
 
+// ===== MODAL DE CONFIRMAÇÃO DE LOGOUT =====
+function mostrarConfirmacaoLogout() {
+    const modal = document.getElementById('modal-logout');
+    if (modal) {
+        modal.classList.add('mostrar');
+        modal.style.display = 'flex';
+    }
+}
+
+function fecharModalLogout() {
+    const modal = document.getElementById('modal-logout');
+    if (modal) {
+        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
+    }
+}
+
+function confirmarLogout() {
+    const formLogout = document.getElementById('formLogout');
+    if (formLogout) {
+        formLogout.submit();
+    }
+}
+
 function cancelarConsulta(consultaId) {
     fetch(`/consulta/${consultaId}/cancelar/`, {
         method: 'POST',
@@ -800,7 +824,11 @@ function initFiltroEstrelas(btnId, dropdownId) {
             // Atualizar texto do botão mantendo o layout novo
             const tituloFiltro = btnFiltro.querySelector("#tituloFiltro");
             if (tituloFiltro) {
-                tituloFiltro.textContent = `${'⭐'.repeat(estrelas)} ${estrelas} estrela${estrelas > 1 ? "s" : ""}`;
+                tituloFiltro.innerHTML = `<i class="fa-solid fa-star star-yellow"></i> ${estrelas} estrela${estrelas > 1 ? "s" : ""}`;
+                // Repetir estrela para cada número
+                const starsHTML = Array(estrelas).fill(0).map(() => '<i class="fa-solid fa-star star-yellow"></i>').join(' ');
+                tituloFiltro.innerHTML = `${starsHTML} ${estrelas} estrela${estrelas > 1 ? "s" : ""}`;
+
             }
         });
     });
