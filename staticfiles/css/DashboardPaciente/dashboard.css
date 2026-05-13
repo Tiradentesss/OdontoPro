@@ -278,7 +278,7 @@ body {
     color: var(--texto-suave) !important;
 }
 
-/* Cards e superfícies brancas no dark mode */
+/* Cards e superfícies no dark mode */
 .theme-dark .card-agendamento,
 .theme-dark .card-clinica,
 .theme-dark .card-feedback,
@@ -288,8 +288,72 @@ body {
 .theme-dark .container-config,
 .theme-dark .logo-sobreposta,
 .theme-dark .perfil-clinica-container {
-    background: var(--branco) !important;
+    background: rgba(15, 23, 42, 0.96) !important;
     color: var(--texto-principal);
+    border-color: rgba(255,255,255,0.10) !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.24) !important;
+    border-radius: 20px !important;
+}
+
+.theme-dark .card-branco {
+    border: 1px solid rgba(255,255,255,0.10) !important;
+}
+
+.theme-dark #perfil-clinica {
+    background: transparent !important;
+}
+
+.theme-dark .container-perfil {
+    background: transparent !important;
+}
+
+.theme-dark .titulo-sessao {
+    color: #f8fafc !important;
+}
+
+.theme-dark .card-branco .tag-secao {
+    background: rgba(255,255,255,0.06) !important;
+    color: #e2e8f0 !important;
+}
+
+.theme-dark .card-branco .descricao-texto,
+.theme-dark .card-branco .lista-servicos-bullets li,
+.theme-dark .card-branco .endereco-detalhes p {
+    color: #cbd5e1 !important;
+}
+
+.theme-dark .header-clinica-detalhe,
+.theme-dark .clinica-info-principal,
+.theme-dark .clinica-textos h2,
+.theme-dark .clinica-textos p {
+    color: var(--texto-principal) !important;
+}
+
+.theme-dark .agendar-btn {
+    background: var(--verde-sucesso) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 14px !important;
+}
+
+.theme-dark .abas-perfil {
+    background: rgba(255,255,255,0.04) !important;
+    border-bottom-color: rgba(255,255,255,0.12) !important;
+    border-radius: 18px;
+    padding: 10px 14px;
+}
+
+.theme-dark .aba-item {
+    color: #cbd5e1 !important;
+}
+
+.theme-dark .aba-item:hover {
+    color: #ffffff !important;
+}
+
+.theme-dark .aba-item.ativa {
+    color: var(--azul-claro) !important;
+    border-bottom-color: var(--azul-claro) !important;
 }
 
 .theme-dark .card-feedback {
@@ -2814,7 +2878,8 @@ body.theme-dark .item-menu.ativo {
     height: 70px;
 
     border-radius: 50%;
-    background: #fff;
+    background: #fff !important;
+    border-color: #fff !important;
 
     display: flex;
     align-items: center;
@@ -2828,12 +2893,14 @@ body.theme-dark .item-menu.ativo {
 }
 
 /* imagem da logo */
-.logo-sobreposta img {
+.logo-sobreposta img,
+.logo-sobreposta .logo-placeholder {
     width: 100%;
     height: 100%;
-
+    background-color: #fff !important;
     object-fit: cover;
     object-position: center;
+    border-radius: 50% !important;
 }
 
 /* quando não tiver logo */
@@ -2848,6 +2915,7 @@ body.theme-dark .item-menu.ativo {
     background: #e9f2ff;
     color: #2a6bff;
     font-size: 26px;
+    border-radius: 50% !important;
 }
 
 /* empurrar conteúdo para baixo por causa da logo */
