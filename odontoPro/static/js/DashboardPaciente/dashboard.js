@@ -443,6 +443,7 @@ function abrirModalAgendamento(clinicaId) {
                     data.medicos.forEach(function(med) {
 
                         const card = document.createElement("div");
+                        card.className = "card-medico";
                         card.style.cssText = `
                             background: #f8fafc;
                             padding: 20px;
@@ -1206,6 +1207,7 @@ function carregarMedicosClinica(clinicaId) {
                 data.medicos.forEach(medico => {
 
                     const medicoCard = document.createElement("div");
+                    medicoCard.className = "card-medico";
 
                     const foto = medico.foto_url ? medico.foto_url : "/static/img/SemIcon.png";
 

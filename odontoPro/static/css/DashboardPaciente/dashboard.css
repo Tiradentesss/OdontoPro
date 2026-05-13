@@ -315,6 +315,48 @@ body {
     border: 1px solid rgba(255,255,255,0.10) !important;
 }
 
+.theme-dark .card-feedback {
+    background: rgba(15, 23, 42, 0.96) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    color: #e2e8f0 !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.24) !important;
+}
+
+.theme-dark .nome-paciente {
+    color: #f8fafc !important;
+}
+
+.theme-dark .nome-medico {
+    color: #cbd5e1 !important;
+}
+
+.theme-dark .card-feedback p {
+    color: #cbd5e1 !important;
+}
+
+.theme-dark .data-avaliacao {
+    color: #94a3b8 !important;
+}
+
+.theme-dark .card-medico {
+    background: rgba(15, 23, 42, 0.96) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
+}
+
+.theme-dark .card-medico h4 {
+    color: #f8fafc !important;
+}
+
+.theme-dark .card-medico p {
+    color: #cbd5e1 !important;
+}
+
+.theme-dark .card-medico img {
+    filter: brightness(0.95) !important;
+}
+
 .theme-dark #perfil-clinica {
     background: transparent !important;
 }
@@ -4183,6 +4225,25 @@ button.btn-avaliado:disabled {
     border-radius: 10px;
     margin-bottom: 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.card-medico {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.card-medico h4 {
+    margin-bottom: 5px;
+    color: #1a202c;
+}
+
+.card-medico p {
+    font-size: 12px;
+    color: #718096;
+    margin-top: 5px;
 }
 
 .linha-nomes {
