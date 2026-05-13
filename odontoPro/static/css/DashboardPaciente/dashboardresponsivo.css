@@ -11,6 +11,32 @@ body {
     min-height: 100vh;
 }
 
+body.theme-dark .menu-lateral {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.theme-dark .botao-sair,
+body.theme-dark .config-actions .botao-sair,
+body.theme-dark .logout-form .botao-sair {
+    background-color: #ef4444 !important;
+    color: white !important;
+    border-color: transparent !important;
+}
+
+body.theme-dark .detalhes-contato {
+    color: #94a3b8 !important;
+}
+
+body.theme-dark .item-menu {
+    color: #cbd5e1 !important;
+}
+
+body.theme-dark .btn-agendar-green {
+    background: #22c55e !important;
+    color: white !important;
+}
+
 /* --- AJUSTES PARA TELAS MÉDIAS (TABLETS) --- */
 @media (max-width: 992px) {
     .header-clinicas {

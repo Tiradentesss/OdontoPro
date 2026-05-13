@@ -1,6 +1,32 @@
 /* ================= VARIÁVEIS GLOBAIS ================= */
 let filtroEstrelasSelecionado = 0;
 
+function aplicarTema(tema) {
+    const body = document.body;
+    body.classList.remove('theme-light', 'theme-dark');
+    if (tema === 'dark') {
+        body.classList.add('theme-dark');
+    } else {
+        body.classList.add('theme-light');
+    }
+    localStorage.setItem('dashboardTheme', tema);
+    atualizarBotaoTema();
+}
+
+function definirTemaInicial() {
+    const savedTheme = localStorage.getItem('dashboardTheme');
+    const tema = savedTheme === 'dark' ? 'dark' : 'light';
+    aplicarTema(tema);
+    return tema;
+}
+
+function atualizarBotaoTema() {
+    const botao = document.getElementById('btnToggleTheme');
+    if (!botao) return;
+    const isDark = document.body.classList.contains('theme-dark');
+    botao.textContent = isDark ? 'Tema claro' : 'Tema escuro';
+}
+
 /* ================= FUNÇÃO PARA CARREGAR HORÁRIOS ================= */
 function carregarHorariosHandler() {
     if (this.value && clinicaSelecionada) {
@@ -71,6 +97,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const emailInput = document.getElementById('inputEmail');
     if (emailInput) {
         emailInput.addEventListener('blur', validarCampoEmail);
+    }
+
+    definirTemaInicial();
+    const themeToggleButton = document.getElementById('btnToggleTheme');
+    if (themeToggleButton) {
+        themeToggleButton.addEventListener('click', () => {
+            const isDark = document.body.classList.contains('theme-dark');
+            aplicarTema(isDark ? 'light' : 'dark');
+        });
     }
     
     // Listener para resize - readjustar dropdowns se necessário

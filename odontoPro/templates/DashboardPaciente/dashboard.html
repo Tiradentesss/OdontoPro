@@ -22,7 +22,7 @@
 <script defer src="{% static 'js/DashboardPaciente/dashboard.js' %}"></script>
 </head>
 
-<body>
+<body class="theme-light">
 
 <nav class="menu-lateral" id="menuLateral">
     <button class="botao-seta" onclick="alternarMenu()" id="botaoSeta">
@@ -821,6 +821,13 @@
                 <button type="submit" class="btn-salvar" id="btnSalvarConfig" form="formConfiguracao">
                     Salvar alterações
                 </button>
+
+                <div class="theme-switcher">
+                    <span>Modo de tema</span>
+                    <button type="button" id="btnToggleTheme" class="btn-theme">
+                        Tema escuro
+                    </button>
+                </div>
 
                 <button type="button" class="btn-salvar btn-logout" onclick="mostrarConfirmacaoLogout()">
                     Sair
