@@ -20,8 +20,8 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
 SESSION_SAVE_EVERY_REQUEST = False
 
-# DEBUG - default True so local development works without needing env vars
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+# DEBUG - default False for production
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 # Configurar cookies de sessão e CSRF
 # Por padrão não usar 'Secure' para facilitar desenvolvimento local (HTTP).
