@@ -308,7 +308,7 @@ def dashboard_paciente(request):
 
     tem_notificacao = notificacoes.exists()
 
-    if filtro_status and filtro_status != "todas":
+    if filtro_status and filtro_status != "todas" and filtro_status != "perdidas":
         consultas = consultas.filter(status=filtro_status)
 
     especialidades_consultas = Consulta.objects.filter(
@@ -375,7 +375,7 @@ def filtrar_consultas(request):
     status = request.GET.get("status", "todas")
 
     consultas = Consulta.objects.filter(paciente=paciente).order_by("-data_hora")
-    if status != "todas":
+    if status != "todas" and status != "perdidas":
         consultas = consultas.filter(status=status)
 
     html = render_to_string(

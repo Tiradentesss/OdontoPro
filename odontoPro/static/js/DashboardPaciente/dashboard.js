@@ -701,15 +701,17 @@ function inicializarFiltrosConsultas() {
         const agora = new Date();
 
         cards.forEach(card => {
-            const status = card.dataset.status;
+            const status = (card.dataset.status || "").toLowerCase();
             const especialidade = card.dataset.especialidade || "";
-            const dataHora = card.dataset.dataHora || "";
+            const dataHora = card.dataset.hora || "";
             const dataConsulta = dataHora ? new Date(dataHora) : null;
             const textoCard = card.textContent.toLowerCase();
+            const isPerdida = isConsultaPerdida(status, dataConsulta, agora);
+
+            card.classList.toggle("perdida-card", isPerdida);
 
             const statusMatch = filtroStatus === "todas"
-                || filtroStatus === status
-                || (filtroStatus === "perdidas" && isConsultaPerdida(status, dataConsulta, agora));
+                || (filtroStatus === "perdidas" ? isPerdida : status === filtroStatus);
 
             const especialidadeMatch = !especialidadeSelecionada || especialidade === especialidadeSelecionada;
             const dataMatch = !dataSelecionada || (dataHora ? dataHora.startsWith(dataSelecionada) : false);
@@ -743,11 +745,7 @@ function inicializarFiltrosConsultas() {
 }
 
 function isConsultaPerdida(status, dataConsulta, agora) {
-    if (!dataConsulta || isNaN(dataConsulta.getTime())) {
-        return false;
-    }
-
-    return (status === "agendada" || status === "confirmada") && dataConsulta < agora;
+    return status === "perdida";
 }
 
 /* ================= CSRF ================= */

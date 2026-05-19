@@ -96,6 +96,17 @@ body.theme-dark .filtros-adicionais input[type="date"] {
     border-color: rgba(255, 255, 255, 0.14);
 }
 
+body.theme-dark select,
+body.theme-dark .modal-select {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--texto-principal);
+}
+
+body.theme-dark select option {
+    background: rgba(15, 23, 42, 0.96) !important;
+    color: var(--texto-principal) !important;
+}
+
 body.theme-dark .btn-filtro:hover {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
 }
@@ -426,6 +437,11 @@ body {
     border-left-color: #facc15 !important;
 }
 
+.theme-dark .card-agendamento[data-status="realizada"],
+.theme-dark .realizado-card {
+    border-left-color: #22c55e !important;
+}
+
 .theme-dark .card-agendamento[data-status="cancelada"],
 .theme-dark .cancelado-card {
     border-left-color: #ef4444 !important;
@@ -446,6 +462,18 @@ body {
     color: var(--texto-principal);
     border: 1px solid rgba(255,255,255,0.12);
     box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+}
+
+.theme-dark .modal-content,
+.theme-dark .modal-content * {
+    color: var(--texto-principal) !important;
+}
+
+.theme-dark #modal-notificacoes .modal-box {
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    color: var(--texto-principal);
 }
 
 .theme-dark .modal-header {
@@ -2209,8 +2237,14 @@ body.theme-dark .item-menu.ativo {
 
 /* Opacidade para cards passados ou cancelados (Opcional, dá um efeito visual de histórico) */
 .realizado-card,
-.cancelado-card {
+.cancelado-card,
+.perdida-card {
     border-color: #f1f3f5;
+}
+
+/* Consultas perdidas ainda exibem o status original, sem forçar borda vermelha. */
+.perdida-card {
+    opacity: 1;
 }
 
 .cancelado-card .corpo-agendamento h3,

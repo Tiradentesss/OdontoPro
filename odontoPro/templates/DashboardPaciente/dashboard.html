@@ -549,7 +549,7 @@
                         {% if cons.status == 'realizada' %}realizado-card{% elif cons.status == 'cancelada' %}cancelado-card{% endif %}"
                  data-status="{{ cons.status }}"
                  data-especialidade="{{ cons.especialidade.id|default:'' }}"
-                 data-data-hora="{{ cons.data_hora|date:'c' }}">
+                 data-hora="{{ cons.data_hora|date:'c' }}">
                 
                 <div class="header-agendamento">
                     <span class="status-badge {{ cons.status }}">
