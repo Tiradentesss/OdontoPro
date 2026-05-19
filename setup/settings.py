@@ -159,10 +159,17 @@ if DATABASE_URL:
         )
     }
     if not DEBUG:
-        DATABASES['default']['OPTIONS'] = {
-            'ssl': {},
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
+        engine = DATABASES['default'].get('ENGINE', '')
+        if 'mysql' in engine:
+            DATABASES['default']['OPTIONS'] = {
+                'ssl': {'ssl-mode': 'REQUIRED'},
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
+        elif 'postgresql' in engine:
+            # psycopg uses sslmode instead of an ssl option object
+            DATABASES['default']['OPTIONS'] = {
+                'sslmode': 'require',
+            }
 elif DEBUG:
     # Desenvolvimento local sem DATABASE_URL - usar SQLite
     DATABASES = {
