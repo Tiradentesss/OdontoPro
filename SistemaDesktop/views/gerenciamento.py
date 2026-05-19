@@ -13,13 +13,13 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.clinica_id = clinica_id
         self.selected_medico = None
         self.selected_date = datetime.now().date()
-        self.selected_dates = set()  # Múltiplas datas selecionadas
-        self.last_selected_date = None  # Para Shift+Click em datas
+        self.selected_dates = set()
+        self.last_selected_date = None
         self.selected_slots = set()
-        self.last_selected_slot = None  # Para Shift+Click em horários
+        self.last_selected_slot = None
         self.current_month = self.selected_date.month
         self.current_year = self.selected_date.year
-        self.date_buttons = {}  # Para armazenar botões de datas
+        self.date_buttons = {}
 
         self.colors = {
             "bg": COLORS["bg"],
@@ -44,9 +44,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
         self._build_ui()
 
-    # =========================================================
-    # DADOS MOCK
-    # =========================================================
     def _mock_medicos(self):
         return [
             {
@@ -72,17 +69,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             },
         ]
 
-    # =========================================================
-    # UI PRINCIPAL
-    # =========================================================
     def _build_ui(self):
         self.pack(fill="both", expand=True)
 
-        # Configurar grid principal
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # Container principal com dois painéis lado a lado
         main_container = ctk.CTkFrame(self, fg_color="transparent")
         main_container.grid(row=0, column=0, sticky="nsew", padx=24, pady=24)
         main_container.grid_rowconfigure(0, weight=1)
@@ -92,9 +84,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self._build_left_panel(main_container)
         self._build_right_panel(main_container)
 
-    # =========================================================
-    # PAINEL ESQUERDO - MÉDICOS
-    # =========================================================
     def _build_left_panel(self, parent):
         left_card = ctk.CTkFrame(
             parent,
@@ -107,7 +96,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         left_card.grid_rowconfigure(2, weight=1)
         left_card.grid_columnconfigure(0, weight=1)
 
-        # Título
         title_frame = ctk.CTkFrame(left_card, fg_color="transparent")
         title_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 12))
         
@@ -119,7 +107,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         title.pack(anchor="w")
 
-        # Campo de pesquisa
         search_frame = ctk.CTkFrame(left_card, fg_color="transparent")
         search_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 16))
         
@@ -129,7 +116,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             corner_radius=12,
             border_width=1,
             border_color=self.colors["border"],
-            fg_color="#FFFFFF",
+            fg_color=self.colors["card_soft"],
             text_color=self.colors["text"],
             placeholder_text="Pesquisar médico por nome ou especialidade...",
             placeholder_text_color=self.colors["muted"]
@@ -137,7 +124,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.search_entry.pack(fill="x")
         self.search_entry.bind("<KeyRelease>", lambda e: self._render_medicos())
 
-        # Tabela de médicos
         self.medicos_list = ctk.CTkScrollableFrame(
             left_card,
             fg_color="transparent",
@@ -176,10 +162,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         for i, medico in enumerate(filtrados):
             is_selected = self.selected_medico and self.selected_medico["id"] == medico["id"]
             
-            # Linha do médico
             row = ctk.CTkFrame(
                 self.medicos_list,
-                fg_color=self.colors["selected_row"] if is_selected else "#FFFFFF",
+                fg_color=self.colors["selected_row"] if is_selected else self.colors["card"],
                 corner_radius=12,
                 border_width=1,
                 border_color=self.colors["primary"] if is_selected else self.colors["border"],
@@ -188,20 +173,17 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             row.grid(row=i, column=0, sticky="ew", pady=4)
             row.grid_propagate(False)
             
-            # Configurar colunas
             row.grid_columnconfigure(0, weight=0, minsize=50)
             row.grid_columnconfigure(1, weight=1, minsize=240)
             row.grid_columnconfigure(2, weight=1, minsize=240)
             row.grid_columnconfigure(3, weight=1, minsize=180)
             row.grid_rowconfigure(0, weight=1)
             
-            # Avatar
             avatar_img = self._create_avatar(medico["nome"], 32)
             avatar = ctk.CTkLabel(row, image=avatar_img, text="")
             avatar.image = avatar_img
             avatar.grid(row=0, column=0, padx=(12, 8), pady=14)
             
-            # Nome
             nome = ctk.CTkLabel(
                 row,
                 text=medico["nome"],
@@ -211,7 +193,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             )
             nome.grid(row=0, column=1, sticky="w", padx=8)
             
-            # Email
             email = ctk.CTkLabel(
                 row,
                 text=medico["email"],
@@ -221,7 +202,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             )
             email.grid(row=0, column=2, sticky="w", padx=8)
             
-            # Especialidade
             especialidade = ctk.CTkLabel(
                 row,
                 text=medico["especialidade"],
@@ -231,15 +211,11 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             )
             especialidade.grid(row=0, column=3, sticky="w", padx=8)
             
-            # Bind de clique
             for widget in [row, avatar, nome, email, especialidade]:
                 widget.bind("<Button-1>", lambda e, m=medico: self._select_medico(m))
                 widget.bind("<Enter>", lambda e, r=row, s=is_selected: self._hover_row(r, s, True))
                 widget.bind("<Leave>", lambda e, r=row, s=is_selected: self._hover_row(r, s, False))
 
-    # =========================================================
-    # PAINEL DIREITO - AGENDAMENTO
-    # =========================================================
     def _build_right_panel(self, parent):
         self.right_card = ctk.CTkFrame(
             parent,
@@ -252,7 +228,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.right_card.grid_rowconfigure(3, weight=1)
         self.right_card.grid_columnconfigure(0, weight=1)
 
-        # Título
         title_frame = ctk.CTkFrame(self.right_card, fg_color="transparent")
         title_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 12))
         
@@ -272,7 +247,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         self.right_subtitle.pack(anchor="w", pady=(4, 0))
         
-        # Dica de uso
         tip_label = ctk.CTkLabel(
             title_frame,
             text="💡 Dica: Use Shift + Clique para selecionar intervalos de datas/horários",
@@ -281,7 +255,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         tip_label.pack(anchor="w", pady=(6, 0))
 
-        # Calendário
         self.calendar_card = ctk.CTkFrame(
             self.right_card,
             fg_color=self.colors["card_soft"],
@@ -292,7 +265,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.calendar_card.grid(row=1, column=0, sticky="ew", padx=16, pady=(0, 16))
         self._build_calendar()
 
-        # Info da data selecionada
         info_card = ctk.CTkFrame(
             self.right_card,
             fg_color=self.colors["primary_soft"],
@@ -305,11 +277,10 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             info_card,
             text=self._format_selected_date(),
             font=ctk.CTkFont(size=14, weight="bold"),
-            text_color=self.colors["primary_dark"]
+            text_color=self.colors["primary"] if self._is_dark_theme() else self.colors["primary_dark"]
         )
         self.date_info_label.pack(padx=16, pady=12, anchor="w")
 
-        # Horários disponíveis
         slots_container = ctk.CTkFrame(self.right_card, fg_color="transparent")
         slots_container.grid(row=3, column=0, sticky="nsew", padx=16, pady=(0, 16))
         slots_container.grid_rowconfigure(1, weight=1)
@@ -334,14 +305,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         self.slots_grid.grid(row=1, column=0, sticky="nsew")
         
-        # Configurar colunas do grid de horários
         for i in range(4):
             self.slots_grid.grid_columnconfigure(i, weight=1)
         self.slots_grid.grid_rowconfigure(0, weight=1)
         
         self._build_time_slots()
 
-        # Rodapé com seleção e botão salvar
         footer = ctk.CTkFrame(self.right_card, fg_color="transparent")
         footer.grid(row=4, column=0, sticky="ew", padx=16, pady=(0, 20))
         footer.grid_columnconfigure(0, weight=1)
@@ -367,25 +336,20 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         save_btn.grid(row=0, column=1, sticky="e")
 
-    # =========================================================
-    # CALENDÁRIO
-    # =========================================================
     def _build_calendar(self):
         for widget in self.calendar_card.winfo_children():
             widget.destroy()
 
-        # Cabeçalho do calendário
         header = ctk.CTkFrame(self.calendar_card, fg_color="transparent")
         header.pack(fill="x", padx=16, pady=(16, 12))
         
-        # Botão anterior
         prev_btn = ctk.CTkButton(
             header,
             text="◀",
             width=32,
             height=32,
             corner_radius=8,
-            fg_color="#FFFFFF",
+            fg_color=self.colors["card"],
             text_color=self.colors["text"],
             border_width=1,
             border_color=self.colors["border"],
@@ -395,7 +359,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         prev_btn.pack(side="left")
         
-        # Mês/Ano
         month_label = ctk.CTkLabel(
             header,
             text=self._month_year_label(),
@@ -404,14 +367,13 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         month_label.pack(side="left", padx=12)
         
-        # Botão próximo
         next_btn = ctk.CTkButton(
             header,
             text="▶",
             width=32,
             height=32,
             corner_radius=8,
-            fg_color="#FFFFFF",
+            fg_color=self.colors["card"],
             text_color=self.colors["text"],
             border_width=1,
             border_color=self.colors["border"],
@@ -421,7 +383,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         next_btn.pack(side="right")
         
-        # Dias da semana
         days_frame = ctk.CTkFrame(self.calendar_card, fg_color="transparent")
         days_frame.pack(fill="both", expand=True, padx=16, pady=(0, 16))
         
@@ -436,12 +397,11 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             lbl.grid(row=0, column=col, padx=4, pady=(0, 8), sticky="nsew")
             days_frame.grid_columnconfigure(col, weight=1)
         
-        # Dias do mês
         first_day = datetime(self.current_year, self.current_month, 1).date()
         start_weekday = first_day.weekday()
         last_day = self._last_day_of_month(self.current_year, self.current_month)
         
-        self.date_buttons = {}  # Limpar botões anteriores
+        self.date_buttons = {}
         row = 1
         col = start_weekday
         
@@ -449,7 +409,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             current_date = datetime(self.current_year, self.current_month, day_num).date()
             is_today = current_date == datetime.now().date()
             is_selected = current_date in self.selected_dates
-            is_sunday = current_date.weekday() == 6  # 6 = Domingo
+            is_sunday = current_date.weekday() == 6
             
             btn = ctk.CTkButton(
                 days_frame,
@@ -457,11 +417,11 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 width=40,
                 height=36,
                 corner_radius=10,
-                fg_color=self.colors["primary"] if is_selected else ("#E5E5E5" if is_sunday else ("#F0F8FF" if is_today else "#FFFFFF")),
-                text_color="#FFFFFF" if is_selected else ("#A0A0A0" if is_sunday else self.colors["text"]),
+                fg_color=self._get_date_button_color(is_selected, is_today, is_sunday),
+                text_color=self._get_date_text_color(is_selected, is_sunday),
                 border_width=1,
-                border_color=self.colors["primary"] if is_selected else ("#D0D0D0" if is_sunday else self.colors["border"]),
-                hover_color=self.colors["hover"] if not is_sunday else ("#E5E5E5"),
+                border_color=self.colors["primary"] if is_selected else self.colors["border"],
+                hover_color=self.colors["hover"] if not is_sunday else self.colors["card_soft"],
                 font=ctk.CTkFont(size=13),
                 state="disabled" if is_sunday else "normal"
             )
@@ -477,16 +437,45 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 col = 0
                 row += 1
 
-    # =========================================================
-    # HORÁRIOS
-    # =========================================================
+    def _is_dark_theme(self):
+        """Detecta se está usando tema escuro baseado na cor de fundo"""
+        bg_color = self.colors["bg"]
+        # Se a cor de fundo for escura (RGB baixo), é tema escuro
+        if bg_color.startswith('#'):
+            # Remove o # e converte para RGB
+            hex_color = bg_color.lstrip('#')
+            if len(hex_color) == 6:
+                r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
+                # Se a média for menor que 128, considera tema escuro
+                return (r + g + b) / 3 < 128
+        return False
+
+    def _get_date_button_color(self, is_selected, is_today, is_sunday):
+        """Retorna a cor de fundo correta para botões de data"""
+        if is_sunday:
+            return self.colors["card_soft"]
+        elif is_selected:
+            return self.colors["primary"]
+        elif is_today:
+            return self.colors["primary_soft"]
+        else:
+            return self.colors["card"]
+
+    def _get_date_text_color(self, is_selected, is_sunday):
+        """Retorna a cor do texto correta para botões de data"""
+        if is_sunday:
+            return self.colors["muted"]
+        elif is_selected:
+            return "white"
+        else:
+            return self.colors["text"]
+
     def _build_time_slots(self):
         for widget in self.slots_grid.winfo_children():
             widget.destroy()
         
         self.slot_buttons = {}
         
-        # Horários disponíveis
         horarios = [
             "08:00", "08:30", "09:00", "09:30",
             "10:00", "10:30", "11:00", "11:30",
@@ -506,8 +495,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 text=horario,
                 height=38,
                 corner_radius=10,
-                fg_color=self.colors["primary"] if is_selected else "#FFFFFF",
-                text_color="#FFFFFF" if is_selected else self.colors["text"],
+                fg_color=self.colors["primary"] if is_selected else self.colors["card"],
+                text_color="white" if is_selected else self.colors["text"],
                 border_width=1,
                 border_color=self.colors["primary"] if is_selected else self.colors["border"],
                 hover_color=self.colors["hover"],
@@ -518,18 +507,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             
             self.slot_buttons[horario] = btn
 
-    # =========================================================
-    # AÇÕES
-    # =========================================================
     def _on_date_clicked(self, event, selected_date):
-        """Manipula clique em data com suporte a Shift+Click para intervalo"""
-        shift_pressed = (event.state & 0x1) != 0  # 0x1 é a flag Shift
+        shift_pressed = (event.state & 0x1) != 0
         
         if shift_pressed and self.last_selected_date:
-            # Shift+Click: selecionar intervalo
-            self._select_date_range(self.last_selected_date, selected_date)
+            self._toggle_date_range(self.last_selected_date, selected_date)
         else:
-            # Click normal: selecionar/desselecionar única data
             if selected_date in self.selected_dates:
                 self.selected_dates.remove(selected_date)
             else:
@@ -539,30 +522,36 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self._update_calendar_display()
         self._update_date_info()
 
-    def _select_date_range(self, start_date, end_date):
-        """Seleciona intervalo de datas entre start_date e end_date"""
+    def _toggle_date_range(self, start_date, end_date):
         if start_date > end_date:
             start_date, end_date = end_date, start_date
         
+        interval_dates = set()
         current = start_date
         while current <= end_date:
-            self.selected_dates.add(current)
+            if current.weekday() != 6:
+                interval_dates.add(current)
             current += timedelta(days=1)
+        
+        if interval_dates.issubset(self.selected_dates):
+            self.selected_dates -= interval_dates
+        else:
+            self.selected_dates.update(interval_dates)
 
     def _update_calendar_display(self):
-        """Atualiza a visualização do calendário para refletir datas selecionadas"""
         for date, btn in self.date_buttons.items():
             is_selected = date in self.selected_dates
             is_today = date == datetime.now().date()
+            is_sunday = date.weekday() == 6
             
             btn.configure(
-                fg_color=self.colors["primary"] if is_selected else ("#F0F8FF" if is_today else "#FFFFFF"),
-                text_color="#FFFFFF" if is_selected else self.colors["text"],
-                border_color=self.colors["primary"] if is_selected else self.colors["border"]
+                fg_color=self._get_date_button_color(is_selected, is_today, is_sunday),
+                text_color=self._get_date_text_color(is_selected, is_sunday),
+                border_color=self.colors["primary"] if is_selected else self.colors["border"],
+                state="disabled" if is_sunday else "normal"
             )
 
     def _update_date_info(self):
-        """Atualiza o label de informação de datas selecionadas"""
         if not self.selected_dates:
             self.date_info_label.configure(text="Nenhuma data selecionada")
         elif len(self.selected_dates) == 1:
@@ -577,8 +566,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             )
 
     def _on_slot_clicked(self, event, horario):
-        """Manipula clique em horário com suporte a Shift+Click para intervalo"""
-        shift_pressed = (event.state & 0x1) != 0  # 0x1 é a flag Shift
+        shift_pressed = (event.state & 0x1) != 0
         
         horarios_list = [
             "08:00", "08:30", "09:00", "09:30",
@@ -589,17 +577,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         ]
         
         if shift_pressed and self.last_selected_slot and self.last_selected_slot in horarios_list:
-            # Shift+Click: selecionar intervalo de horários
-            start_idx = horarios_list.index(self.last_selected_slot)
-            end_idx = horarios_list.index(horario)
-            
-            if start_idx > end_idx:
-                start_idx, end_idx = end_idx, start_idx
-            
-            for idx in range(start_idx, end_idx + 1):
-                self.selected_slots.add(horarios_list[idx])
+            self._toggle_slot_range(self.last_selected_slot, horario)
         else:
-            # Click normal: selecionar/desselecionar único horário
             if horario in self.selected_slots:
                 self.selected_slots.remove(horario)
             else:
@@ -609,13 +588,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self._update_slots_display()
 
     def _update_slots_display(self):
-        """Atualiza a visualização dos horários para refletir seleção"""
         for horario, btn in self.slot_buttons.items():
             is_selected = horario in self.selected_slots
             
             btn.configure(
-                fg_color=self.colors["primary"] if is_selected else "#FFFFFF",
-                text_color="#FFFFFF" if is_selected else self.colors["text"],
+                fg_color=self.colors["primary"] if is_selected else self.colors["card"],
+                text_color="white" if is_selected else self.colors["text"],
                 border_color=self.colors["primary"] if is_selected else self.colors["border"]
             )
         
@@ -624,41 +602,34 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             text=f"{qtd} horário{'s' if qtd != 1 else ''} selecionado{'s' if qtd != 1 else ''}"
         )
 
+    def _toggle_slot_range(self, start_horario, end_horario):
+        horarios_list = [
+            "08:00", "08:30", "09:00", "09:30",
+            "10:00", "10:30", "11:00", "11:30",
+            "12:00", "12:30", "13:00", "13:30",
+            "14:00", "14:30", "15:00", "15:30",
+            "16:00", "16:30", "17:00", "17:30"
+        ]
+        
+        start_idx = horarios_list.index(start_horario)
+        end_idx = horarios_list.index(end_horario)
+        
+        if start_idx > end_idx:
+            start_idx, end_idx = end_idx, start_idx
+        
+        interval_slots = set(horarios_list[start_idx:end_idx + 1])
+        
+        if interval_slots.issubset(self.selected_slots):
+            self.selected_slots -= interval_slots
+        else:
+            self.selected_slots.update(interval_slots)
+
     def _select_medico(self, medico):
         self.selected_medico = medico
         self.right_subtitle.configure(
             text=f"Configurando agenda de {medico['nome']}."
         )
         self._render_medicos()
-
-    def _select_date(self, selected_date):
-        self.selected_date = selected_date
-        self.date_info_label.configure(text=self._format_selected_date())
-        self._build_calendar()
-        self._build_time_slots()
-
-    def _toggle_slot(self, horario):
-        if horario in self.selected_slots:
-            self.selected_slots.remove(horario)
-            btn = self.slot_buttons[horario]
-            btn.configure(
-                fg_color="#FFFFFF",
-                text_color=self.colors["text"],
-                border_color=self.colors["border"]
-            )
-        else:
-            self.selected_slots.add(horario)
-            btn = self.slot_buttons[horario]
-            btn.configure(
-                fg_color=self.colors["primary"],
-                text_color="#FFFFFF",
-                border_color=self.colors["primary"]
-            )
-        
-        qtd = len(self.selected_slots)
-        self.selection_label.configure(
-            text=f"{qtd} horário{'s' if qtd != 1 else ''} selecionado{'s' if qtd != 1 else ''}"
-        )
 
     def _save_disponibilidade(self):
         if not self.selected_medico:
@@ -704,11 +675,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             self.current_month += 1
         self._build_calendar()
 
-    # =========================================================
-    # HELPERS
-    # =========================================================
     def _format_date(self, date):
-        """Formata uma data para exibição"""
         dias = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", 
                 "Sexta-feira", "Sábado", "Domingo"]
         nome_dia = dias[date.weekday()]
@@ -719,7 +686,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             if not is_selected:
                 row.configure(fg_color=self.colors["hover"])
         else:
-            row.configure(fg_color=self.colors["selected_row"] if is_selected else "#FFFFFF")
+            row.configure(fg_color=self.colors["selected_row"] if is_selected else self.colors["card"])
 
     def _create_avatar(self, nome, size):
         inicial = nome[0].upper() if nome else "?"
@@ -759,14 +726,11 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
 
 class Gerenciamento(BaseScreen):
-    """Wrapper que integra MedicosDisponibilidadeScreen ao sistema de telas"""
     def __init__(self, parent, clinica_id=None):
         super().__init__(parent, "Gerenciamento")
         
-        # Remove o padding padrão do BaseScreen para dar espaço total à tela de disponibilidade
         if hasattr(self, 'content_card'):
             self.content_card.pack_forget()
         
-        # Coloca a tela de disponibilidade diretamente no frame raiz
         screen = MedicosDisponibilidadeScreen(self, clinica_id=clinica_id)
         screen.pack(fill="both", expand=True)

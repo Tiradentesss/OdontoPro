@@ -106,13 +106,14 @@ class ModernInput(ctk.CTkFrame):
         label_frame = ctk.CTkFrame(self, fg_color="transparent")
         label_frame.pack(fill="x", pady=(0, 3))
 
+        # Label com padding-left maior para mover mais para a direita
         lbl = ctk.CTkLabel(
             label_frame,
             text=label,
             font=font("text"),
             text_color=COLORS["text_secondary"]
         )
-        lbl.pack(side="left")
+        lbl.pack(side="left", padx=(40, 0))  # Aumentado de 20 para 40px
 
         if required:
             required_lbl = ctk.CTkLabel(
@@ -206,7 +207,7 @@ class Configuracoes(BaseScreen):
 
     def setup_ui(self):
         self.tab_bar = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
-        self.tab_bar.pack(fill="x", padx=25, pady=(9, 0), anchor="nw")
+        self.tab_bar.pack(fill="x", padx=10, pady=(9, 0), anchor="nw")
 
         self._build_tabs()
 
@@ -215,7 +216,7 @@ class Configuracoes(BaseScreen):
             fg_color="transparent",
             corner_radius=20
         )
-        self.container_outer.pack(fill="both", expand=True, padx=25, pady=(6, 20))
+        self.container_outer.pack(fill="both", expand=True, padx=10, pady=(6, 20))
 
         self.container_conteudo = ctk.CTkFrame(
             self.container_outer,
@@ -285,15 +286,15 @@ class Configuracoes(BaseScreen):
         if tab_name in render_methods:
             render_methods[tab_name](self.content_area)
 
-    def _titulo(self, parent, texto, padx=25):
+    def _titulo(self, parent, texto, padx=10):
         ctk.CTkLabel(
             parent,
             text=texto,
             font=font("title", "bold"),
-            text_color="#111827"
+            text_color=self.colors["text_primary"]
         ).pack(anchor="w", padx=padx, pady=(24, 17))
 
-    def _secao_titulo(self, parent, texto, padx=25):
+    def _secao_titulo(self, parent, texto, padx=10):
         container = ctk.CTkFrame(parent, fg_color="transparent")
         container.pack(fill="x", padx=padx, pady=(16, 8))
 
@@ -301,7 +302,7 @@ class Configuracoes(BaseScreen):
             container,
             text=texto,
             font=font("subtitle", "bold"),
-            text_color="#374151"
+            text_color=self.colors["text_primary"]
         ).pack(anchor="w")
 
         linha = ctk.CTkFrame(container, height=2, width=52, fg_color=self.colors["accent"], corner_radius=1)
@@ -310,12 +311,12 @@ class Configuracoes(BaseScreen):
     def _create_card_section(self, parent, title, subtitle=None):
         card = ctk.CTkFrame(
             parent,
-            fg_color="#FFFFFF",
+            fg_color=COLORS['card'],
             corner_radius=16,
             border_width=1,
             border_color=self.colors["border"]
         )
-        card.pack(fill="x", padx=25, pady=(0, 20), anchor="w")
+        card.pack(fill="x", padx=10, pady=(0, 20), anchor="w")
 
         header = ctk.CTkFrame(card, fg_color="transparent")
         header.pack(fill="x", padx=24, pady=(20, 10))
@@ -356,11 +357,12 @@ class Configuracoes(BaseScreen):
         password_frame = ctk.CTkFrame(parent, fg_color="transparent")
         password_frame.pack(fill="x", pady=(0, 20), anchor="w")
 
-        self._secao_titulo(password_frame, "Alterar Senha", padx=25)
+        self._secao_titulo(password_frame, "Alterar Senha", padx=10)
 
         form_frame = ctk.CTkFrame(password_frame, fg_color="transparent")
-        form_frame.pack(fill="x", padx=25, anchor="w")
+        form_frame.pack(fill="x", padx=10, anchor="w")
 
+        # Inputs de segurança
         current_pwd = ModernInput(
             form_frame, label="Senha Atual", placeholder="Digite sua senha atual",
             icon="🔑", required=True
@@ -382,13 +384,14 @@ class Configuracoes(BaseScreen):
         confirm_pwd.pack(fill="x", pady=5, anchor="w")
         confirm_pwd.entry.configure(show="•")
 
+        # Frame da força da senha
         strength_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
         strength_frame.pack(fill="x", pady=(10, 0), anchor="w")
 
         ctk.CTkLabel(
             strength_frame, text="Força da senha:", font=font("small"),
             text_color=self.colors["text_secondary"]
-        ).pack(side="left")
+        ).pack(side="left", padx=(40, 0))  # Também aumentado para 40px
 
         self.strength_bar = ctk.CTkProgressBar(
             strength_frame, width=200, height=6, corner_radius=3,
@@ -420,13 +423,13 @@ class Configuracoes(BaseScreen):
 
     # ==================== MINHA CLÍNICA ====================
     def _render_preferences(self, parent):
-        self._titulo(parent, "Configurações da Clínica", padx=25)
+        self._titulo(parent, "Configurações da Clínica", padx=10)
 
         sub_tabs = ["Geral", "Serviços", "Descrição"]
         self.sub_tab_buttons = {}
 
         tab_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        tab_frame.pack(fill="x", padx=25, pady=(0, 10), anchor="w")
+        tab_frame.pack(fill="x", padx=10, pady=(0, 10), anchor="w")
 
         for tab in sub_tabs:
             btn = ctk.CTkButton(
@@ -443,7 +446,7 @@ class Configuracoes(BaseScreen):
             self.sub_tab_buttons[tab.lower()] = btn
 
         divider = ctk.CTkFrame(parent, height=1, fg_color=self.colors["border"])
-        divider.pack(fill="x", padx=25, pady=(0, 15))
+        divider.pack(fill="x", padx=10, pady=(0, 15))
 
         self.sub_tab_content = ctk.CTkFrame(parent, fg_color="transparent")
         self.sub_tab_content.pack(fill="both", expand=True, anchor="w")
@@ -507,7 +510,7 @@ class Configuracoes(BaseScreen):
                 logo_wrap,
                 width=140,
                 height=140,
-                bg="white",
+                bg=self.colors["bg_card"],
                 highlightthickness=0,
                 bd=0
             )
@@ -638,7 +641,7 @@ class Configuracoes(BaseScreen):
         scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
         scroll.pack(fill="both", expand=True, anchor="w")
 
-        self._secao_titulo(scroll, "Serviços Oferecidos", padx=25)
+        self._secao_titulo(scroll, "Serviços Oferecidos", padx=10)
 
         self.services_text = ctk.CTkTextbox(
             scroll,
@@ -647,16 +650,17 @@ class Configuracoes(BaseScreen):
             border_width=1,
             border_color=self.colors["border"],
             fg_color=COLORS["input_bg"],
-            font=font("text")
+            font=font("text"),
+            text_color=self.colors["text_primary"]
         )
-        self.services_text.pack(fill="both", expand=True, anchor="w", padx=25, pady=(10, 0))
+        self.services_text.pack(fill="both", expand=True, anchor="w", padx=10, pady=(10, 0))
         self.services_text.insert("1.0", "• Limpeza profissional\n• Clareamento dental\n• Implantes\n• Aparelhos ortodônticos")
 
     def _render_preferences_description(self, parent):
         scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
         scroll.pack(fill="both", expand=True, anchor="w")
 
-        self._secao_titulo(scroll, "Sobre a Clínica", padx=25)
+        self._secao_titulo(scroll, "Sobre a Clínica", padx=10)
 
         self.description_text = ctk.CTkTextbox(
             scroll,
@@ -665,9 +669,10 @@ class Configuracoes(BaseScreen):
             border_width=1,
             border_color=self.colors["border"],
             fg_color=COLORS["input_bg"],
-            font=font("text")
+            font=font("text"),
+            text_color=self.colors["text_primary"]
         )
-        self.description_text.pack(fill="both", expand=True, anchor="w", padx=25, pady=(10, 0))
+        self.description_text.pack(fill="both", expand=True, anchor="w", padx=10, pady=(10, 0))
         self.description_text.insert("1.0", "Bem-vindo à nossa clínica! Somos uma equipe dedicada a proporcionar o melhor cuidado para seu sorriso...")
 
     # ==================== PERFIL ====================
@@ -675,7 +680,7 @@ class Configuracoes(BaseScreen):
         self._titulo(parent, "Meu Perfil")
 
         profile_container = ctk.CTkFrame(parent, fg_color="transparent")
-        profile_container.pack(fill="both", expand=True, padx=25)
+        profile_container.pack(fill="both", expand=True, padx=10)
         profile_container.grid_columnconfigure(0, weight=0)
         profile_container.grid_columnconfigure(1, weight=1)
 
@@ -693,7 +698,9 @@ class Configuracoes(BaseScreen):
         avatar_container.pack_propagate(False)
 
         self.avatar_canvas = tk.Canvas(
-            avatar_container, width=140, height=140, bg="white", highlightthickness=0, bd=0
+            avatar_container, width=140, height=140, 
+            bg=self.colors["bg_card"],
+            highlightthickness=0, bd=0
         )
         self.avatar_canvas.pack()
 
@@ -752,7 +759,7 @@ class Configuracoes(BaseScreen):
     # ==================== FOOTER ====================
     def _build_footer(self, parent):
         footer = ctk.CTkFrame(parent, fg_color="transparent")
-        footer.pack(fill="x", side="bottom", padx=25, pady=14)
+        footer.pack(fill="x", side="bottom", padx=10, pady=14)
 
         save_btn = ctk.CTkButton(
             footer, text="SALVAR ALTERAÇÕES", fg_color=self.colors["accent"],
@@ -765,7 +772,8 @@ class Configuracoes(BaseScreen):
 
         cancel_btn = ctk.CTkButton(
             footer, text="CANCELAR", fg_color="transparent",
-            hover_color="#F3F4F6", text_color=self.colors["text_secondary"],
+            hover_color=COLORS["hover"],
+            text_color=self.colors["text_secondary"],
             border_width=1, border_color=self.colors["border"],
             height=44, width=125, corner_radius=5,
             font=font("button_large"),
@@ -946,7 +954,7 @@ class Configuracoes(BaseScreen):
 
         preview_frame = ctk.CTkFrame(
             main_wrap,
-            fg_color="#FFFFFF",
+            fg_color=COLORS['card'],
             corner_radius=8,
             border_width=1,
             border_color=self.colors["border"]
@@ -955,7 +963,7 @@ class Configuracoes(BaseScreen):
 
         self.clinic_photo_canvas = tk.Canvas(
             preview_frame,
-            bg="white",
+            bg=self.colors["bg_card"],
             highlightthickness=0,
             bd=0
         )

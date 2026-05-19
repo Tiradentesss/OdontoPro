@@ -19,8 +19,9 @@ def get_connection():
             database=DB_CONFIG["database"],
             port=DB_CONFIG.get("port", 3306),
             ssl_ca=ssl_ca,
-            connection_timeout=int(DB_CONFIG.get("connect_timeout", 5)),
-            auth_plugin=DB_CONFIG.get("auth_plugin", "mysql_native_password")
+            connection_timeout=int(DB_CONFIG.get("connect_timeout", 15)),  # Aumentado de 5 para 15 segundos
+            auth_plugin=DB_CONFIG.get("auth_plugin", "mysql_native_password"),
+            autocommit=True  # Evita locks desnecessários
         )
     except Error as err:
         raise ConnectionError(f"Não foi possível conectar ao banco: {err}") from err

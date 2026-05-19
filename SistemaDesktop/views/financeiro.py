@@ -263,9 +263,13 @@ class Financeiro(BaseScreen):
         titulo = titulo.replace(',', '.')
         ax.set_title(titulo, fontsize=8, color=COLORS["text_secondary"], pad=15, loc='center', fontweight='bold')
         
-        # Legenda
+        # Legenda com texto branco
         legend = ax.legend(loc='upper left', frameon=True, fancybox=True, shadow=False,
                           fontsize=7, facecolor=COLORS["card"], edgecolor=COLORS["border"])
+        
+        # CORREÇÃO: Define a cor do texto da legenda como branco
+        for text in legend.get_texts():
+            text.set_color("white")
         
         # Ajustar layout
         plt.tight_layout()
@@ -376,7 +380,7 @@ class Financeiro(BaseScreen):
                 row_frame, 
                 text=tipo, 
                 font=font("small", "bold"),
-                text_color="white",
+                text_color=("white", "white"),
                 fg_color=cor,
                 corner_radius=10,
                 anchor="center",

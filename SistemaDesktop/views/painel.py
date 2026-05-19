@@ -22,22 +22,22 @@ class Painel(BaseScreen):
 
         # Definição de Estilo Expandida (Mantendo sua Identidade)
         self.colors = {
-            'primary': COLORS.get('primary', '#0284C7'),
-            'primary_soft': COLORS.get('primary_soft', '#F0F9FF'),
-            'success': '#10B981',
-            'success_soft': '#ECFDF5',
-            'warning': '#F59E0B',
-            'warning_soft': '#FFFBEB',
-            'danger': '#EF4444',
-            'danger_soft': '#FEF2F2',
-            'info': '#3B82F6',
-            'info_soft': '#EFF6FF',
-            'card': COLORS.get('card', '#FFFFFF'),
-            'border': COLORS.get('border', '#E2E8F0'),
-            'text': COLORS.get('text_primary', '#1E293B'),
-            'text_secondary': '#64748B',
-            'text_muted': '#94A3B8',
-            'bg_app': '#F8FAFC'
+            'primary': COLORS.get('primary', '#06B6D4'),
+            'primary_soft': COLORS.get('primary_soft', '#164E63'),
+            'success': COLORS.get('success', '#10B981'),
+            'success_soft': COLORS.get('success_light', '#065F46'),
+            'warning': COLORS.get('warning', '#F59E0B'),
+            'warning_soft': COLORS.get('warning_light', '#78350F'),
+            'danger': COLORS.get('danger', '#EF4444'),
+            'danger_soft': COLORS.get('danger_light', '#7F1D1D'),
+            'info': COLORS.get('secondary', '#3B82F6'),
+            'info_soft': COLORS.get('accent_light', '#164E63'),
+            'card': COLORS.get('card', '#1E293B'),
+            'border': COLORS.get('border', '#334155'),
+            'text': COLORS.get('text_primary', '#F1F5F9'),
+            'text_secondary': COLORS.get('text_secondary', '#CBD5E1'),
+            'text_muted': COLORS.get('text_muted', '#94A3B8'),
+            'bg_app': COLORS.get('bg_soft', '#1E293B')
         }
 
         # Container Principal com Scroll

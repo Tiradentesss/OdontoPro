@@ -37,7 +37,7 @@ class CustomOptionMenu(ctk.CTkOptionMenu):
         self._canvas.create_line(
             self._current_width - 28, 6,
             self._current_width - 28, self._current_height - 6,
-            fill='#E5E7EB',
+            fill=COLORS['divider'],
             width=1,
             tags="divider"
         )
@@ -94,7 +94,7 @@ class Agenda(BaseScreen):
             'selected': COLORS['selected_row'],
             'border': COLORS['border'],
             'border_soft': COLORS['border'],
-            'shadow': COLORS['shadow'] if 'shadow' in COLORS else '#DCEAF7',
+            'shadow': COLORS['shadow'] if 'shadow' in COLORS else COLORS['border'],
             'avatar_colors': ['#F59E0B', '#EF4444', '#EC4899', '#10B981', '#3B82F6']
         }
 
@@ -153,8 +153,19 @@ class Agenda(BaseScreen):
         self.pagina_atual = 0
         self.refresh_data()
 
+    def _reset_loading_if_stuck(self):
+        """Reseta o estado de carregamento se ainda estiver True (travado)"""
+        if self._loading:
+            print("[Agenda] ⚠️  Carregamento travado por mais de 30s. Resetando...")
+            self._loading = False
+            self._render_error("O carregamento demorou muito. Tente novamente.")
+
     def _auto_check(self):
         try:
+            # Não fazer check automático se já está carregando
+            if self._loading:
+                return
+                
             snapshot = ConsultaController.snapshot_por_clinica(
                 self.clinica_id,
                 data=self._get_data_sql(),
@@ -164,9 +175,10 @@ class Agenda(BaseScreen):
             )
 
             if snapshot != self.current_snapshot:
+                print("[Agenda] Dados mudaram. Recarregando...")
                 self.refresh_data()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Agenda] Erro em _auto_check: {e}")
         finally:
             self.after(self._auto_refresh_ms, self._auto_check)
 
@@ -174,7 +186,10 @@ class Agenda(BaseScreen):
         if self._loading:
             return
         self._loading = True
-        threading.Thread(target=self._load_data_thread, daemon=True).start()
+        thread = threading.Thread(target=self._load_data_thread, daemon=True)
+        thread.start()
+        # Timeout de segurança: se não carregar em 30 segundos, reseta o estado
+        self.after(30000, lambda: self._reset_loading_if_stuck())
 
     def render(self):
         if self._loading:
@@ -207,12 +222,16 @@ class Agenda(BaseScreen):
         )
         loading_lbl.pack(padx=40, pady=28)
 
-        threading.Thread(target=self._load_data_thread, daemon=True).start()
+        thread = threading.Thread(target=self._load_data_thread, daemon=True)
+        thread.start()
+        # Timeout de segurança
+        self.after(30000, lambda: self._reset_loading_if_stuck())
 
     def _load_data_thread(self):
         data_sql = self._get_data_sql()
 
         try:
+            print(f"[Agenda] Iniciando carregamento de dados...")
             consultas = ConsultaController.listar_por_clinica(
                 self.clinica_id,
                 pagina=self.pagina_atual,
@@ -222,6 +241,8 @@ class Agenda(BaseScreen):
                 medico=self.filtro_medico,
                 especialidade=self.filtro_especialidade,
             )
+            print(f"[Agenda] Consultas carregadas: {len(consultas)}")
+            
             total = ConsultaController.contar_por_clinica(
                 self.clinica_id,
                 data=data_sql,
@@ -229,8 +250,11 @@ class Agenda(BaseScreen):
                 medico=self.filtro_medico,
                 especialidade=self.filtro_especialidade,
             )
+            print(f"[Agenda] Total de consultas: {total}")
 
             datas, medicos, especialidades = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+            print(f"[Agenda] Opções de filtro carregadas")
+            
             snapshot = ConsultaController.snapshot_por_clinica(
                 self.clinica_id,
                 data=data_sql,
@@ -238,6 +262,7 @@ class Agenda(BaseScreen):
                 medico=self.filtro_medico,
                 especialidade=self.filtro_especialidade,
             )
+            print(f"[Agenda] Snapshot gerado")
 
             try:
                 self.after(0, lambda: self._render_after_load(consultas, total, datas, medicos, especialidades, snapshot))
@@ -256,36 +281,54 @@ class Agenda(BaseScreen):
             except RuntimeError:
                 # Main loop pode ter terminado
                 pass
+        finally:
+            # CRÍTICO: sempre resetar o estado de carregamento
+            self._loading = False
+            print(f"[Agenda] Estado de carregamento resetado")
 
 
     def _render_error(self, message):
-        self._loading = False
-        for w in self.content_card.winfo_children():
-            w.destroy()
+        try:
+            self._loading = False
+            for w in self.content_card.winfo_children():
+                w.destroy()
 
-        wrapper = ctk.CTkFrame(self.content_card, fg_color='transparent')
-        wrapper.pack(fill='both', expand=True, padx=20, pady=20)
+            wrapper = ctk.CTkFrame(self.content_card, fg_color='transparent')
+            wrapper.pack(fill='both', expand=True, padx=20, pady=20)
 
-        card = ctk.CTkFrame(
-            wrapper,
-            fg_color=self.colors['bg_card'],
-            corner_radius=24,
-            border_width=1,
-            border_color=self.colors['border']
-        )
-        card.place(relx=0.5, rely=0.5, anchor='center')
+            card = ctk.CTkFrame(
+                wrapper,
+                fg_color=self.colors['bg_card'],
+                corner_radius=24,
+                border_width=1,
+                border_color=self.colors['border']
+            )
+            card.place(relx=0.5, rely=0.5, anchor='center')
 
-        ctk.CTkLabel(
-            card,
-            text=f'Erro ao carregar agenda:\n{message}',
-            text_color='#EF4444',
-            font=font("text", "bold"),
-            justify='center'
-        ).pack(padx=32, pady=28)
+            ctk.CTkLabel(
+                card,
+                text=f'Erro ao carregar agenda:\n{message}',
+                text_color='#EF4444',
+                font=font("text", "bold"),
+                justify='center'
+            ).pack(padx=32, pady=28)
+            
+            # Botão para tentar novamente
+            ctk.CTkButton(
+                card,
+                text='↻ Tentar Novamente',
+                fg_color=COLORS['primary'],
+                hover_color=COLORS['primary_dark'],
+                text_color='white',
+                command=self.refresh_data
+            ).pack(padx=32, pady=(0, 28))
+        except Exception as e:
+            print(f"[Agenda] Erro em _render_error: {e}")
+            self._loading = False
 
     def _render_after_load(self, consultas, total, datas, medicos, especialidades, snapshot):
         try:
-            self._loading = False
+            self._loading = False  # Resetar ANTES de renderizar
             self.current_snapshot = snapshot
 
             for w in self.content_card.winfo_children():
@@ -300,7 +343,7 @@ class Agenda(BaseScreen):
             left.grid_columnconfigure(0, weight=1)
             left.grid_rowconfigure(3, weight=1)
 
-            right = ctk.CTkFrame(self.content_card, fg_color='#f8fafc', corner_radius=15)
+            right = ctk.CTkFrame(self.content_card, fg_color=COLORS['bg_soft'], corner_radius=15)
             right.grid(row=0, column=1, sticky='nsew', padx=(10, 20), pady=20)
             right.grid_columnconfigure(0, weight=1)
             self.details_panel = right
@@ -313,10 +356,10 @@ class Agenda(BaseScreen):
             # ==============================
             content_frame = ctk.CTkFrame(
                 left,
-                fg_color='#ffffff',
+                fg_color=COLORS['card'],
                 corner_radius=15,
                 border_width=1,
-                border_color='#e2e8f0'
+                border_color=COLORS['border']
             )
             content_frame.grid(row=3, column=0, sticky='nsew', pady=(0, 10))
             content_frame.grid_columnconfigure(0, weight=1)
@@ -365,16 +408,16 @@ class Agenda(BaseScreen):
             print(f"[Agenda] _render_after_load error: {e}")
             import traceback
             traceback.print_exc()
-            self._loading = False
+            self._loading = False  # Garantir que reseta mesmo com erro
             self._render_error(f"Falha ao renderizar agenda: {str(e)}")
 
     def _render_filtros(self, parent, datas, medicos, especialidades):
         filtros_card = ctk.CTkFrame(
             parent,
-            fg_color="#f3f6fb",
+            fg_color=COLORS['card'],
             corner_radius=18,
             border_width=1,
-            border_color="#e2e8f0"
+            border_color=COLORS['border']
         )
         filtros_card.grid(row=0, column=0, sticky='ew', pady=(0, 12))
         filtros_card.grid_columnconfigure(0, weight=1)
@@ -383,7 +426,7 @@ class Agenda(BaseScreen):
         linha.pack(fill='x', padx=12, pady=12)
 
         def filtro(texto, values, var_name):
-            frame = ctk.CTkFrame(linha, fg_color="#ffffff", corner_radius=12)
+            frame = ctk.CTkFrame(linha, fg_color=COLORS['card'], corner_radius=12)
 
             partes = texto.split(' ', 1)
             icone = partes[0] if partes else ""
@@ -418,10 +461,10 @@ class Agenda(BaseScreen):
                 frame,
                 values=values,
                 height=34,
-                fg_color="white",
-                border_color="#4db8ff",
-                button_color="#4db8ff",
-                button_hover_color="#3399ff",
+                fg_color=COLORS['input_bg'],
+                border_color=COLORS['primary'],
+                button_color=COLORS['primary'],
+                button_hover_color=COLORS['primary_dark'],
                 corner_radius=8,
                 variable=getattr(self, var_name)
             )
@@ -462,8 +505,8 @@ class Agenda(BaseScreen):
             text='↻ Atualizar',
             width=120,
             height=32,
-            fg_color='#4db8ff',
-            hover_color='#3399ff',
+            fg_color=COLORS['primary'],
+            hover_color=COLORS['primary_dark'],
             corner_radius=10,
             font=ctk.CTkFont(size=12, weight='bold'),
             command=self.refresh_data
@@ -617,7 +660,7 @@ class Agenda(BaseScreen):
             padx_left = status_conf.get('padx_left', 8)
             padx_right = status_conf.get('padx_right', 8)
             
-            estilo_status = LOCAL_STATUS_COLORS.get(status_key, {'bg': '#E5E7EB', 'text': '#374151'})
+            estilo_status = LOCAL_STATUS_COLORS.get(status_key, {'bg': COLORS['border'], 'text': COLORS['text_secondary']})
 
             status_wrap = ctk.CTkFrame(row, fg_color="transparent")
             status_wrap.grid(row=0, column=6, sticky='ew', padx=(padx_left, padx_right), pady=0)
@@ -653,7 +696,7 @@ class Agenda(BaseScreen):
         if self.paciente_selecionado == cid:
             row.configure(fg_color=self.colors['selected'])
         else:
-            row.configure(fg_color=self.colors['hover'])
+            row.configure(fg_color=COLORS['hover'])
 
     def _on_row_leave(self, row, cid):
         if self.paciente_selecionado == cid:
@@ -782,7 +825,7 @@ class Agenda(BaseScreen):
         ) = consulta
 
         status_key = (status or '').lower()
-        estilo_status = LOCAL_STATUS_COLORS.get(status_key, {'bg': '#E5E7EB', 'text': '#374151'})
+        estilo_status = LOCAL_STATUS_COLORS.get(status_key, {'bg': COLORS['border'], 'text': COLORS['text_secondary']})
 
         top = ctk.CTkFrame(card, fg_color='transparent')
         top.pack(fill='x', pady=(18, 10))
@@ -848,7 +891,7 @@ class Agenda(BaseScreen):
         obs = ctk.CTkTextbox(
             obs_container,
             height=140,
-            fg_color='#F8FAFC',
+            fg_color=COLORS['bg_soft'],
             border_width=1,
             border_color=self.colors['border'],
             corner_radius=12
@@ -858,7 +901,7 @@ class Agenda(BaseScreen):
         obs.configure(state='disabled')
 
     def _detail_item(self, parent, text):
-        row = ctk.CTkFrame(parent, fg_color='#F8FAFC', corner_radius=12)
+        row = ctk.CTkFrame(parent, fg_color=COLORS['bg_soft'], corner_radius=12)
         row.pack(fill='x', pady=4)
 
         ctk.CTkLabel(
@@ -872,7 +915,7 @@ class Agenda(BaseScreen):
         self.paciente_selecionado = consulta_id
 
         for cid, row in self.row_widgets.items():
-            row.configure(fg_color=self.colors['selected'] if cid == consulta_id else '#FFFFFF')
+            row.configure(fg_color=self.colors['selected'] if cid == consulta_id else COLORS['card'])
 
         # Cancela qualquer atualização pendente
         if self._detail_update_id is not None:

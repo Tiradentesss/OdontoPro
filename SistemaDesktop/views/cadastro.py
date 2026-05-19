@@ -286,9 +286,9 @@ class Cadastro(BaseScreen):
             height=44,
             fg_color=COLORS["input_bg"], 
             button_color=COLORS["border"], 
-            button_hover_color="#D1D5DB",
+            button_hover_color=COLORS["border"],
             text_color=COLORS["text"], 
-            dropdown_fg_color="#FFFFFF", 
+            dropdown_fg_color=COLORS["card"], 
             dropdown_text_color=COLORS["text"],
             dropdown_font=font("text"),
             command=self._ao_mudar_tipo_profissional
@@ -454,7 +454,7 @@ class Cadastro(BaseScreen):
             width=220,
             fg_color=self.cor_primaria,
             hover_color=self.cor_primaria_hover,
-            text_color="#FFFFFF",
+            text_color="white",
             corner_radius=5,
             border_spacing=0,
             command=_salvar

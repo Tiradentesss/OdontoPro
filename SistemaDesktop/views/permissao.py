@@ -596,46 +596,47 @@ class Permissoes(BaseScreen):
         self.right_card.grid_rowconfigure(3, weight=1)
         self.right_card.grid_columnconfigure(0, weight=1)
 
-        # Cabeçalho do card direito
-        header_frame = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        header_frame.grid(row=0, column=0, sticky="ew", pady=(20, 10), padx=25)
+        # Cabeçalho do card direito - Ajustado para alinhar com AdminListFrame
+        header_bg = ctk.CTkFrame(self.right_card, fg_color="transparent")
+        header_bg.grid(row=0, column=0, sticky="ew", pady=(30, 10), padx=25)  # Aumentado de 20 para 30
         
-        ctk.CTkLabel(
-            header_frame, 
+        # Container principal do cabeçalho
+        header_content = ctk.CTkFrame(header_bg, fg_color="transparent")
+        header_content.pack(fill="x")
+        
+        # Título com ícone
+        title_frame = ctk.CTkFrame(header_content, fg_color="transparent")
+        title_frame.pack(side="left")
+        
+        self.icon_label = ctk.CTkLabel(
+            title_frame, 
             text="🔐", 
-            font=font("large_title")
-        ).pack(side="left", padx=(0, 15))
+            font=font(ICON_SIZE)
+        )
+        self.icon_label.pack(side="left", padx=(0, 12))
         
-        title_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
-        title_frame.pack(side="left", fill="both", expand=True)
-        
-        ctk.CTkLabel(
+        self.title_label = ctk.CTkLabel(
             title_frame, 
             text="Permissões", 
             font=font("subtitle", "bold"), 
-            text_color=COLORS["text"],
-            anchor="w"
-        ).pack(anchor="w")
+            text_color=COLORS["text"]
+        )
+        self.title_label.pack(side="left")
         
         self.selected_admin_label = ctk.CTkLabel(
             title_frame, 
             text="Nenhum administrador selecionado", 
             font=font("small"), 
-            text_color=COLORS["muted"],
-            anchor="w"
+            text_color=COLORS["muted"]
         )
-        self.selected_admin_label.pack(anchor="w")
+        self.selected_admin_label.pack(side="left", padx=15)
 
-        # Área de permissões - AGORA SEM SCROLLBAR
+        # Área de permissões
         self.permissions_container = ctk.CTkFrame(
             self.right_card, 
             fg_color="transparent"
         )
         self.permissions_container.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
-        
-        # Configurar 2 colunas para os cards
-        self.permissions_container.grid_columnconfigure(0, weight=1)
-        self.permissions_container.grid_columnconfigure(1, weight=1)
         
         # Configurar 2 colunas para os cards
         self.permissions_container.grid_columnconfigure(0, weight=1)
@@ -656,7 +657,7 @@ class Permissoes(BaseScreen):
             row, col = divmod(index, 2)
             config = permissions_config.get(perm_name, {"icon": "🛡️", "desc": "", "color": COLORS["muted"]})
             
-            # Card de permissão - COM ALTURA REDUZIDA PARA CABER NA TELA
+            # Card de permissão
             card = ctk.CTkFrame(
                 self.permissions_container, 
                 fg_color=COLORS["content_bg"], 
@@ -774,9 +775,7 @@ class Permissoes(BaseScreen):
         )
         self.account_status_switch.grid(row=0, column=2, rowspan=2, padx=(5, 15), sticky="e")
 
-        # =========================================================
-        # BOTÃO SALVAR - PADRONIZADO COM AS CORES DO SISTEMA
-        # =========================================================
+        # Botão Salvar
         button_frame = ctk.CTkFrame(self.right_card, fg_color="transparent")
         button_frame.grid(row=3, column=0, pady=(0, 25), padx=20, sticky="e")
         
@@ -784,12 +783,12 @@ class Permissoes(BaseScreen):
             button_frame, 
             text="💾 Salvar Alterações", 
             font=font("button_large", "bold"),
-            fg_color=COLORS["primary"],  # Cor primária do sistema
-            hover_color=COLORS["primary_dark"],  # Cor hover
-            height=44,  # Altura padrão
-            width=220,  # Largura padrão
-            corner_radius=5,  # Bordas arredondadas
-            text_color="#FFFFFF",  # Texto branco
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
+            height=44,
+            width=220,
+            corner_radius=5,
+            text_color="#FFFFFF",
             command=self.save_to_database
         )
         self.save_btn.pack(anchor="e")
@@ -798,7 +797,7 @@ class Permissoes(BaseScreen):
 
     def on_admin_click(self, frame, admin_name):
         self.selected_admin_name = admin_name
-        self.selected_admin_id = self.admins_data[admin_name].get("id")  # Novo: guardar ID do gerente
+        self.selected_admin_id = self.admins_data[admin_name].get("id")
         self.selected_admin_label.configure(text=f"Configurando: {admin_name}")
         self.toggle_switches_state("normal")
 
@@ -848,7 +847,7 @@ class Permissoes(BaseScreen):
             todas_permissoes = GerenciamentoController.listar_permissoes_disponiveis()
             permissao_map = {p['codigo']: p['id'] for p in todas_permissoes}
             for perm_nome in self.permissions_list:
-                if self.switch_widgets[perm_nome].get():  # Se a permissão está ativada
+                if self.switch_widgets[perm_nome].get():
                     permissao_id = permissao_map.get(perm_nome)
                     if permissao_id:
                         GerenciamentoController.adicionar_permissao_gerente(gerente_id, permissao_id)
