@@ -86,7 +86,7 @@ class App(ctk.CTk):
             frame.pack_forget()
         
         # Recriar todos os frames com as novas cores
-        self.frames["painel"] = Painel(self.container)
+        self.frames["painel"] = Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario)
         self.frames["agenda"] = Agenda(self.container, self.clinica_id)
         self.frames["financeiro"] = Financeiro(self.container)
         self.frames["config"] = Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id)
@@ -263,7 +263,7 @@ class App(ctk.CTk):
         self.container.grid(row=0, column=1, sticky="nsew", padx=30, pady=30)
 
         self.frames = {
-            "painel": Painel(self.container),
+            "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
             "agenda": Agenda(self.container, self.clinica_id),
             "financeiro": Financeiro(self.container),
             "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id),
