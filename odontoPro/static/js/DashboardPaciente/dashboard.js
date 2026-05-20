@@ -1162,6 +1162,10 @@ let avaliacoesSelecionadas = {}; // Armazenar avaliação por consulta
 function mostrarEstrelas(consultaId, clinicaId, medicoId) {
     console.log(`Mostrando estrelas para consulta ${consultaId}`);
     const secao = document.getElementById(`avaliacao-${consultaId}`);
+    const card = document.querySelector(`.card-agendamento[data-consulta-id="${consultaId}"]`);
+    if (card) {
+        card.classList.add('avaliacao-ativa');
+    }
     if (secao) {
         secao.style.display = "block";
         // Scroll suave para a seção
@@ -1173,6 +1177,10 @@ function mostrarEstrelas(consultaId, clinicaId, medicoId) {
 
 function ocultarEstrelas(consultaId) {
     const secao = document.getElementById(`avaliacao-${consultaId}`);
+    const card = document.querySelector(`.card-agendamento[data-consulta-id="${consultaId}"]`);
+    if (card) {
+        card.classList.remove('avaliacao-ativa');
+    }
     if (secao) {
         secao.style.display = "none";
         // Limpar seleção

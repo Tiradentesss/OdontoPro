@@ -551,53 +551,54 @@
                  data-consulta-id="{{ cons.id }}"
                  data-especialidade="{{ cons.especialidade.id|default:'' }}"
                  data-hora="{{ cons.data_hora|date:'c' }}">
-                
-                <div class="header-agendamento">
-                    <span class="status-badge {{ cons.status }}">
-                        {{ cons.get_status_display }}
-                    </span>
+                <div class="card-default-view">
+                    <div class="header-agendamento">
+                        <span class="status-badge {{ cons.status }}">
+                            {{ cons.get_status_display }}
+                        </span>
 
-                    <span class="data-consulta">
-                        <i class="fa-regular fa-calendar"></i>
-                        {{ cons.data_hora|date:"d/m/Y" }}
-                    </span>
-                </div>
+                        <span class="data-consulta">
+                            <i class="fa-regular fa-calendar"></i>
+                            {{ cons.data_hora|date:"d/m/Y" }}
+                        </span>
+                    </div>
 
-                <div class="corpo-agendamento">
-                    <h3>{{ cons.clinica.nome }}</h3>
-                    <p><i class="fa-solid fa-user-doctor"></i> {{ cons.medico.nome }}</p>
-                    {% if cons.especialidade %}
-                        <p><i class="fa-solid fa-stethoscope"></i> {{ cons.especialidade.nome }}</p>
-                    {% endif %}
-                        <p class="hora-consulta"><i class="fa-regular fa-clock"></i> <span class="hora-text">{{ cons.data_hora|time:"H:i" }}</span></p>
-                </div>
+                    <div class="corpo-agendamento">
+                        <h3>{{ cons.clinica.nome }}</h3>
+                        <p><i class="fa-solid fa-user-doctor"></i> {{ cons.medico.nome }}</p>
+                        {% if cons.especialidade %}
+                            <p><i class="fa-solid fa-stethoscope"></i> {{ cons.especialidade.nome }}</p>
+                        {% endif %}
+                            <p class="hora-consulta"><i class="fa-regular fa-clock"></i> <span class="hora-text">{{ cons.data_hora|time:"H:i" }}</span></p>
+                    </div>
 
-                <div class="card-actions">
-                    <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
-                        Ver Detalhes
-                    </button>
-
-                    {% if cons.status == 'agendada' or cons.status == 'confirmada' %}
-                        <button class="btn-cancelar-consulta" onclick="confirmarCancelamentoConsulta('{{ cons.id }}')">
-                            Cancelar
-                        </button>
-                    {% endif %}
-
-                    {% if cons.status == 'realizada' and not cons.avaliacao %}
-                        <button class="btn-avaliar"
-                            onclick="mostrarEstrelas('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
-                            Avaliar Consulta
+                    <div class="card-actions">
+                        <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
+                            Ver Detalhes
                         </button>
 
-                    {% elif cons.avaliacao %}
-                        <button class="btn-avaliado" disabled>
-                            ✔ Avaliado
-                        </button>
-                    {% endif %}
+                        {% if cons.status == 'agendada' or cons.status == 'confirmada' %}
+                            <button class="btn-cancelar-consulta" onclick="confirmarCancelamentoConsulta('{{ cons.id }}')">
+                                Cancelar
+                            </button>
+                        {% endif %}
+
+                        {% if cons.status == 'realizada' and not cons.avaliacao %}
+                            <button class="btn-avaliar"
+                                onclick="mostrarEstrelas('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
+                                Avaliar Consulta
+                            </button>
+
+                        {% elif cons.avaliacao %}
+                            <button class="btn-avaliado" disabled>
+                                ✔ Avaliado
+                            </button>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- 🔹 Seção de Avaliação com Estrelas (inicialmente oculta) -->
-                <div class="avaliacao-section" id="avaliacao-{{ cons.id }}" style="display: none; margin-top: 15px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+                <div class="avaliacao-section" id="avaliacao-{{ cons.id }}" style="display: none;">
                     <h4 style="margin-bottom: 15px;">Avaliar Consulta</h4>
                     
                     <div class="avaliacao-stars" style="display: flex; gap: 10px; margin-bottom: 15px; font-size: 32px; justify-content: center;">
@@ -608,9 +609,9 @@
                         <span class="star" data-valor="5" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
                     </div>
 
-                    <textarea id="comentario-{{ cons.id }}" placeholder="Deixe um comentário sobre a consulta (opcional)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; min-height: 80px;"></textarea>
+                    <textarea id="comentario-{{ cons.id }}" placeholder="Deixe um comentário sobre a consulta (opcional)"></textarea>
 
-                    <div style="display: flex; gap: 10px;">
+                    <div class="avaliacao-actions">
                         <button class="btn-enviar-avaliacao" onclick="enviarAvaliacao('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
                             Enviar Avaliação
                         </button>

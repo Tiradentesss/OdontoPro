@@ -305,6 +305,20 @@ body {
     border-radius: 20px !important;
 }
 
+.theme-dark .card-agendamento.avaliacao-ativa {
+    background: rgba(255, 218, 120, 0.12) !important;
+    border-color: #ffda78 !important;
+    border-left-color: #ffda78 !important;
+    box-shadow: 0 14px 32px rgba(255, 184, 0, 0.16) !important;
+}
+
+.theme-dark .card-agendamento .corpo-agendamento h3,
+.theme-dark .card-agendamento .corpo-agendamento p,
+.theme-dark .card-agendamento .corpo-agendamento .hora-consulta,
+.theme-dark .card-agendamento .corpo-agendamento .hora-consulta span {
+    color: #ffffff !important;
+}
+
 .theme-dark .logo-sobreposta {
     background: #fff !important;
     border-color: #fff !important;
@@ -445,6 +459,13 @@ body {
 .theme-dark .card-agendamento[data-status="cancelada"],
 .theme-dark .cancelado-card {
     border-left-color: #ef4444 !important;
+}
+
+.theme-dark .card-agendamento.avaliacao-ativa {
+    background: rgba(255, 218, 120, 0.12) !important;
+    border-left-color: #ffda78 !important;
+    border-color: #ffda78 !important;
+    box-shadow: 0 14px 32px rgba(255, 184, 0, 0.16) !important;
 }
 
 .theme-dark .abas-clinica {
@@ -2041,11 +2062,83 @@ body.theme-dark .item-menu.ativo {
 
 /* ================= SEÇÃO DE AVALIAÇÃO COM ESTRELAS ================= */
 .avaliacao-section {
+    display: none;
+    position: absolute;
+    inset: 0;
     border: 2px solid #FFB800;
-    background: linear-gradient(135deg, rgba(255, 184, 0, 0.05) 0%, rgba(255, 184, 0, 0.02) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 246, 215, 0.98) 100%);
     animation: slideDown 0.3s ease-out;
-    position: relative;
     z-index: 1000;
+    padding: 14px;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.card-agendamento {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-agendamento.avaliacao-ativa {
+    background: #fff9ed;
+    border-color: #ffda78;
+    border-left-color: #ffda78;
+    box-shadow: 0 14px 32px rgba(255, 184, 0, 0.18);
+    transform: translateY(-2px);
+}
+
+.card-agendamento.avaliacao-ativa .card-default-view {
+    opacity: 0.12;
+    filter: blur(1px);
+    pointer-events: none;
+}
+
+.card-agendamento.avaliacao-ativa .avaliacao-section {
+    display: flex;
+}
+
+.avaliacao-section h4 {
+    color: #1f2937;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.avaliacao-stars {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.avaliacao-section textarea {
+    width: 100%;
+    min-height: 60px;
+    max-height: 72px;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111827;
+    resize: none;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.avaliacao-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.avaliacao-actions button {
+    flex: 1;
+    min-width: 0;
 }
 
 @keyframes slideDown {
@@ -3899,6 +3992,10 @@ body.theme-dark .item-menu.ativo {
 .card-agendamento[data-status="realizada"],
 .realizado-card {
     border-left-color: #22c55e;
+}
+
+.card-agendamento.avaliacao-ativa {
+    border-left-color: #ffda78 !important;
 }
 
 .status-badge.realizada {
