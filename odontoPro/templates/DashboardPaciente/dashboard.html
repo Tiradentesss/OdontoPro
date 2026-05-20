@@ -573,24 +573,28 @@
                     </div>
 
                     <div class="card-actions">
-                        <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
+                        <button class="btn-detalhes" type="button" data-consulta-id="{{ cons.id }}" aria-label="Ver detalhes da consulta {{ cons.id }}">
                             Ver Detalhes
                         </button>
 
                         {% if cons.status == 'agendada' or cons.status == 'confirmada' %}
-                            <button class="btn-cancelar-consulta" onclick="confirmarCancelamentoConsulta('{{ cons.id }}')">
+                            <button class="btn-cancelar-consulta" type="button" data-consulta-id="{{ cons.id }}" aria-label="Cancelar consulta {{ cons.id }}">
                                 Cancelar
                             </button>
                         {% endif %}
 
                         {% if cons.status == 'realizada' and not cons.avaliacao %}
-                            <button class="btn-avaliar"
-                                onclick="mostrarEstrelas('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
+                            <button class="btn-avaliar" type="button"
+                                data-consulta-id="{{ cons.id }}"
+                                data-clinica-id="{{ cons.clinica.id }}"
+                                data-medico-id="{{ cons.medico.id }}"
+                                aria-expanded="false"
+                                aria-label="Avaliar consulta {{ cons.id }}">
                                 Avaliar Consulta
                             </button>
 
                         {% elif cons.avaliacao %}
-                            <button class="btn-avaliado" disabled>
+                            <button class="btn-avaliado" type="button" disabled aria-label="Consulta avaliada">
                                 ✔ Avaliado
                             </button>
                         {% endif %}
@@ -598,24 +602,24 @@
                 </div>
 
                 <!-- 🔹 Seção de Avaliação com Estrelas (inicialmente oculta) -->
-                <div class="avaliacao-section" id="avaliacao-{{ cons.id }}" style="display: none;">
-                    <h4 style="margin-bottom: 15px;">Avaliar Consulta</h4>
+                <div class="avaliacao-section" id="avaliacao-{{ cons.id }}" aria-hidden="true">
+                    <h4>Avaliar Consulta</h4>
                     
-                    <div class="avaliacao-stars" style="display: flex; gap: 10px; margin-bottom: 15px; font-size: 32px; justify-content: center;">
-                        <span class="star" data-valor="1" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
-                        <span class="star" data-valor="2" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
-                        <span class="star" data-valor="3" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
-                        <span class="star" data-valor="4" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
-                        <span class="star" data-valor="5" onclick="selecionarEstrela(this, '{{ cons.id }}')" style="cursor: pointer;">★</span>
+                    <div class="avaliacao-stars">
+                        <button type="button" class="star" data-valor="1" data-consulta-id="{{ cons.id }}" aria-label="Selecionar 1 estrela">★</button>
+                        <button type="button" class="star" data-valor="2" data-consulta-id="{{ cons.id }}" aria-label="Selecionar 2 estrelas">★</button>
+                        <button type="button" class="star" data-valor="3" data-consulta-id="{{ cons.id }}" aria-label="Selecionar 3 estrelas">★</button>
+                        <button type="button" class="star" data-valor="4" data-consulta-id="{{ cons.id }}" aria-label="Selecionar 4 estrelas">★</button>
+                        <button type="button" class="star" data-valor="5" data-consulta-id="{{ cons.id }}" aria-label="Selecionar 5 estrelas">★</button>
                     </div>
 
                     <textarea id="comentario-{{ cons.id }}" placeholder="Deixe um comentário sobre a consulta (opcional)"></textarea>
 
                     <div class="avaliacao-actions">
-                        <button class="btn-enviar-avaliacao" onclick="enviarAvaliacao('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
+                        <button class="btn-enviar-avaliacao" type="button" data-consulta-id="{{ cons.id }}" data-clinica-id="{{ cons.clinica.id }}" data-medico-id="{{ cons.medico.id }}">
                             Enviar Avaliação
                         </button>
-                        <button class="btn-cancelar-avaliacao" onclick="ocultarEstrelas('{{ cons.id }}')">
+                        <button class="btn-cancelar-avaliacao" type="button" data-consulta-id="{{ cons.id }}">
                             Cancelar
                         </button>
                     </div>

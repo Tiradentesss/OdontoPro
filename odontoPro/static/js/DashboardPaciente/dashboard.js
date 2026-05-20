@@ -84,6 +84,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Fechar modais ao clicar fora
     inicializarFechoDeModais();
     
+    // Inicializar ações de cartão de consulta
+    inicializarInteracaoCartoes();
+    
     // Adicionar listener para carregamento de horários quando data é selecionada
     const inputData = document.getElementById('inputData');
     if (inputData) {
@@ -122,6 +125,50 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
+function inicializarInteracaoCartoes() {
+    const grid = document.querySelector('.grid-agendamentos');
+    if (!grid) return;
+
+    grid.addEventListener('click', event => {
+        const detalheBtn = event.target.closest('.btn-detalhes');
+        if (detalheBtn) {
+            abrirDetalhes(detalheBtn.dataset.consultaId);
+            return;
+        }
+
+        const cancelarBtn = event.target.closest('.btn-cancelar-consulta');
+        if (cancelarBtn) {
+            confirmarCancelamentoConsulta(cancelarBtn.dataset.consultaId);
+            return;
+        }
+
+        const avaliarBtn = event.target.closest('.btn-avaliar');
+        if (avaliarBtn) {
+            mostrarEstrelas(avaliarBtn.dataset.consultaId, avaliarBtn.dataset.clinicaId, avaliarBtn.dataset.medicoId);
+            avaliarBtn.setAttribute('aria-expanded', 'true');
+            return;
+        }
+
+        const enviarBtn = event.target.closest('.btn-enviar-avaliacao');
+        if (enviarBtn) {
+            enviarAvaliacao(enviarBtn.dataset.consultaId, enviarBtn.dataset.clinicaId, enviarBtn.dataset.medicoId);
+            return;
+        }
+
+        const cancelarAvaliacaoBtn = event.target.closest('.btn-cancelar-avaliacao');
+        if (cancelarAvaliacaoBtn) {
+            ocultarEstrelas(cancelarAvaliacaoBtn.dataset.consultaId);
+            return;
+        }
+
+        const starBtn = event.target.closest('.star');
+        if (starBtn) {
+            selecionarEstrela(starBtn, starBtn.dataset.consultaId);
+            return;
+        }
+    });
+}
 
 /* ================= FUNÇÃO PARA AJUSTAR POSIÇÃO DO DROPDOWN ================= */
 function ajustarPosicaoDropdown(dropdown, botao) {
@@ -1163,12 +1210,17 @@ function mostrarEstrelas(consultaId, clinicaId, medicoId) {
     console.log(`Mostrando estrelas para consulta ${consultaId}`);
     const secao = document.getElementById(`avaliacao-${consultaId}`);
     const card = document.querySelector(`.card-agendamento[data-consulta-id="${consultaId}"]`);
+    const botaoAvaliar = document.querySelector(`.btn-avaliar[data-consulta-id="${consultaId}"]`);
+
     if (card) {
         card.classList.add('avaliacao-ativa');
     }
+    if (botaoAvaliar) {
+        botaoAvaliar.setAttribute('aria-expanded', 'true');
+    }
     if (secao) {
-        secao.style.display = "block";
-        // Scroll suave para a seção
+        secao.style.display = "flex";
+        secao.setAttribute('aria-hidden', 'false');
         secao.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } else {
         console.error(`Seção de avaliação não encontrada: avaliacao-${consultaId}`);
@@ -1178,12 +1230,17 @@ function mostrarEstrelas(consultaId, clinicaId, medicoId) {
 function ocultarEstrelas(consultaId) {
     const secao = document.getElementById(`avaliacao-${consultaId}`);
     const card = document.querySelector(`.card-agendamento[data-consulta-id="${consultaId}"]`);
+    const botaoAvaliar = document.querySelector(`.btn-avaliar[data-consulta-id="${consultaId}"]`);
+
     if (card) {
         card.classList.remove('avaliacao-ativa');
     }
+    if (botaoAvaliar) {
+        botaoAvaliar.setAttribute('aria-expanded', 'false');
+    }
     if (secao) {
         secao.style.display = "none";
-        // Limpar seleção
+        secao.setAttribute('aria-hidden', 'true');
         document.querySelectorAll(`#avaliacao-${consultaId} .star`).forEach(star => {
             star.classList.remove("selecionada");
         });
@@ -1253,11 +1310,12 @@ function enviarAvaliacao(consultaId, clinicaId, medicoId) {
             mostrarMensagem('Sucesso', 'Avaliação enviada com sucesso!', 'success');
             ocultarEstrelas(consultaId);
             // Desabilitar botão de avaliação
-            const btnAvaliar = document.querySelector(`button[data-consulta-id="${consultaId}"]`);
+            const btnAvaliar = document.querySelector(`.btn-avaliar[data-consulta-id="${consultaId}"]`);
             if (btnAvaliar) {
                 btnAvaliar.disabled = true;
                 btnAvaliar.textContent = "✅ Avaliado";
                 btnAvaliar.style.opacity = "0.6";
+                btnAvaliar.setAttribute('aria-expanded', 'false');
             }
         } else {
             mostrarMensagem('Erro', data.message || 'Erro ao enviar avaliação', 'error');
