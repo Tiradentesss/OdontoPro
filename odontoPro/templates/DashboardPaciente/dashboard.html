@@ -548,6 +548,7 @@
             <div class="card-agendamento 
                         {% if cons.status == 'realizada' %}realizado-card{% elif cons.status == 'cancelada' %}cancelado-card{% endif %}"
                  data-status="{{ cons.status }}"
+                 data-consulta-id="{{ cons.id }}"
                  data-especialidade="{{ cons.especialidade.id|default:'' }}"
                  data-hora="{{ cons.data_hora|date:'c' }}">
                 
@@ -566,36 +567,34 @@
                     <h3>{{ cons.clinica.nome }}</h3>
                     <p><i class="fa-solid fa-user-doctor"></i> {{ cons.medico.nome }}</p>
                     {% if cons.especialidade %}
-                    <p><i class="fa-solid fa-stethoscope"></i> {{ cons.especialidade.nome }}</p>
+                        <p><i class="fa-solid fa-stethoscope"></i> {{ cons.especialidade.nome }}</p>
                     {% endif %}
-                    <p><i class="fa-regular fa-clock"></i> {{ cons.data_hora|time:"H:i" }}</p>
+                        <p class="hora-consulta"><i class="fa-regular fa-clock"></i> <span class="hora-text">{{ cons.data_hora|time:"H:i" }}</span></p>
                 </div>
 
-                <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
-                    Ver Detalhes
-                </button>
-
-                <!-- Botão de Cancelar (só para consultas agendadas ou confirmadas) -->
-                {% if cons.status == 'agendada' or cons.status == 'confirmada' %}
-                    <button class="btn-cancelar-consulta" onclick="confirmarCancelamentoConsulta('{{ cons.id }}')">
-                        Cancelar Consulta
-                    </button>
-                {% else %}
-                    <!-- DEBUG: Status atual: {{ cons.status }} -->
-                {% endif %}
-
-                <!-- Botão de Avaliar (só para consultas realizadas) -->
-                {% if cons.status == 'realizada' and not cons.avaliacao %}
-                    <button class="btn-avaliar"
-                        onclick="mostrarEstrelas('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
-                        Avaliar Consulta
+                <div class="card-actions">
+                    <button class="btn-detalhes" onclick="abrirDetalhes('{{ cons.id }}')">
+                        Ver Detalhes
                     </button>
 
-                {% elif cons.avaliacao %}
-                    <button class="btn-avaliado" disabled>
-                        ✔ Avaliado
-                    </button>
-                {% endif %}
+                    {% if cons.status == 'agendada' or cons.status == 'confirmada' %}
+                        <button class="btn-cancelar-consulta" onclick="confirmarCancelamentoConsulta('{{ cons.id }}')">
+                            Cancelar
+                        </button>
+                    {% endif %}
+
+                    {% if cons.status == 'realizada' and not cons.avaliacao %}
+                        <button class="btn-avaliar"
+                            onclick="mostrarEstrelas('{{ cons.id }}', '{{ cons.clinica.id }}', '{{ cons.medico.id }}')">
+                            Avaliar Consulta
+                        </button>
+
+                    {% elif cons.avaliacao %}
+                        <button class="btn-avaliado" disabled>
+                            ✔ Avaliado
+                        </button>
+                    {% endif %}
+                </div>
 
                 <!-- 🔹 Seção de Avaliação com Estrelas (inicialmente oculta) -->
                 <div class="avaliacao-section" id="avaliacao-{{ cons.id }}" style="display: none; margin-top: 15px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
@@ -628,7 +627,6 @@
                         <div class="modal-header-consulta">
                             <div class="titulo-consulta">
                                 <h3>Detalhes da Consulta</h3>
-                                <div class="consulta-id">#{{ cons.id }}</div>
                             </div>
                             <div class="status-consulta">
                                 <i class="fa-solid fa-check"></i>
@@ -727,7 +725,13 @@
 
                         <!-- Botões de ação -->
                         <div class="modal-actions">
-                            <button class="btn-secondary" onclick="fecharDetalhes('{{ cons.id }}')">
+                            {% if cons.status == 'agendada' or cons.status == 'confirmada' %}
+                                <button class="btn-principal" onclick="abrirReagendamento('{{ cons.id }}')">
+                                    <i class="fa-solid fa-calendar-arrow-up"></i>
+                                    Reagendar
+                                </button>
+                            {% endif %}
+                            <button class="btn-secundario" onclick="fecharDetalhes('{{ cons.id }}')">
                                 <i class="fa-solid fa-times"></i>
                                 Fechar
                             </button>
@@ -959,9 +963,33 @@
                 </p>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 25px;">
-                <button class="btn-secundario" style="flex: 1;" onclick="fecharModalCancelar()">Voltar</button>
-                <button class="btn-cancelar" style="flex: 1;" onclick="confirmarCancelamento()">Sim, Cancelar</button>
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 25px;">
+                <button class="btn-secundario" style="flex: 1; max-width: 160px;" onclick="fecharModalCancelar()">Voltar</button>
+                <button class="btn-cancelar" style="flex: 1; max-width: 160px;" onclick="confirmarCancelamento()">Sim, Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE REAGENDAMENTO -->
+<div id="modal-reagendar-consulta" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Reagendar Consulta</h3>
+            <button onclick="fecharModalReagendar()" class="fechar-modal">×</button>
+        </div>
+
+        <div class="modal-body">
+            <div style="text-align: center; margin-bottom: 10px;">
+                <label for="reagendar-data" style="display:block; font-weight:600; margin-bottom:6px;">Nova data</label>
+                <input id="reagendar-data" type="date" style="padding:8px; width:60%; margin-bottom:12px;" />
+                <label for="reagendar-hora" style="display:block; font-weight:600; margin-bottom:6px;">Novo horário</label>
+                <input id="reagendar-hora" type="time" style="padding:8px; width:60%;" />
+            </div>
+
+            <div style="display:flex; justify-content: center; gap:10px; margin-top:20px;">
+                <button class="btn-secundario" style="flex:1; max-width: 160px;" onclick="fecharModalReagendar()">Voltar</button>
+                <button class="btn-principal" style="flex:1; max-width: 160px;" onclick="submitReagendamento()">Confirmar</button>
             </div>
         </div>
     </div>

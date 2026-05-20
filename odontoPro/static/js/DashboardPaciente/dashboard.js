@@ -291,16 +291,16 @@ function cancelarConsulta(consultaId) {
         method: 'POST',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': getCsrfToken()
-        }
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            removerCardConsulta(consultaId);
             mostrarMensagem('Consulta Cancelada', data.message, 'success');
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
         } else {
             mostrarMensagem('Erro', 'Erro: ' + data.error, 'error');
         }
@@ -309,6 +309,103 @@ function cancelarConsulta(consultaId) {
         console.error('Erro ao cancelar consulta:', error);
         mostrarMensagem('Erro', 'Erro ao cancelar a consulta', 'error');
     });
+}
+
+function removerCardConsulta(consultaId) {
+    const card = document.querySelector(`.card-agendamento[data-consulta-id="${consultaId}"]`);
+    if (card) {
+        const grid = card.closest('.grid-agendamentos');
+        card.remove();
+        if (grid && !grid.querySelector('.card-agendamento')) {
+            const vazio = document.createElement('div');
+            vazio.className = 'empty-consultas';
+            vazio.textContent = 'Nenhuma consulta encontrada.';
+            grid.appendChild(vazio);
+        }
+    }
+}
+
+// ===== REAGENDAMENTO EM TEMPO REAL =====
+function abrirReagendamento(consultaId) {
+    const modal = document.getElementById('modal-reagendar-consulta');
+    const dateInput = document.getElementById('reagendar-data');
+    const timeInput = document.getElementById('reagendar-hora');
+    const card = document.querySelector(`.card-agendamento[data-consulta-id="${consultaId}"]`);
+    if (card && card.dataset.hora) {
+        const dt = new Date(card.dataset.hora);
+        if (!isNaN(dt.getTime())) {
+            dateInput.value = dt.toISOString().slice(0,10);
+            timeInput.value = dt.toTimeString().slice(0,5);
+        }
+    }
+    modal.dataset.consultaId = consultaId;
+    modal.classList.add('mostrar');
+    modal.style.display = 'flex';
+}
+
+function fecharModalReagendar() {
+    const modal = document.getElementById('modal-reagendar-consulta');
+    if (modal) {
+        modal.classList.remove('mostrar');
+        modal.style.display = 'none';
+        delete modal.dataset.consultaId;
+    }
+}
+
+function submitReagendamento() {
+    const modal = document.getElementById('modal-reagendar-consulta');
+    const consultaId = modal.dataset.consultaId;
+    const date = document.getElementById('reagendar-data').value;
+    const time = document.getElementById('reagendar-hora').value;
+    if (!date || !time) {
+        mostrarMensagem('Erro', 'Informe data e hora válidas', 'error');
+        return;
+    }
+    const data_hora = `${date}T${time}:00`;
+    const formData = new FormData();
+    formData.append('data_hora', data_hora);
+
+    fetch(`/consulta/${consultaId}/reagendar/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: formData,
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            updateCardConsulta(consultaId, data.data_hora, data.status);
+            fecharModalReagendar();
+            mostrarMensagem('Consulta Reagendada', data.message, 'success');
+        } else {
+            mostrarMensagem('Erro', data.error || 'Erro ao reagendar', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Erro no reagendamento:', err);
+        mostrarMensagem('Erro', 'Erro ao reagendar consulta', 'error');
+    });
+}
+
+function updateCardConsulta(consultaId, isoDataHora, status) {
+    const card = document.querySelector(`.card-agendamento[data-consulta-id="${consultaId}"]`);
+    if (!card) return;
+    card.dataset.hora = isoDataHora;
+    const dt = new Date(isoDataHora);
+    const dataStr = dt.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+    const timeStr = dt.toTimeString().slice(0,5);
+    const headerData = card.querySelector('.header-agendamento .data-consulta');
+    if (headerData) headerData.innerHTML = `<i class="fa-regular fa-calendar"></i> ${dataStr}`;
+    const horaText = card.querySelector('.hora-text');
+    if (horaText) horaText.textContent = timeStr;
+    const badge = card.querySelector('.status-badge');
+    if (badge) {
+        badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        badge.className = 'status-badge ' + status;
+    }
 }
 
 // Função auxiliar para pegar CSRF token

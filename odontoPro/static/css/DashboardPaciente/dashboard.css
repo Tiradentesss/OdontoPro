@@ -616,6 +616,21 @@ body.theme-dark .tag-online {
     color: var(--perigo);
 }
 
+.theme-dark .status-badge.confirmada {
+    background: rgba(59, 130, 246, 0.16);
+    color: #93c5fd;
+}
+
+.theme-dark .status-badge.perdida {
+    background: rgba(148, 163, 184, 0.16);
+    color: #cbd5e1;
+}
+
+.theme-dark .status-badge.perdida {
+    background: rgba(148, 163, 184, 0.16);
+    color: #cbd5e1;
+}
+
 /* Security banner no dark mode */
 .theme-dark .security-banner {
     background: rgba(77, 184, 255, 0.16);
@@ -1899,6 +1914,17 @@ body.theme-dark .item-menu.ativo {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
 }
 
+.card-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.card-actions button {
+    width: 100%;
+}
+
 .header-agendamento {
     display: flex;
     justify-content: space-between;
@@ -2344,6 +2370,16 @@ body.theme-dark .item-menu.ativo {
 .status-badge.realizado {
     background: #e3f2fd;
     color: #3498db;
+}
+
+.status-badge.confirmada {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-badge.perdida {
+    background: #f3f4f6;
+    color: #4b5563;
 }
 
 .status-badge.cancelado {
@@ -3776,9 +3812,23 @@ body.theme-dark .item-menu.ativo {
     color: #991b1b;
 }
 
-.card-agendamento[data-status="cancelada"],
-.cancelado-card {
-    border-left-color: #ef4444;
+.card-agendamento[data-status="confirmada"] {
+    border-left-color: #3b82f6;
+}
+
+.status-badge.confirmada {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.card-agendamento[data-status="perdida"],
+.perdida-card {
+    border-left-color: #9ca3af;
+}
+
+.status-badge.perdida {
+    background: #f3f4f6;
+    color: #4b5563;
 }
 
 .status-badge.cancelada {

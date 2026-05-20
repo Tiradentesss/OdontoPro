@@ -97,13 +97,42 @@ def reagendar_consulta(request, consulta_id):
     consulta = get_object_or_404(Consulta, id=consulta_id)
 
     if request.method == "POST":
+        # Accept AJAX requests with an ISO datetime in `data_hora`
+        data_hora_iso = request.POST.get("data_hora") or request.POST.get("data_hora_iso")
+        if data_hora_iso:
+            dt = parse_datetime(data_hora_iso)
+            if not dt:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({"success": False, "error": "Data inválida"}, status=400)
+                messages.error(request, "Data inválida")
+            else:
+                # make timezone-aware if necessary
+                if timezone.is_naive(dt):
+                    dt = timezone.make_aware(dt)
+                consulta.data_hora = dt
+                consulta.status = "agendada"
+                consulta.save()
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        "success": True,
+                        "message": "Consulta reagendada com sucesso!",
+                        "data_hora": consulta.data_hora.isoformat(),
+                        "status": consulta.status,
+                    })
+                messages.success(request, "Consulta reagendada com sucesso!")
+                return redirect("dashboard_paciente")
+
+        # Fallback legacy POST (se vier em campos separados)
         nova_data = request.POST.get("data")
         novo_horario = request.POST.get("hora")
 
         if not nova_data or not novo_horario:
             messages.error(request, "Informe a nova data e horário.")
         else:
-            consulta.data_hora = f"{nova_data} {novo_horario}"
+            dt = parse_datetime(f"{nova_data}T{novo_horario}:00")
+            if dt and timezone.is_naive(dt):
+                dt = timezone.make_aware(dt)
+            consulta.data_hora = dt or consulta.data_hora
             consulta.status = "agendada"
             consulta.save()
 
