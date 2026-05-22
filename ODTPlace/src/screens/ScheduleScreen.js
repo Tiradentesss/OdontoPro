@@ -437,8 +437,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                     contentContainerStyle={styles.dateCarousel}
                     ref={scrollViewRef}
                     nestedScrollEnabled={true}
-                    onStartShouldSetResponderCapture={() => true}
-                    onMoveShouldSetResponderCapture={() => true}
+                    scrollEnabled={true}
                     onScrollBeginDrag={() => setShouldResetPosition(false)}
                     onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
                 >
