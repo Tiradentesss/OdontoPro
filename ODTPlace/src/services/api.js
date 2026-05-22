@@ -1,8 +1,14 @@
 import axios from "axios";
 
 // Configure your backend URL here
-// Use your local IP address so the app can reach the backend from a device/emulator
-const API_BASE_URL = "http://192.168.1.108:3001/api"; // Use your local IP address here
+// For development:
+// - Android Emulator/Web: http://localhost:3001/api
+// - Physical Device/iOS: Use your machine's local IP (e.g., http://192.168.X.X:3001/api)
+// - To find your IP on Windows: run `ipconfig` in terminal and look for IPv4 Address
+
+// Change this to your machine's IP if connecting from a physical device
+// Your machine IP: 10.0.60.217
+const API_BASE_URL = "http://10.0.60.217:3001/api"; // Change to your IP for physical devices
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -65,9 +71,16 @@ export const loginPatient = async (email, senha) => {
     return response.data;
   } catch (error) {
     console.error('Login API Error:', error.message);
-    if (error.code === 'ECONNABORTED' || error.message.includes('Network Error')) {
-      throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão.');
+    console.error('API Base URL:', API_BASE_URL);
+    
+    // Network connection errors
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      throw new Error('Conexão expirou. O servidor está respondendo?');
     }
+    if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error') || !error.response) {
+      throw new Error('Não foi possível conectar ao servidor.\n\nVerifique:\n1. O backend está rodando em ' + API_BASE_URL + '?\n2. Sua conexão de rede?');
+    }
+    // Server errors
     if (error.response) {
       throw error;
     }
