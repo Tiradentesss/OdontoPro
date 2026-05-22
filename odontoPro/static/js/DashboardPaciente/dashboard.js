@@ -346,7 +346,11 @@ function cancelarConsulta(consultaId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            removerCardConsulta(consultaId);
+            const card = document.querySelector(`.card-agendamento[data-consulta-id="${consultaId}"]`);
+            if (card) {
+                updateCardConsulta(consultaId, card.dataset.hora, 'cancelada');
+                aplicarFiltrosConsultas();
+            }
             mostrarMensagem('Consulta Cancelada', data.message, 'success');
         } else {
             mostrarMensagem('Erro', 'Erro: ' + data.error, 'error');
@@ -425,6 +429,7 @@ function submitReagendamento() {
     .then(data => {
         if (data.success) {
             updateCardConsulta(consultaId, data.data_hora, data.status);
+            aplicarFiltrosConsultas();
             fecharModalReagendar();
             mostrarMensagem('Consulta Reagendada', data.message, 'success');
         } else {
@@ -440,18 +445,48 @@ function submitReagendamento() {
 function updateCardConsulta(consultaId, isoDataHora, status) {
     const card = document.querySelector(`.card-agendamento[data-consulta-id="${consultaId}"]`);
     if (!card) return;
-    card.dataset.hora = isoDataHora;
-    const dt = new Date(isoDataHora);
-    const dataStr = dt.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
-    const timeStr = dt.toTimeString().slice(0,5);
-    const headerData = card.querySelector('.header-agendamento .data-consulta');
-    if (headerData) headerData.innerHTML = `<i class="fa-regular fa-calendar"></i> ${dataStr}`;
-    const horaText = card.querySelector('.hora-text');
-    if (horaText) horaText.textContent = timeStr;
-    const badge = card.querySelector('.status-badge');
-    if (badge) {
-        badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        badge.className = 'status-badge ' + status;
+    if (isoDataHora) {
+        card.dataset.hora = isoDataHora;
+        const dt = new Date(isoDataHora);
+        if (!isNaN(dt.getTime())) {
+            const dataStr = dt.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
+            const timeStr = dt.toTimeString().slice(0,5);
+            const headerData = card.querySelector('.header-agendamento .data-consulta');
+            if (headerData) headerData.innerHTML = `<i class="fa-regular fa-calendar"></i> ${dataStr}`;
+            const horaText = card.querySelector('.hora-text');
+            if (horaText) horaText.textContent = timeStr;
+        }
+    }
+    if (status) {
+        card.dataset.status = status;
+        card.classList.remove('realizado-card', 'cancelado-card', 'perdida-card');
+        if (status === 'realizada') card.classList.add('realizado-card');
+        if (status === 'cancelada') card.classList.add('cancelado-card');
+        if (status === 'perdida') card.classList.add('perdida-card');
+
+        const badge = card.querySelector('.status-badge');
+        if (badge) {
+            const displayText = status.charAt(0).toUpperCase() + status.slice(1);
+            badge.textContent = displayText;
+            badge.className = 'status-badge ' + status;
+        }
+        
+        // Atualizar botões de ação baseado no novo status
+        const cardActions = card.querySelector('.card-actions');
+        if (cardActions) {
+            const btnCancelar = cardActions.querySelector('.btn-cancelar-consulta');
+            const btnAvaliar = cardActions.querySelector('.btn-avaliar');
+            
+            // Se foi cancelada, remover botão de cancelamento
+            if (status === 'cancelada' && btnCancelar) {
+                btnCancelar.remove();
+            }
+            
+            // Se foi reagendada ou alterada, remover botão de avaliação (pois consulta não foi realizada)
+            if ((status === 'agendada' || status === 'confirmada') && btnAvaliar) {
+                btnAvaliar.remove();
+            }
+        }
     }
 }
 
@@ -829,41 +864,45 @@ function inicializarFechoDeModais() {
 }
 
 /* ================= UPLOAD DE FOTO ================= */
-function inicializarFiltrosConsultas() {
+function aplicarFiltrosConsultas() {
     const botoes = document.querySelectorAll(".filtro-btn");
     const cards = document.querySelectorAll(".card-agendamento");
     const selectEspecialidade = document.getElementById("selectFiltroEspecialidade");
     const inputData = document.getElementById("inputFiltroData");
     const inputFiltroTexto = document.getElementById("inputFiltroTexto");
 
-    const aplicarFiltrosConsultas = () => {
-        const filtroStatus = document.querySelector(".filtro-btn.ativo")?.dataset.filtro || "todas";
-        const especialidadeSelecionada = selectEspecialidade?.value || "";
-        const dataSelecionada = inputData?.value || "";
-        const pesquisa = inputFiltroTexto?.value.trim().toLowerCase() || "";
+    const filtroStatus = document.querySelector(".filtro-btn.ativo")?.dataset.filtro || "todas";
+    const especialidadeSelecionada = selectEspecialidade?.value || "";
+    const dataSelecionada = inputData?.value || "";
+    const pesquisa = inputFiltroTexto?.value.trim().toLowerCase() || "";
+    const agora = new Date();
 
-        const agora = new Date();
+    cards.forEach(card => {
+        const status = (card.dataset.status || "").toLowerCase();
+        const especialidade = card.dataset.especialidade || "";
+        const dataHora = card.dataset.hora || "";
+        const dataConsulta = dataHora ? new Date(dataHora) : null;
+        const textoCard = card.textContent.toLowerCase();
+        const isPerdida = isConsultaPerdida(status, dataConsulta, agora);
 
-        cards.forEach(card => {
-            const status = (card.dataset.status || "").toLowerCase();
-            const especialidade = card.dataset.especialidade || "";
-            const dataHora = card.dataset.hora || "";
-            const dataConsulta = dataHora ? new Date(dataHora) : null;
-            const textoCard = card.textContent.toLowerCase();
-            const isPerdida = isConsultaPerdida(status, dataConsulta, agora);
+        card.classList.toggle("perdida-card", isPerdida);
 
-            card.classList.toggle("perdida-card", isPerdida);
+        const statusMatch = filtroStatus === "todas"
+            || (filtroStatus === "perdidas" ? isPerdida : status === filtroStatus);
 
-            const statusMatch = filtroStatus === "todas"
-                || (filtroStatus === "perdidas" ? isPerdida : status === filtroStatus);
+        const especialidadeMatch = !especialidadeSelecionada || especialidade === especialidadeSelecionada;
+        const dataMatch = !dataSelecionada || (dataHora ? dataHora.startsWith(dataSelecionada) : false);
+        const pesquisaMatch = !pesquisa || textoCard.includes(pesquisa);
 
-            const especialidadeMatch = !especialidadeSelecionada || especialidade === especialidadeSelecionada;
-            const dataMatch = !dataSelecionada || (dataHora ? dataHora.startsWith(dataSelecionada) : false);
-            const pesquisaMatch = !pesquisa || textoCard.includes(pesquisa);
+        card.style.display = statusMatch && especialidadeMatch && dataMatch && pesquisaMatch ? "block" : "none";
+    });
+}
 
-            card.style.display = statusMatch && especialidadeMatch && dataMatch && pesquisaMatch ? "block" : "none";
-        });
-    };
+function inicializarFiltrosConsultas() {
+    const botoes = document.querySelectorAll(".filtro-btn");
+    const selectEspecialidade = document.getElementById("selectFiltroEspecialidade");
+    const inputData = document.getElementById("inputFiltroData");
+    const inputFiltroTexto = document.getElementById("inputFiltroTexto");
 
     botoes.forEach(btn => {
         btn.addEventListener("click", () => {
