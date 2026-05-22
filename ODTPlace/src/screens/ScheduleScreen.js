@@ -929,7 +929,7 @@ const styles = StyleSheet.create({
     dateCarousel: {
         paddingHorizontal: 18,
         paddingTop: 6,
-        paddingBottom: 0,
+        paddingBottom: 12,
     },
     dateItem: {
         width: 58,
@@ -994,7 +994,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#0b4a88',
     },
     scheduleHeader: {
-        marginTop: 12,
+        marginTop: 8,
         marginHorizontal: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
