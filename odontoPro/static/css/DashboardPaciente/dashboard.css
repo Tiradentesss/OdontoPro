@@ -990,8 +990,8 @@ body.theme-dark .item-menu.ativo {
 .botao-notificacao {
     background: #fff;
     border: none;
-    width: 60px;
-    height: 45px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     cursor: pointer;
     position: relative;
@@ -3396,6 +3396,7 @@ body.theme-dark .item-menu.ativo {
     padding: 40px 20px;
     box-sizing: border-box;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #perfil-clinica.ativa {
@@ -3410,6 +3411,8 @@ body.theme-dark .item-menu.ativo {
     flex-direction: column;
     gap: 25px;
     margin: 0 auto;
+    box-sizing: border-box;
+    padding: 0 10px;
 }
 
 /* Título da Seção */
@@ -3491,9 +3494,27 @@ body.theme-dark .item-menu.ativo {
     background: transparent;
     padding: 0;
     border-radius: 0;
-    width: fit-content;
+    width: 100%;
     margin-bottom: 25px;
     border-bottom: 2px solid #e2e8f0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    box-sizing: border-box;
+}
+
+.abas-perfil::-webkit-scrollbar {
+    height: 4px;
+}
+
+.abas-perfil::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.abas-perfil::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
 }
 
 .aba-item {
@@ -3509,6 +3530,8 @@ body.theme-dark .item-menu.ativo {
     transition: all 0.3s ease;
     border-bottom: 3px solid transparent;
     position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .aba-item:hover {

@@ -60,6 +60,37 @@ body.theme-dark .btn-agendar-green {
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
         gap: 15px;
     }
+
+    /* ===== RESPONSIVE - PERFIL DA CLÍNICA (TABLETS) ===== */
+    .header-clinica-detalhe {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px !important;
+    }
+
+    .clinica-info-principal {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .logo-clinica-detalhe {
+        width: 80px;
+        height: 80px;
+    }
+
+    .clinica-textos h2 {
+        font-size: 20px;
+    }
+
+    .agendar-btn {
+        width: 100%;
+        order: 10;
+    }
+
+    #lista-medicos {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
 }
 
 /* --- AJUSTES PARA MOBILE (CELULARES) --- */
@@ -241,6 +272,106 @@ body.theme-dark .btn-agendar-green {
     /* garante que grids internos, quando usados, se ajustem corretamente */
     .dropdown-filtro .grid, .dropdown-filtro .row {
         grid-template-columns: 1fr;
+    }
+
+    /* ===== RESPONSIVE - PERFIL DA CLÍNICA ===== */
+    #perfil-clinica {
+        padding: 20px 10px;
+    }
+
+    .container-perfil {
+        max-width: 100%;
+        padding: 0 5px;
+    }
+
+    .titulo-sessao {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+
+    .card-branco {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    /* Header da clínica em mobile: layout vertical */
+    .header-clinica-detalhe {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px !important;
+    }
+
+    .clinica-info-principal {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .logo-clinica-detalhe {
+        width: 70px;
+        height: 70px;
+        border-radius: 12px;
+    }
+
+    .clinica-textos h2 {
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+
+    .clinica-textos p {
+        font-size: 12px;
+    }
+
+    /* Botão agendar em mobile: full width e abaixo do conteúdo */
+    .agendar-btn {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 14px;
+        order: 10; /* Força para baixo */
+    }
+
+    /* Abas em mobile: scroll horizontal e centralizadas */
+    .abas-perfil {
+        gap: 8px;
+        padding-bottom: 0;
+        margin: 0 auto;
+        padding: 0 10px;
+        width: fit-content;
+    }
+
+    .aba-item {
+        padding: 12px 0;
+        padding-bottom: 10px;
+        margin-right: 12px;
+        font-size: 12px;
+        white-space: nowrap;
+        min-width: max-content;
+    }
+
+    /* Container de avaliações responsivo */
+    #lista-medicos {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Mapa responsivo */
+    .mapa-google iframe {
+        height: 300px !important;
+    }
+
+    /* Btn voltar perfil */
+    .btn-voltar-perfil {
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    /* Modal content ajustado para mobile */
+    #modal-agendamento-1 .modal-content {
+        width: 95% !important;
+        max-height: 95vh;
+        padding: 20px 15px !important;
+    }
+
     }
 
     /* 5. Abas de navegação interna */
