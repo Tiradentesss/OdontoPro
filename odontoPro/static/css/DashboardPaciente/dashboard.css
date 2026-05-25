@@ -2674,7 +2674,7 @@ body.theme-dark .item-menu.ativo {
     background: var(--fundo-claro);
     border: none;
     padding: 15px;
-    border-radius: 0px;
+    border-radius: 8px;
     font-family: 'Poppins', sans-serif;
     font-size: 14px;
     color: var(--texto-principal);
@@ -2684,7 +2684,7 @@ body.theme-dark .item-menu.ativo {
     background: var(--fundo-claro);
     border: none;
     padding: 15px;
-    border-radius: 0px;
+    border-radius: 8px;
     font-family: 'Poppins', sans-serif;
     font-size: 14px;
     cursor: pointer;
