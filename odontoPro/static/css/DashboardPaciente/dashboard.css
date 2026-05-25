@@ -1972,12 +1972,12 @@ body.theme-dark .item-menu.ativo {
 
 .consultas-separador {
     grid-column: 1 / -1;
-    padding: 15px 0;
+    padding: 8px 0;
 }
 
 .consultas-separador hr {
     border: none;
-    border-top: 2px dashed var(--cor-borda);
+    border-top: 1px solid var(--cor-borda);
     margin: 0;
 }
 
