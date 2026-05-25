@@ -542,10 +542,10 @@
         </div>
     </div>
 
-    <div class="grid-agendamentos">
+    <div class="grid-agendamentos" id="consultas-container">
         {% if consultas %}
             {% for cons in consultas %}
-            <div class="card-agendamento 
+            <div class="card-agendamento" style="display: none;" 
                         {% if cons.status == 'realizada' %}realizado-card{% elif cons.status == 'cancelada' %}cancelado-card{% endif %}"
                  data-status="{{ cons.status }}"
                  data-consulta-id="{{ cons.id }}"

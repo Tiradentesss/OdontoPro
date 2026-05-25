@@ -896,6 +896,9 @@ function aplicarFiltrosConsultas() {
 
         card.style.display = statusMatch && especialidadeMatch && dataMatch && pesquisaMatch ? "block" : "none";
     });
+    
+    // Após aplicar filtros, reorganizar consultas
+    atualizarVisibilidadeHeaders();
 }
 
 function inicializarFiltrosConsultas() {
@@ -925,10 +928,153 @@ function inicializarFiltrosConsultas() {
     }
 
     aplicarFiltrosConsultas();
+    reorganizarConsultasPorData();
 }
 
 function isConsultaPerdida(status, dataConsulta, agora) {
     return status === "perdida";
+}
+
+/* ================= REORGANIZAR CONSULTAS POR DATA ================= */
+function reorganizarConsultasPorData() {
+    const container = document.getElementById('consultas-container');
+    if (!container) return;
+
+    // Prioridade de status (ordem em que deve aparecer)
+    const statusPriority = {
+        'agendada': 1,
+        'perdida': 2,
+        'realizada': 3,
+        'cancelada': 4
+    };
+
+    // Coletar todos os cards de consulta
+    const cards = Array.from(container.querySelectorAll('.card-agendamento'));
+    
+    // Criar objeto para agrupar por data e hora
+    const consultasPorData = {};
+
+    cards.forEach(card => {
+        const dataHoraISO = card.dataset.hora;
+        if (!dataHoraISO) return;
+
+        const dataHora = new Date(dataHoraISO);
+        const dataBR = dataHora.toLocaleDateString('pt-BR', { 
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const dataISO = dataHora.toISOString().split('T')[0]; // YYYY-MM-DD
+        const hora = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+        if (!consultasPorData[dataISO]) {
+            consultasPorData[dataISO] = { dataBR, horarios: {} };
+        }
+
+        if (!consultasPorData[dataISO].horarios[hora]) {
+            consultasPorData[dataISO].horarios[hora] = [];
+        }
+
+        consultasPorData[dataISO].horarios[hora].push({
+            card: card,
+            status: card.dataset.status || '',
+            priority: statusPriority[card.dataset.status] || 999
+        });
+    });
+
+    // Ordenar por data (ISO order garante ordem correta)
+    const datasOrdenadas = Object.keys(consultasPorData).sort();
+
+    // Limpar container
+    container.innerHTML = '';
+
+    // Reconstruir container com headers e cards ordenados
+    datasOrdenadas.forEach((dataISO, indexData) => {
+        const { dataBR, horarios } = consultasPorData[dataISO];
+        
+        // Adicionar header de data
+        const headerData = document.createElement('div');
+        headerData.className = 'consultas-header-data';
+        headerData.innerHTML = `<h3 class="data-titulo">dia ${dataISO.split('-')[2]}</h3>`;
+        container.appendChild(headerData);
+
+        // Ordenar horas
+        const horasOrdenadas = Object.keys(horarios).sort();
+
+        horasOrdenadas.forEach(hora => {
+            // Ordenar consultas por status (prioridade)
+            const consultasOrdenadas = horarios[hora].sort((a, b) => a.priority - b.priority);
+
+            consultasOrdenadas.forEach(consulta => {
+                consulta.card.style.display = 'block'; // Mostrar card
+                container.appendChild(consulta.card);
+            });
+        });
+
+        // Adicionar separador entre datas (exceto na última)
+        if (indexData < datasOrdenadas.length - 1) {
+            const separador = document.createElement('div');
+            separador.className = 'consultas-separador';
+            separador.innerHTML = '<hr>';
+            container.appendChild(separador);
+        }
+    });
+}
+
+/* ================= ATUALIZAR VISIBILIDADE DE HEADERS ================= */
+function atualizarVisibilidadeHeaders() {
+    const headers = document.querySelectorAll('.consultas-header-data');
+    const separadores = document.querySelectorAll('.consultas-separador');
+
+    headers.forEach(header => {
+        // Encontrar o próximo card visível após este header
+        let nextVisibleCard = null;
+        let element = header.nextElementSibling;
+        
+        while (element) {
+            if (element.classList.contains('card-agendamento') && element.style.display !== 'none') {
+                nextVisibleCard = element;
+                break;
+            }
+            if (element.classList.contains('consultas-separador')) {
+                break;
+            }
+            element = element.nextElementSibling;
+        }
+        
+        // Mostrar/ocultar header baseado se há cards visíveis
+        header.style.display = nextVisibleCard ? 'block' : 'none';
+    });
+
+    separadores.forEach(separador => {
+        // Encontrar headers antes e depois do separador
+        let headerAntes = null;
+        let headerDepois = null;
+        
+        let element = separador.previousElementSibling;
+        while (element) {
+            if (element.classList.contains('consultas-header-data')) {
+                headerAntes = element;
+                break;
+            }
+            element = element.previousElementSibling;
+        }
+        
+        element = separador.nextElementSibling;
+        while (element) {
+            if (element.classList.contains('consultas-header-data')) {
+                headerDepois = element;
+                break;
+            }
+            element = element.nextElementSibling;
+        }
+        
+        // Mostrar separador se ambos os headers estão visíveis
+        const mostrar = (headerAntes && headerAntes.style.display !== 'none') &&
+                       (headerDepois && headerDepois.style.display !== 'none');
+        separador.style.display = mostrar ? 'block' : 'none';
+    });
 }
 
 /* ================= CSRF ================= */

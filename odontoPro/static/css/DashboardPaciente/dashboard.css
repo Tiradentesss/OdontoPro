@@ -484,6 +484,14 @@ body {
     box-shadow: 0 14px 32px rgba(255, 184, 0, 0.16) !important;
 }
 
+.theme-dark .data-titulo {
+    color: #60A5FA;
+}
+
+.theme-dark .consultas-separador hr {
+    border-top-color: rgba(255,255,255,0.14);
+}
+
 .theme-dark .abas-clinica {
     background: rgba(255,255,255,0.08) !important;
 }
@@ -1944,6 +1952,33 @@ body.theme-dark .item-menu.ativo {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
+}
+
+/* Headers e separadores de data */
+.consultas-header-data {
+    grid-column: 1 / -1;
+    padding: 20px 0 15px 0;
+    margin-top: 20px;
+}
+
+.data-titulo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--azul-claro);
+    margin: 0;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+}
+
+.consultas-separador {
+    grid-column: 1 / -1;
+    padding: 15px 0;
+}
+
+.consultas-separador hr {
+    border: none;
+    border-top: 2px dashed var(--cor-borda);
+    margin: 0;
 }
 
 .card-agendamento {
