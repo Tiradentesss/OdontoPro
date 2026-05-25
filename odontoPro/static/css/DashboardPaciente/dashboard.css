@@ -3494,7 +3494,7 @@ body.theme-dark .item-menu.ativo {
     background: transparent;
     padding: 0;
     border-radius: 0;
-    width: 100%;
+    width: fit-content;
     margin-bottom: 25px;
     border-bottom: 2px solid #e2e8f0;
     overflow-x: auto;
