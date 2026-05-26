@@ -583,6 +583,12 @@
                             </button>
                         {% endif %}
 
+                        {% if cons.status == 'perdida' %}
+                            <button class="btn-reagendar-consulta btn-principal" type="button" data-consulta-id="{{ cons.id }}" aria-label="Reagendar consulta {{ cons.id }}">
+                                Reagendar
+                            </button>
+                        {% endif %}
+
                         {% if cons.status == 'realizada' and not cons.avaliacao %}
                             <button class="btn-avaliar" type="button"
                                 data-consulta-id="{{ cons.id }}"
@@ -730,7 +736,7 @@
 
                         <!-- Botões de ação -->
                         <div class="modal-actions">
-                            {% if cons.status == 'agendada' or cons.status == 'confirmada' %}
+                            {% if cons.status == 'agendada' or cons.status == 'confirmada' or cons.status == 'perdida' %}
                                 <button class="btn-principal" onclick="abrirReagendamento('{{ cons.id }}')">
                                     <i class="fa-solid fa-calendar-arrow-up"></i>
                                     Reagendar

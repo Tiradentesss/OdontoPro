@@ -143,6 +143,12 @@ function inicializarInteracaoCartoes() {
             return;
         }
 
+        const reagendarBtn = event.target.closest('.btn-reagendar-consulta');
+        if (reagendarBtn) {
+            abrirReagendamento(reagendarBtn.dataset.consultaId);
+            return;
+        }
+
         const avaliarBtn = event.target.closest('.btn-avaliar');
         if (avaliarBtn) {
             mostrarEstrelas(avaliarBtn.dataset.consultaId, avaliarBtn.dataset.clinicaId, avaliarBtn.dataset.medicoId);
@@ -428,6 +434,12 @@ function submitReagendamento() {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
+            if (data.new_consulta_id) {
+                fecharModalReagendar();
+                mostrarMensagem('Consulta reagendada com sucesso!', data.message, 'success');
+                window.location.reload();
+                return;
+            }
             updateCardConsulta(consultaId, data.data_hora, data.status);
             aplicarFiltrosConsultas();
             fecharModalReagendar();
@@ -943,9 +955,9 @@ function reorganizarConsultasPorData() {
     // Prioridade de status (ordem em que deve aparecer)
     const statusPriority = {
         'agendada': 1,
-        'perdida': 2,
-        'realizada': 3,
-        'cancelada': 4
+        'realizada': 2,
+        'cancelada': 3,
+        'perdida': 4
     };
 
     // Coletar todos os cards de consulta
@@ -983,8 +995,8 @@ function reorganizarConsultasPorData() {
         });
     });
 
-    // Ordenar por data (ISO order garante ordem correta)
-    const datasOrdenadas = Object.keys(consultasPorData).sort();
+    // Ordenar por data em ordem decrescente (ISO order garante ordem correta)
+    const datasOrdenadas = Object.keys(consultasPorData).sort().reverse();
 
     // Limpar container
     container.innerHTML = '';

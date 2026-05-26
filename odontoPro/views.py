@@ -109,6 +109,29 @@ def reagendar_consulta(request, consulta_id):
                 # make timezone-aware if necessary
                 if timezone.is_naive(dt):
                     dt = timezone.make_aware(dt)
+                if consulta.status == "perdida":
+                    nova_consulta = Consulta.objects.create(
+                        paciente=consulta.paciente,
+                        nome=consulta.nome,
+                        email=consulta.email,
+                        telefone=consulta.telefone,
+                        clinica=consulta.clinica,
+                        medico=consulta.medico,
+                        especialidade=consulta.especialidade,
+                        observacoes=consulta.observacoes,
+                        data_hora=dt,
+                        status="agendada",
+                    )
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({
+                            "success": True,
+                            "message": "Consulta reagendada com sucesso!",
+                            "data_hora": nova_consulta.data_hora.isoformat(),
+                            "status": nova_consulta.status,
+                            "new_consulta_id": nova_consulta.id,
+                        })
+                    messages.success(request, "Consulta reagendada com sucesso!")
+                    return redirect("dashboard_paciente")
                 consulta.data_hora = dt
                 consulta.status = "agendada"
                 consulta.save()
@@ -132,9 +155,23 @@ def reagendar_consulta(request, consulta_id):
             dt = parse_datetime(f"{nova_data}T{novo_horario}:00")
             if dt and timezone.is_naive(dt):
                 dt = timezone.make_aware(dt)
-            consulta.data_hora = dt or consulta.data_hora
-            consulta.status = "agendada"
-            consulta.save()
+            if consulta.status == "perdida":
+                Consulta.objects.create(
+                    paciente=consulta.paciente,
+                    nome=consulta.nome,
+                    email=consulta.email,
+                    telefone=consulta.telefone,
+                    clinica=consulta.clinica,
+                    medico=consulta.medico,
+                    especialidade=consulta.especialidade,
+                    observacoes=consulta.observacoes,
+                    data_hora=dt or consulta.data_hora,
+                    status="agendada",
+                )
+            else:
+                consulta.data_hora = dt or consulta.data_hora
+                consulta.status = "agendada"
+                consulta.save()
 
             messages.success(request, "Consulta reagendada com sucesso!")
             return redirect("dashboard_paciente")
