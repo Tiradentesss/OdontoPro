@@ -18,11 +18,10 @@
                 </a>
             </div>
             <nav class="nav-links">
-                <a href="/login/">Entrar</a>
                 {% if logged_in %}
                     <a href="/dashboard-paciente/" class="btn-outline">Painel</a>
                 {% else %}
-                    <a href="/login/?next=/dashboard-paciente/" class="btn-outline">Painel</a>
+                    <a href="/login/" class="btn-outline">Entrar</a>
                 {% endif %}
                 <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">☀️</button>
             </nav>
