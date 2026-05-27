@@ -199,6 +199,11 @@ def perfil_clinica(request, clinica_id):
 
 # ---------- LOGIN PACIENTE ----------
 def login_paciente(request):
+    if request.session.get("paciente_id"):
+        return redirect("dashboard_paciente")
+    if request.session.get("medico_id"):
+        return redirect("painel_profissional")
+
     # unified login endpoint for pacientes and profissionais
     if request.method == "POST":
         raw_email = request.POST.get("email", "") or ""
@@ -219,6 +224,7 @@ def login_paciente(request):
 
             # successful paciente login
             request.session["paciente_id"] = paciente.id
+            request.session.set_expiry(settings.SESSION_COOKIE_AGE)
             # explicitly save session before redirect and debug
             try:
                 request.session.save()
@@ -255,6 +261,7 @@ def login_paciente(request):
 
             request.session["medico_id"] = medico.id
             request.session["clinica_id"] = medico.clinica.id
+            request.session.set_expiry(settings.SESSION_COOKIE_AGE)
             try:
                 request.session.save()
             except Exception as e:
@@ -420,10 +427,13 @@ def painel_profissional(request):
 
 
 # ---------- LOGOUT ----------
+@require_POST
 def logout_view(request):
     request.session.flush()
     logout(request)
-    return redirect("login_paciente")
+    response = redirect("login_paciente")
+    response.delete_cookie("uid_signed", path="/")
+    return response
 
 
 # kept for backwards compatibility, but the main login logic is now in login_paciente
@@ -923,6 +933,20 @@ def alterar_senha_paciente(request):
         "debug_cookie_uid_signed": request.COOKIES.get("uid_signed"),
     }
     return render(request, "DashboardPaciente/dashboard.html", context)
+
+
+def home(request):
+    """Simple home page layout (placeholder).
+
+    This view renders a static marketing-like home screen. Functionality
+    (downloads / redirects) can be wired later.
+    """
+    logged_in = bool(
+        request.user.is_authenticated
+        or request.session.get("paciente_id")
+        or request.session.get("medico_id")
+    )
+    return render(request, "home.html", {"logged_in": logged_in})
 
 def cadastrar_paciente(request):
     if request.method != "POST":

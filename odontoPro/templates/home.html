@@ -1,0 +1,229 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OdontoPro — Home</title>
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <link rel="shortcut icon" href="{% static 'img/logo icon.png' %}" type="image/x-icon">
+</head>
+<body>
+    <header class="home-header">
+        <div class="container">
+            <div class="logo">
+                <a href="/" class="logo-link">
+                    <img src="{% static 'img/logo icon.png' %}" alt="Logo" />
+                    <span class="logo-text">OdontoPlace</span>
+                </a>
+            </div>
+            <nav class="nav-links">
+                <a href="/login/">Entrar</a>
+                {% if logged_in %}
+                    <a href="/dashboard-paciente/" class="btn-outline">Painel</a>
+                {% else %}
+                    <a href="/login/?next=/dashboard-paciente/" class="btn-outline">Painel</a>
+                {% endif %}
+                <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">☀️</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="banner-area" aria-hidden="true"></div>
+        <section class="hero">
+            <div class="container hero-inner">
+                <div class="hero-copy">
+                    <h1>Encontre a clínica ideal</h1>
+                    <p class="lead">Selecione uma de nossas unidades para agendar sua consulta e acompanhar o atendimento em um só lugar.</p>
+                    <div class="hero-ctas">
+                        {% if logged_in %}
+                            <a href="/dashboard-paciente/" class="btn-primary">Acessar site</a>
+                        {% else %}
+                            <a href="/login/?next=/dashboard-paciente/" class="btn-primary">Acessar site</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="clinic-cards-preview" aria-label="Preview de clínicas com avaliações altas">
+                        <div class="clinic-card is-active" data-rating="4.9">
+                            <img src="{% static 'img/clinica_sorriso_vital.png' %}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="Clínica Sorriso Vital" />
+                            <div class="clinic-info">
+                                <strong>Clínica Sorriso Vital</strong>
+                                <span class="clinic-location">Cidade Nova, Belém</span>
+                                <span class="clinic-rating">⭐ 4,9</span>
+                            </div>
+                        </div>
+                        <div class="clinic-card is-active" data-rating="5.0">
+                            <img src="{% static 'img/clinica_lumina.png' %}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="Clínica Lumina Dental" />
+                            <div class="clinic-info">
+                                <strong>Clínica Lumina Dental</strong>
+                                <span class="clinic-location">Centro, Belém</span>
+                                <span class="clinic-rating">⭐ 5,0</span>
+                            </div>
+                        </div>
+                        <div class="clinic-card" data-rating="4.8">
+                            <img src="{% static 'img/clinica_bem_dente.png' %}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="Clínica Bem Dente" />
+                            <div class="clinic-info">
+                                <strong>Clínica Bem Dente</strong>
+                                <span class="clinic-location">Batista Campos, Belém</span>
+                                <span class="clinic-rating">⭐ 4,8</span>
+                            </div>
+                        </div>
+                        <div class="clinic-card" data-rating="4.7">
+                            <img src="{% static 'img/clinica.essencial.png' %}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="Clínica Essencial" />
+                            <div class="clinic-info">
+                                <strong>Clínica Essencial</strong>
+                                <span class="clinic-location">Marco, Belém</span>
+                                <span class="clinic-rating">⭐ 4,7</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="about-project container">
+            <div class="about-inner">
+                <div class="about-copy">
+                    <h2>Sobre o projeto</h2>
+                    <p>OdontoPlace é um sistema open-source para gerenciamento de clínicas odontológicas — agendas, pacientes, pagamentos e relatórios em um só lugar. O objetivo é oferecer uma experiência simples, segura e integrada para profissionais e pacientes.</p>
+                    <p class="muted">Contribuições, issues e sugestões são bem-vindas no repositório. Estamos construindo isso com foco em usabilidade e privacidade dos dados.</p>
+                </div>
+                <div class="about-details">
+                    <h4>Principais pontos</h4>
+                    <ul>
+                        <li>Agendamento e gerenciamento de pacientes</li>
+                        <li>Multiplataforma (web &amp; desktop)</li>
+                        <li>Fácil integração com serviços de notificação</li>
+                    </ul>
+                    <a href="/" class="btn-secondary">Saiba mais</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="features container">
+            <div class="feature">
+                <h3>Agendamento simples</h3>
+                <p>Marque consultas em poucos cliques e receba notificações.</p>
+            </div>
+            <div class="feature">
+                <h3>Multiplataforma</h3>
+                <p>App web, desktop e mobile com sincronização em tempo real.</p>
+            </div>
+            <div class="feature">
+                <h3>Segurança</h3>
+                <p>Dados protegidos com práticas recomendadas de segurança.</p>
+            </div>
+        </section>
+
+        <section class="download container">
+            <div class="platform-grid">
+                <article class="platform-card platform-mobile">
+                    <div class="platform-copy">
+                        <p class="platform-tag">Paciente & Dentistas</p>
+                        <h2>Aplicativo mobile pensado para o dia a dia</h2>
+                        <p>Agende consultas, acompanhe históricos e organize atendimento direto no celular com um fluxo simples e rápido.</p>
+                        <ul class="platform-list">
+                            <li>⚡ Agenda sempre disponível</li>
+                            <li>🧠 Histórico e notificações</li>
+                            <li>📱 Experiência fluida em dispositivos móveis</li>
+                        </ul>
+                        <div class="download-links">
+                            {% if logged_in %}
+                                <a href="/dashboard-paciente/" id="link-appstore" class="store-badge">App Store</a>
+                                <a href="/dashboard-paciente/" id="link-playstore" class="store-badge">Google Play</a>
+                            {% else %}
+                                <a href="/login/?next=/dashboard-paciente/" id="link-appstore" class="store-badge">App Store</a>
+                                <a href="/login/?next=/dashboard-paciente/" id="link-playstore" class="store-badge">Google Play</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="platform-preview mobile-preview">
+                        <div class="phone-frame">
+                            <div class="phone-notch"></div>
+                            <img src="{% static 'img/dentista tela de login.png' %}" alt="Preview mobile do app para pacientes e dentistas" />
+                        </div>
+                        <div class="mini-card mini-card-top">Agendamento em minutos</div>
+                        <div class="mini-card mini-card-bottom">Notificações em tempo real</div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="desktop-section container">
+            <article class="platform-card platform-desktop">
+                <div class="platform-copy">
+                    <p class="platform-tag">Para clínicas</p>
+                    <h2>Sistema para gestão completa da clínica</h2>
+                    <p>Centralize profissionais, agendas, prontuários e atendimento em uma interface pensada para equipes e gestão.</p>
+                    <ul class="platform-list">
+                        <li>🖥️ Painel administrativo completo</li>
+                        <li>📈 Visão geral da clínica</li>
+                        <li>🛡️ Fluxo seguro e organizado</li>
+                    </ul>
+                    <div class="desktop-cta">
+                        {% if logged_in %}
+                            <a id="download-desktop" href="/dashboard-paciente/" class="btn-primary">Download Desktop — Para Clínicas e Profissionais</a>
+                        {% else %}
+                            <a id="download-desktop" href="/login/?next=/dashboard-paciente/" class="btn-primary">Download Desktop — Para Clínicas e Profissionais</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="platform-preview desktop-preview">
+                    <div class="desktop-frame">
+                        <img src="{% static 'img/Foto Login Profissional.png' %}" alt="Preview desktop para clínicas e profissionais" />
+                    </div>
+                    <div class="mini-card mini-card-top">Gestão de equipe</div>
+                    <div class="mini-card mini-card-bottom">Agenda centralizada</div>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <div class="footer-brand">
+                    <h3>OdontoPlace</h3>
+                    <p>Gerenciamento de clínicas odontológicas moderno e intuitivo.</p>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Produto</h4>
+                <ul>
+                    {% if logged_in %}
+                        <li><a href="/dashboard-paciente/">Aplicação</a></li>
+                    {% else %}
+                        <li><a href="/login/?next=/dashboard-paciente/">Aplicação</a></li>
+                    {% endif %}
+                    <li><a href="/">Recursos</a></li>
+                    <li><a href="/">Preços</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Empresa</h4>
+                <ul>
+                    <li><a href="/">Sobre</a></li>
+                    <li><a href="/">Blog</a></li>
+                    <li><a href="/">Contato</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="/">Privacidade</a></li>
+                    <li><a href="/">Termos</a></li>
+                    <li><a href="/">Cookies</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="footer-left">© {% now "Y" %} OdontoPlace. Todos os direitos reservados.</div>
+            <div class="footer-right">Designed with ♥</div>
+        </div>
+    </footer>
+
+    <script defer src="{% static 'js/home.js' %}"></script>
+</body>
+</html>

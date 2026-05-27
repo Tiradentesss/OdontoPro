@@ -67,6 +67,22 @@ class LoginViewTests(TestCase):
         self.assertRedirects(resp, reverse('painel_profissional'))
         self.assertEqual(self.client.session.get('medico_id'), self.medico.id)
 
+    def test_logout_clears_session_and_uid_cookie(self):
+        resp = self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(self.client.session.get('paciente_id'), self.paciente.id)
+        self.assertIn('uid_signed', resp.cookies)
+
+        logout_resp = self.client.post(reverse('logout'))
+        self.assertEqual(logout_resp.status_code, 302)
+        self.assertRedirects(logout_resp, reverse('login_paciente'))
+        self.assertIsNone(self.client.session.get('paciente_id'))
+        self.assertEqual(logout_resp.cookies['uid_signed']['max-age'], 0)
+
+        login_page = self.client.get(reverse('login_paciente'))
+        self.assertEqual(login_page.status_code, 200)
+        self.assertTemplateUsed(login_page, 'LoginCadastro/login.html')
+
     def test_login_wrong_password(self):
         resp = self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'wrong'})
         self.assertEqual(resp.status_code, 200)

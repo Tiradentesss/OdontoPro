@@ -5,8 +5,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    # LOGIN
-    path('', views.login_paciente, name='login_paciente'),
+    # HOME / LOGIN
+    path('', views.home, name='home'),
     path('login/', views.login_paciente, name='login_paciente'),
     path("cadastro-clinica/", views.cadastro_clinica, name="cadastro_clinica"),
     path("login-clinica/", views.login_clinica, name="login_clinica"),
@@ -14,6 +14,7 @@ urlpatterns = [
     # DASHBOARD
     path('dashboard-paciente/', views.dashboard_paciente, name='dashboard_paciente'),
     path('painel-profissional/', views.painel_profissional, name='painel_profissional'),
+    path('home/', views.home, name='home'),
 
     # LOGOUT
     path('logout/', views.logout_view, name='logout'),
