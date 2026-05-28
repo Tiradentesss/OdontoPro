@@ -32,27 +32,45 @@ document.addEventListener('DOMContentLoaded', function(){
         });
     }
 
-    const previewCards = Array.from(document.querySelectorAll('.clinic-card'));
-    const premiumCards = previewCards.filter(card => parseFloat(card.dataset.rating) >= 4.5);
+    const previewCards = Array.from(document.querySelectorAll('.clinic-cards-preview .clinic-card'));
 
-    if (premiumCards.length > 2) {
-        let currentIndex = 0;
-        const visibleCount = 2;
+    if (previewCards.length) {
+        const premiumCards = previewCards.filter(card => parseFloat(card.dataset.rating) >= 4.5);
 
-        const renderPreview = () => {
-            previewCards.forEach(card => card.classList.remove('is-active'));
+        if (premiumCards.length > 2) {
+            let currentIndex = 0;
+            const visibleCount = 2;
 
-            for (let offset = 0; offset < visibleCount; offset++) {
-                const index = (currentIndex + offset) % premiumCards.length;
-                premiumCards[index].classList.add('is-active');
-            }
+            const renderPreview = () => {
+                previewCards.forEach(card => card.classList.remove('is-active'));
 
-            currentIndex = (currentIndex + 1) % premiumCards.length;
+                for (let offset = 0; offset < visibleCount; offset++) {
+                    const index = (currentIndex + offset) % premiumCards.length;
+                    premiumCards[index].classList.add('is-active');
+                }
+
+                currentIndex = (currentIndex + 1) % premiumCards.length;
+            };
+
+            renderPreview();
+            setInterval(renderPreview, 5000);
+        } else {
+            previewCards.forEach(card => card.classList.add('is-active'));
+        }
+    }
+
+    const featuredCards = Array.from(document.querySelectorAll('.floating-clinic-cards .clinic-card'));
+    const featuredScroll = document.querySelector('.floating-cards-scroll');
+
+    if (featuredCards.length > 1 && featuredScroll) {
+        let featuredIndex = 0;
+
+        const rotateFeaturedClinics = () => {
+            const firstCard = featuredScroll.firstElementChild;
+            if (!firstCard) return;
+            featuredScroll.appendChild(firstCard);
         };
 
-        renderPreview();
-        setInterval(renderPreview, 5000);
-    } else {
-        previewCards.forEach(card => card.classList.add('is-active'));
+        setInterval(rotateFeaturedClinics, 5000);
     }
 });

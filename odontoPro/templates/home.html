@@ -43,42 +43,23 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="hero-visual">
-                    <div class="clinic-cards-preview" aria-label="Preview de clínicas com avaliações altas">
-                        <div class="clinic-card is-active" data-rating="4.9">
-                            <img src="{% static 'img/clinica_sorriso_vital.png' %}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="Clínica Sorriso Vital" />
-                            <div class="clinic-info">
-                                <strong>Clínica Sorriso Vital</strong>
-                                <span class="clinic-location">Cidade Nova, Belém</span>
-                                <span class="clinic-rating">⭐ 4,9</span>
-                            </div>
+            </div>
+        </section>
+
+        <section class="floating-clinic-cards" aria-label="Clínicas em destaque">
+            <div class="floating-cards-scroll">
+                {% for clinica in featured_clinics %}
+                    <article class="clinic-card" data-rating="{{ clinica.avaliacao|floatformat:1 }}">
+                        <img src="{{ clinica.display_image }}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="{{ clinica.nome }}" />
+                        <div class="clinic-info">
+                            <strong>{{ clinica.nome }}</strong>
+                            <span class="clinic-location">{{ clinica.location }}</span>
+                            <span class="clinic-rating">⭐ {{ clinica.avaliacao|floatformat:1 }}</span>
                         </div>
-                        <div class="clinic-card is-active" data-rating="5.0">
-                            <img src="{% static 'img/clinica_lumina.png' %}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="Clínica Lumina Dental" />
-                            <div class="clinic-info">
-                                <strong>Clínica Lumina Dental</strong>
-                                <span class="clinic-location">Centro, Belém</span>
-                                <span class="clinic-rating">⭐ 5,0</span>
-                            </div>
-                        </div>
-                        <div class="clinic-card" data-rating="4.8">
-                            <img src="{% static 'img/clinica_bem_dente.png' %}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="Clínica Bem Dente" />
-                            <div class="clinic-info">
-                                <strong>Clínica Bem Dente</strong>
-                                <span class="clinic-location">Batista Campos, Belém</span>
-                                <span class="clinic-rating">⭐ 4,8</span>
-                            </div>
-                        </div>
-                        <div class="clinic-card" data-rating="4.7">
-                            <img src="{% static 'img/clinica.essencial.png' %}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="Clínica Essencial" />
-                            <div class="clinic-info">
-                                <strong>Clínica Essencial</strong>
-                                <span class="clinic-location">Marco, Belém</span>
-                                <span class="clinic-rating">⭐ 4,7</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    </article>
+                {% empty %}
+                    <p class="empty-featured-clinics">Nenhuma clínica com avaliação 4+ no momento.</p>
+                {% endfor %}
             </div>
         </section>
 
@@ -93,7 +74,7 @@
                     <div class="about-highlights">
                         <span class="highlight-pill">📅 Agenda integrada</span>
                         <span class="highlight-pill">🧑‍⚕️ Fluxo para equipe</span>
-                        <span class="highlight-pill">📱 Experiência mobile + desktop</span>
+                        <span class="highlight-pill">� Experiência mobile + desktop</span>
                     </div>
 
                     <div class="about-actions">

@@ -946,7 +946,42 @@ def home(request):
         or request.session.get("paciente_id")
         or request.session.get("medico_id")
     )
-    return render(request, "home.html", {"logged_in": logged_in})
+
+    featured_clinics = list(
+        Clinica.objects.filter(ativo=True, avaliacao__gte=4.0)
+        .select_related("endereco")
+        .prefetch_related("imagens")
+        .order_by("-avaliacao", "-num_avaliacoes", "nome")
+    )
+
+    for clinica in featured_clinics:
+        first_image = clinica.imagens.first()
+
+        if clinica.logo:
+            clinica.display_image = clinica.logo.url
+        elif clinica.imagem:
+            clinica.display_image = clinica.imagem.url
+        elif first_image:
+            clinica.display_image = first_image.imagem.url
+        else:
+            clinica.display_image = static("img/default-banner.jpg")
+
+        if clinica.endereco:
+            location_parts = [part for part in [clinica.endereco.cidade, clinica.endereco.bairro] if part]
+            clinica.location = ", ".join(location_parts) or "Localização não informada"
+        else:
+            clinica.location = "Localização não informada"
+
+    display_featured_clinics = []
+    if featured_clinics:
+        while len(display_featured_clinics) < 4:
+            display_featured_clinics.extend(featured_clinics)
+        display_featured_clinics = display_featured_clinics[:4]
+
+    return render(request, "home.html", {
+        "logged_in": logged_in,
+        "featured_clinics": display_featured_clinics,
+    })
 
 def cadastrar_paciente(request):
     if request.method != "POST":
