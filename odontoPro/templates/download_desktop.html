@@ -1,0 +1,161 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Download Desktop - OdontoPlace</title>
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+</head>
+<body class="download-page">
+    <header class="home-header">
+        <div class="container">
+            <div class="logo">
+                <a href="/" class="logo-link">
+                    <img src="{% static 'img/logo icon.png' %}" alt="Logo" />
+                    <span class="logo-text">OdontoPlace</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container download-page-main">
+        <section class="download-shell">
+            <div class="download-hero">
+                <div class="download-hero-copy">
+                    <span class="download-eyebrow">Aplicativo Desktop</span>
+                    <h1>OdontoPlace Desktop</h1>
+                    <p class="download-lead">
+                        Um ambiente pensada para clínicas e profissionais que precisam de organização,
+                        visão geral da agenda e fluxo de atendimento sem perder tempo.
+                    </p>
+
+                    <div class="download-status-row">
+                        <span class="download-status-badge unavailable">Download indisponível no momento</span>
+                        <span class="download-status-badge platform">Windows 10/11</span>
+                    </div>
+
+                    <div class="download-cta-row">
+                        <a href="/" class="btn-secondary">Voltar para a Home</a>
+                        <a href="/login/" class="btn-primary">Acessar plataforma</a>
+                    </div>
+                </div>
+
+                <aside class="download-preview-panel" aria-label="Preview do desktop">
+                    <div class="download-preview-header">
+                        <div class="window-controls">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <span class="preview-tag">Em desenvolvimento</span>
+                    </div>
+
+                    <div class="download-preview-body">
+                        <div class="preview-topbar">
+                            <div class="preview-topbar-chip">Agenda</div>
+                            <div class="preview-topbar-chip muted">Hoje</div>
+                        </div>
+
+                        <div class="preview-screen">
+                            <div class="preview-card preview-card-primary">
+                                <div>
+                                    <p class="preview-card-label">Atendimentos</p>
+                                    <h2>24 agendados</h2>
+                                </div>
+                                <span class="preview-pill success">+18%</span>
+                            </div>
+
+                            <div class="preview-stat-grid">
+                                <div class="preview-stat-card">
+                                    <span class="preview-stat-icon">🗓️</span>
+                                    <strong>Agenda central</strong>
+                                    <p>Visão rápida dos horários da clínica.</p>
+                                </div>
+                                <div class="preview-stat-card">
+                                    <span class="preview-stat-icon">🛡️</span>
+                                    <strong>Fluxo seguro</strong>
+                                    <p>Organização e controle melhorados.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="download-grid">
+                <article class="download-card">
+                    <div class="download-card-top">
+                        <p class="download-card-tag">Status do produto</p>
+                        <h2>Download em preparação</h2>
+                    </div>
+
+                    <div class="download-placeholder">
+                        <div class="download-placeholder-icon">⬇️</div>
+                        <h3>Instalador em breve</h3>
+                        <p>
+                            O pacote desktop está sendo finalizado para entrega. Enquanto isso, você pode
+                            usar a plataforma web e seguir acompanhando o lançamento.
+                        </p>
+
+                        <div class="download-disabled-button" aria-disabled="true">Download indisponível</div>
+                    </div>
+
+                    <ul class="download-info-list">
+                        <li>
+                            <span class="info-label">Plataforma</span>
+                            <span class="info-value">Windows 10/11</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Disponibilidade</span>
+                            <span class="info-value">Em desenvolvimento</span>
+                        </li>
+                        <li>
+                            <span class="info-label">Acesso atual</span>
+                            <span class="info-value">Plataforma web</span>
+                        </li>
+                    </ul>
+                </article>
+
+                <article class="download-card">
+                    <div class="download-card-top">
+                        <p class="download-card-tag">O que o desktop oferece</p>
+                        <h2>Funcionalidades previstas</h2>
+                    </div>
+
+                    <ul class="download-feature-list">
+                        <li class="download-feature-item">
+                            <span class="feature-icon">✓</span>
+                            <div>
+                                <strong>Agenda integrada</strong>
+                                <p>Organize horários, atendimentos e fluxo de consulta em um painel central.</p>
+                            </div>
+                        </li>
+                        <li class="download-feature-item">
+                            <span class="feature-icon">✓</span>
+                            <div>
+                                <strong>Gestão clínica</strong>
+                                <p>Gerencie profissionais, pacientes e relatórios de forma mais objetiva.</p>
+                            </div>
+                        </li>
+                        <li class="download-feature-item">
+                            <span class="feature-icon">✓</span>
+                            <div>
+                                <strong>Entrada mais rápida</strong>
+                                <p>Uma experiência desktop para quem prefere operar sem depender do navegador.</p>
+                            </div>
+                        </li>
+                        <li class="download-feature-item">
+                            <span class="feature-icon">✓</span>
+                            <div>
+                                <strong>Segurança e estabilidade</strong>
+                                <p>Ferramentas pensadas para equipes e estrutura de atendimento com mais controle.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

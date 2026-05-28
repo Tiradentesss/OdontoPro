@@ -983,6 +983,11 @@ def home(request):
         "featured_clinics": display_featured_clinics,
     })
 
+
+def download_desktop(request):
+    return render(request, "download_desktop.html")
+
+
 def cadastrar_paciente(request):
     if request.method != "POST":
         return redirect("login_paciente")

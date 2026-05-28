@@ -15,6 +15,7 @@ urlpatterns = [
     path('dashboard-paciente/', views.dashboard_paciente, name='dashboard_paciente'),
     path('painel-profissional/', views.painel_profissional, name='painel_profissional'),
     path('home/', views.home, name='home'),
+    path('download-desktop/', views.download_desktop, name='download_desktop'),
 
     # LOGOUT
     path('logout/', views.logout_view, name='logout'),

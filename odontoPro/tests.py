@@ -93,6 +93,23 @@ class LoginViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Conta não encontrada")
 
+    def test_download_desktop_page_is_available(self):
+        resp = self.client.get(reverse('download_desktop'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'download_desktop.html')
+        self.assertContains(resp, 'Baixe o aplicativo Desktop')
+
+    def test_login_page_has_home_link(self):
+        resp = self.client.get(reverse('login_paciente'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Voltar para a Home')
+        self.assertContains(resp, 'href="/"')
+
+    def test_home_download_button_points_to_download_page(self):
+        resp = self.client.get('/')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'href="/download-desktop/"')
+
     def test_config_update_keeps_session(self):
         # login first
         self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})

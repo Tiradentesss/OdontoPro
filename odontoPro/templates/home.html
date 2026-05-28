@@ -190,11 +190,7 @@
                         <li>🛡️ Fluxo seguro e organizado</li>
                     </ul>
                     <div class="desktop-cta">
-                        {% if logged_in %}
-                            <a id="download-desktop" href="/dashboard-paciente/" class="btn-primary">Download Desktop — Para Clínicas e Profissionais</a>
-                        {% else %}
-                            <a id="download-desktop" href="/login/?next=/dashboard-paciente/" class="btn-primary">Download Desktop — Para Clínicas e Profissionais</a>
-                        {% endif %}
+                        <a id="download-desktop" href="{% url 'download_desktop' %}" class="btn-primary">Download Desktop — Para Clínicas e Profissionais</a>
                     </div>
                 </div>
                 <div class="platform-preview desktop-preview">

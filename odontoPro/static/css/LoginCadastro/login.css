@@ -118,6 +118,30 @@ body {
     margin-top: 5px;
 }
 
+.back-home-wrapper {
+    margin: 0 0 18px;
+}
+
+.back-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: #f2fbfe;
+    color: #0f8fb8;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid rgba(27, 195, 234, 0.24);
+    transition: all 0.25s ease;
+}
+
+.back-home-link:hover {
+    background: #e4f8fd;
+    transform: translateY(-1px);
+}
+
 /* --- BOTÕES --- */
 .btn-login {
     width: 100%;
