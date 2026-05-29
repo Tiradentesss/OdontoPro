@@ -21,6 +21,16 @@ import NotificationsScreen from './src/screens/NotificationsScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
 import SystemScreen from './src/screens/SystemScreen';
 import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
+import PreLogin from './src/screens/PreLogin';
+import LoginProfissional from './src/screens/LoginProfissional';
+import HomeProfissional from './src/screens/HomeProfissional';
+import CadastroP from './src/screens/CadastroP';
+import ForgotPassword from './src/screens/ForgotPassword';
+import CheckEmail from './src/screens/CheckEmail';
+import NewPassword from './src/screens/NewPassword';
+import ForgotPasswordP from './src/screens/ForgotPasswordP';
+import CheckEmailP from './src/screens/CheckEmailP';
+import NewPasswordP from './src/screens/NewPasswordP';
 // import ProfileScreen from './src/screens/ProfileScreen';
 
 // Criando o stack
@@ -32,9 +42,13 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="PreLogin" component={PreLogin} />
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="LoginProfissional" component={LoginProfissional} />
           <Stack.Screen name="Cadastro" component={CadastroScreen} />
+          <Stack.Screen name="CadastroP" component={CadastroP} />
           <Stack.Screen name="Home" component={MainTabs} />
+          <Stack.Screen name="HomeP" component={HomeProfissional} />
           <Stack.Screen name="Schedule" component={ScheduleScreen} />
           <Stack.Screen name="ClinicDetail" component={ClinicDetailScreen} />
           <Stack.Screen name="Professionals" component={ProfessionalsScreen} />
@@ -45,6 +59,12 @@ export default function App() {
           <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
           <Stack.Screen name="System" component={SystemScreen} />
           <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+          <Stack.Screen name="CheckEmail" component={CheckEmail} />
+          <Stack.Screen name="NewPassword" component={NewPassword} />
+          <Stack.Screen name="ForgotPasswordP" component={ForgotPasswordP} />
+          <Stack.Screen name="CheckEmailP" component={CheckEmailP} />
+          <Stack.Screen name="NewPasswordP" component={NewPasswordP} />
           {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
         </Stack.Navigator>
       </NavigationContainer>

@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, ImageBackground } from 'react-native';
-import CustomInput from '../components/CustomInput';
-import CustomButton from '../components/CustomButton';
-import { loginPatient } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { View, Text, StyleSheet, Alert, Image, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import CustomInput2 from '../components/CustomInput2';
+import CustomButton from '../components/CustomButton4';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginProfissional({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const { login } = useAuth();
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (email === '' || senha === '') {
       Alert.alert('Erro', 'Preencha todos os campos!');
       return;
@@ -21,30 +19,19 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
-    try {
-      const user = await loginPatient(email, senha);
-      if (user && user.id) {
-        login(user);
-        navigation.replace('Home');
-      } else {
-        Alert.alert('Erro', 'Resposta inválida do servidor.');
-      }
-    } catch (error) {
-      console.log('Login error:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Falha ao fazer login.';
-      Alert.alert('Erro', errorMessage);
-    }
+    const userName = email.split('@')[0];
+    navigation.replace('HomeP', { userName });
   };
 
   return (
-    <ImageBackground
-      source={require('../../assets/imagem background.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
+    <LinearGradient 
+    start={{ x: 0, y: 0 }}
+    end={{ x: 0.5, y: 1 }}
+    colors={['#0a247c', '#1BC4EB']}
+    style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={require('../../assets/LogoODTPlace.png')}
+          source={require('../../assets/LogoP.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -58,22 +45,22 @@ export default function LoginScreen({ navigation }) {
       <Text style={styles.description}>Digite seu e-mail e senha para fazer login</Text>
 
       <Text style={styles.label}>Email</Text>
-      <CustomInput
+      <CustomInput2
         placeholder="Digite seu email"
         value={email}
         onChangeText={setEmail}
       />
 
       <Text style={styles.label}>Senha</Text>
-      <CustomInput
+      <CustomInput2
         placeholder="Digite sua senha"
         value={senha}
         onChangeText={setSenha}
         secureTextEntry
       />
 
-      <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('ForgotPassword')}>
-        <Text style={styles.forgot}>Esqueceu a Senha ?</Text>
+      <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('ForgotPasswordP')}>
+        <Text style={styles.forgot}>Esqueceu a Senha?</Text>
       </TouchableOpacity>
 
       <CustomButton
@@ -82,20 +69,16 @@ export default function LoginScreen({ navigation }) {
         style={{ width: 335, alignSelf: 'center' }}
       />
 
+    <View style={styles.orContainer}>
+      <View style={styles.line} />
       <Text style={styles.or}>Ou</Text>
+      <View style={styles.line} />
+    </View>
 
       <TouchableOpacity style={styles.socialButton} onPress={handleLogin} activeOpacity={0.8}>
         <Text style={styles.socialText}>Continuar com Google</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.socialButton} onPress={handleLogin} activeOpacity={0.8}>
-        <Text style={styles.socialText}>Continuar com Facebook</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Cadastro')}>
-        <Text style={styles.signup}>Quero me cadastrar</Text>
-      </TouchableOpacity>
-    </ImageBackground>
+    </LinearGradient>
   );
 }
 
@@ -103,7 +86,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#08a4c4',
   },
   header: {
     marginTop: 40,
@@ -120,23 +103,24 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   headerTitle: {
+    fontFamily: 'Poppins-Bold',
     fontSize: 14,
     fontWeight: '700',
-    color: '#07336d',
+    color: '#fff',
   },
   headerSubtitle: {
     fontSize: 11,
-    color: '#6b7a90',
+    color: '#fff',
     marginTop: 2,
   },
   pageTitle: {
     fontSize: 28,
     fontWeight: '700',
     marginBottom: 8,
-    color: '#07336d',
+    color: '#fff',
   },
   description: {
-    color: '#6b7a90',
+    color: '#fff',
     marginBottom: 22,
     fontSize: 15,
     lineHeight: 22,
@@ -144,20 +128,31 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 10,
     marginBottom: 6,
-    color: '#6b7a90',
+    color: '#fff',
     fontSize: 13,
   },
   forgot: {
     textAlign: 'right',
-    marginTop: 10,
+    fontWeight: 'bold',
     marginBottom: 20,
-    color: '#1f4ed8',
+    color: '#fff',
     fontSize: 13,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#fff',
+    opacity: 0.5,
+  },
+  orText: {
+    marginHorizontal: 10,
+    color: '#fff',
+    fontSize: 14,
   },
   or: {
     textAlign: 'center',
-    marginVertical: 16,
-    color: '#888',
+    marginVertical: 20,
+    color: '#fff',
     fontSize: 14,
   },
   socialButton: {
@@ -171,12 +166,15 @@ const styles = StyleSheet.create({
   },
   socialText: {
     fontSize: 15,
-    color: '#24325f',
+    fontFamily: 'Poppins-Bold',
+    fontWeight: 'bold',
+    color: '#000000',
   },
   signup: {
     textAlign: 'center',
+    fontWeight: 'bold',
     marginTop: 22,
-    color: '#1f4ed8',
+    color: '#fff',
     fontSize: 15,
   },
 });

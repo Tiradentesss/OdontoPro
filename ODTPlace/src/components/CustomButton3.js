@@ -1,14 +1,14 @@
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 // Componente de botão reutilizável
-export default function CustomButton({ title, onPress, style, textStyle }) {
+export default function CustomButton({ title, onPress }) {
   return (
 
     // TouchableOpacity = botão clicável com efeito de opacidade
-    <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
+    <TouchableOpacity style={styles.button} onPress={onPress}>
 
       {/* Texto do botão */}
-      <Text style={[styles.text, textStyle]}>
+      <Text style={styles.text}>
         {title}
       </Text>
 
@@ -19,7 +19,8 @@ export default function CustomButton({ title, onPress, style, textStyle }) {
 const styles = StyleSheet.create({
 
   button: {
-    backgroundColor: '#1BC3EA',
+    marginTop:10,
+    backgroundColor: '#00bceb',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
