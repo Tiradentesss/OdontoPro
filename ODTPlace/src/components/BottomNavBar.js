@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
         elevation: 18,
     },
     bottomTab: {
-        width: 84,
+        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 6,
@@ -58,7 +58,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#e5f5ff',
         borderRadius: 20,
         paddingVertical: 10,
-        paddingHorizontal: 6,
     },
     bottomTabIcon: {
         width: 32,
