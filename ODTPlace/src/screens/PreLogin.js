@@ -19,7 +19,8 @@ export default function PreLogin({ navigation }) {
       <CustomButton
         title="Sou Paciente"
         onPress={() => navigation.navigate('Login')}
-        style={{ width: 300, alignSelf: 'center' }}
+        style={{ width: 300, alignSelf: 'center', backgroundColor: '#ffffff' }}
+        textStyle={{ color: '#000000' }}
       />
       <CustomButton2
         title="Sou Profissional"
