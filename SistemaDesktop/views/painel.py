@@ -7,6 +7,8 @@ from controllers.consulta_controller import ConsultaController
 from controllers.paciente_controller import PacienteController
 from controllers.medico_controller import MedicoController
 from controllers.gerenciamento_controller import GerenciamentoController
+from controllers.financeiro_controller import FinanceiroController
+from controllers.clinica_controller import ClinicaController
 
 class Painel(BaseScreen):
     def __init__(self, parent, clinica_id=None, usuario_id=None, tipo_usuario=None):
@@ -95,24 +97,24 @@ class Painel(BaseScreen):
 
         ctk.CTkLabel(
             header, text=titulo,
-            font=ctk.CTkFont(family="Segoe UI", size=18, weight="bold"),
+            font=font("card_title", "bold"),
             text_color=self.colors['text']
         ).pack(anchor="w")
 
         if subtitulo:
             ctk.CTkLabel(
                 header, text=subtitulo,
-                font=ctk.CTkFont(family="Segoe UI", size=12),
+                font=font("text"),
                 text_color=self.colors['text_secondary']
             ).pack(anchor="w")
             
         return card
 
     def _render_proximas_consultas(self, row, col):
-        card = self._criar_card("Próximas Consultas", "Agenda prioritária de hoje", row, col, padx=(0, 10))
+        card = self._criar_card("Próximas Consultas", "Compromissos agendados para hoje", row, col, padx=(0, 10))
         
         if not self.dados_consultas_hoje:
-            self._render_vazio(card, "Nenhuma consulta para hoje")
+            self._render_vazio(card, "Nenhum compromisso agendado para hoje")
             return
 
         for item in self.dados_consultas_hoje[:4]:
@@ -127,23 +129,23 @@ class Painel(BaseScreen):
             avatar = ctk.CTkLabel(
                 row_item, text=nome[0].upper(), width=38, height=38,
                 corner_radius=19, fg_color=self.colors['primary_soft'],
-                text_color=self.colors['primary'], font=ctk.CTkFont(weight="bold")
+                text_color=self.colors['primary'], font=font("button", "bold")
             )
             avatar.pack(side="left", padx=(5, 12))
 
             info = ctk.CTkFrame(row_item, fg_color="transparent")
             info.pack(side="left", fill="both", expand=True)
             
-            ctk.CTkLabel(info, text=nome, font=ctk.CTkFont(size=14, weight="bold"), text_color=self.colors['text']).pack(anchor="w")
-            ctk.CTkLabel(info, text=f"Horário: {horario}h", font=ctk.CTkFont(size=11), text_color=self.colors['text_secondary']).pack(anchor="w")
+            ctk.CTkLabel(info, text=nome, font=font("card_title", "bold"), text_color=self.colors['text']).pack(anchor="w")
+            ctk.CTkLabel(info, text=f"Horário: {horario}h", font=font("text_large"), text_color=self.colors['text_secondary']).pack(anchor="w")
 
             # Badge Status
             badge = ctk.CTkFrame(row_item, fg_color=self.colors['info_soft'], corner_radius=8)
             badge.pack(side="right", padx=5)
-            ctk.CTkLabel(badge, text="Confirmado", text_color=self.colors['info'], font=ctk.CTkFont(size=10, weight="bold")).pack(padx=8, pady=2)
+            ctk.CTkLabel(badge, text="Confirmado", text_color=self.colors['info'], font=font("small", "bold")).pack(padx=8, pady=2)
 
     def _render_resumo_financeiro(self, row, col):
-        card = self._criar_card("Resumo Financeiro", "Performance econômica mensal", row, col, padx=(10, 0))
+        card = self._criar_card("Resumo Financeiro", "Receita e despesas do mês", row, col, padx=(10, 0))
         
         container = ctk.CTkFrame(card, fg_color="transparent")
         container.pack(fill="x", padx=20, pady=10)
@@ -160,18 +162,18 @@ class Painel(BaseScreen):
             box = ctk.CTkFrame(container, fg_color=self.colors['bg_app'], corner_radius=12)
             box.grid(row=0, column=i, padx=4, sticky="nsew")
             
-            ctk.CTkLabel(box, text=lab, font=ctk.CTkFont(size=11), text_color=self.colors['text_secondary']).pack(pady=(10, 0))
-            ctk.CTkLabel(box, text=val, font=ctk.CTkFont(size=15, weight="bold"), text_color=col_text).pack(pady=(0, 10))
+            ctk.CTkLabel(box, text=lab, font=font("text_large"), text_color=self.colors['text_secondary']).pack(pady=(10, 0))
+            ctk.CTkLabel(box, text=val, font=font("large_title", "bold"), text_color=col_text).pack(pady=(0, 10))
 
         # Footer Info
         footer = ctk.CTkLabel(
             card, text=f"✓ {f['realizadas']} de {f['total_consultas']} consultas concluídas este mês",
-            font=ctk.CTkFont(size=12, slant="italic"), text_color=self.colors['text_muted']
+            font=font("text"), text_color=self.colors['text_muted']
         )
         footer.pack(pady=(15, 20))
 
     def _render_status_consultas(self, row, col):
-        card = self._criar_card("Status das Consultas", "Volume por categoria", row, col, padx=(0, 10))
+        card = self._criar_card("Status das Consultas", "Distribuição de consultas por status", row, col, padx=(0, 10))
         
         contagem = self.dados_contagem_consultas
         total = contagem.get('total', 1)
@@ -192,23 +194,23 @@ class Painel(BaseScreen):
             lbl_f = ctk.CTkFrame(row_f, fg_color="transparent")
             lbl_f.pack(fill="x")
             
-            ctk.CTkLabel(lbl_f, text=label, font=ctk.CTkFont(size=13), text_color=self.colors['text']).pack(side="left")
-            ctk.CTkLabel(lbl_f, text=f"{valor}", font=ctk.CTkFont(size=13, weight="bold"), text_color=self.colors['text']).pack(side="right")
+            ctk.CTkLabel(lbl_f, text=label, font=font("subtitle"), text_color=self.colors['text']).pack(side="left")
+            ctk.CTkLabel(lbl_f, text=f"{valor}", font=font("subtitle", "bold"), text_color=self.colors['text']).pack(side="right")
             
             prog = ctk.CTkProgressBar(row_f, height=8, progress_color=cor, fg_color=self.colors['bg_app'])
             prog.pack(fill="x", pady=(5, 0))
             prog.set(perc)
 
     def _render_resumo_cadastros(self, row, col):
-        card = self._criar_card("Base de Dados", "Total de registros ativos", row, col, padx=(10, 0))
+        card = self._criar_card("Base de Dados", "Usuários e registros do sistema", row, col, padx=(10, 0))
         
         # Destaque Principal
         hero = ctk.CTkFrame(card, fg_color=self.colors['primary_soft'], corner_radius=15)
         hero.pack(fill="x", padx=20, pady=10)
         
         ctk.CTkLabel(hero, text=str(self.dados_cadastros['total_usuarios']), 
-                     font=ctk.CTkFont(size=42, weight="bold"), text_color=self.colors['primary']).pack(pady=(15,0))
-        ctk.CTkLabel(hero, text="USUÁRIOS TOTAIS", font=ctk.CTkFont(size=11, weight="bold"), 
+                     font=font("large_title", "bold"), text_color=self.colors['primary']).pack(pady=(15,0))
+        ctk.CTkLabel(hero, text="TOTAL DE USUÁRIOS", font=font("text_large", "bold"), 
                      text_color=self.colors['primary']).pack(pady=(0, 15))
 
         # Grid de detalhes
@@ -219,15 +221,15 @@ class Painel(BaseScreen):
         for label, key, color_key in itens:
             f = ctk.CTkFrame(detalhe, fg_color=self.colors['bg_app'], corner_radius=10)
             f.pack(fill="x", pady=3)
-            ctk.CTkLabel(f, text=label, text_color=self.colors['text_secondary']).pack(side="left", padx=15, pady=8)
-            ctk.CTkLabel(f, text=str(self.dados_cadastros[key]), font=ctk.CTkFont(weight="bold"), 
+            ctk.CTkLabel(f, text=label, font=font("text"), text_color=self.colors['text_secondary']).pack(side="left", padx=15, pady=8)
+            ctk.CTkLabel(f, text=str(self.dados_cadastros[key]), font=font("card_title", "bold"), 
                          text_color=self.colors[color_key]).pack(side="right", padx=15)
 
     def _render_profissionais_ativos(self, row, col):
-        card = self._criar_card("Corpo Clínico", "Especialistas em atividade", row, col, padx=(0, 10))
+        card = self._criar_card("Corpo Clínico", "Profissionais ativos no sistema", row, col, padx=(0, 10))
         
         if not self.dados_medicos:
-            self._render_vazio(card, "Nenhum médico escalado")
+            self._render_vazio(card, "Nenhum profissional disponível no momento")
             return
 
         for prof in self.dados_medicos[:3]:
@@ -238,14 +240,14 @@ class Painel(BaseScreen):
             item.pack(fill="x", padx=20, pady=4)
             
             # Avatar Style
-            ctk.CTkLabel(item, text="🩺", font=ctk.CTkFont(size=20)).pack(side="left", padx=15)
+            ctk.CTkLabel(item, text="🩺", font=font("button_large")).pack(side="left", padx=15)
             txt_f = ctk.CTkFrame(item, fg_color="transparent")
             txt_f.pack(side="left", pady=10)
-            ctk.CTkLabel(txt_f, text=nome, font=ctk.CTkFont(weight="bold"), text_color=self.colors['text']).pack(anchor="w")
-            ctk.CTkLabel(txt_f, text=espec, font=ctk.CTkFont(size=11), text_color=self.colors['text_muted']).pack(anchor="w")
+            ctk.CTkLabel(txt_f, text=nome, font=font("text_large", "bold"), text_color=self.colors['text']).pack(anchor="w")
+            ctk.CTkLabel(txt_f, text=espec, font=font("text"), text_color=self.colors['text_muted']).pack(anchor="w")
 
     def _render_alertas(self, row, col):
-        card = self._criar_card("Notificações", "Alertas críticos do sistema", row, col, padx=(10, 0))
+        card = self._criar_card("Notificações", "Alertas e avisos importantes", row, col, padx=(10, 0))
         
         alertas = [
             ("⚠️", "Taxa de cancelamento subiu 5% esta semana", self.colors['danger']),
@@ -256,30 +258,156 @@ class Painel(BaseScreen):
         for icon, msg, color in alertas:
             f = ctk.CTkFrame(card, fg_color=self.colors['bg_app'], corner_radius=10, border_width=1, border_color=self.colors['border'])
             f.pack(fill="x", padx=20, pady=4)
-            ctk.CTkLabel(f, text=f"{icon}  {msg}", text_color=color, font=ctk.CTkFont(size=12, weight="bold")).pack(padx=15, pady=12, anchor="w")
+            ctk.CTkLabel(f, text=f"{icon}  {msg}", text_color=color, font=font("text_large", "bold")).pack(padx=15, pady=12, anchor="w")
 
     def _render_vazio(self, parent, mensagem):
         ctk.CTkLabel(parent, text=mensagem, text_color=self.colors['text_muted'], 
-                     font=ctk.CTkFont(slant="italic")).pack(pady=40)
+                     font=font("text")).pack(pady=40)
 
-    # --- Métodos de Dados (Mantidos os originais para integridade) ---
+    # --- Métodos de Dados (Conectados ao Banco de Dados) ---
     def _carregar_consultas_hoje(self):
+        """Carrega consultas agendadas para hoje"""
         try:
-            if not self.clinica_id: return []
-            return ConsultaController.listar_por_clinica(self.clinica_id, pagina=0, limite=5, 
-                                                        data=date.today().strftime('%Y-%m-%d'))
-        except: return []
+            if not self.clinica_id: 
+                return []
+            # Busca consultas de hoje
+            data_hoje = date.today().strftime('%Y-%m-%d')
+            consultas = ConsultaController.listar_por_clinica(
+                self.clinica_id, 
+                pagina=0, 
+                limite=5, 
+                data=data_hoje
+            )
+            return consultas if consultas else []
+        except Exception as e:
+            print(f"Erro ao carregar consultas: {e}")
+            return []
 
     def _carregar_contagem_consultas(self):
-        # Lógica original simplificada para o exemplo
-        return {'agendada': 12, 'confirmada': 8, 'realizada': 45, 'cancelada': 3, 'total': 68}
+        """Carrega contagem de consultas por status"""
+        try:
+            if not self.clinica_id:
+                return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
+            
+            conn = None
+            try:
+                from config.database import get_connection
+                conn = get_connection()
+                cursor = conn.cursor(dictionary=True)
+                
+                # Buscar contagens por status
+                cursor.execute("""
+                    SELECT 
+                        SUM(CASE WHEN status = 'agendada' THEN 1 ELSE 0 END) as agendada,
+                        SUM(CASE WHEN status = 'confirmada' THEN 1 ELSE 0 END) as confirmada,
+                        SUM(CASE WHEN status = 'realizada' THEN 1 ELSE 0 END) as realizada,
+                        SUM(CASE WHEN status = 'cancelada' THEN 1 ELSE 0 END) as cancelada,
+                        COUNT(*) as total
+                    FROM odontoPro_consulta
+                    WHERE clinica_id = %s
+                """, (self.clinica_id,))
+                
+                resultado = cursor.fetchone()
+                conn.close()
+                
+                return {
+                    'agendada': resultado['agendada'] or 0,
+                    'confirmada': resultado['confirmada'] or 0,
+                    'realizada': resultado['realizada'] or 0,
+                    'cancelada': resultado['cancelada'] or 0,
+                    'total': resultado['total'] or 0
+                }
+            except Exception as e:
+                print(f"Erro ao contar consultas: {e}")
+                return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
+            finally:
+                if conn:
+                    conn.close()
+        except Exception as e:
+            print(f"Erro geral: {e}")
+            return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
 
     def _carregar_resumo_cadastros(self):
-        return {'pacientes': 142, 'medicos': 12, 'gerentes': 4, 'total_usuarios': 158}
+        """Carrega resumo de usuários cadastrados"""
+        try:
+            if not self.clinica_id:
+                return {'pacientes': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
+            
+            conn = None
+            try:
+                from config.database import get_connection
+                conn = get_connection()
+                cursor = conn.cursor(dictionary=True)
+                
+                # Contar pacientes
+                cursor.execute("SELECT COUNT(*) as total FROM odontoPro_paciente WHERE clinica_id = %s", (self.clinica_id,))
+                pacientes = cursor.fetchone()['total']
+                
+                # Contar médicos
+                cursor.execute("SELECT COUNT(*) as total FROM odontoPro_medico WHERE clinica_id = %s", (self.clinica_id,))
+                medicos = cursor.fetchone()['total']
+                
+                # Contar gerentes
+                cursor.execute("SELECT COUNT(*) as total FROM odontoPro_gerenciamento WHERE clinica_id = %s AND ativo = 1", (self.clinica_id,))
+                gerentes = cursor.fetchone()['total']
+                
+                conn.close()
+                
+                return {
+                    'pacientes': pacientes,
+                    'medicos': medicos,
+                    'gerentes': gerentes,
+                    'total_usuarios': pacientes + medicos + gerentes + 1  # +1 para a clínica
+                }
+            except Exception as e:
+                print(f"Erro ao contar cadastros: {e}")
+                return {'pacientes': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
+            finally:
+                if conn:
+                    conn.close()
+        except Exception as e:
+            print(f"Erro geral: {e}")
+            return {'pacientes': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
 
     def _carregar_medicos(self):
-        return [{'nome': 'Dr. Arnaldo Silva', 'especialidade': 'Ortodontia'}, 
-                {'nome': 'Dra. Beatriz Luz', 'especialidade': 'Implantodontia'}]
+        """Carrega lista de médicos ativos"""
+        try:
+            if not self.clinica_id:
+                return []
+            
+            medicos = MedicoController.listar_medicos(self.clinica_id)
+            return medicos if medicos else []
+        except Exception as e:
+            print(f"Erro ao carregar médicos: {e}")
+            return []
 
     def _carregar_financeiro(self):
-        return {'faturamento': 12500, 'despesas': 4200, 'lucro': 8300, 'total_consultas': 50, 'realizadas': 42}
+        """Carrega resumo financeiro do mês"""
+        try:
+            if not self.clinica_id:
+                return {
+                    'faturamento': 0,
+                    'despesas': 0,
+                    'lucro': 0,
+                    'total_consultas': 0,
+                    'realizadas': 0
+                }
+            
+            # Buscar dados do FinanceiroController
+            resumo = FinanceiroController.obter_resumo_financeiro(self.clinica_id)
+            return resumo if resumo else {
+                'faturamento': 0,
+                'despesas': 0,
+                'lucro': 0,
+                'total_consultas': 0,
+                'realizadas': 0
+            }
+        except Exception as e:
+            print(f"Erro ao carregar dados financeiros: {e}")
+            return {
+                'faturamento': 0,
+                'despesas': 0,
+                'lucro': 0,
+                'total_consultas': 0,
+                'realizadas': 0
+            }

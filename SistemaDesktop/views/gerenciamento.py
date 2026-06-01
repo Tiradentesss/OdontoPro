@@ -326,8 +326,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         save_btn = ctk.CTkButton(
             footer,
             text="Salvar Disponibilidade",
-            height=40,
-            width=180,
+            height=38,
+            width=160,
             corner_radius=12,
             fg_color=self.colors["primary"],
             hover_color=self.colors["primary_dark"],

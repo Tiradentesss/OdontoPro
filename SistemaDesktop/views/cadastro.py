@@ -1,4 +1,4 @@
-from .base import BaseScreen
+from .base import BaseScreen, ActionButtons
 from .theme import font, ICON_SIZE, COLORS
 import customtkinter as ctk
 from controllers.paciente_controller import PacienteController
@@ -21,7 +21,7 @@ class Cadastro(BaseScreen):
         self.cor_primaria = COLORS["primary"]
         self.cor_primaria_hover = COLORS["primary_dark"]
         
-        self.padding_lateral = 25
+        self.padding_lateral = 15
 
         self.paciente_entries = []
         self.profissional_entries = []
@@ -30,7 +30,7 @@ class Cadastro(BaseScreen):
         # 1. BARRA DE ABAS (TOPO)
         # =============================
         self.tab_bar = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
-        self.tab_bar.pack(fill="x", padx=25, pady=(9, 0), anchor="nw")
+        self.tab_bar.pack(fill="x", padx=15, pady=(9, 0), anchor="nw")
 
         self.btn_pacientes = ctk.CTkButton(
             self.tab_bar, text="👤   Pacientes",
@@ -56,7 +56,7 @@ class Cadastro(BaseScreen):
             fg_color="transparent",
             corner_radius=20
         )
-        self.container_outer.pack(fill="both", expand=True, padx=25, pady=25)
+        self.container_outer.pack(fill="both", expand=True, padx=15, pady=15)
 
         # Container com scroll para garantir que os botões apareçam
         self.scroll_frame = ctk.CTkScrollableFrame(
@@ -70,7 +70,7 @@ class Cadastro(BaseScreen):
             self.scroll_frame,
             fg_color="transparent"
         )
-        self.container_conteudo.pack(fill="both", expand=True)
+        self.container_conteudo.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.frame_pacientes = self._criar_tela_pacientes()
         self.frame_profissionais = self._criar_tela_profissionais()
@@ -101,7 +101,7 @@ class Cadastro(BaseScreen):
         estilo_inativo = {
             "fg_color": "transparent",
             "text_color": self.cor_texto_inativo,
-            "hover_color": "#D1D5DB"
+            "hover_color": "#243756"
         }
 
         if ativa == "Pacientes":
@@ -176,7 +176,7 @@ class Cadastro(BaseScreen):
             fg_color=COLORS["input_bg"],
             border_color=COLORS["border"],
             border_width=1,
-            corner_radius=5,
+            corner_radius=8,
             text_color=COLORS["text"],
             placeholder_text_color=COLORS["text_muted"]
         )
@@ -204,7 +204,7 @@ class Cadastro(BaseScreen):
             fg_color=COLORS["input_bg"],
             border_color=COLORS["border"],
             border_width=1,
-            corner_radius=5,
+            corner_radius=8,
             text_color=COLORS["text"],
             placeholder_text_color=COLORS["text_muted"]
         )
@@ -234,7 +234,7 @@ class Cadastro(BaseScreen):
             fg_color=COLORS["input_bg"],
             border_color=COLORS["border"],
             border_width=1,
-            corner_radius=5,
+            corner_radius=8,
             text_color=COLORS["text"],
             placeholder_text_color=COLORS["text_muted"]
         )
@@ -262,7 +262,7 @@ class Cadastro(BaseScreen):
             fg_color=COLORS["input_bg"],
             border_color=COLORS["border"],
             border_width=1,
-            corner_radius=5,
+            corner_radius=8,
             text_color=COLORS["text"],
             placeholder_text_color=COLORS["text_muted"]
         )
@@ -347,7 +347,7 @@ class Cadastro(BaseScreen):
             fg_color=COLORS["input_bg"],
             border_color=COLORS["border"],
             border_width=1,
-            corner_radius=5,
+            corner_radius=8,
             text_color=COLORS["text"],
             placeholder_text_color=COLORS["text_muted"]
         )
@@ -371,7 +371,7 @@ class Cadastro(BaseScreen):
             fg_color=COLORS["input_bg"],
             border_color=COLORS["border"],
             border_width=1,
-            corner_radius=5,
+            corner_radius=8,
             text_color=COLORS["text"],
             placeholder_text_color=COLORS["text_muted"]
         )
@@ -403,7 +403,7 @@ class Cadastro(BaseScreen):
                 fg_color=COLORS["input_bg"],
                 border_color=COLORS["border"],
                 border_width=1,
-                corner_radius=5,
+                corner_radius=8,
                 text_color=COLORS["text"],
                 placeholder_text_color=COLORS["text_muted"]
             )
@@ -446,21 +446,6 @@ class Cadastro(BaseScreen):
             except Exception as e:
                 self._mostrar_mensagem(f"Erro: {str(e)}", sucesso=False)
 
-        salvar_btn = ctk.CTkButton(
-            container,
-            text=texto_principal.upper(),
-            font=font("button_large", "bold"),
-            height=44,
-            width=220,
-            fg_color=self.cor_primaria,
-            hover_color=self.cor_primaria_hover,
-            text_color="white",
-            corner_radius=5,
-            border_spacing=0,
-            command=_salvar
-        )
-        salvar_btn.pack(side="left", padx=(0, 8))
-
         def _limpar():
             entries = target_entries or []
             for e in entries:
@@ -471,21 +456,13 @@ class Cadastro(BaseScreen):
                 except Exception:
                     pass
 
-        limpar_btn = ctk.CTkButton(
+        ActionButtons(
             container,
-            text="LIMPAR",
-            font=font("button_large"),
-            height=44,
-            width=125,
-            fg_color="transparent",
-            hover_color="#F3F4F6",
-            text_color="#6B7280",
-            corner_radius=5,
-            border_width=1,
-            border_color=COLORS["border"],
-            command=_limpar
-        )
-        limpar_btn.pack(side="left")
+            primary_text=texto_principal.upper(),
+            secondary_text="LIMPAR",
+            on_primary=_salvar,
+            on_secondary=_limpar
+        ).pack(anchor="w")
 
     # =====================================================
     # COMPONENTES REUTILIZÁVEIS
@@ -501,7 +478,7 @@ class Cadastro(BaseScreen):
             parent, placeholder_text=placeholder, height=44, show=show,
             fg_color=COLORS["input_bg"], border_color=COLORS["border"], 
             text_color=COLORS["text"], placeholder_text_color=COLORS["text_muted"], 
-            corner_radius=5
+            corner_radius=8
         )
         entry.pack(fill="x", padx=self.padding_lateral, pady=8)
         return entry

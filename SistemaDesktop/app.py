@@ -11,7 +11,7 @@ from views.gerenciamento import Gerenciamento
 from views.login import Login
 from views.permissao import Permissoes
 from controllers.gerenciamento_controller import GerenciamentoController
-from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode
+from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode, font
 
 from PIL import Image
 import customtkinter as ctk
@@ -20,14 +20,7 @@ import os
 
 class App(ctk.CTk):
     def logout(self):
-        self.withdraw()  # esconde a janela sem matar o Tk
-
-        def abrir_login():
-            self.destroy()  # agora sim, depois que o loop esvaziar
-            login = Login()
-            login.mainloop()
-
-        self.after(100, abrir_login)
+        self.destroy()  # fecha a janela e o programa
 
     def toggle_theme(self):
         """Alterna entre modo escuro e claro e atualiza a interface"""
@@ -177,14 +170,14 @@ class App(ctk.CTk):
         ctk.CTkLabel(
             self.sidebar,
             text="OdontoPro",
-            font=ctk.CTkFont(size=24, weight="bold"),
+            font=font("large_title", "bold"),
             text_color=COLORS["primary"]
         ).pack(pady=(40, 5))
 
         ctk.CTkLabel(
             self.sidebar,
             text="Clinical Management",
-            font=ctk.CTkFont(size=11),
+            font=font("small"),
             text_color=COLORS["text_secondary"]
         ).pack(pady=(0, 30))
 
@@ -193,25 +186,25 @@ class App(ctk.CTk):
         if self.tipo_usuario == "gerenciamento":
             # Para gerentes, mostrar todos os itens possíveis
             todos_itens = [
-                ("▣  Painel", "painel"),
-                ("🗓  Agenda", "agenda"),
-                ("💰  Financeiro", "financeiro"),
-                ("👔  Gerenciamento", "gerenciamento"),
-                ("🔒  Permissões", "permissao"),
-                ("👤  Cadastro", "cadastro"),
-                ("⚙  Configurações", "config"),
+                ("📊  Painel", "painel"),
+                ("📅  Agenda", "agenda"),
+                ("💳  Financeiro", "financeiro"),
+                ("🏢  Gerenciamento", "gerenciamento"),
+                ("🔐  Permissões", "permissao"),
+                ("👥  Cadastro", "cadastro"),
+                ("⚙️  Configurações", "config"),
             ]
             # Filtrar apenas os que o gerente tem permissão
             self.menu_items = [item for item in todos_itens if self.tem_permissao(item[1])]
         else:  # clinica
             self.menu_items = [
-                ("▣  Painel", "painel"),
-                ("🗓  Agenda", "agenda"),
-                ("💰  Financeiro", "financeiro"),
-                ("👔  Gerenciamento", "gerenciamento"),
-                ("🔒  Permissões", "permissao"),
-                ("👤  Cadastro", "cadastro"),
-                ("⚙  Configurações", "config"),
+                ("📊  Painel", "painel"),
+                ("📅  Agenda", "agenda"),
+                ("💳  Financeiro", "financeiro"),
+                ("🏢  Gerenciamento", "gerenciamento"),
+                ("🔐  Permissões", "permissao"),
+                ("👥  Cadastro", "cadastro"),
+                ("⚙️  Configurações", "config"),
             ]
 
         for text, name in self.menu_items:
@@ -233,7 +226,7 @@ class App(ctk.CTk):
             fg_color=COLORS["primary"],
             text_color="white",
             hover_color=COLORS["primary_dark"],
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=font("button", "bold"),
             height=40,
             border_width=2,
             border_color=COLORS["primary_dark"],
@@ -249,7 +242,7 @@ class App(ctk.CTk):
             fg_color=logout_color,
             text_color="white",
             hover_color=logout_hover,
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=font("button", "bold"),
             height=40,
             border_width=2,
             border_color=logout_border,
@@ -293,12 +286,12 @@ class App(ctk.CTk):
             fg_color="transparent",
             text_color=COLORS["text_secondary"],
             hover_color=COLORS["hover"],
-            height=46,
+            height=52,
             corner_radius=10,
-            font=ctk.CTkFont(size=14),
+            font=font("subtitle", "bold"),
             command=lambda: self.show_frame(name)
         )
-        btn.pack(fill="x", padx=16, pady=6)
+        btn.pack(fill="x", padx=12, pady=8)
         return btn
 
     def show_frame(self, name):

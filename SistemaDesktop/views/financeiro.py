@@ -1,27 +1,56 @@
 from .base import BaseScreen
 import customtkinter as ctk
+import tkinter as tk
+from tkinter import messagebox, simpledialog
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from .theme import font, COLORS
 from datetime import datetime, timedelta
 from collections import defaultdict
+from controllers.financeiro_controller import FinanceiroController
 
 
 class Financeiro(BaseScreen):
-    def __init__(self, parent):
+    def __init__(self, parent, clinica_id=None):
         super().__init__(parent, "Financeiro")
 
-        # Transações iniciais (serão sincronizadas com a tabela)
-        self.transacoes = [
-            ("04/05", "Consulta Odontológica", "Receita", 250),
-            ("03/05", "Materiais de Limpeza", "Despesa", 450),
-            ("02/05", "Manutenção Ar Condicionado", "Despesa", 300),
-        ]
+        self.clinica_id = clinica_id
+        # Carrega transações do banco de dados
+        self.transacoes = self._carregar_transacoes()
 
         self.main_container = ctk.CTkScrollableFrame(self.content_card, fg_color="transparent")
         self.main_container.pack(fill="both", expand=True, padx=20, pady=20)
 
         self.setup_ui()
+    
+    def _carregar_transacoes(self):
+        """Carrega transações do banco de dados"""
+        try:
+            if not self.clinica_id:
+                return []
+            
+            # Buscar todas as transações do mês
+            data_inicio = datetime.now().replace(day=1)
+            transacoes_db = FinanceiroController.listar_transacoes(
+                self.clinica_id, 
+                data_inicio=data_inicio
+            )
+            
+            # Converter para o formato esperado (data_str, descricao, tipo, valor)
+            transacoes_formatadas = []
+            for trans in transacoes_db:
+                if trans and isinstance(trans, dict):
+                    data_str = trans.get('data', datetime.now()).strftime('%d/%m')
+                    descricao = trans.get('descricao', 'Transação')
+                    tipo = trans.get('tipo', 'receita')
+                    valor = float(trans.get('valor', 0))
+                    transacoes_formatadas.append((data_str, descricao, tipo, valor))
+            
+            return transacoes_formatadas if transacoes_formatadas else []
+        
+        except Exception as e:
+            print(f"Erro ao carregar transações: {e}")
+            return []
 
     def setup_ui(self):
         self.create_kpi_section()
@@ -185,12 +214,12 @@ class Financeiro(BaseScreen):
         
         # Linha e área para Receitas (azul primário)
         ax.plot(x, receitas, marker='o', linewidth=2.5, markersize=6,
-                color=COLORS["primary"], label='📈 Entradas', alpha=1)
+                color=COLORS["primary"], label='⬆️ Entradas', alpha=1)
         ax.fill_between(x, receitas, alpha=0.2, color=COLORS["primary"])
         
         # Linha e área para Despesas (vermelho)
         ax.plot(x, despesas, marker='s', linewidth=2.5, markersize=6,
-                color=COLORS["danger"], label='📉 Saídas', alpha=1)
+                color=COLORS["danger"], label='⬇️ Saídas', alpha=1)
         ax.fill_between(x, despesas, alpha=0.2, color=COLORS["danger"])
         
         # Adicionar valores nos pontos com ajuste para valores negativos
@@ -290,6 +319,20 @@ class Financeiro(BaseScreen):
 
         ctk.CTkLabel(header, text="🧾 Transações",
                      font=font("subtitle", "bold")).pack(side="left")
+
+        # Botão para adicionar despesa
+        btn_adicionar = ctk.CTkButton(
+            header,
+            text="+ Adicionar Despesa",
+            font=font("small", "bold"),
+            fg_color=COLORS["danger"],
+            hover_color="#991B1B",
+            text_color="white",
+            height=32,
+            corner_radius=6,
+            command=self.abrir_dialog_adicionar_despesa
+        )
+        btn_adicionar.pack(side="right")
 
         self.render_table(container)
 
@@ -427,3 +470,298 @@ class Financeiro(BaseScreen):
             "despesa": total_despesa,
             "lucro": lucro
         }
+
+    def abrir_dialog_adicionar_despesa(self):
+        """Abre um diálogo para adicionar uma nova despesa"""
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Adicionar Despesa")
+        dialog.geometry("450x500")
+        dialog.resizable(False, False)
+        dialog.attributes("-topmost", True)
+        dialog.grab_set()
+        
+        # Configurar cor de fundo da janela
+        dialog.configure(fg_color=COLORS["bg"])
+
+        # Frame principal com padding generoso
+        main_frame = ctk.CTkFrame(dialog, fg_color=COLORS["card"], corner_radius=12)
+        main_frame.pack(fill="both", expand=True, padx=15, pady=15)
+
+        # Título
+        title_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        title_frame.pack(fill="x", padx=20, pady=(20, 10))
+        
+        ctk.CTkLabel(
+            title_frame,
+            text="📝 Nova Despesa",
+            font=font("card_title", "bold"),
+            text_color=COLORS["text"]
+        ).pack(anchor="w")
+
+        # Separador visual
+        separator = ctk.CTkFrame(main_frame, height=1, fg_color=COLORS["border"])
+        separator.pack(fill="x", padx=20, pady=(0, 20))
+
+        # Frame de conteúdo com scroll se necessário
+        content_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        content_frame.pack(fill="both", expand=True, padx=20, pady=0)
+
+        # Data
+        ctk.CTkLabel(
+            content_frame,
+            text="Data",
+            font=font("text", "bold"),
+            text_color=COLORS["text"]
+        ).pack(anchor="w", pady=(0, 8))
+        
+        # Frame para o campo de data com botão de calendário
+        data_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
+        data_frame.pack(fill="x", pady=(0, 20))
+        
+        entry_data = ctk.CTkEntry(
+            data_frame,
+            placeholder_text="DD/MM/AAAA",
+            height=45,
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
+            border_width=1,
+            corner_radius=8,
+            font=font("text")
+        )
+        entry_data.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        entry_data.delete(0, "end")
+        entry_data.insert(0, datetime.now().strftime("%d/%m/%Y"))
+        
+        def abrir_seletor_data():
+            """Abre um seletor de data simples"""
+            data_atual = datetime.now()
+            try:
+                data_atual = datetime.strptime(entry_data.get(), "%d/%m/%Y")
+            except:
+                pass
+            
+            cal_window = ctk.CTkToplevel(dialog)
+            cal_window.title("Selecione a Data")
+            cal_window.geometry("320x280")
+            cal_window.resizable(False, False)
+            cal_window.grab_set()
+            cal_window.configure(fg_color=COLORS["bg"])
+            
+            cal_frame = ctk.CTkFrame(cal_window, fg_color=COLORS["card"], corner_radius=12)
+            cal_frame.pack(fill="both", expand=True, padx=10, pady=10)
+            
+            # Título
+            ctk.CTkLabel(
+                cal_frame,
+                text="Selecione a Data",
+                font=font("subtitle", "bold"),
+                text_color=COLORS["text"]
+            ).pack(pady=(15, 10))
+            
+            # Frame para seletores
+            selector_frame = ctk.CTkFrame(cal_frame, fg_color="transparent")
+            selector_frame.pack(fill="both", padx=15, pady=10)
+            
+            # Dia
+            ctk.CTkLabel(selector_frame, text="Dia", font=font("small", "bold")).pack(anchor="w", pady=(0, 5))
+            dia_var = tk.StringVar(value=f"{data_atual.day:02d}")
+            dia_menu = ctk.CTkComboBox(
+                selector_frame,
+                values=[f"{i:02d}" for i in range(1, 32)],
+                variable=dia_var,
+                height=35,
+                corner_radius=6,
+                font=font("text")
+            )
+            dia_menu.pack(fill="x", pady=(0, 10))
+            
+            # Mês
+            ctk.CTkLabel(selector_frame, text="Mês", font=font("small", "bold")).pack(anchor="w", pady=(0, 5))
+            meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+            mes_var = tk.StringVar(value=meses[data_atual.month - 1])
+            mes_menu = ctk.CTkComboBox(
+                selector_frame,
+                values=meses,
+                variable=mes_var,
+                height=35,
+                corner_radius=6,
+                font=font("text")
+            )
+            mes_menu.pack(fill="x", pady=(0, 10))
+            
+            # Ano
+            ctk.CTkLabel(selector_frame, text="Ano", font=font("small", "bold")).pack(anchor="w", pady=(0, 5))
+            ano_var = tk.StringVar(value=str(data_atual.year))
+            anos = [str(year) for year in range(2020, 2031)]
+            ano_menu = ctk.CTkComboBox(
+                selector_frame,
+                values=anos,
+                variable=ano_var,
+                height=35,
+                corner_radius=6,
+                font=font("text")
+            )
+            ano_menu.pack(fill="x", pady=(0, 15))
+            
+            def confirmar_data():
+                dia = dia_var.get()
+                mes = meses.index(mes_var.get()) + 1
+                ano = ano_var.get()
+                data_formatada = f"{dia}/{mes:02d}/{ano}"
+                entry_data.delete(0, "end")
+                entry_data.insert(0, data_formatada)
+                cal_window.destroy()
+            
+            btn_confirmar = ctk.CTkButton(
+                cal_frame,
+                text="✓ Confirmar",
+                fg_color=COLORS["primary"],
+                hover_color=COLORS["primary_dark"],
+                height=40,
+                corner_radius=6,
+                font=font("button", "bold"),
+                command=confirmar_data
+            )
+            btn_confirmar.pack(fill="x", padx=15, pady=(0, 15))
+        
+        btn_calendario = ctk.CTkButton(
+            data_frame,
+            text="📅",
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
+            text_color="white",
+            width=45,
+            height=45,
+            corner_radius=8,
+            font=font("text", "bold"),
+            command=abrir_seletor_data
+        )
+        btn_calendario.pack(side="left")
+
+        # Descrição
+        ctk.CTkLabel(
+            content_frame,
+            text="Descrição",
+            font=font("text", "bold"),
+            text_color=COLORS["text"]
+        ).pack(anchor="w", pady=(0, 8))
+        
+        entry_descricao = ctk.CTkEntry(
+            content_frame,
+            placeholder_text="Ex: Aluguel do consultório",
+            height=45,
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
+            border_width=1,
+            corner_radius=8,
+            font=font("text")
+        )
+        entry_descricao.pack(fill="x", pady=(0, 20))
+
+        # Valor
+        ctk.CTkLabel(
+            content_frame,
+            text="Valor (R$)",
+            font=font("text", "bold"),
+            text_color=COLORS["text"]
+        ).pack(anchor="w", pady=(0, 8))
+        
+        entry_valor = ctk.CTkEntry(
+            content_frame,
+            placeholder_text="0,00",
+            height=45,
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
+            border_width=1,
+            corner_radius=8,
+            font=font("text")
+        )
+        entry_valor.pack(fill="x", pady=(0, 30))
+
+        def salvar_despesa():
+            """Salva a despesa no banco de dados"""
+            try:
+                data_str = entry_data.get().strip()
+                descricao = entry_descricao.get().strip()
+                valor_str = entry_valor.get().strip().replace(",", ".")
+                
+                # Validações
+                if not all([data_str, descricao, valor_str]):
+                    messagebox.showerror("Erro", "Preencha todos os campos!")
+                    return
+                
+                # Validar formato de data
+                try:
+                    datetime.strptime(data_str, "%d/%m/%Y")
+                except ValueError:
+                    messagebox.showerror("Erro", "Data inválida! Use DD/MM/AAAA")
+                    return
+                
+                # Validar valor
+                try:
+                    valor = float(valor_str)
+                    if valor <= 0:
+                        messagebox.showerror("Erro", "O valor deve ser maior que zero!")
+                        return
+                except ValueError:
+                    messagebox.showerror("Erro", "Valor inválido!")
+                    return
+                
+                # Salvar no banco de dados
+                if self.clinica_id:
+                    resultado = FinanceiroController.criar_transacao(
+                        tipo="despesa",
+                        descricao=descricao,
+                        valor=valor,
+                        clinica_id=self.clinica_id,
+                        data=datetime.strptime(data_str, "%d/%m/%Y")
+                    )
+                    
+                    if resultado.get("sucesso"):
+                        messagebox.showinfo("Sucesso", "Despesa adicionada com sucesso!")
+                        dialog.destroy()
+                        # Recarregar os dados
+                        self.transacoes = self._carregar_transacoes()
+                        self.atualizar_interface()
+                    else:
+                        messagebox.showerror("Erro", resultado.get("mensagem", "Erro ao adicionar despesa"))
+                else:
+                    messagebox.showerror("Erro", "Clínica não identificada!")
+            
+            except Exception as e:
+                messagebox.showerror("Erro", f"Erro ao salvar despesa: {str(e)}")
+
+        # Frame dos botões com melhor espaçamento
+        button_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+        button_frame.pack(fill="x", padx=20, pady=(0, 20))
+
+        # Botão Confirmar (Salvar)
+        btn_salvar = ctk.CTkButton(
+            button_frame,
+            text="✓  Confirmar",
+            font=font("button", "bold"),
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
+            text_color="white",
+            height=45,
+            corner_radius=8,
+            border_width=0,
+            command=salvar_despesa
+        )
+        btn_salvar.pack(side="left", fill="both", expand=True, padx=(0, 10))
+
+        # Botão Cancelar
+        btn_cancelar = ctk.CTkButton(
+            button_frame,
+            text="✕  Cancelar",
+            font=font("button", "bold"),
+            fg_color=COLORS["danger"],
+            hover_color="#DC2626",
+            text_color="white",
+            height=45,
+            corner_radius=8,
+            border_width=0,
+            command=dialog.destroy
+        )
+        btn_cancelar.pack(side="left", fill="both", expand=True)

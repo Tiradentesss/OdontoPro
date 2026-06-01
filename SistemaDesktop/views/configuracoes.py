@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from .base import BaseScreen
+from .base import BaseScreen, ActionButtons
 from .theme import font, ICON_SIZE, COLORS
 import os
 from PIL import Image, ImageTk, ImageDraw
@@ -140,7 +140,7 @@ class ModernInput(ctk.CTkFrame):
             input_container,
             placeholder_text=placeholder,
             height=44,
-            corner_radius=5,
+            corner_radius=8,
             border_width=1,
             border_color=COLORS["border"],
             fg_color=COLORS["input_bg"],
@@ -207,7 +207,7 @@ class Configuracoes(BaseScreen):
 
     def setup_ui(self):
         self.tab_bar = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
-        self.tab_bar.pack(fill="x", padx=10, pady=(9, 0), anchor="nw")
+        self.tab_bar.pack(fill="x", padx=15, pady=(9, 0), anchor="nw")
 
         self._build_tabs()
 
@@ -216,17 +216,17 @@ class Configuracoes(BaseScreen):
             fg_color="transparent",
             corner_radius=20
         )
-        self.container_outer.pack(fill="both", expand=True, padx=10, pady=(6, 20))
+        self.container_outer.pack(fill="both", expand=True, padx=15, pady=15)
 
         self.container_conteudo = ctk.CTkFrame(
             self.container_outer,
             fg_color=self.colors["bg_card"],
             corner_radius=12
         )
-        self.container_conteudo.pack(fill="both", expand=True, padx=2, pady=(2, 1))
+        self.container_conteudo.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.content_area = ctk.CTkFrame(self.container_conteudo, fg_color="transparent")
-        self.content_area.pack(fill="both", expand=True)
+        self.content_area.pack(fill="both", expand=True, padx=0, pady=0)
 
         self._build_footer(self.container_conteudo)
         self.switch_tab(self.current_tab)
@@ -286,7 +286,7 @@ class Configuracoes(BaseScreen):
         if tab_name in render_methods:
             render_methods[tab_name](self.content_area)
 
-    def _titulo(self, parent, texto, padx=10):
+    def _titulo(self, parent, texto, padx=15):
         ctk.CTkLabel(
             parent,
             text=texto,
@@ -294,7 +294,7 @@ class Configuracoes(BaseScreen):
             text_color=self.colors["text_primary"]
         ).pack(anchor="w", padx=padx, pady=(24, 17))
 
-    def _secao_titulo(self, parent, texto, padx=10):
+    def _secao_titulo(self, parent, texto, padx=15):
         container = ctk.CTkFrame(parent, fg_color="transparent")
         container.pack(fill="x", padx=padx, pady=(16, 8))
 
@@ -316,7 +316,7 @@ class Configuracoes(BaseScreen):
             border_width=1,
             border_color=self.colors["border"]
         )
-        card.pack(fill="x", padx=10, pady=(0, 20), anchor="w")
+        card.pack(fill="x", padx=15, pady=(0, 20), anchor="w")
 
         header = ctk.CTkFrame(card, fg_color="transparent")
         header.pack(fill="x", padx=24, pady=(20, 10))
@@ -357,10 +357,10 @@ class Configuracoes(BaseScreen):
         password_frame = ctk.CTkFrame(parent, fg_color="transparent")
         password_frame.pack(fill="x", pady=(0, 20), anchor="w")
 
-        self._secao_titulo(password_frame, "Alterar Senha", padx=10)
+        self._secao_titulo(password_frame, "Alterar Senha", padx=15)
 
         form_frame = ctk.CTkFrame(password_frame, fg_color="transparent")
-        form_frame.pack(fill="x", padx=10, anchor="w")
+        form_frame.pack(fill="x", padx=15, anchor="w")
 
         # Inputs de segurança
         current_pwd = ModernInput(
@@ -394,7 +394,7 @@ class Configuracoes(BaseScreen):
         ).pack(side="left", padx=(40, 0))  # Também aumentado para 40px
 
         self.strength_bar = ctk.CTkProgressBar(
-            strength_frame, width=200, height=6, corner_radius=3,
+            strength_frame, width=200, height=6, corner_radius=4,
             progress_color=self.colors["accent"]
         )
         self.strength_bar.pack(side="left", padx=(10, 0))
@@ -423,13 +423,13 @@ class Configuracoes(BaseScreen):
 
     # ==================== MINHA CLÍNICA ====================
     def _render_preferences(self, parent):
-        self._titulo(parent, "Configurações da Clínica", padx=10)
+        self._titulo(parent, "Configurações da Clínica", padx=15)
 
         sub_tabs = ["Geral", "Serviços", "Descrição"]
         self.sub_tab_buttons = {}
 
         tab_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        tab_frame.pack(fill="x", padx=10, pady=(0, 10), anchor="w")
+        tab_frame.pack(fill="x", padx=15, pady=(0, 10), anchor="w")
 
         for tab in sub_tabs:
             btn = ctk.CTkButton(
@@ -446,7 +446,7 @@ class Configuracoes(BaseScreen):
             self.sub_tab_buttons[tab.lower()] = btn
 
         divider = ctk.CTkFrame(parent, height=1, fg_color=self.colors["border"])
-        divider.pack(fill="x", padx=10, pady=(0, 15))
+        divider.pack(fill="x", padx=15, pady=(0, 15))
 
         self.sub_tab_content = ctk.CTkFrame(parent, fg_color="transparent")
         self.sub_tab_content.pack(fill="both", expand=True, anchor="w")
@@ -641,38 +641,38 @@ class Configuracoes(BaseScreen):
         scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
         scroll.pack(fill="both", expand=True, anchor="w")
 
-        self._secao_titulo(scroll, "Serviços Oferecidos", padx=10)
+        self._secao_titulo(scroll, "Serviços Oferecidos", padx=15)
 
         self.services_text = ctk.CTkTextbox(
             scroll,
             height=180,
-            corner_radius=5,
+            corner_radius=8,
             border_width=1,
             border_color=self.colors["border"],
             fg_color=COLORS["input_bg"],
             font=font("text"),
             text_color=self.colors["text_primary"]
         )
-        self.services_text.pack(fill="both", expand=True, anchor="w", padx=10, pady=(10, 0))
+        self.services_text.pack(fill="both", expand=True, anchor="w", padx=15, pady=(10, 0))
         self.services_text.insert("1.0", "• Limpeza profissional\n• Clareamento dental\n• Implantes\n• Aparelhos ortodônticos")
 
     def _render_preferences_description(self, parent):
         scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
         scroll.pack(fill="both", expand=True, anchor="w")
 
-        self._secao_titulo(scroll, "Sobre a Clínica", padx=10)
+        self._secao_titulo(scroll, "Sobre a Clínica", padx=15)
 
         self.description_text = ctk.CTkTextbox(
             scroll,
             height=280,
-            corner_radius=5,
+            corner_radius=8,
             border_width=1,
             border_color=self.colors["border"],
             fg_color=COLORS["input_bg"],
             font=font("text"),
             text_color=self.colors["text_primary"]
         )
-        self.description_text.pack(fill="both", expand=True, anchor="w", padx=10, pady=(10, 0))
+        self.description_text.pack(fill="both", expand=True, anchor="w", padx=15, pady=(10, 0))
         self.description_text.insert("1.0", "Bem-vindo à nossa clínica! Somos uma equipe dedicada a proporcionar o melhor cuidado para seu sorriso...")
 
     # ==================== PERFIL ====================
@@ -680,7 +680,7 @@ class Configuracoes(BaseScreen):
         self._titulo(parent, "Meu Perfil")
 
         profile_container = ctk.CTkFrame(parent, fg_color="transparent")
-        profile_container.pack(fill="both", expand=True, padx=10)
+        profile_container.pack(fill="both", expand=True, padx=15)
         profile_container.grid_columnconfigure(0, weight=0)
         profile_container.grid_columnconfigure(1, weight=1)
 
@@ -714,7 +714,7 @@ class Configuracoes(BaseScreen):
             avatar_frame, text="Alterar foto", fg_color="transparent",
             hover_color=self.colors["accent_light"], text_color=self.colors["accent"],
             border_width=1, border_color=self.colors["accent"],
-            height=44, corner_radius=5, font=font("text"),
+            height=44, corner_radius=8, font=font("text"),
             anchor="center", command=self._change_avatar
         )
         upload_btn.pack(anchor="w", fill="x")
@@ -759,27 +759,15 @@ class Configuracoes(BaseScreen):
     # ==================== FOOTER ====================
     def _build_footer(self, parent):
         footer = ctk.CTkFrame(parent, fg_color="transparent")
-        footer.pack(fill="x", side="bottom", padx=10, pady=14)
+        footer.pack(fill="x", side="bottom", padx=15, pady=14)
 
-        save_btn = ctk.CTkButton(
-            footer, text="SALVAR ALTERAÇÕES", fg_color=self.colors["accent"],
-            hover_color=self.colors["accent_hover"], text_color="white",
-            height=44, width=220, corner_radius=5,
-            font=font("button_large", "bold"),
-            command=self._save
-        )
-        save_btn.pack(side="left", padx=(0, 8))
-
-        cancel_btn = ctk.CTkButton(
-            footer, text="CANCELAR", fg_color="transparent",
-            hover_color=COLORS["hover"],
-            text_color=self.colors["text_secondary"],
-            border_width=1, border_color=self.colors["border"],
-            height=44, width=125, corner_radius=5,
-            font=font("button_large"),
-            command=self._cancel
-        )
-        cancel_btn.pack(side="left")
+        ActionButtons(
+            footer,
+            primary_text="SALVAR ALTERAÇÕES",
+            secondary_text="CANCELAR",
+            on_primary=self._save,
+            on_secondary=self._cancel
+        ).pack(anchor="w")
 
     # ==================== CARREGAMENTO DE DADOS ====================
     def _load_clinic_data(self):
