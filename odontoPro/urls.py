@@ -22,6 +22,10 @@ urlpatterns = [
 
     # CLÍNICA
     path("clinica/<int:clinica_id>/", views.perfil_clinica, name="perfilClinica"),
+    path("clinicas/gerenciar/", views.gerenciar_clinicas, name="gerenciar_clinicas"),
+    path("clinica/<int:clinica_id>/editar/", views.editar_clinica, name="editar_clinica"),
+    path("clinica/<int:clinica_id>/imagem/adicionar/", views.adicionar_imagem_clinica, name="adicionar_imagem_clinica"),
+    path("imagem/<int:imagem_id>/deletar/", views.deletar_imagem_clinica, name="deletar_imagem_clinica"),
 
     # CONSULTAS
     path("consulta/<int:consulta_id>/cancelar/", views.cancelar_consulta, name="cancelar_consulta"),

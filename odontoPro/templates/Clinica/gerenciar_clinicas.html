@@ -1,0 +1,124 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gerenciar Clínicas - OdontoPlace</title>
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container-gc {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            color: #0E56A8;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .clinicas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .clinica-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .clinica-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-color: #1BC3EA;
+        }
+        .clinica-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 15px;
+            background: white;
+            border: 2px solid #e2e8f0;
+        }
+        .clinica-card h3 {
+            color: #0E56A8;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .clinica-card p {
+            color: #64748B;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        .btn-editar {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #1BC3EA;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-editar:hover {
+            background: #15a8cb;
+            transform: translateY(-2px);
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #1BC3EA;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-gc">
+        <a href="/" class="back-link">← Voltar</a>
+        <h1>Gerenciar Clínicas</h1>
+        
+        {% if clinicas %}
+            <div class="clinicas-grid">
+                {% for clinica in clinicas %}
+                    <div class="clinica-card">
+                        {% if clinica.logo %}
+                            <img src="{{ clinica.logo.url }}" alt="{{ clinica.nome }}" class="clinica-logo">
+                        {% else %}
+                            <img src="{% static 'img/SemIcon.png' %}" alt="Sem logo" class="clinica-logo">
+                        {% endif %}
+                        <h3>{{ clinica.nome }}</h3>
+                        <p>{{ clinica.telefone }}</p>
+                        <a href="{% url 'editar_clinica' clinica.id %}" class="btn-editar">Editar</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="text-align: center; color: #64748B; padding: 40px;">Nenhuma clínica cadastrada.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

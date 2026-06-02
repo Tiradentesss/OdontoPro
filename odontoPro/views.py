@@ -988,6 +988,63 @@ def download_desktop(request):
     return render(request, "download_desktop.html")
 
 
+def gerenciar_clinicas(request):
+    """Lista todas as clínicas para gerenciamento"""
+    clinicas = Clinica.objects.all().order_by('nome')
+    return render(request, 'Clinica/gerenciar_clinicas.html', {'clinicas': clinicas})
+
+
+def editar_clinica(request, clinica_id):
+    """Editar logo e imagens de uma clínica"""
+    clinica = get_object_or_404(Clinica, id=clinica_id)
+    
+    if request.method == 'POST':
+        # Atualizar logo
+        if 'logo' in request.FILES:
+            clinica.logo = request.FILES['logo']
+        
+        clinica.save()
+        messages.success(request, f'Clínica {clinica.nome} atualizada com sucesso!')
+        return redirect('editar_clinica', clinica_id=clinica_id)
+    
+    imagens = clinica.imagens.all().order_by('ordem')
+    return render(request, 'Clinica/editar_clinica.html', {
+        'clinica': clinica,
+        'imagens': imagens,
+    })
+
+
+def adicionar_imagem_clinica(request, clinica_id):
+    """Adicionar nova imagem à clínica"""
+    clinica = get_object_or_404(Clinica, id=clinica_id)
+    
+    if request.method == 'POST' and 'imagem' in request.FILES:
+        from .models import ClinicaImagem
+        ordem = clinica.imagens.count() + 1
+        ClinicaImagem.objects.create(
+            clinica=clinica,
+            imagem=request.FILES['imagem'],
+            ordem=ordem
+        )
+        messages.success(request, 'Imagem adicionada com sucesso!')
+        return redirect('editar_clinica', clinica_id=clinica_id)
+    
+    return redirect('editar_clinica', clinica_id=clinica_id)
+
+
+def deletar_imagem_clinica(request, imagem_id):
+    """Deletar imagem da clínica"""
+    from .models import ClinicaImagem
+    imagem = get_object_or_404(ClinicaImagem, id=imagem_id)
+    clinica_id = imagem.clinica.id
+    
+    if request.method == 'POST':
+        imagem.delete()
+        messages.success(request, 'Imagem removida com sucesso!')
+    
+    return redirect('editar_clinica', clinica_id=clinica_id)
+
+
 def cadastrar_paciente(request):
     if request.method != "POST":
         return redirect("login_paciente")

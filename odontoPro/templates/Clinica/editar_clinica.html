@@ -1,0 +1,228 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Editar Clínica - OdontoPlace</title>
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container-ec {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #1BC3EA;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        h1 {
+            color: #0E56A8;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #0E56A8;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .form-group input[type="file"],
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group input[type="file"]:focus,
+        .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: #1BC3EA;
+            box-shadow: 0 0 0 3px rgba(27, 195, 234, 0.1);
+        }
+        .form-preview {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .form-preview h3 {
+            color: #0E56A8;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .preview-image {
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: white;
+            border: 1px solid #e2e8f0;
+        }
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #1BC3EA;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+        }
+        .btn-submit:hover {
+            background: #15a8cb;
+            transform: translateY(-2px);
+        }
+        .section-title {
+            color: #0E56A8;
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #1BC3EA;
+        }
+        .imagens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 24px;
+        }
+        .imagem-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .imagem-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        .imagem-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .imagem-remove:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+        .messages {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+        .messages.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-ec">
+        <a href="{% url 'gerenciar_clinicas' %}" class="back-link">← Voltar para Clínicas</a>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="messages {% if message.tags %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <h1>Editar {{ clinica.nome }}</h1>
+        
+        <!-- Logo -->
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="logo">Logo da Clínica</label>
+                <input type="file" id="logo" name="logo" accept="image/*">
+            </div>
+            
+            {% if clinica.logo %}
+                <div class="form-preview">
+                    <h3>Logo Atual</h3>
+                    <img src="{{ clinica.logo.url }}" alt="Logo" class="preview-image">
+                </div>
+            {% endif %}
+            
+            <button type="submit" class="btn-submit">Atualizar Logo</button>
+        </form>
+        
+        <!-- Imagens -->
+        <div class="section-title">Imagens da Clínica</div>
+        
+        {% if imagens %}
+            <div class="imagens-grid">
+                {% for imagem in imagens %}
+                    <div class="imagem-item">
+                        <img src="{{ imagem.imagem.url }}" alt="Imagem {{ imagem.ordem }}">
+                        <form method="POST" action="{% url 'deletar_imagem_clinica' imagem.id %}" style="position: absolute; top: 0; right: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="imagem-remove" title="Remover" onclick="return confirm('Tem certeza?');">×</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #64748B; margin-bottom: 20px;">Nenhuma imagem adicionada ainda.</p>
+        {% endif %}
+        
+        <!-- Adicionar Imagem -->
+        <form method="POST" action="{% url 'adicionar_imagem_clinica' clinica.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="imagem">Adicionar Nova Imagem</label>
+                <input type="file" id="imagem" name="imagem" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn-submit">Adicionar Imagem</button>
+        </form>
+    </div>
+</body>
+</html>
