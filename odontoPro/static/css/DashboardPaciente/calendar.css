@@ -334,6 +334,50 @@ body.theme-dark #modal-calendario .btn-close-modal:hover {
   font-weight: 600;
 }
 
+/* Available and unavailable dates */
+.day-cell.available {
+  background-color: #d4f5f5;
+  color: var(--col-black);
+  font-weight: 600;
+  border: 2px solid #1BC3EA;
+}
+
+.day-cell.available:hover {
+  background-color: #a8e6e0;
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(27, 195, 234, 0.3);
+}
+
+.day-cell.unavailable {
+  background-color: #f0f0f0;
+  color: #999;
+  font-weight: 500;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.day-cell.unavailable:hover {
+  background-color: #f0f0f0;
+  transform: none;
+  cursor: not-allowed;
+}
+
+body.theme-dark .day-cell.available {
+  background-color: rgba(27, 195, 234, 0.2);
+  color: var(--texto-principal);
+  border-color: #1BC3EA;
+}
+
+body.theme-dark .day-cell.available:hover {
+  background-color: rgba(27, 195, 234, 0.3);
+}
+
+body.theme-dark .day-cell.unavailable {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #666;
+  opacity: 0.5;
+}
+
 /* ASIDE SECTION */
 .calendar-aside {
   background-color: var(--col-lightgrey);

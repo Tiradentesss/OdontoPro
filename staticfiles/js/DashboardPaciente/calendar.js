@@ -43,7 +43,7 @@ class CalendarTimeSelector {
     let html = '';
     
     // Day headers
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
     dayNames.forEach(dayName => {
       html += `<div class="day-header">${dayName}</div>`;
     });
@@ -56,17 +56,24 @@ class CalendarTimeSelector {
     
     // Current month days
     const today = new Date();
+    // Store availability status for batch processing
+    this.dateAvailability = this.dateAvailability || {};
+    
     for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
       const currentCellDate = new Date(year, month, dayNum);
       const dateString = this.formatDate(currentCellDate);
       const isToday = this.isToday(currentCellDate);
       const isSelected = this.selectedDate && dateString === this.formatDate(this.selectedDate);
       const isWeekend = currentCellDate.getDay() === 0 || currentCellDate.getDay() === 6;
+      const isAvailable = this.dateAvailability[dateString] === true;
+      const isUnavailable = this.dateAvailability[dateString] === false;
       
       let classes = 'day-cell';
       if (isToday) classes += ' today';
       if (isSelected) classes += ' selected';
       if (isWeekend) classes += ' weekend';
+      if (isAvailable) classes += ' available';
+      if (isUnavailable) classes += ' unavailable';
       
       html += `<div class="${classes}" data-date="${dateString}">${dayNum}</div>`;
     }
@@ -89,8 +96,8 @@ class CalendarTimeSelector {
     });
     
     // Update month/year display - procurar o mês/ano correspondente
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     const monthYearEls = document.querySelectorAll('.month-year');
     monthYearEls.forEach(el => {
       const modal = el.closest('.modal');
@@ -98,6 +105,46 @@ class CalendarTimeSelector {
         el.textContent = `${monthNames[month]} ${year}`;
       }
     });
+    
+    // Carregar disponibilidade de datas para a clínica selecionada
+    this.loadDateAvailability(year, month);
+  }
+  
+  loadDateAvailability(year, month) {
+    // Obter clinica_id de onde estiver armazenado
+    const clinicaSelecionada = window.clinicaSelecionada;
+    if (!clinicaSelecionada) return;
+    
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysToCheck = [];
+    
+    // Preparar lista de datas para verificar
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateString = this.formatDate(date);
+      daysToCheck.push(dateString);
+    }
+    
+    // Fazer requisições para verificar disponibilidade de cada data
+    const promises = daysToCheck.map(dateString => 
+      fetch(`/clinica/${clinicaSelecionada}/horarios/?data=${dateString}`)
+        .then(response => response.json())
+        .then(data => ({
+          date: dateString,
+          hasHorarios: data.horarios && data.horarios.length > 0
+        }))
+        .catch(() => ({ date: dateString, hasHorarios: false }))
+    );
+    
+    Promise.all(promises).then(results => {
+      // Atualizar status de disponibilidade
+      results.forEach(result => {
+        this.dateAvailability[result.date] = result.hasHorarios;
+      });
+      // Re-renderizar calendário com dados de disponibilidade
+      this.renderCalendar();
+    });
+  }
   }
 
   attachEventListeners() {
@@ -106,7 +153,7 @@ class CalendarTimeSelector {
     if (calendarMatrix) {
       calendarMatrix.addEventListener('click', (event) => {
         const dayCell = event.target.closest('.day-cell');
-        if (!dayCell || dayCell.classList.contains('other-month') || dayCell.classList.contains('disabled')) {
+        if (!dayCell || dayCell.classList.contains('other-month') || dayCell.classList.contains('disabled') || dayCell.classList.contains('unavailable')) {
           return;
         }
         this.selectDate(dayCell);
