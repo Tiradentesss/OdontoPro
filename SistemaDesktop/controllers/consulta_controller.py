@@ -169,3 +169,74 @@ class ConsultaController:
         snapshot = cursor.fetchone()[0]
         conn.close()
         return snapshot
+
+    @staticmethod
+    def listar_pacientes(clinica_id):
+        """Lista todos os pacientes da clínica"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, nome
+            FROM odontoPro_paciente
+            WHERE clinica_id = %s
+            ORDER BY nome ASC
+        """, (clinica_id,))
+        
+        pacientes = cursor.fetchall()
+        conn.close()
+        return pacientes
+
+    @staticmethod
+    def listar_medicos(clinica_id):
+        """Lista todos os médicos da clínica"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, nome
+            FROM odontoPro_medico
+            WHERE clinica_id = %s
+            ORDER BY nome ASC
+        """, (clinica_id,))
+        
+        medicos = cursor.fetchall()
+        conn.close()
+        return medicos
+
+    @staticmethod
+    def listar_especialidades():
+        """Lista todas as especialidades odontológicas"""
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, nome
+            FROM odontoPro_especialidade
+            ORDER BY nome ASC
+        """)
+        
+        especialidades = cursor.fetchall()
+        conn.close()
+        return especialidades
+
+    @staticmethod
+    def criar_consulta(clinica_id, paciente_id, medico_id, data_hora, status='agendada', especialidade='', observacoes=''):
+        """Cria uma nova consulta"""
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                INSERT INTO odontoPro_consulta 
+                (clinica_id, paciente_id, medico_id, data_hora, status, especialidade, observacoes)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (clinica_id, paciente_id, medico_id, data_hora, status, especialidade, observacoes))
+            
+            conn.commit()
+            consulta_id = cursor.lastrowid
+            conn.close()
+            
+            return {"sucesso": True, "consulta_id": consulta_id}
+        except Exception as e:
+            return {"sucesso": False, "erro": str(e)}

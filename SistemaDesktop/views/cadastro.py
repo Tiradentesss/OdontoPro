@@ -7,6 +7,27 @@ from controllers.gerenciamento_controller import GerenciamentoController
 import hashlib
 
 class Cadastro(BaseScreen):
+    # Especialidades de Odontologia
+    ESPECIALIDADES_ODONTOLOGIA = [
+        "Selecione uma especialidade",
+        "Odontologia Geral",
+        "Ortodontia",
+        "Endodontia",
+        "Periodontia",
+        "Implantodontia",
+        "Odontopediatria",
+        "Prótese Dentária",
+        "Cirurgia Oral",
+        "Patologia Oral",
+        "Estética Dental",
+        "Radiologia Odontológica",
+        "Odontologia Forense",
+        "Saúde Coletiva",
+        "Traumatologia",
+        "Dentística",
+        "Halitose"
+    ]
+
     def __init__(self, parent, clinica_id=None):
         super().__init__(parent, "Cadastro")
         self.clinica_id = clinica_id
@@ -304,6 +325,33 @@ class Cadastro(BaseScreen):
         )
         entries.extend([self.cro_entry, self.telefone_entry])
 
+        # Adicionar campo de especialidade para médico
+        self._secao_titulo(self.frame_medico, "Especialidade")
+        especialidade_container = ctk.CTkFrame(self.frame_medico, fg_color="transparent")
+        especialidade_container.pack(fill="x", padx=self.padding_lateral, pady=(0, 10))
+        
+        ctk.CTkLabel(
+            especialidade_container, 
+            text="Selecione a especialidade", 
+            font=font("text"),
+            text_color=COLORS["text_secondary"]
+        ).pack(anchor="w", pady=(0, 3))
+        
+        self.especialidade_medico = ctk.CTkOptionMenu(
+            especialidade_container,
+            values=self.ESPECIALIDADES_ODONTOLOGIA,
+            height=44,
+            fg_color=COLORS["input_bg"], 
+            button_color=COLORS["border"], 
+            button_hover_color=COLORS["border"],
+            text_color=COLORS["text"], 
+            dropdown_fg_color=COLORS["card"], 
+            dropdown_text_color=COLORS["text"],
+            dropdown_font=font("text")
+        )
+        self.especialidade_medico.set(self.ESPECIALIDADES_ODONTOLOGIA[0])
+        self.especialidade_medico.pack(fill="x")
+
         self._ao_mudar_tipo_profissional("Médico")
 
         self.profissional_entries = entries
@@ -535,10 +583,15 @@ class Cadastro(BaseScreen):
             telefone = self.telefone_entry.get().strip()
             senha = self.senha_entry.get().strip()
             confirma_senha = self.confirma_senha_entry.get().strip()
+            especialidade = self.especialidade_medico.get().strip()
             
             # Validações
             if not all([nome, email, cro, telefone, senha]):
                 self._mostrar_mensagem("Preencha todos os campos obrigatórios (inclusive senha)", sucesso=False)
+                return
+            
+            if especialidade == "Selecione uma especialidade":
+                self._mostrar_mensagem("Por favor, selecione uma especialidade", sucesso=False)
                 return
             
             if senha != confirma_senha:
@@ -555,7 +608,7 @@ class Cadastro(BaseScreen):
                 cro=cro,
                 clinica_id=self.clinica_id,
                 senha=senha,
-                especialidades=None
+                especialidades=especialidade
             )
             
             if resultado["sucesso"]:
@@ -563,6 +616,7 @@ class Cadastro(BaseScreen):
                 self._limpar_campos([entries[0], entries[1]])
                 self._limpar_campos([self.cro_entry, self.telefone_entry])
                 self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
+                self.especialidade_medico.set(self.ESPECIALIDADES_ODONTOLOGIA[0])
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:

@@ -20,6 +20,11 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.current_month = self.selected_date.month
         self.current_year = self.selected_date.year
         self.date_buttons = {}
+        
+        # Paginação de médicos
+        self.medicos_por_pagina = 7
+        self.pagina_atual = 0
+        self.total_medicos_filtrados = 0
 
         self.colors = {
             "bg": COLORS["bg"],
@@ -76,7 +81,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
         main_container = ctk.CTkFrame(self, fg_color="transparent")
-        main_container.grid(row=0, column=0, sticky="nsew", padx=24, pady=24)
+        main_container.grid(row=0, column=0, sticky="nsew", padx=24, pady=(40, 24))
         main_container.grid_rowconfigure(0, weight=1)
         main_container.grid_columnconfigure(0, weight=1, minsize=500)
         main_container.grid_columnconfigure(1, weight=1, minsize=500)
@@ -92,12 +97,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             border_width=1,
             border_color=self.colors["border"]
         )
-        left_card.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
+        left_card.grid(row=0, column=0, sticky="nsew", padx=(0, 12), pady=10)
         left_card.grid_rowconfigure(2, weight=1)
         left_card.grid_columnconfigure(0, weight=1)
 
         title_frame = ctk.CTkFrame(left_card, fg_color="transparent")
-        title_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 12))
+        title_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(28, 12))
         
         title = ctk.CTkLabel(
             title_frame,
@@ -108,7 +113,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         title.pack(anchor="w")
 
         search_frame = ctk.CTkFrame(left_card, fg_color="transparent")
-        search_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 16))
+        search_frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 20))
         
         self.search_entry = ctk.CTkEntry(
             search_frame,
@@ -124,15 +129,20 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.search_entry.pack(fill="x")
         self.search_entry.bind("<KeyRelease>", lambda e: self._render_medicos())
 
-        self.medicos_list = ctk.CTkScrollableFrame(
+        self.medicos_list = ctk.CTkFrame(
             left_card,
             fg_color="transparent",
-            corner_radius=0,
-            scrollbar_button_color=self.colors["primary_soft"],
-            scrollbar_button_hover_color=self.colors["primary"]
+            corner_radius=0
         )
-        self.medicos_list.grid(row=2, column=0, sticky="nsew", padx=16, pady=(0, 16))
+        self.medicos_list.grid(row=2, column=0, sticky="nsew", padx=16, pady=(16, 12))
         self.medicos_list.grid_columnconfigure(0, weight=1)
+
+        # Container para abas de paginação
+        self.pagination_frame = ctk.CTkFrame(left_card, fg_color="transparent")
+        self.pagination_frame.grid(row=3, column=0, sticky="ew", padx=16, pady=(16, 20))
+        self.pagination_frame.grid_columnconfigure(0, weight=1)
+        
+        self.pagination_buttons = {}
 
         self._render_medicos()
 
@@ -149,17 +159,35 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 busca in medico["especialidade"].lower()):
                 filtrados.append(medico)
 
-        if not filtrados:
+        self.total_medicos_filtrados = len(filtrados)
+        
+        # Resetar página se busca mudou
+        if busca and self.pagina_atual > 0:
+            self.pagina_atual = 0
+
+        # Calcular paginação
+        total_paginas = (self.total_medicos_filtrados + self.medicos_por_pagina - 1) // self.medicos_por_pagina
+        if self.pagina_atual >= total_paginas and total_paginas > 0:
+            self.pagina_atual = total_paginas - 1
+
+        inicio = self.pagina_atual * self.medicos_por_pagina
+        fim = inicio + self.medicos_por_pagina
+        medicos_pagina = filtrados[inicio:fim]
+
+        # Atualizar abas de paginação
+        self._update_pagination_tabs(total_paginas)
+
+        if not medicos_pagina:
             empty = ctk.CTkLabel(
                 self.medicos_list,
-                text="Nenhum médico encontrado.",
+                text="Nenhum médico encontrado." if filtrados else "Nenhum médico cadastrado.",
                 text_color=self.colors["muted"],
                 font=ctk.CTkFont(size=14)
             )
             empty.grid(row=0, column=0, pady=40)
             return
 
-        for i, medico in enumerate(filtrados):
+        for i, medico in enumerate(medicos_pagina):
             is_selected = self.selected_medico and self.selected_medico["id"] == medico["id"]
             
             row = ctk.CTkFrame(
@@ -216,6 +244,57 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 widget.bind("<Enter>", lambda e, r=row, s=is_selected: self._hover_row(r, s, True))
                 widget.bind("<Leave>", lambda e, r=row, s=is_selected: self._hover_row(r, s, False))
 
+    def _update_pagination_tabs(self, total_paginas):
+        """Atualiza as abas de paginação com números"""
+        # Limpar abas anteriores
+        for widget in self.pagination_frame.winfo_children():
+            widget.destroy()
+        self.pagination_buttons = {}
+
+        if total_paginas <= 1:
+            return
+
+        # Criar container interno para centralizar abas
+        tabs_container = ctk.CTkFrame(self.pagination_frame, fg_color="transparent")
+        tabs_container.pack(pady=8)
+
+        # Criar abas com números
+        for pagina_num in range(total_paginas):
+            is_current = pagina_num == self.pagina_atual
+            
+            tab_btn = ctk.CTkButton(
+                tabs_container,
+                text=str(pagina_num + 1),
+                width=36,
+                height=36,
+                corner_radius=8,
+                fg_color=self.colors["primary"] if is_current else self.colors["card"],
+                text_color="white" if is_current else self.colors["text"],
+                border_width=1 if is_current else 0,
+                border_color=self.colors["primary"] if is_current else self.colors["border"],
+                hover_color=self.colors["primary_dark"] if is_current else self.colors["hover"],
+                font=ctk.CTkFont(size=12, weight="bold"),
+                command=lambda p=pagina_num: self._go_to_page(p)
+            )
+            tab_btn.pack(side="left", padx=4)
+            self.pagination_buttons[pagina_num] = tab_btn
+
+    def _go_to_page(self, pagina_num):
+        """Navega para a página especificada"""
+        self.pagina_atual = pagina_num
+        self._render_medicos()
+
+    def _prev_page_medicos(self):
+        if self.pagina_atual > 0:
+            self.pagina_atual -= 1
+            self._render_medicos()
+
+    def _next_page_medicos(self):
+        total_paginas = (self.total_medicos_filtrados + self.medicos_por_pagina - 1) // self.medicos_por_pagina
+        if self.pagina_atual < total_paginas - 1:
+            self.pagina_atual += 1
+            self._render_medicos()
+
     def _build_right_panel(self, parent):
         self.right_card = ctk.CTkFrame(
             parent,
@@ -224,12 +303,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             border_width=1,
             border_color=self.colors["border"]
         )
-        self.right_card.grid(row=0, column=1, sticky="nsew", padx=(12, 0))
+        self.right_card.grid(row=0, column=1, sticky="nsew", padx=(12, 0), pady=10)
         self.right_card.grid_rowconfigure(3, weight=1)
         self.right_card.grid_columnconfigure(0, weight=1)
 
         title_frame = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        title_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 12))
+        title_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(28, 12))
         
         self.right_title = ctk.CTkLabel(
             title_frame,
@@ -262,7 +341,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             border_width=1,
             border_color=self.colors["border"]
         )
-        self.calendar_card.grid(row=1, column=0, sticky="ew", padx=16, pady=(0, 16))
+        self.calendar_card.grid(row=1, column=0, sticky="ew", padx=16, pady=(12, 16))
         self._build_calendar()
 
         info_card = ctk.CTkFrame(
@@ -282,7 +361,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.date_info_label.pack(padx=16, pady=12, anchor="w")
 
         slots_container = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        slots_container.grid(row=3, column=0, sticky="nsew", padx=16, pady=(0, 16))
+        slots_container.grid(row=3, column=0, sticky="nsew", padx=16, pady=(12, 20))
         slots_container.grid_rowconfigure(1, weight=1)
         slots_container.grid_columnconfigure(0, weight=1)
         
@@ -294,14 +373,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         slots_title.grid(row=0, column=0, sticky="w", pady=(0, 12))
         
-        self.slots_grid = ctk.CTkScrollableFrame(
+        self.slots_grid = ctk.CTkFrame(
             slots_container,
             fg_color=self.colors["card_soft"],
             corner_radius=16,
             border_width=1,
-            border_color=self.colors["border"],
-            scrollbar_button_color=self.colors["primary_soft"],
-            scrollbar_button_hover_color=self.colors["primary"]
+            border_color=self.colors["border"]
         )
         self.slots_grid.grid(row=1, column=0, sticky="nsew")
         
@@ -312,7 +389,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self._build_time_slots()
 
         footer = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        footer.grid(row=4, column=0, sticky="ew", padx=16, pady=(0, 20))
+        footer.grid(row=4, column=0, sticky="ew", padx=16, pady=(0, 28))
         footer.grid_columnconfigure(0, weight=1)
         
         self.selection_label = ctk.CTkLabel(

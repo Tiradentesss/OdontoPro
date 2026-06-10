@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from .base import BaseScreen, ActionButtons
-from .theme import font, ICON_SIZE, COLORS
+from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode, get_dark_mode
 import os
 from PIL import Image, ImageTk, ImageDraw
 
@@ -170,12 +170,13 @@ class ModernInput(ctk.CTkFrame):
 
 
 class Configuracoes(BaseScreen):
-    def __init__(self, parent, tipo_usuario="clinica", clinica_id=None, usuario_id=None):
+    def __init__(self, parent, tipo_usuario="clinica", clinica_id=None, usuario_id=None, app=None):
         super().__init__(parent, "Configurações")
 
         self.tipo_usuario = tipo_usuario
         self.clinica_id = clinica_id
         self.usuario_id = usuario_id
+        self.app = app
 
         self.colors = {
             "bg_main": COLORS["content_bg"],
@@ -423,13 +424,50 @@ class Configuracoes(BaseScreen):
 
     # ==================== MINHA CLÍNICA ====================
     def _render_preferences(self, parent):
-        self._titulo(parent, "Configurações da Clínica", padx=15)
+        # Header com Título e Botão de Modo Escuro/Claro
+        header_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        header_frame.pack(fill="x", padx=15, pady=(24, 0), anchor="w")
+        
+        # Título à esquerda
+        titulo_label = ctk.CTkLabel(
+            header_frame,
+            text="Configurações da Clínica",
+            font=font("title", "bold"),
+            text_color=self.colors["text_primary"]
+        )
+        titulo_label.pack(side="left", anchor="w")
+        
+        # Botão de Modo Escuro/Claro à direita
+        def toggle_theme():
+            if self.app:
+                self.app.toggle_theme()
+                # Atualizar o texto do botão
+                theme_text = "☀️  Modo Claro" if get_dark_mode() else "🌙  Modo Escuro"
+                self.theme_btn.configure(text=theme_text)
+            else:
+                toggle_dark_mode()
+                theme_text = "☀️  Modo Claro" if get_dark_mode() else "🌙  Modo Escuro"
+                self.theme_btn.configure(text=theme_text)
+
+        self.theme_btn = ctk.CTkButton(
+            header_frame,
+            text="☀️  Modo Claro" if get_dark_mode() else "🌙  Modo Escuro",
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
+            text_color="white",
+            font=font("text", "bold"),
+            height=32,
+            corner_radius=6,
+            border_width=0,
+            command=toggle_theme
+        )
+        self.theme_btn.pack(side="right", padx=(0, 0))
 
         sub_tabs = ["Geral", "Serviços", "Descrição"]
         self.sub_tab_buttons = {}
 
         tab_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        tab_frame.pack(fill="x", padx=15, pady=(0, 10), anchor="w")
+        tab_frame.pack(fill="x", padx=15, pady=(17, 10), anchor="w")
 
         for tab in sub_tabs:
             btn = ctk.CTkButton(

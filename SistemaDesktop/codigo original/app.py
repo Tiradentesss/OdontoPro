@@ -514,7 +514,7 @@ class Login(ctk.CTk):
         self.geometry(f"{largura}x{altura}")
         self.configure(fg_color="#F2F3F5")
 
-        caminho = os.path.dirname(__file__)
+        caminho = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "assets"))
 
         # ================= GRID 50/50 =================
         self.grid_columnconfigure(0, weight=1)

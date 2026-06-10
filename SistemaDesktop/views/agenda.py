@@ -511,7 +511,20 @@ class Agenda(BaseScreen):
             font=ctk.CTkFont(size=12, weight='bold'),
             command=self.refresh_data
         )
-        botao.pack(fill='x', padx=10, pady=(0, 10))
+        botao.pack(fill='x', padx=10, pady=(0, 5))
+
+        botao_marcar = ctk.CTkButton(
+            button_wrap,
+            text='➕ Marcar',
+            width=120,
+            height=32,
+            fg_color='#10B981',
+            hover_color='#059669',
+            corner_radius=10,
+            font=ctk.CTkFont(size=12, weight='bold'),
+            command=self.abrir_dialogo_marcar_consulta
+        )
+        botao_marcar.pack(fill='x', padx=10, pady=(5, 10))
 
     def _render_info_top(self, parent, total):
         info_wrap = ctk.CTkFrame(parent, fg_color='transparent')
@@ -943,3 +956,270 @@ class Agenda(BaseScreen):
             anos -= 1
 
         return f'{anos} anos'
+
+    def abrir_dialogo_marcar_consulta(self):
+        """Abre uma janela de diálogo para marcar uma nova consulta"""
+        dialogo = ctk.CTkToplevel(self.master)
+        dialogo.title("Marcar Consulta")
+        dialogo.geometry("600x700")
+        dialogo.resizable(False, False)
+        
+        # Centralizar a janela
+        dialogo.update_idletasks()
+        x = dialogo.winfo_parent
+        dialogo.grab_set()
+        
+        # Frame principal
+        main_frame = ctk.CTkFrame(dialogo, fg_color=COLORS['bg'])
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        # Título
+        ctk.CTkLabel(
+            main_frame,
+            text="Marcar Nova Consulta",
+            font=font("large_title", "bold"),
+            text_color=COLORS['text_primary']
+        ).pack(pady=(0, 20))
+        
+        # Frame com scroll
+        canvas_frame = ctk.CTkScrollableFrame(
+            main_frame,
+            fg_color=COLORS['card'],
+            corner_radius=15,
+            border_width=1,
+            border_color=COLORS['border']
+        )
+        canvas_frame.pack(fill='both', expand=True, pady=(0, 15))
+        
+        # Carregar dados
+        try:
+            pacientes = ConsultaController.listar_pacientes(self.clinica_id)
+            medicos = ConsultaController.listar_medicos(self.clinica_id)
+            especialidades = ConsultaController.listar_especialidades()
+        except Exception as e:
+            print(f"Erro ao carregar dados: {e}")
+            pacientes = []
+            medicos = []
+            especialidades = []
+        
+        paciente_nomes = [p[1] for p in pacientes]
+        paciente_ids = {p[1]: p[0] for p in pacientes}
+        
+        medico_nomes = [m[1] for m in medicos]
+        medico_ids = {m[1]: m[0] for m in medicos}
+        
+        especialidade_nomes = [e[1] for e in especialidades]
+        
+        # Campo Paciente
+        ctk.CTkLabel(
+            canvas_frame,
+            text="Paciente",
+            font=font("subtitle"),
+            text_color=COLORS['text_primary']
+        ).pack(anchor='w', padx=15, pady=(15, 5))
+        
+        paciente_var = ctk.StringVar(value=paciente_nomes[0] if paciente_nomes else "")
+        paciente_combo = ctk.CTkComboBox(
+            canvas_frame,
+            values=paciente_nomes,
+            variable=paciente_var,
+            height=40,
+            fg_color=COLORS['input_bg'],
+            border_color=COLORS['primary'],
+            button_color=COLORS['primary'],
+            button_hover_color=COLORS['primary_dark'],
+            corner_radius=8
+        )
+        paciente_combo.pack(fill='x', padx=15, pady=(0, 15))
+        
+        # Campo Médico
+        ctk.CTkLabel(
+            canvas_frame,
+            text="Médico",
+            font=font("subtitle"),
+            text_color=COLORS['text_primary']
+        ).pack(anchor='w', padx=15, pady=(0, 5))
+        
+        medico_var = ctk.StringVar(value=medico_nomes[0] if medico_nomes else "")
+        medico_combo = ctk.CTkComboBox(
+            canvas_frame,
+            values=medico_nomes,
+            variable=medico_var,
+            height=40,
+            fg_color=COLORS['input_bg'],
+            border_color=COLORS['primary'],
+            button_color=COLORS['primary'],
+            button_hover_color=COLORS['primary_dark'],
+            corner_radius=8
+        )
+        medico_combo.pack(fill='x', padx=15, pady=(0, 15))
+        
+        # Data
+        ctk.CTkLabel(
+            canvas_frame,
+            text="Data da Consulta",
+            font=font("subtitle"),
+            text_color=COLORS['text_primary']
+        ).pack(anchor='w', padx=15, pady=(0, 5))
+        
+        data_var = ctk.StringVar(value="")
+        data_entry = ctk.CTkEntry(
+            canvas_frame,
+            placeholder_text="DD/MM/YYYY",
+            height=40,
+            fg_color=COLORS['input_bg'],
+            border_color=COLORS['primary'],
+            corner_radius=8,
+            textvariable=data_var
+        )
+        data_entry.pack(fill='x', padx=15, pady=(0, 15))
+        
+        # Hora
+        ctk.CTkLabel(
+            canvas_frame,
+            text="Hora da Consulta",
+            font=font("subtitle"),
+            text_color=COLORS['text_primary']
+        ).pack(anchor='w', padx=15, pady=(0, 5))
+        
+        hora_var = ctk.StringVar(value="")
+        hora_entry = ctk.CTkEntry(
+            canvas_frame,
+            placeholder_text="HH:MM",
+            height=40,
+            fg_color=COLORS['input_bg'],
+            border_color=COLORS['primary'],
+            corner_radius=8,
+            textvariable=hora_var
+        )
+        hora_entry.pack(fill='x', padx=15, pady=(0, 15))
+        
+        # Especialidade
+        ctk.CTkLabel(
+            canvas_frame,
+            text="Especialidade",
+            font=font("subtitle"),
+            text_color=COLORS['text_primary']
+        ).pack(anchor='w', padx=15, pady=(0, 5))
+        
+        especialidade_var = ctk.StringVar(value=especialidade_nomes[0] if especialidade_nomes else "")
+        especialidade_combo = ctk.CTkComboBox(
+            canvas_frame,
+            values=especialidade_nomes,
+            variable=especialidade_var,
+            height=40,
+            fg_color=COLORS['input_bg'],
+            border_color=COLORS['primary'],
+            button_color=COLORS['primary'],
+            button_hover_color=COLORS['primary_dark'],
+            corner_radius=8
+        )
+        especialidade_combo.pack(fill='x', padx=15, pady=(0, 15))
+        
+        # Observações
+        ctk.CTkLabel(
+            canvas_frame,
+            text="Observações (opcional)",
+            font=font("subtitle"),
+            text_color=COLORS['text_primary']
+        ).pack(anchor='w', padx=15, pady=(0, 5))
+        
+        obs_var = ctk.StringVar(value="")
+        obs_text = ctk.CTkTextbox(
+            canvas_frame,
+            height=100,
+            fg_color=COLORS['input_bg'],
+            border_color=COLORS['primary'],
+            border_width=1,
+            corner_radius=8
+        )
+        obs_text.pack(fill='x', padx=15, pady=(0, 15))
+        
+        # Frame de botões
+        button_frame = ctk.CTkFrame(main_frame, fg_color='transparent')
+        button_frame.pack(fill='x', pady=(0, 0))
+        
+        def salvar_consulta():
+            try:
+                # Validações
+                if not paciente_var.get():
+                    from tkinter import messagebox
+                    messagebox.showerror("Erro", "Selecione um paciente")
+                    return
+                
+                if not medico_var.get():
+                    from tkinter import messagebox
+                    messagebox.showerror("Erro", "Selecione um médico")
+                    return
+                
+                if not data_var.get():
+                    from tkinter import messagebox
+                    messagebox.showerror("Erro", "Preencha a data")
+                    return
+                
+                if not hora_var.get():
+                    from tkinter import messagebox
+                    messagebox.showerror("Erro", "Preencha a hora")
+                    return
+                
+                # Converter data e hora
+                from datetime import datetime
+                try:
+                    d, m, a = data_var.get().split('/')
+                    h, min = hora_var.get().split(':')
+                    data_hora = datetime(int(a), int(m), int(d), int(h), int(min))
+                except:
+                    from tkinter import messagebox
+                    messagebox.showerror("Erro", "Formato de data/hora inválido. Use DD/MM/YYYY e HH:MM")
+                    return
+                
+                # Buscar IDs
+                paciente_id = paciente_ids[paciente_var.get()]
+                medico_id = medico_ids[medico_var.get()]
+                
+                # Salvar consulta
+                resultado = ConsultaController.criar_consulta(
+                    self.clinica_id,
+                    paciente_id,
+                    medico_id,
+                    data_hora,
+                    status='agendada',
+                    especialidade=especialidade_var.get(),
+                    observacoes=obs_text.get('1.0', 'end-1c')
+                )
+                
+                if resultado['sucesso']:
+                    from tkinter import messagebox
+                    messagebox.showinfo("Sucesso", f"Consulta marcada com sucesso!")
+                    self.refresh_data()
+                    dialogo.destroy()
+                else:
+                    from tkinter import messagebox
+                    messagebox.showerror("Erro", f"Erro ao marcar consulta: {resultado['erro']}")
+            except Exception as e:
+                from tkinter import messagebox
+                messagebox.showerror("Erro", f"Erro ao salvar: {str(e)}")
+        
+        # Botão Salvar
+        btn_salvar = ctk.CTkButton(
+            button_frame,
+            text="✓ Salvar Consulta",
+            height=40,
+            fg_color=COLORS['primary'],
+            hover_color=COLORS['primary_dark'],
+            font=font("button", "bold"),
+            command=salvar_consulta
+        )
+        btn_salvar.pack(side='left', fill='x', expand=True, padx=(0, 5))
+        
+        # Botão Cancelar
+        btn_cancelar = ctk.CTkButton(
+            button_frame,
+            text="✕ Cancelar",
+            height=40,
+            fg_color='#EF4444',
+            hover_color='#DC2626',
+            font=font("button", "bold"),
+            command=dialogo.destroy
+        )
+        btn_cancelar.pack(side='left', fill='x', expand=True, padx=(5, 0))

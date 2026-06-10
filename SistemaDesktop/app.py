@@ -23,34 +23,25 @@ class App(ctk.CTk):
         self.destroy()  # fecha a janela e o programa
 
     def toggle_theme(self):
-        """Alterna entre modo escuro e claro e atualiza a interface"""
+        """Alterna tema e recria TODOS os frames com as novas cores"""
+        # Atualizar tema global
         toggle_dark_mode()
+        
+        # Atualizar cores da aplicação
+        self.configure(fg_color=COLORS["bg"])
+        self.sidebar.configure(fg_color=COLORS["card"], border_color=COLORS["border"])
         
         # Cores para o botão de Sair (responsivo ao tema)
         logout_color = "#DC2626" if not get_dark_mode() else "#EF4444"
         logout_hover = "#991B1B" if not get_dark_mode() else "#7F1D1D"
         logout_border = "#7F1D1D" if not get_dark_mode() else "#DC2626"
         
-        # Atualizar cores de ambos os botões inferiores
-        # Botão de Modo
-        self.dark_mode_button.configure(
-            text="☀️  Modo Claro" if get_dark_mode() else "🌙  Modo Escuro",
-            fg_color=COLORS["primary"],
-            text_color="white",
-            hover_color=COLORS["primary_dark"],
-            border_color=COLORS["primary_dark"]
-        )
-        
-        # Botão de Sair
+        # Atualizar botão de Sair
         self.logout_button.configure(
             fg_color=logout_color,
             hover_color=logout_hover,
             border_color=logout_border
         )
-        
-        # Atualizar cores da aplicação
-        self.configure(fg_color=COLORS["bg"])
-        self.sidebar.configure(fg_color=COLORS["card"], border_color=COLORS["border"])
         
         # Atualizar cores dos botões do menu
         for name, btn in self.buttons.items():
@@ -67,28 +58,30 @@ class App(ctk.CTk):
                     hover_color=COLORS["hover"]
                 )
         
-        # Atualizar cores do container
-        self.container.configure(fg_color="transparent")
-        
-        # Recriar TODOS os frames para aplicar as novas cores
-        # Guardar o frame atual
+        # Guardar o nome do frame atual antes de destruir
         current_frame_name = self.current_frame_name
         
         # Destruir todos os frames antigos
         for frame in self.frames.values():
             frame.pack_forget()
+            frame.destroy()
         
-        # Recriar todos os frames com as novas cores
-        self.frames["painel"] = Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario)
-        self.frames["agenda"] = Agenda(self.container, self.clinica_id)
-        self.frames["financeiro"] = Financeiro(self.container)
-        self.frames["config"] = Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id)
-        self.frames["cadastro"] = Cadastro(self.container, self.clinica_id)
-        self.frames["gerenciamento"] = Gerenciamento(self.container, self.clinica_id)
-        self.frames["permissao"] = Permissoes(self.container, self.clinica_id)
+        # Recriar TODOS os frames com as novas cores
+        self.frames = {
+            "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
+            "agenda": Agenda(self.container, self.clinica_id),
+            "financeiro": Financeiro(self.container),
+            "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
+            "cadastro": Cadastro(self.container, self.clinica_id),
+            "gerenciamento": Gerenciamento(self.container, self.clinica_id),
+            "permissao": Permissoes(self.container, self.clinica_id),
+        }
         
         # Mostrar o frame que estava ativo
-        self.show_frame(current_frame_name)
+        if current_frame_name in self.frames:
+            self.show_frame(current_frame_name)
+            self.current_frame.pack(expand=True, fill="both")
+
 
     def _carregar_permissoes_usuario(self):
         """Carrega as permissões do gerente logado"""
@@ -219,23 +212,7 @@ class App(ctk.CTk):
         logout_hover = "#991B1B" if not get_dark_mode() else "#7F1D1D"
         logout_border = "#7F1D1D" if not get_dark_mode() else "#DC2626"
 
-        # Botão de Modo Claro/Escuro (embaixo)
-        self.dark_mode_button = ctk.CTkButton(
-            bottom_frame,
-            text="🌙  Modo Escuro" if not get_dark_mode() else "☀️  Modo Claro",
-            fg_color=COLORS["primary"],
-            text_color="white",
-            hover_color=COLORS["primary_dark"],
-            font=font("button", "bold"),
-            height=40,
-            border_width=2,
-            border_color=COLORS["primary_dark"],
-            corner_radius=8,
-            command=self.toggle_theme
-        )
-        self.dark_mode_button.pack(fill="x", pady=(0, 5))
-
-        # Botão de Sair do Sistema (em cima)
+        # Botão de Sair do Sistema
         self.logout_button = ctk.CTkButton(
             bottom_frame,
             text="⎋  Sair do Sistema",
@@ -249,7 +226,7 @@ class App(ctk.CTk):
             corner_radius=8,
             command=self.logout
         )
-        self.logout_button.pack(fill="x", pady=(5, 0))
+        self.logout_button.pack(fill="x")
 
         # ================= Área Principal =================
         self.container = ctk.CTkFrame(self, fg_color="transparent")
@@ -259,7 +236,7 @@ class App(ctk.CTk):
             "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
             "agenda": Agenda(self.container, self.clinica_id),
             "financeiro": Financeiro(self.container),
-            "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id),
+            "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),
             "permissao": Permissoes(self.container, self.clinica_id),
