@@ -10,8 +10,10 @@ from .theme import font, ICON_SIZE, COLORS
 
 
 class Login(ctk.CTk):
-    def __init__(self):
+    def __init__(self, on_success=None, auto_login_enabled=False):
         super().__init__()
+        self.on_success = on_success
+        self.auto_login_enabled = auto_login_enabled  # Flag para permitir auto-login
         self.title("Login - OdontoPro")
 
         self.update_idletasks()
@@ -188,6 +190,10 @@ class Login(ctk.CTk):
         self._carregar_credenciais_salvas()
 
     def _carregar_credenciais_salvas(self):
+        """Carrega credenciais salvas e pré-preenche os campos
+        
+        Auto-login é feito apenas se auto_login_enabled=True (primeira inicialização)
+        """
         dados = carregar_credenciais()
         if not dados:
             return
@@ -197,10 +203,14 @@ class Login(ctk.CTk):
         if not email or not senha:
             return
 
+        # Pré-preencher os campos com credenciais salvas
         self.ent_user.insert(0, email)
         self.ent_pass.insert(0, senha)
         self.remember_var.set(True)
-        self.after(300, lambda: self.autenticar(auto_login=True))
+        
+        # Fazer auto-login apenas se habilitado (primeira inicialização)
+        if self.auto_login_enabled:
+            self.after(300, lambda: self.autenticar(auto_login=True))
 
     def autenticar(self, auto_login=False):
         email = self.ent_user.get().strip()
@@ -235,13 +245,28 @@ class Login(ctk.CTk):
         if not resultado_perms.get("sucesso"):
             print(f"[AVISO LOGIN] Falha ao inicializar permissões: {resultado_perms.get('mensagem')}")
 
-        self.destroy()
+        # Se estiver usando callback (modo com MainWindow), chamar callback
+        if self.on_success:
+            # Destruir a janela de login
+            self.withdraw()  # Esconder antes de destruir
+            self.destroy()
+            
+            # Chamar callback com dados do usuário
+            self.on_success(
+                usuario["nome"],
+                usuario["id"],
+                usuario["tipo"],
+                usuario["clinica_id"]
+            )
+        else:
+            # Modo CTk puro (compatibilidade com versão anterior)
+            self.destroy()
 
-        from app import App
-        app = App(
-            usuario_nome=usuario["nome"],
-            usuario_id=usuario["id"],
-            tipo_usuario=usuario["tipo"],
-            clinica_id=usuario["clinica_id"]
-        )
-        app.mainloop()
+            from app import App
+            app = App(
+                usuario_nome=usuario["nome"],
+                usuario_id=usuario["id"],
+                tipo_usuario=usuario["tipo"],
+                clinica_id=usuario["clinica_id"]
+            )
+            app.mainloop()

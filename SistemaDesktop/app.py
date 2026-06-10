@@ -1,6 +1,4 @@
 import customtkinter as ctk
-import sys
-print("PYTHON EXECUTÁVEL:", sys.executable)
 
 from views.painel import Painel
 from views.agenda import Agenda
@@ -8,19 +6,29 @@ from views.financeiro import Financeiro
 from views.cadastro import Cadastro
 from views.configuracoes import Configuracoes
 from views.gerenciamento import Gerenciamento
-from views.login import Login
 from views.permissao import Permissoes
 from controllers.gerenciamento_controller import GerenciamentoController
 from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode, font
 
 from PIL import Image
-import customtkinter as ctk
 import os
 
 
 class App(ctk.CTk):
     def logout(self):
-        self.destroy()  # fecha a janela e o programa
+        """Faz logout e volta para a tela de login"""
+        # Se houver um callback de logout, usar ele
+        if hasattr(self, 'on_logout') and self.on_logout:
+            # Limpar todos os frames
+            for frame in self.frames.values():
+                frame.pack_forget()
+                frame.destroy()
+            
+            # Chamar o callback
+            self.on_logout()
+        else:
+            # Fallback: fechar normalmente
+            self.destroy()
 
     def toggle_theme(self):
         """Alterna tema e recria TODOS os frames com as novas cores"""
@@ -114,10 +122,12 @@ class App(ctk.CTk):
         perm_necessaria = mapa_permissoes.get(tela)
         return perm_necessaria in self.permissoes_usuario if perm_necessaria else False
 
-    def __init__(self, usuario_nome="Usuário", usuario_id=None, tipo_usuario=None, clinica_id=None):
+    def __init__(self, usuario_nome="Usuário", usuario_id=None, tipo_usuario=None, clinica_id=None, on_logout=None):
         self.clinica_id = clinica_id
         self.usuario_id = usuario_id
         self.tipo_usuario = tipo_usuario
+        self.on_logout = on_logout
+        
         super().__init__()
 
         # Carregar preferência de tema
@@ -156,6 +166,8 @@ class App(ctk.CTk):
             border_width=1,
             border_color=COLORS["border"]
         )
+        
+        # Modo CTk - usar grid
         self.sidebar.grid(row=0, column=0, sticky="nsew")
         self.sidebar.grid_propagate(False)
 
@@ -304,4 +316,5 @@ class App(ctk.CTk):
     pass
 
 if __name__ == "__main__":
-    Login().mainloop()
+    from main import MainWindow
+    MainWindow()
