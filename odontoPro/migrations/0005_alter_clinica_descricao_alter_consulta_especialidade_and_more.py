@@ -34,7 +34,11 @@ class Migration(migrations.Migration):
                 'unique_together': {('medico', 'especialidade')},
             },
         ),
-        migrations.AlterField(
+        migrations.RemoveField(
+            model_name='medico',
+            name='especialidades',
+        ),
+        migrations.AddField(
             model_name='medico',
             name='especialidades',
             field=models.ManyToManyField(related_name='medicos', through='odontoPro.MedicoEspecialidade', to='odontoPro.especialidade'),

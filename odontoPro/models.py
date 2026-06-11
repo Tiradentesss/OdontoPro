@@ -196,12 +196,45 @@ class Paciente(models.Model):
     data_nascimento = models.DateField(null=True, blank=True)
     senha = models.CharField(max_length=255)  # hash
     telefone = models.CharField(max_length=14)
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name='pacientes',
+        null=True,
+        blank=True
+    )
     ativo = models.BooleanField(default=True)
 
     foto = models.ImageField(upload_to='pacientes/', null=True, blank=True)
 
     def __str__(self):
         return self.nome
+
+
+# -------------------------
+# FAVORITOS
+# -------------------------
+class Favorito(models.Model):
+    paciente = models.ForeignKey(
+        Paciente,
+        on_delete=models.CASCADE,
+        related_name='favoritos'
+    )
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name='favoritos'
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('paciente', 'clinica')
+        verbose_name = 'Favorito'
+        verbose_name_plural = 'Favoritos'
+
+    def __str__(self):
+        return f'{self.paciente.nome} - {self.clinica.nome}'
+
 
 # -------------------------
 # ESPECIALIDADE
@@ -336,6 +369,44 @@ class Consulta(models.Model):
 # -------------------------
 
 
+class Financeiro(models.Model):
+    TIPOS = (
+        ('receita', 'Receita'),
+        ('despesa', 'Despesa'),
+    )
+
+    CATEGORIAS = (
+        ('consulta', 'Consulta'),
+        ('limpeza', 'Limpeza'),
+        ('tratamento', 'Tratamento'),
+        ('material', 'Material'),
+        ('aluguel', 'Aluguel'),
+        ('folha', 'Folha de Pagamento'),
+        ('utensilio', 'Utensílio'),
+        ('outro', 'Outro'),
+    )
+
+    tipo = models.CharField(max_length=20, choices=TIPOS)
+    descricao = models.CharField(max_length=255)
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    categoria = models.CharField(max_length=50, choices=CATEGORIAS)
+    data = models.DateTimeField(auto_now_add=True)
+    observacoes = models.TextField(blank=True, null=True)
+    clinica = models.ForeignKey(
+        Clinica,
+        on_delete=models.CASCADE,
+        related_name='financeiros'
+    )
+
+    class Meta:
+        verbose_name = 'Transação Financeira'
+        verbose_name_plural = 'Transações Financeiras'
+        ordering = ['-data']
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} - {self.descricao} ({self.valor})"
+
+
 class Avaliacao(models.Model):
     nota = models.IntegerField(
         validators=[
@@ -365,11 +436,11 @@ class Avaliacao(models.Model):
     )
 
     consulta = models.OneToOneField(
-    Consulta,
-    on_delete=models.CASCADE,
-    related_name="avaliacao",
-    null=True,
-    blank=True,
+        Consulta,
+        on_delete=models.CASCADE,
+        related_name="avaliacao",
+        null=True,
+        blank=True,
     )
 
     data_postagem = models.DateTimeField(auto_now_add=True)
