@@ -28,7 +28,14 @@ class ClinicaController:
                     p.telefone,
                     p.email,
                     m.nome AS medico_nome,
-                    c.especialidade
+                    COALESCE((
+                        SELECT e.nome
+                        FROM odontoPro_medico_especialidades me
+                        JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                        WHERE me.medico_id = m.id
+                        ORDER BY e.nome
+                        LIMIT 1
+                    ), '') AS especialidade
                 FROM odontoPro_consulta c
                 LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
                 LEFT JOIN odontoPro_medico m ON c.medico_id = m.id

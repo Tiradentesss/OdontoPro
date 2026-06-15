@@ -21,11 +21,10 @@ class ConsultaController:
             params.append(medico)
 
         if especialidade and especialidade not in ['Todos', 'Especialidade']:
-            where.append("(LOWER(c.especialidade) = %s OR EXISTS ("
+            where.append("EXISTS ("
                          "SELECT 1 FROM odontoPro_medico_especialidades me "
                          "JOIN odontoPro_especialidade e ON me.especialidade_id = e.id "
-                         "WHERE me.medico_id = c.medico_id AND LOWER(e.nome) = %s))")
-            params.append(especialidade.lower())
+                         "WHERE me.medico_id = c.medico_id AND LOWER(e.nome) = %s)")
             params.append(especialidade.lower())
 
         return " AND ".join(where), params
@@ -51,7 +50,7 @@ class ConsultaController:
                 p.foto,
                 c.observacoes,
                 m.nome AS medico_nome,
-                COALESCE(NULLIF(c.especialidade, ''), (
+                COALESCE((
                     SELECT e.nome
                     FROM odontoPro_medico_especialidades me
                     JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
@@ -97,13 +96,13 @@ class ConsultaController:
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT DISTINCT DATE(c.data_hora), m.nome, COALESCE(NULLIF(c.especialidade, ''), e.nome) AS especialidade
+            SELECT DISTINCT DATE(c.data_hora), m.nome, e.nome AS especialidade
             FROM odontoPro_consulta c
             LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
             LEFT JOIN odontoPro_medico_especialidades me ON me.medico_id = m.id
             LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
             WHERE c.clinica_id = %s
-            ORDER BY DATE(c.data_hora) DESC, m.nome ASC, COALESCE(NULLIF(c.especialidade, ''), e.nome) ASC
+            ORDER BY DATE(c.data_hora) DESC, m.nome ASC, e.nome ASC
         """, (clinica_id,))
 
         resultados = cursor.fetchall()
@@ -134,7 +133,7 @@ class ConsultaController:
                 p.foto,
                 c.observacoes,
                 m.nome AS medico_nome,
-                COALESCE(NULLIF(c.especialidade, ''), (
+                COALESCE((
                     SELECT e.nome
                     FROM odontoPro_medico_especialidades me
                     JOIN odontoPro_especialidade e ON me.especialidade_id = e.id

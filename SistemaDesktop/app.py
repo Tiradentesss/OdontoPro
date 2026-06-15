@@ -78,7 +78,7 @@ class App(ctk.CTk):
         self.frames = {
             "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
             "agenda": Agenda(self.container, self.clinica_id),
-            "financeiro": Financeiro(self.container),
+            "financeiro": Financeiro(self.container, self.clinica_id),
             "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),
@@ -247,7 +247,7 @@ class App(ctk.CTk):
         self.frames = {
             "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
             "agenda": Agenda(self.container, self.clinica_id),
-            "financeiro": Financeiro(self.container),
+            "financeiro": Financeiro(self.container, self.clinica_id),
             "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),

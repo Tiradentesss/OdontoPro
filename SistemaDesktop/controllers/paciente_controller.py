@@ -25,9 +25,9 @@ class PacienteController:
 
             cursor.execute("""
                 INSERT INTO odontoPro_paciente 
-                (nome, cpf, sexo, email, data_nascimento, telefone, senha)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (nome, cpf, sexo, email, data_nascimento, telefone, senha_hash))
+                (nome, cpf, sexo, email, data_nascimento, telefone, senha, ativo, clinica_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (nome, cpf, sexo, email, data_nascimento, telefone, senha_hash, 1, clinica_id))
 
             conn.commit()
             return {"sucesso": True, "id": cursor.lastrowid, "mensagem": "Paciente cadastrado com sucesso"}

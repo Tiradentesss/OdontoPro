@@ -422,8 +422,8 @@ class GerenciamentoController:
                 if perm not in permissoes_existentes:
                     try:
                         cursor.execute(
-                            "INSERT INTO odontoPro_permissao (codigo) VALUES (%s)",
-                            (perm,)
+                            "INSERT INTO odontoPro_permissao (codigo, descricao) VALUES (%s, %s)",
+                            (perm, perm)
                         )
                         inseridas.append(perm)
                         print(f"[PERMISSÕES] ✓ Permissão inserida: {perm}")

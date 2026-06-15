@@ -12,16 +12,23 @@ def get_connection():
         ssl_ca = os.path.join(base_dir, ssl_ca)
 
     try:
-        return mysql.connector.connect(
-            host=DB_CONFIG["host"],
-            user=DB_CONFIG["user"],
-            password=DB_CONFIG.get("password", ""),
-            database=DB_CONFIG["database"],
-            port=DB_CONFIG.get("port", 3306),
-            ssl_ca=ssl_ca,
-            connection_timeout=int(DB_CONFIG.get("connect_timeout", 15)),  # Aumentado de 5 para 15 segundos
-            auth_plugin=DB_CONFIG.get("auth_plugin", "mysql_native_password"),
-            autocommit=True  # Evita locks desnecessários
-        )
+        connection_params = {
+            "host": DB_CONFIG["host"],
+            "user": DB_CONFIG["user"],
+            "password": DB_CONFIG.get("password", ""),
+            "database": DB_CONFIG["database"],
+            "port": DB_CONFIG.get("port", 3306),
+            "connection_timeout": int(DB_CONFIG.get("connect_timeout", 30)),
+            "auth_plugin": DB_CONFIG.get("auth_plugin", "mysql_native_password"),
+            "autocommit": True,
+            "use_unicode": True,
+            "charset": "utf8mb4"
+        }
+        
+        # Adicionar SSL se configurado
+        if ssl_ca and os.path.exists(ssl_ca):
+            connection_params["ssl_ca"] = ssl_ca
+
+        return mysql.connector.connect(**connection_params)
     except Error as err:
         raise ConnectionError(f"Não foi possível conectar ao banco: {err}") from err

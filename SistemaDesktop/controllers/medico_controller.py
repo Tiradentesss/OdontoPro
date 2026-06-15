@@ -26,9 +26,9 @@ class MedicoController:
 
             cursor.execute("""
                 INSERT INTO odontoPro_medico 
-                (nome, cpf, sexo, email, data_nascimento, telefone, crm_cro, clinica_id, senha)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (nome, cpf, sexo, email, data_nascimento, telefone, cro, clinica_id, senha_hash))
+                (nome, cpf, sexo, email, data_nascimento, telefone, crm_cro, clinica_id, senha, num_avaliacoes, ativo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (nome, cpf, sexo, email, data_nascimento, telefone, cro, clinica_id, senha_hash, 0, 1))
 
             medico_id = cursor.lastrowid
 
