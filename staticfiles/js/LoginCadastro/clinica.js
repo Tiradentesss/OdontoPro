@@ -145,4 +145,22 @@ document.addEventListener('DOMContentLoaded', () => {
             resetarEtapasModal();
         };
     }
+
+    // Toggle de visibilidade da senha (botão específico)
+    const toggleBtn = document.querySelector('.toggle-password');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const pwd = document.getElementById('senha');
+            const icon = toggleBtn.querySelector('.material-symbols-outlined');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                if (icon) icon.textContent = 'visibility_off';
+                toggleBtn.setAttribute('aria-label', 'Ocultar senha');
+            } else {
+                pwd.type = 'password';
+                if (icon) icon.textContent = 'visibility';
+                toggleBtn.setAttribute('aria-label', 'Mostrar senha');
+            }
+        });
+    }
 });

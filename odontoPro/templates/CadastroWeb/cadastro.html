@@ -1,103 +1,264 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="pt-br">     
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro Clínica Odontológica</title>
-<link rel="shortcut icon" href="{% static 'img/logo icon.png' %}" type="image/x-icon">
-<link rel="stylesheet" href="{% static 'css/CadastroWeb/cadastro.css' %}">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>OdontoPlace - Cadastro de Clínica</title>
+    <link rel="shortcut icon" href="{% static 'img/logo icon.png' %}" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="{% static 'css/CadastroWeb/cadastro.css' %}">
 </head>
-
-<body>
-
-<div class="container">
-    <div class="brand-logo">
-        <img src="{% static 'img/logo icon.png' %}" alt="OdontoPlace Logo" class="logo-icon">
-        <div class="brand-text">
-            <span class="logo-text">OdontoPlace</span>
-            <span class="logo-subtitle">Sistema de Agendamento</span>
+<body class="app-body">
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <a href="{% url 'login_clinica' %}" class="back-button">
+                <span class="material-symbols-outlined icon-sm">arrow_back</span>
+                Voltar ao Login
+            </a>
+            <div class="topbar-brand">
+                <img src="{% static 'img/logo icon.png' %}" alt="OdontoPlace Logo" class="topbar-logo"/>
+                <span class="topbar-title">OdontoPlace</span>
+            </div>
         </div>
-    </div>
-    <h1>Cadastro da Clínica</h1>
-    <p class="subtitle">Preencha os dados para registrar sua clínica odontológica</p>
+    </header>
 
-    <form method="POST" action="{% url 'cadastro_clinica' %}" enctype="multipart/form-data">
-    {% csrf_token %}
+    <main class="container main-content">
+        <form method="POST" action="{% url 'cadastro_clinica' %}" enctype="multipart/form-data" class="cadastro-form">
+            {% csrf_token %}
 
-        <div class="form-grid">
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="step-badge">01</div>
+                    <div>
+                        <h2>Identidade da Clínica</h2>
+                        <p>Defina o nome, a descrição e os principais elementos visuais da clínica.</p>
+                    </div>
+                </div>
 
-            <!-- COLUNA 1 -->
-            <div class="column">
-                <h2>Detalhes da Clínica</h2>
+                <div class="section-grid">
+                    <div class="field-column">
+                        <div class="field-group">
+                            <label for="nome">Nome da Clínica</label>
+                            <input id="nome" name="nome" type="text" placeholder="Ex: Sorriso Vital" required/>
+                        </div>
+                        <div class="field-group">
+                            <label for="descricao">Descrição</label>
+                            <textarea id="descricao" name="descricao" rows="4" placeholder="Breve história e missão da sua clínica..."></textarea>
+                        </div>
+                        <div class="field-group">
+                            <label for="especialidade_input">Especialidades</label>
+                            <div class="specialty-input-row">
+                                <input id="especialidade_input" type="text" placeholder="Ex: Ortodontia" />
+                                <button type="button" id="add-specialty" class="add-button">Adicionar</button>
+                            </div>
+                            <div id="specialty-list" class="specialty-list"></div>
+                        </div>
+                    </div>
+                    <div class="field-column">
+                        <div class="field-group">
+                            <label>Logo da Clínica</label>
+                            <label class="upload-card">
+                                <div class="upload-content">
+                                    <span class="material-symbols-outlined upload-icon">upload_file</span>
+                                    <p>Envie o logo oficial da clínica.</p>
+                                    <button type="button" class="upload-button">Escolher arquivo</button>
+                                </div>
+                                <input type="file" name="logo" accept="image/*" required/>
+                            </label>
+                        </div>
+                        <div class="field-group">
+                            <label>Banner ou imagem de destaque</label>
+                            <label class="upload-card">
+                                <div class="upload-content">
+                                    <span class="material-symbols-outlined upload-icon">image</span>
+                                    <p>Escolha uma imagem de destaque para representar a clínica.</p>
+                                    <button type="button" class="upload-button">Escolher arquivo</button>
+                                </div>
+                                <input type="file" name="imagem" accept="image/*"/>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-                <label>Nome da Clínica</label>
-                <input type="text" name="nome" required>
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="step-badge">02</div>
+                    <div>
+                        <h2>Endereço e Contato</h2>
+                        <p>Forneça a localização da clínica e os dados de contato essenciais.</p>
+                    </div>
+                </div>
 
-                <label>Descrição</label>
-                <textarea name="descricao" rows="3"></textarea>
+                <div class="section-grid section-grid--address">
+                    <div class="field-group">
+                        <label for="estado">Estado</label>
+                        <select id="estado" name="estado" required>
+                            <option value="">Selecione</option>
+                            <option value="SP">São Paulo</option>
+                            <option value="RJ">Rio de Janeiro</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label for="rua">Rua</label>
+                        <input id="rua" name="rua" type="text" placeholder="Ex: Av. Paulista"/>
+                    </div>
+                    <div class="field-group">
+                        <label for="cidade">Cidade</label>
+                        <input id="cidade" name="cidade" type="text" placeholder="Ex: São Paulo"/>
+                    </div>
+                    <div class="field-group">
+                        <label for="numero">Número</label>
+                        <input id="numero" name="numero" type="text" placeholder="123"/>
+                    </div>
+                    <div class="field-group">
+                        <label for="cep">CEP</label>
+                        <input id="cep" name="cep" type="text" placeholder="00000-000"/>
+                    </div>
+                    <div class="field-group">
+                        <label for="cnpj">CNPJ</label>
+                        <input id="cnpj" name="cnpj" type="text" placeholder="00.000.000/0001-00"/>
+                    </div>
+                    <div class="field-group">
+                        <label for="bairro">Bairro</label>
+                        <input id="bairro" name="bairro" type="text" placeholder="Ex: Jardins"/>
+                    </div>
+                    <div class="field-group">
+                        <label for="telefone">Telefone</label>
+                        <input id="telefone" name="telefone" type="tel" placeholder="(00) 00000-0000"/>
+                    </div>
+                </div>
+            </section>
 
-                <label>Serviços Oferecidos</label>
-                <textarea name="servicos" rows="3"></textarea>
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="step-badge">03</div>
+                    <div>
+                        <h2>Acesso à Conta</h2>
+                        <p>Defina o e-mail e a senha para o administrador da clínica.</p>
+                    </div>
+                </div>
 
-                <label>Foto da Clínica</label>
-                <input type="file" name="logo" accept="image/*" required>
+                <div class="section-grid section-grid--account">
+                    <div class="field-group">
+                        <label for="email">E-mail</label>
+                        <input id="email" name="email" type="email" placeholder="admin@clinica.com" required/>
+                    </div>
+                    <div class="field-group">
+                        <label for="senha">Senha</label>
+                        <input id="senha" name="senha" type="password" placeholder="••••••••" required/>
+                    </div>
+                    <div class="field-group">
+                        <label for="confirmar_senha">Confirmar senha</label>
+                        <input id="confirmar_senha" name="confirmar_senha" type="password" placeholder="••••••••" required/>
+                    </div>
+                </div>
+            </section>
 
-                <label>Imagem/banner da Clínica (opcional)</label>
-                <input type="file" name="imagem" accept="image/*">
+            <div class="form-actions">
+                <button type="submit" class="submit-button">Cadastrar Clínica</button>
             </div>
+        </form>
+    </main>
 
-            <!-- COLUNA 2 -->
-            <div class="column">
-                <h2>Endereço</h2>
-
-                <label>Estado</label>
-                <input type="text" name="estado" required>
-
-                <label>Cidade</label>
-                <input type="text" name="cidade" required>
-
-                <label>CEP</label>
-                <input type="text" name="cep" required>
-
-                <label>Bairro</label>
-                <input type="text" name="bairro">
-
-                <label>Rua</label>
-                <input type="text" name="rua">
-
-                <label>Número</label>
-                <input type="text" name="numero">
+    <footer class="page-footer">
+        <div class="container footer-inner">
+            <span>Sistema OdontoPlace</span>
+            <div class="footer-links">
+                <a href="#">Política de Privacidade</a>
+                <a href="#">Termos de Serviço</a>
+                <a href="#">Central de Ajuda</a>
             </div>
-
-            <!-- COLUNA 3 -->
-            <div class="column">
-                <h2>Informações Pessoais</h2>
-
-                <label>CNPJ</label>
-                <input type="text" name="cnpj" required>
-
-                <label>Telefone</label>
-                <input type="text" name="telefone" required>
-
-                <label>E-mail</label>
-                <input type="email" name="email" required>
-
-                <label>Senha</label>
-                <input type="password" name="senha" required>
-
-                <label>Confirmar Senha</label>
-                <input type="password" name="confirmar_senha" required>
-            </div>
-
+            <p>© {% now "Y" %} Sistema OdontoPlace. Todos os direitos reservados.</p>
         </div>
+    </footer>
 
-        <button type="submit" class="btn">Cadastrar Clínica</button>
+    <script>
+        const inputs = document.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => input.parentElement.querySelector('label')?.classList.add('label-focus'));
+            input.addEventListener('blur', () => input.parentElement.querySelector('label')?.classList.remove('label-focus'));
+        });
 
-    </form>
+        const uploadCards = document.querySelectorAll('.upload-card');
+        uploadCards.forEach(card => {
+            const fileInput = card.querySelector('input[type=file]');
+            const text = card.querySelector('p');
+            const button = card.querySelector('.upload-button');
 
-</div>
+            button.addEventListener('click', e => {
+                e.preventDefault();
+                fileInput.click();
+            });
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) text.innerText = 'Arquivo selecionado com sucesso!';
+            });
 
+            card.addEventListener('dragover', e => {
+                e.preventDefault();
+                card.classList.add('upload-card-hover');
+            });
+            card.addEventListener('dragleave', () => card.classList.remove('upload-card-hover'));
+            card.addEventListener('drop', e => {
+                e.preventDefault();
+                card.classList.remove('upload-card-hover');
+                text.innerText = 'Arquivo selecionado com sucesso!';
+            });
+        });
+
+        // Especialidades: adicionar / remover
+        const addBtn = document.getElementById('add-specialty');
+        const specialtyInput = document.getElementById('especialidade_input');
+        const specialtyList = document.getElementById('specialty-list');
+
+        function createSpecialtyItem(value) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'specialty-item';
+
+            const span = document.createElement('span');
+            span.className = 'specialty-name';
+            span.innerText = value;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-specialty';
+            removeBtn.innerText = '-';
+
+            // hidden input for form submission
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'especialidades';
+            hidden.value = value;
+
+            removeBtn.addEventListener('click', () => wrapper.remove());
+
+            wrapper.appendChild(span);
+            wrapper.appendChild(removeBtn);
+            wrapper.appendChild(hidden);
+            return wrapper;
+        }
+
+        addBtn?.addEventListener('click', () => {
+            const val = specialtyInput.value.trim();
+            if (!val) return;
+            const item = createSpecialtyItem(val);
+            specialtyList.appendChild(item);
+            specialtyInput.value = '';
+            specialtyInput.focus();
+        });
+
+        // allow enter to add
+        specialtyInput?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addBtn.click();
+            }
+        });
+    </script>
 </body>
 </html>

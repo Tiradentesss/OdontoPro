@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from django.core import signing
 from django.core.files.uploadedfile import SimpleUploadedFile
-from .models import Paciente, Medico, Clinica, Consulta, Endereco
+from .models import Paciente, Medico, Clinica, Consulta, Endereco, Gerenciamento, Permissao
 
 
 class LoginViewTests(TestCase):
@@ -41,6 +41,17 @@ class LoginViewTests(TestCase):
             crm_cro="1234",
             clinica=self.clinica
         )
+        self.permissao_gerenciamento = Permissao.objects.create(
+            codigo="acesso_gerenciamento",
+            descricao="Acesso ao painel de gestão"
+        )
+        self.gerente = Gerenciamento.objects.create(
+            nome="Gerente Autorizado",
+            email="gerente@example.com",
+            senha=make_password("gerente123"),
+            clinica=self.clinica
+        )
+        self.gerente.permissoes.add(self.permissao_gerenciamento)
 
     def test_login_patient_success(self):
         resp = self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
@@ -62,10 +73,44 @@ class LoginViewTests(TestCase):
         self.assertRedirects(resp, reverse('dashboard_paciente'))
 
     def test_login_medico_success(self):
-        resp = self.client.post(reverse('login_paciente'), {'email': 'medico@example.com', 'senha': 'medsenha'})
+        resp = self.client.post(reverse('login_clinica'), {'email': 'medico@example.com', 'senha': 'medsenha'})
         self.assertEqual(resp.status_code, 302)
         self.assertRedirects(resp, reverse('painel_profissional'))
         self.assertEqual(self.client.session.get('medico_id'), self.medico.id)
+
+    def test_login_clinica_page_renders(self):
+        resp = self.client.get(reverse('login_clinica'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'LoginCadastro/login_profissional.html')
+
+    def test_login_clinica_with_clinica_success(self):
+        resp = self.client.post(reverse('login_clinica'), {'email': 'clinica@example.com', 'senha': 'clinica123'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertRedirects(resp, reverse('painel_profissional'))
+        self.assertEqual(self.client.session.get('clinica_id'), self.clinica.id)
+
+    def test_login_clinica_with_gerente_success(self):
+        resp = self.client.post(reverse('login_clinica'), {'email': 'gerente@example.com', 'senha': 'gerente123'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertRedirects(resp, reverse('painel_profissional'))
+        self.assertEqual(self.client.session.get('gerente_id'), self.gerente.id)
+        self.assertEqual(self.client.session.get('clinica_id'), self.clinica.id)
+
+    def test_login_clinica_gerente_without_permission(self):
+        gerente_sem_permissao = Gerenciamento.objects.create(
+            nome="Gerente Sem Acesso",
+            email="gerente-nao@example.com",
+            senha=make_password("gerente123"),
+            clinica=self.clinica
+        )
+        resp = self.client.post(reverse('login_clinica'), {'email': 'gerente-nao@example.com', 'senha': 'gerente123'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Acesso negado. Gerente não tem permissão de gerenciamento.')
+
+    def test_login_clinica_wrong_password(self):
+        resp = self.client.post(reverse('login_clinica'), {'email': 'medico@example.com', 'senha': 'wrong'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Senha incorreta.')
 
     def test_logout_clears_session_and_uid_cookie(self):
         resp = self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
@@ -105,10 +150,10 @@ class LoginViewTests(TestCase):
         self.assertContains(resp, 'Voltar para a Home')
         self.assertContains(resp, 'href="/"')
 
-    def test_home_download_button_points_to_download_page(self):
+    def test_home_download_button_points_to_professional_login(self):
         resp = self.client.get('/')
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'href="/download-desktop/"')
+        self.assertContains(resp, 'href="/login-clinica/"')
 
     def test_config_update_keeps_session(self):
         # login first

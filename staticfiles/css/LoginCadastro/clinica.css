@@ -1,4 +1,5 @@
 /* Configurações Globais */
+/* Configurações Globais */
 * {
     margin: 0;
     padding: 0;
@@ -24,14 +25,36 @@ html {
     flex: 1.2;
     position: relative;
     overflow: hidden;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    background: linear-gradient(180deg, rgba(12,60,145,0.03), rgba(47,127,239,0.03));
 }
 
-.coluna-imagem img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.9);
+.left-hero {
+    max-width: 520px;
+}
+
+.left-hero h1 {
+    font-size: 32px;
+    color: #0b2140;
+    margin-bottom: 16px;
+    line-height: 1.05;
+}
+
+.left-hero p {
+    color: #55668f;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.voltar-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #1645d8;
+    font-weight: 600;
 }
 
 /* Coluna do Formulário */
@@ -53,7 +76,7 @@ html {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
 }
 
 .logo-icone {
@@ -91,6 +114,10 @@ html {
     color: #222;
 }
 
+.boas-vindas.md-hidden {
+    display: none;
+}
+
 /* Campos de Input */
 .campo-input {
     margin-bottom: 20px;
@@ -114,106 +141,42 @@ html {
     transition: all 0.3s ease;
 }
 
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon .icon-right {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.input-with-icon .toggle-password {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    color: #64748b;
+}
+
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .campo-input input:focus {
     outline: none;
     border-color: #007bff;
     background-color: #fff;
     box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
-}
-
-/* Opções de Login */
-.opcoes-extras {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    font-size: 13px;
-}
-
-.checkbox-personalizado {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    color: #666;
-}
-
-.link-esqueci {
-    color: #007bff;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.link-esqueci:hover {
-    text-decoration: underline;
-}
-
-/* Botões */
-button {
-    width: 100%;
-    padding: 15px;
-    border-radius: 10px;
-    border: none;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.botao-acessar {
-    background-color: #007bff;
-    color: white;
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
-}
-
-.botao-acessar:hover {
-    background-color: #0056b3;
-    transform: translateY(-1px);
-}
-
-.divisor {
-    text-align: center;
-    margin: 25px 0;
-    position: relative;
-}
-
-.divisor::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 1px;
-    background-color: #eee;
-}
-
-.divisor span {
-    background-color: #fff;
-    padding: 0 15px;
-    position: relative;
-    color: #999;
-    font-size: 14px;
-}
-
-.botao-google {
-    background-color: #2d3748;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-}
-
-.botao-google:hover {
-    background-color: #1a202c;
-}
-
-/* Rodapé */
-.rodape-login {
-    margin-top: 30px;
-    text-align: center;
-    font-size: 14px;
-    color: #718096;
 }
 
 .rodape-login a {

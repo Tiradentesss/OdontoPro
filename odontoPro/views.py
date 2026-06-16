@@ -14,7 +14,7 @@ from django.core.management import call_command
 from django.templatetags.static import static
 from django.core.files.storage import default_storage
 
-from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade
+from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade, Gerenciamento
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.utils.timezone import make_aware
@@ -214,67 +214,43 @@ def login_paciente(request):
 
         logger.info(f"login attempt email={email} from {request.META.get('REMOTE_ADDR')}")
 
-        # first try paciente
         paciente = Paciente.objects.filter(email__iexact=email).first()
-        if paciente:
-            if not check_password(senha, paciente.senha):
-                messages.error(request, "Senha incorreta.")
-                logger.info("login failed - wrong password for paciente %s", email)
-                return render(request, "LoginCadastro/login.html", {"email": raw_email})
+        if not paciente:
+            messages.error(request, "Conta não encontrada. Cadastre-se primeiro.")
+            logger.info("login failed - patient account not found %s", email)
+            return render(request, "LoginCadastro/login.html", {"email": raw_email})
 
-            # successful paciente login
-            request.session["paciente_id"] = paciente.id
-            request.session.set_expiry(settings.SESSION_COOKIE_AGE)
-            # explicitly save session before redirect and debug
-            try:
-                request.session.save()
-                logger.info("session saved successfully for paciente %s", email)
-            except Exception as e:
-                logger.error("error saving session: %s", e, exc_info=True)
+        if not check_password(senha, paciente.senha):
+            messages.error(request, "Senha incorreta.")
+            logger.info("login failed - wrong password for paciente %s", email)
+            return render(request, "LoginCadastro/login.html", {"email": raw_email})
 
-            uid_signed = signing.dumps(paciente.id)
-            response = redirect("dashboard_paciente")
-            response.set_cookie(
-                "uid_signed",
-                uid_signed,
-                max_age=getattr(settings, "SESSION_COOKIE_AGE", 1209600),
-                path='/',
-                httponly=True,
-                samesite=getattr(settings, "SESSION_COOKIE_SAMESITE", "Lax"),
-                secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
-            )
+        request.session["paciente_id"] = paciente.id
+        request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+        try:
+            request.session.save()
+            logger.info("session saved successfully for paciente %s", email)
+        except Exception as e:
+            logger.error("error saving session: %s", e, exc_info=True)
 
-            logger.info(
-                "✓ Login success paciente %s | session_key=%s | uid_signed criado com sucesso",
-                email,
-                request.session.session_key
-            )
-            return response
+        uid_signed = signing.dumps(paciente.id)
+        response = redirect("dashboard_paciente")
+        response.set_cookie(
+            "uid_signed",
+            uid_signed,
+            max_age=getattr(settings, "SESSION_COOKIE_AGE", 1209600),
+            path='/',
+            httponly=True,
+            samesite=getattr(settings, "SESSION_COOKIE_SAMESITE", "Lax"),
+            secure=getattr(settings, "SESSION_COOKIE_SECURE", False),
+        )
 
-        # if no paciente found, attempt to authenticate a medico
-        medico = Medico.objects.filter(email__iexact=email).first()
-        if medico:
-            if not check_password(senha, medico.senha):
-                messages.error(request, "Senha incorreta.")
-                logger.info("login failed - wrong password for medico %s", email)
-                return render(request, "LoginCadastro/login.html", {"email": raw_email})
-
-            request.session["medico_id"] = medico.id
-            request.session["clinica_id"] = medico.clinica.id
-            request.session.set_expiry(settings.SESSION_COOKIE_AGE)
-            try:
-                request.session.save()
-            except Exception as e:
-                logger.error("error saving session: %s", e, exc_info=True)
-            logger.info("login success medico %s session_key=%s cookies=%s", email,
-                        request.session.session_key,
-                        request.META.get('HTTP_COOKIE'))
-            return redirect("painel_profissional")
-
-        # no account found at all
-        messages.error(request, "Conta não encontrada. Cadastre-se primeiro.")
-        logger.info("login failed - account not found %s", email)
-        return render(request, "LoginCadastro/login.html", {"email": raw_email})
+        logger.info(
+            "✓ Login success paciente %s | session_key=%s | uid_signed criado com sucesso",
+            email,
+            request.session.session_key
+        )
+        return response
 
     # GET
     return render(request, "LoginCadastro/login.html")
@@ -413,17 +389,36 @@ def dashboard_paciente(request):
 
 def painel_profissional(request):
     medico_id = request.session.get('medico_id')
-    if not medico_id:
+    gerente_id = request.session.get('gerente_id')
+    clinica_id = request.session.get('clinica_id')
+
+    if not (medico_id or gerente_id or clinica_id):
         messages.error(request, "Faça login como profissional para acessar o painel.")
-        return redirect('login_paciente')
+        return redirect('login_clinica')
 
-    try:
-        medico = Medico.objects.get(id=medico_id)
-    except Medico.DoesNotExist:
-        messages.error(request, "Profissional não encontrado.")
-        return redirect('login_paciente')
+    if medico_id:
+        profissional = Medico.objects.filter(id=medico_id).first()
+        if not profissional:
+            messages.error(request, "Profissional não encontrado.")
+            return redirect('login_paciente')
+        account_type = 'medico'
+    elif gerente_id:
+        profissional = Gerenciamento.objects.filter(id=gerente_id).select_related('clinica').first()
+        if not profissional:
+            messages.error(request, "Gerente não encontrado.")
+            return redirect('login_paciente')
+        account_type = 'gerente'
+    else:
+        profissional = Clinica.objects.filter(id=clinica_id).first()
+        if not profissional:
+            messages.error(request, "Clínica não encontrada.")
+            return redirect('login_paciente')
+        account_type = 'clinica'
 
-    return render(request, "DashboardProfissional/painel.html", {"medico": medico})
+    return render(request, "DashboardProfissional/painel.html", {
+        "profissional": profissional,
+        "account_type": account_type,
+    })
 
 
 # ---------- LOGOUT ----------
@@ -439,8 +434,62 @@ def logout_view(request):
 # kept for backwards compatibility, but the main login logic is now in login_paciente
 # which handles both patients and professionals.
 def login_clinica(request):
-    # redirect all requests to the unified view
-    return login_paciente(request)
+    if request.session.get("medico_id") or request.session.get("gerente_id") or request.session.get("clinica_id"):
+        return redirect("painel_profissional")
+    if request.session.get("paciente_id"):
+        return redirect("dashboard_paciente")
+
+    if request.method == "POST":
+        raw_email = request.POST.get("email", "") or ""
+        senha = request.POST.get("senha", "") or ""
+        email = raw_email.strip().lower()
+
+        logger.info(f"professional login attempt email={email} from {request.META.get('REMOTE_ADDR')}")
+
+        clinica = Clinica.objects.filter(email__iexact=email).first()
+        if clinica:
+            if not check_password(senha, clinica.senha):
+                messages.error(request, "Senha incorreta.")
+                logger.info("login failed - wrong password for clinica %s", email)
+                return render(request, "LoginCadastro/login_profissional.html", {"email": raw_email})
+
+            request.session["clinica_id"] = clinica.id
+            request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+            try:
+                request.session.save()
+            except Exception as e:
+                logger.error("error saving session: %s", e, exc_info=True)
+            logger.info("login success clinica %s session_key=%s", email, request.session.session_key)
+            return redirect("painel_profissional")
+
+        gerente = Gerenciamento.objects.filter(email__iexact=email, ativo=True).select_related("clinica").first()
+        if gerente:
+            if not check_password(senha, gerente.senha):
+                messages.error(request, "Senha incorreta.")
+                logger.info("login failed - wrong password for gerente %s", email)
+                return render(request, "LoginCadastro/login_profissional.html", {"email": raw_email})
+
+            required_permission = "acesso_gerenciamento"
+            if not gerente.permissoes.filter(codigo=required_permission).exists():
+                messages.error(request, "Acesso negado. Gerente não tem permissão de gerenciamento.")
+                logger.info("login failed - gerente without required permission %s", email)
+                return render(request, "LoginCadastro/login_profissional.html", {"email": raw_email})
+
+            request.session["gerente_id"] = gerente.id
+            request.session["clinica_id"] = gerente.clinica.id
+            request.session.set_expiry(settings.SESSION_COOKIE_AGE)
+            try:
+                request.session.save()
+            except Exception as e:
+                logger.error("error saving session: %s", e, exc_info=True)
+            logger.info("login success gerente %s session_key=%s", email, request.session.session_key)
+            return redirect("painel_profissional")
+
+        messages.error(request, "Conta profissional não encontrada.")
+        logger.info("login failed - professional account not found %s", email)
+        return render(request, "LoginCadastro/login_profissional.html", {"email": raw_email})
+
+    return render(request, "LoginCadastro/login_profissional.html")
 
 
 # 🔹 NOVO — RETORNA APENAS A LISTA FILTRADA (SEM RELOAD)
