@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from .base import BaseScreen, ActionButtons
-from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode, get_dark_mode
+from .theme import font, ICON_SIZE, COLORS
 import os
 from PIL import Image, ImageTk, ImageDraw
 
@@ -106,14 +106,14 @@ class ModernInput(ctk.CTkFrame):
         label_frame = ctk.CTkFrame(self, fg_color="transparent")
         label_frame.pack(fill="x", pady=(0, 3))
 
-        # Label com padding-left maior para mover mais para a direita
+        # Label alinhado ao começo (esquerda)
         lbl = ctk.CTkLabel(
             label_frame,
             text=label,
             font=font("text"),
             text_color=COLORS["text_secondary"]
         )
-        lbl.pack(side="left", padx=(40, 0))  # Aumentado de 20 para 40px
+        lbl.pack(side="left", padx=(0, 0))
 
         if required:
             required_lbl = ctk.CTkLabel(
@@ -170,13 +170,12 @@ class ModernInput(ctk.CTkFrame):
 
 
 class Configuracoes(BaseScreen):
-    def __init__(self, parent, tipo_usuario="clinica", clinica_id=None, usuario_id=None, app=None):
+    def __init__(self, parent, tipo_usuario="clinica", clinica_id=None, usuario_id=None):
         super().__init__(parent, "Configurações")
 
         self.tipo_usuario = tipo_usuario
         self.clinica_id = clinica_id
         self.usuario_id = usuario_id
-        self.app = app
 
         self.colors = {
             "bg_main": COLORS["content_bg"],
@@ -196,13 +195,18 @@ class Configuracoes(BaseScreen):
             "tab_inactive": COLORS["tab_inactive"]
         }
 
-        self.current_tab = "Perfil"
         self.tab_buttons = {}
         self.images = {}
         self.loading_states = {}
         self.clinic_entries = {}
         self.profile_entries = {}
         self.address_entries = {}
+        
+        # Determinar aba inicial baseada no tipo de usuário
+        if self.tipo_usuario == "clinica":
+            self.current_tab = "Minha Clínica"
+        else:
+            self.current_tab = "Perfil"
 
         self.setup_ui()
 
@@ -236,13 +240,10 @@ class Configuracoes(BaseScreen):
         todas_abas = [
             {"name": "Perfil", "text": "👤   Perfil", "tipo_acesso": ["gerenciamento", "dentista"]},
             {"name": "Segurança", "text": "🔒   Segurança", "tipo_acesso": ["clinica", "gerenciamento", "dentista"]},
-            {"name": "Minha Clínica", "text": "🏥   Minha Clínica", "tipo_acesso": ["clinica"]}
+            {"name": "Minha Clínica", "text": "🏥   Minha Clínica", "tipo_acesso": ["clinica", "gerenciamento"]}
         ]
 
         tabs_disponiveis = [tab for tab in todas_abas if self.tipo_usuario in tab["tipo_acesso"]]
-
-        if tabs_disponiveis:
-            self.current_tab = tabs_disponiveis[0]["name"]
 
         for i, tab in enumerate(tabs_disponiveis):
             btn = ctk.CTkButton(
@@ -355,50 +356,58 @@ class Configuracoes(BaseScreen):
     def _render_security(self, parent):
         self._titulo(parent, "Segurança da Conta")
 
-        password_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        password_frame.pack(fill="x", pady=(0, 20), anchor="w")
+        scroll = ctk.CTkScrollableFrame(
+            parent,
+            fg_color="transparent",
+            scrollbar_button_color=COLORS["border"],
+            scrollbar_button_hover_color=COLORS["text_muted"]
+        )
+        scroll.pack(fill="both", expand=True, padx=15)
 
-        self._secao_titulo(password_frame, "Alterar Senha", padx=15)
+        _, form_body = self._create_card_section(
+            scroll,
+            "Alterar Senha",
+            "Mantenha sua conta segura com uma senha forte"
+        )
 
-        form_frame = ctk.CTkFrame(password_frame, fg_color="transparent")
-        form_frame.pack(fill="x", padx=15, anchor="w")
+        form_body.grid_columnconfigure((0, 1), weight=1)
 
         # Inputs de segurança
         current_pwd = ModernInput(
-            form_frame, label="Senha Atual", placeholder="Digite sua senha atual",
+            form_body, label="Senha Atual", placeholder="Digite sua senha atual",
             icon="🔑", required=True
         )
-        current_pwd.pack(fill="x", pady=5, anchor="w")
+        current_pwd.grid(row=0, column=0, sticky="ew", padx=(0, 8), pady=8)
         current_pwd.entry.configure(show="•")
 
         new_pwd = ModernInput(
-            form_frame, label="Nova Senha", placeholder="Digite a nova senha",
+            form_body, label="Nova Senha", placeholder="Digite a nova senha",
             icon="🔒", required=True
         )
-        new_pwd.pack(fill="x", pady=5, anchor="w")
+        new_pwd.grid(row=0, column=1, sticky="ew", padx=(8, 0), pady=8)
         new_pwd.entry.configure(show="•")
 
         confirm_pwd = ModernInput(
-            form_frame, label="Confirmar Nova Senha", placeholder="Digite novamente a nova senha",
+            form_body, label="Confirmar Nova Senha", placeholder="Digite novamente a nova senha",
             icon="✓", required=True
         )
-        confirm_pwd.pack(fill="x", pady=5, anchor="w")
+        confirm_pwd.grid(row=1, column=0, columnspan=2, sticky="ew", pady=8)
         confirm_pwd.entry.configure(show="•")
 
         # Frame da força da senha
-        strength_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
-        strength_frame.pack(fill="x", pady=(10, 0), anchor="w")
+        strength_frame = ctk.CTkFrame(form_body, fg_color="transparent")
+        strength_frame.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(10, 0))
 
         ctk.CTkLabel(
             strength_frame, text="Força da senha:", font=font("small"),
             text_color=self.colors["text_secondary"]
-        ).pack(side="left", padx=(40, 0))  # Também aumentado para 40px
+        ).pack(side="left", padx=(0, 10))
 
         self.strength_bar = ctk.CTkProgressBar(
             strength_frame, width=200, height=6, corner_radius=4,
             progress_color=self.colors["accent"]
         )
-        self.strength_bar.pack(side="left", padx=(10, 0))
+        self.strength_bar.pack(side="left")
         self.strength_bar.set(0)
 
         new_pwd.entry.bind("<KeyRelease>", lambda e: self._check_password_strength(new_pwd.entry.get()))
@@ -424,45 +433,6 @@ class Configuracoes(BaseScreen):
 
     # ==================== MINHA CLÍNICA ====================
     def _render_preferences(self, parent):
-        # Header com Título e Botão de Modo Escuro/Claro
-        header_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        header_frame.pack(fill="x", padx=15, pady=(24, 0), anchor="w")
-        
-        # Título à esquerda
-        titulo_label = ctk.CTkLabel(
-            header_frame,
-            text="Configurações da Clínica",
-            font=font("title", "bold"),
-            text_color=self.colors["text_primary"]
-        )
-        titulo_label.pack(side="left", anchor="w")
-        
-        # Botão de Modo Escuro/Claro à direita
-        def toggle_theme():
-            if self.app:
-                self.app.toggle_theme()
-                # Atualizar o texto do botão
-                theme_text = "☀️  Modo Claro" if get_dark_mode() else "🌙  Modo Escuro"
-                self.theme_btn.configure(text=theme_text)
-            else:
-                toggle_dark_mode()
-                theme_text = "☀️  Modo Claro" if get_dark_mode() else "🌙  Modo Escuro"
-                self.theme_btn.configure(text=theme_text)
-
-        self.theme_btn = ctk.CTkButton(
-            header_frame,
-            text="☀️  Modo Claro" if get_dark_mode() else "🌙  Modo Escuro",
-            fg_color=COLORS["primary"],
-            hover_color=COLORS["primary_dark"],
-            text_color="white",
-            font=font("text", "bold"),
-            height=32,
-            corner_radius=6,
-            border_width=0,
-            command=toggle_theme
-        )
-        self.theme_btn.pack(side="right", padx=(0, 0))
-
         sub_tabs = ["Geral", "Serviços", "Descrição"]
         self.sub_tab_buttons = {}
 
@@ -522,7 +492,7 @@ class Configuracoes(BaseScreen):
             endereco_data = self._load_endereco_data()
 
         # CARD IDENTIDADE
-        if self.tipo_usuario == "clinica":
+        if self.tipo_usuario == "clinica" or self.tipo_usuario == "gerenciamento":
             _, identidade_body = self._create_card_section(
                 scroll,
                 "Identidade da Clínica",
@@ -717,75 +687,42 @@ class Configuracoes(BaseScreen):
     def _render_profile(self, parent):
         self._titulo(parent, "Meu Perfil")
 
-        profile_container = ctk.CTkFrame(parent, fg_color="transparent")
-        profile_container.pack(fill="both", expand=True, padx=15)
-        profile_container.grid_columnconfigure(0, weight=0)
-        profile_container.grid_columnconfigure(1, weight=1)
-
-        self._render_avatar(profile_container)
-        self._render_profile_form(profile_container)
-
-    def _render_avatar(self, parent):
-        avatar_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        avatar_frame.grid(row=0, column=0, sticky="nw", padx=(0, 25))
-
-        self._secao_titulo(avatar_frame, "Foto de Perfil", padx=0)
-
-        avatar_container = ctk.CTkFrame(avatar_frame, fg_color="transparent", width=140, height=140)
-        avatar_container.pack(anchor="w", pady=(0, 25))
-        avatar_container.pack_propagate(False)
-
-        self.avatar_canvas = tk.Canvas(
-            avatar_container, width=140, height=140, 
-            bg=self.colors["bg_card"],
-            highlightthickness=0, bd=0
+        scroll = ctk.CTkScrollableFrame(
+            parent,
+            fg_color="transparent",
+            scrollbar_button_color=COLORS["border"],
+            scrollbar_button_hover_color=COLORS["text_muted"]
         )
-        self.avatar_canvas.pack()
+        scroll.pack(fill="both", expand=True, padx=15)
 
-        profile_data = self._load_user_profile_data()
-        avatar_path = profile_data.get("avatar_path") if profile_data else None
-        nome = profile_data.get("nome", "") if profile_data else ""
-        placeholder_text = ImagePreview._get_initials(nome) if nome else "GG"
-        ImagePreview.create_circular_preview(self.avatar_canvas, avatar_path, 140, placeholder_text)
-
-        upload_btn = ctk.CTkButton(
-            avatar_frame, text="Alterar foto", fg_color="transparent",
-            hover_color=self.colors["accent_light"], text_color=self.colors["accent"],
-            border_width=1, border_color=self.colors["accent"],
-            height=44, corner_radius=8, font=font("text"),
-            anchor="center", command=self._change_avatar
+        _, form_body = self._create_card_section(
+            scroll,
+            "Informações Pessoais",
+            "Gerencie seus dados pessoais"
         )
-        upload_btn.pack(anchor="w", fill="x")
 
-    def _render_profile_form(self, parent):
-        form_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        form_frame.grid(row=0, column=1, sticky="nsew")
-        form_frame.grid_columnconfigure((0, 1), weight=1)
-
-        title_container = ctk.CTkFrame(form_frame, fg_color="transparent")
-        title_container.grid(row=0, column=0, columnspan=2, sticky="w")
-        self._secao_titulo(title_container, "Informações Pessoais", padx=0)
+        form_body.grid_columnconfigure((0, 1), weight=1)
 
         fields = [
-            {"label": "Nome Completo", "placeholder": "Gabriel Gomes", "row": 1, "col": 0, "icon": "👤", "required": True},
-            {"label": "CPF", "placeholder": "000.000.000-00", "row": 1, "col": 1, "icon": "📄", "required": True},
-            {"label": "E-mail", "placeholder": "gabriel@email.com", "row": 2, "col": 0, "icon": "✉️", "required": True},
-            {"label": "Telefone", "placeholder": "(00) 00000-0000", "row": 2, "col": 1, "icon": "📞", "required": True},
-            {"label": "Data de Nascimento", "placeholder": "24/05/2002", "row": 3, "col": 0, "icon": "🎂", "required": False},
-            {"label": "Profissão", "placeholder": "Dentista", "row": 3, "col": 1, "icon": "💼", "required": False}
+            {"label": "Nome Completo", "placeholder": "Gabriel Gomes", "row": 0, "col": 0, "icon": "👤", "required": True},
+            {"label": "CPF", "placeholder": "000.000.000-00", "row": 0, "col": 1, "icon": "📄", "required": True},
+            {"label": "E-mail", "placeholder": "gabriel@email.com", "row": 1, "col": 0, "icon": "✉️", "required": True},
+            {"label": "Telefone", "placeholder": "(00) 00000-0000", "row": 1, "col": 1, "icon": "📞", "required": True},
+            {"label": "Data de Nascimento", "placeholder": "24/05/2002", "row": 2, "col": 0, "icon": "🎂", "required": False},
+            {"label": "Profissão", "placeholder": "Dentista", "row": 2, "col": 1, "icon": "💼", "required": False}
         ]
 
         self.profile_entries = {}
         for field in fields:
             input_widget = ModernInput(
-                form_frame, label=field["label"], placeholder=field["placeholder"],
+                form_body, label=field["label"], placeholder=field["placeholder"],
                 icon=field["icon"], required=field.get("required", False)
             )
-            padx_val = (0, 5) if field["col"] == 0 else (5, 0)
+            padx_val = (0, 8) if field["col"] == 0 else (8, 0)
 
             input_widget.grid(
                 row=field["row"], column=field["col"], sticky="ew",
-                padx=padx_val, pady=5
+                padx=padx_val, pady=8
             )
             self.profile_entries[field["label"]] = input_widget
 
@@ -793,6 +730,9 @@ class Configuracoes(BaseScreen):
         if profile_data:
             self.profile_entries["Nome Completo"].set(profile_data.get("nome", ""))
             self.profile_entries["E-mail"].set(profile_data.get("email", ""))
+
+    def _render_profile_form(self, parent):
+        pass
 
     # ==================== FOOTER ====================
     def _build_footer(self, parent):
@@ -975,9 +915,16 @@ class Configuracoes(BaseScreen):
         for widget in self.clinic_photos_container.winfo_children():
             widget.destroy()
 
+        # Frame principal que ocupa todo o container
         main_wrap = ctk.CTkFrame(self.clinic_photos_container, fg_color="transparent")
         main_wrap.pack(fill="both", expand=True, padx=18, pady=18)
+        
+        # CORREÇÃO: Usar grid para dividir espaço entre preview (expansível) e footer (fixo)
+        main_wrap.grid_rowconfigure(0, weight=1)      # Row 0: preview_frame EXPANDE
+        main_wrap.grid_rowconfigure(1, weight=0)      # Row 1: footer NÃO expande (altura fixa)
+        main_wrap.grid_columnconfigure(0, weight=1)   # Coluna: ambos ocupam 100% da largura
 
+        # Frame de preview - agora NÃO usa expand=True
         preview_frame = ctk.CTkFrame(
             main_wrap,
             fg_color=COLORS['card'],
@@ -985,7 +932,8 @@ class Configuracoes(BaseScreen):
             border_width=1,
             border_color=self.colors["border"]
         )
-        preview_frame.pack(fill="both", expand=True, pady=(0, 14))
+        # MUDANÇA: grid() em vez de pack() para usar sistema de grid do main_wrap
+        preview_frame.grid(row=0, column=0, sticky="nsew", pady=(0, 14))
 
         self.clinic_photo_canvas = tk.Canvas(
             preview_frame,
@@ -996,60 +944,62 @@ class Configuracoes(BaseScreen):
         self.clinic_photo_canvas.pack(fill="both", expand=True, padx=12, pady=12)
         self.clinic_photo_canvas.bind("<Configure>", self._on_canvas_resize)
 
-        footer = ctk.CTkFrame(main_wrap, fg_color="transparent")
-        footer.pack(fill="x")
+        # Footer com altura fixa de 52px
+        footer = ctk.CTkFrame(main_wrap, fg_color="transparent", height=52)
+        footer.grid(row=1, column=0, sticky="ew", pady=(20, 0))
+        footer.pack_propagate(False)
 
-        nav_frame = ctk.CTkFrame(footer, fg_color="transparent")
-        nav_frame.pack(side="left")
+        nav_frame = ctk.CTkFrame(footer, fg_color="transparent", height=44)
+        nav_frame.pack(side="left", fill="y", padx=0, pady=0)
 
         self.prev_btn = ctk.CTkButton(
             nav_frame,
             text="◀",
-            width=42,
-            height=42,
-            font=font("subtitle", "bold"),
+            width=44,
+            height=44,
+            font=("Arial", 20, "bold"),
             fg_color=self.colors["accent"],
             hover_color=self.colors["accent_hover"],
-            state="disabled",
-            corner_radius=8,
+            text_color="white",
+            corner_radius=6,
             command=self._previous_clinic_photo
         )
-        self.prev_btn.pack(side="left", padx=(0, 6))
+        self.prev_btn.pack(side="left", padx=(0, 6), pady=0)
 
         self.photo_counter_label = ctk.CTkLabel(
             nav_frame,
             text="0/0",
-            font=font("text"),
+            font=("Arial", 10, "bold"),
             text_color=self.colors["text_secondary"]
         )
-        self.photo_counter_label.pack(side="left", padx=10)
+        self.photo_counter_label.pack(side="left", padx=10, pady=0)
 
         self.next_btn = ctk.CTkButton(
             nav_frame,
             text="▶",
-            width=42,
-            height=42,
-            font=font("subtitle", "bold"),
+            width=44,
+            height=44,
+            font=("Arial", 20, "bold"),
             fg_color=self.colors["accent"],
             hover_color=self.colors["accent_hover"],
-            state="disabled",
-            corner_radius=8,
+            text_color="white",
+            corner_radius=6,
             command=self._next_clinic_photo
         )
-        self.next_btn.pack(side="left", padx=(6, 0))
+        self.next_btn.pack(side="left", padx=(6, 0), pady=0)
 
         self.add_photo_btn = ctk.CTkButton(
             footer,
             text="+ Adicionar Foto",
             width=170,
-            height=42,
-            font=font("text"),
+            height=44,
+            font=("Arial", 11, "bold"),
             fg_color=self.colors["accent"],
             hover_color=self.colors["accent_hover"],
-            corner_radius=8,
+            corner_radius=6,
             command=self._add_clinic_photo
         )
-        self.add_photo_btn.pack(side="right")
+        self.add_photo_btn.pack(side="right", padx=0, pady=0)
 
         self._update_clinic_photos_display()
 
@@ -1068,8 +1018,6 @@ class Configuracoes(BaseScreen):
                 "SEM FOTOS\nCLIQUE EM + PARA ADICIONAR"
             )
             self.photo_counter_label.configure(text="0/0")
-            self.prev_btn.configure(state="disabled")
-            self.next_btn.configure(state="disabled")
         else:
             current_photo = self.clinic_photos[self.current_photo_index]
             ImagePreview.create_rectangular_preview(
@@ -1082,13 +1030,6 @@ class Configuracoes(BaseScreen):
 
             self.photo_counter_label.configure(
                 text=f"{self.current_photo_index + 1}/{len(self.clinic_photos)}"
-            )
-
-            self.prev_btn.configure(
-                state="normal" if self.current_photo_index > 0 else "disabled"
-            )
-            self.next_btn.configure(
-                state="normal" if self.current_photo_index < len(self.clinic_photos) - 1 else "disabled"
             )
 
     def _next_clinic_photo(self):
@@ -1157,13 +1098,13 @@ class Configuracoes(BaseScreen):
                 if not input_widget._validate():
                     all_valid = False
 
-        if self.current_tab == "Minha Clínica" and self.tipo_usuario == "clinica":
+        if self.current_tab == "Minha Clínica" and (self.tipo_usuario == "clinica" or self.tipo_usuario == "gerenciamento"):
             for _, input_widget in self.clinic_entries.items():
                 if not input_widget._validate():
                     all_valid = False
 
         if all_valid:
-            if self.tipo_usuario == "clinica" and self.clinica_id:
+            if (self.tipo_usuario == "clinica" or self.tipo_usuario == "gerenciamento") and self.clinica_id:
                 self._save_clinic_data()
             else:
                 messagebox.showinfo("Sucesso", "Configurações salvas com sucesso!")

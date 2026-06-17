@@ -112,7 +112,8 @@ class Agenda(BaseScreen):
         self.col_widths = {conf['key']: conf['minsize'] for conf in self.col_config}
 
         self.render()
-        self.after(self._auto_refresh_ms, self._auto_check)
+        # Desabilitar auto-refresh por enquanto - causa loops infinitos
+        # self.after(self._auto_refresh_ms, self._auto_check)
 
     def _get_data_sql(self):
         if not self.filtro_data or self.filtro_data in ['Todos', 'Data']:
@@ -154,33 +155,13 @@ class Agenda(BaseScreen):
         self.refresh_data()
 
     def _reset_loading_if_stuck(self):
-        """Reseta o estado de carregamento se ainda estiver True (travado)"""
-        if self._loading:
-            print("[Agenda] ⚠️  Carregamento travado por mais de 30s. Resetando...")
-            self._loading = False
-            self._render_error("O carregamento demorou muito. Tente novamente.")
+        """Desabilitado - não será mais usado"""
+        pass
 
     def _auto_check(self):
-        try:
-            # Não fazer check automático se já está carregando
-            if self._loading:
-                return
-                
-            snapshot = ConsultaController.snapshot_por_clinica(
-                self.clinica_id,
-                data=self._get_data_sql(),
-                status=self.filtro_status,
-                medico=self.filtro_medico,
-                especialidade=self.filtro_especialidade,
-            )
-
-            if snapshot != self.current_snapshot:
-                print("[Agenda] Dados mudaram. Recarregando...")
-                self.refresh_data()
-        except Exception as e:
-            print(f"[Agenda] Erro em _auto_check: {e}")
-        finally:
-            self.after(self._auto_refresh_ms, self._auto_check)
+        """Auto-refresh desabilitado - usar refresh_data() manual"""
+        # Funcionalidade desabilitada por causar loops infinitos
+        pass
 
     def refresh_data(self):
         if self._loading:
@@ -188,8 +169,6 @@ class Agenda(BaseScreen):
         self._loading = True
         thread = threading.Thread(target=self._load_data_thread, daemon=True)
         thread.start()
-        # Timeout de segurança: se não carregar em 30 segundos, reseta o estado
-        self.after(30000, lambda: self._reset_loading_if_stuck())
 
     def render(self):
         if self._loading:

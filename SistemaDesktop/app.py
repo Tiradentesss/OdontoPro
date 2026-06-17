@@ -95,8 +95,15 @@ class App(ctk.CTk):
         """Carrega as permissões do gerente logado"""
         try:
             perms_bd = GerenciamentoController.obter_permissoes_gerente(self.usuario_id)
-            # Mapear para dicionário {codigo_permissão: True}
-            return {p['codigo']: True for p in perms_bd}
+            perms = {p['codigo']: True for p in perms_bd}
+            
+            # Se gerente não tem permissões no BD, dar todas as permissões padrão
+            if not perms:
+                print(f"[PERMISSÕES] Gerente {self.usuario_id} sem permissões no BD. Concedendo todas...")
+                permissoes_padrao = ["Painel", "Agenda", "Financeiro", "Configurações", "Cadastro", "Gerenciamento", "Permissões"]
+                return {p: True for p in permissoes_padrao}
+            
+            return perms
         except Exception as e:
             print(f"Erro ao carregar permissões: {e}")
             return {}
@@ -248,7 +255,7 @@ class App(ctk.CTk):
             "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
             "agenda": Agenda(self.container, self.clinica_id),
             "financeiro": Financeiro(self.container, self.clinica_id),
-            "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
+            "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),
             "permissao": Permissoes(self.container, self.clinica_id),

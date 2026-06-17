@@ -496,7 +496,7 @@ class Permissoes(BaseScreen):
         self.switch_widgets = {}
         self.permissions_list = [
             "Painel", "Agenda", "Financeiro", "Configurações",
-            "Cadastro", "Gerenciamento", "Permissões"
+            "Cadastro", "Gerenciamento", "Permissões", "Minha Clínica"
         ]
 
         self.admins_data = self.load_gerentes_from_database()
@@ -604,6 +604,7 @@ class Permissoes(BaseScreen):
             "Cadastro":      {"icon": "📝", "desc": "CRUD de usuários",         "color": COLORS["danger"]},
             "Gerenciamento": {"icon": "👔", "desc": "Controle administrativo",  "color": COLORS["secondary"]},
             "Permissões":    {"icon": "🔐", "desc": "Controle de acesso",       "color": COLORS["accent"]},
+            "Minha Clínica":  {"icon": "🏥", "desc": "Acessar configurações da clínica", "color": COLORS["success"]},
             "Status da Conta": {"icon": "👤", "desc": "Ativar ou desativar o acesso à conta", "color": COLORS["accent"]},
         }
 
@@ -643,7 +644,7 @@ class Permissoes(BaseScreen):
             if perm_name == "Status da Conta":
                 self.account_status_switch = ctk.CTkSwitch(
                     card, text="", width=40, height=22,
-                    progress_color=config['color'],
+                    progress_color=COLORS["primary"],
                     button_color=COLORS["card"],
                     button_hover_color=COLORS["hover"],
                     command=self.sync_account_status
@@ -652,7 +653,7 @@ class Permissoes(BaseScreen):
             else:
                 sw = ctk.CTkSwitch(
                     card, text="", width=40, height=22,
-                    progress_color=config['color'],
+                    progress_color=COLORS["primary"],
                     button_color=COLORS["card"],
                     button_hover_color=COLORS["hover"],
                     command=lambda p=perm_name: self.sync_permission(p)
