@@ -1,3 +1,5 @@
+{% load static %}
+{% static 'img/logo icon.png' as default_logo %}
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -9,8 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="../src/painel.css">
-    <link rel="stylesheet" href="../src/responsivo.css">
+    <link rel="stylesheet" href="{% static 'css/DashboardProfissional/painel.css' %}">
+    <link rel="stylesheet" href="{% static 'css/DashboardProfissional/responsivo.css' %}">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
@@ -18,10 +20,10 @@
 
     <aside class="sidebar">
         <div class="logo-container">
-            <img src="/img/logo icon.png" alt="OdontoPlace Logo" class="logo-small">
+            <img src="{{ default_logo }}" alt="Logo do OdontoPlace" class="logo-small">
             <div class="brand-text">
                 <span class="logo-text">OdontoPlace</span>
-                <span class="logo-subtitle">Sistema de Agendamento</span>
+                <span class="logo-subtitle">Painel Profissional</span>
             </div>
         </div>
 
@@ -32,7 +34,9 @@
                     <a href="#" class="nav-link active" data-target="painel">
                         <i data-lucide="layout-dashboard"></i>
                         <span>Painel</span>
-                        <span class="nav-badge">3</span>
+                        {% if consultas|length > 0 %}
+                            <span class="nav-badge">{{ consultas|length }}</span>
+                        {% endif %}
                     </a>
                 </li>
                 <li>
@@ -41,12 +45,7 @@
                         <span>Agendamento</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="nav-link" data-target="pacientes">
-                        <i data-lucide="users"></i>
-                        <span>Meus Pacientes</span>
-                    </a>
-                </li>
+                <!-- 'Meus Pacientes' removido conforme solicitado -->
                 <li>
                     <a href="#" class="nav-link" data-target="configuracao">
                         <i data-lucide="settings"></i>
@@ -64,10 +63,10 @@
         </nav>
 
         <div class="sidebar-footer">
-            <div id="btnLogout" class="botao-sair">
+            <button id="btnLogout" class="botao-sair" type="button">
                 <i data-lucide="log-out"></i>
                 <span>Sair</span>
-            </a>
+            </button>
         </div>
     </aside>
 
@@ -76,7 +75,7 @@
         <section id="painel" class="tab-content active">
             <header class="header">
                 <div class="user-welcome">
-                    <h1>Clinica Lumina</h1>
+                    <h1>{{ clinica.nome }}</h1>
                     <p class="breadcrumb">Painel / Gerenciamento</p>
                 </div>
             </header>
@@ -89,19 +88,41 @@
                     </div>
 
                     <div class="appointments-list">
-                        <div class="appointment-item" onclick="openPreview('Victor Araujo', '09:00 - 09:30 AM')">
-                            <div class="appointment-left">
-                                <img src="/img/1b5ef428f7403ec9d5a5818de6363ebc.jpg" class="avatar">
-                                <div class="info">
-                                    <h3>Victor Araujo</h3>
-                                    <p>Hoje as 09:00 - 09:30 AM</p>
+                        {% if consultas %}
+                            {% for consulta in consultas %}
+                                <div class="appointment-item" data-consulta-id="{{ consulta.id }}" data-nome="{{ consulta.nome|escapejs }}" data-horario="{{ consulta.data_hora|date:'H:i' }}">
+                                    <div class="appointment-left">
+                                        {% if consulta.paciente and consulta.paciente.foto %}
+                                            <img src="{{ consulta.paciente.foto.url }}" class="avatar">
+                                        {% else %}
+                                            <img src="{% static 'img/default-avatar.svg' %}" class="avatar">
+                                        {% endif %}
+                                        <div class="info">
+                                            {% if consulta.paciente %}
+                                                <h3>{{ consulta.paciente.nome }}</h3>
+                                            {% else %}
+                                                <h3>{{ consulta.nome }}</h3>
+                                            {% endif %}
+                                            <p>{{ consulta.data_hora|date:"d/m H:i" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="appointment-right">
+                                        <span class="badge-status">{{ consulta.get_status_display }}</span>
+                                        <div class="card-actions">
+                                            {% if consulta.status == 'agendada' or consulta.status == 'confirmada' %}
+                                                <button type="button" class="btn-outline btn-cancelar-consulta" data-consulta-id="{{ consulta.id }}">Cancelar</button>
+                                            {% endif %}
+                                            {% if consulta.status == 'agendada' %}
+                                                <button type="button" class="btn-primary btn-confirmar-consulta" data-consulta-id="{{ consulta.id }}">Confirmar</button>
+                                            {% endif %}
+                                        </div>
+                                        <i data-lucide="chevron-right" class="icon-arrow"></i>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="appointment-right">
-                                <span class="badge-status">Confirmado</span>
-                                <i data-lucide="chevron-right" class="icon-arrow"></i>
-                            </div>
-                        </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="empty-message">Nenhuma consulta agendada.</p>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -155,7 +176,7 @@
                 </div>
             </section>
         </section>
-        <section id="agendamento" class="tab-content">
+        <section id="agendamento" class="tab-content" data-clinica="{{ clinica.id }}">
             <header class="header">
                 <div class="user-welcome">
                     <h1>Agendamento</h1>
@@ -163,21 +184,18 @@
                 </div>
             </header>
             <div class="card">
-                <p>O calendário de consultas será implementado aqui.</p>
+                <div class="agendamento-controls">
+                    <label for="agendamento-data">Data</label>
+                    <input type="date" id="agendamento-data">
+                    <button id="btnCarregarHorarios" class="btn btn-primary">Carregar horários</button>
+                </div>
+                <div id="agendamento-list" class="agendamento-list">
+                    <p class="hint">Selecione uma data e clique em "Carregar horários".</p>
+                </div>
             </div>
         </section>
 
-        <section id="pacientes" class="tab-content">
-            <header class="header">
-                <div class="user-welcome">
-                    <h1>Meus Pacientes</h1>
-                    <p class="breadcrumb">Base de dados completa</p>
-                </div>
-            </header>
-            <div class="card">
-                <p>Lista detalhada de pacientes vindo em breve...</p>
-            </div>
-        </section>
+        <!-- Seção 'Meus Pacientes' removida -->
 
 
         <section id="configuracao" class="tab-content">
@@ -189,61 +207,136 @@
             </header>
 
             <div class="container-config">
-                <section class="visual-perfil">
-                    <div class="caixa-banner">
-                        <img id="previa-banner"
-                            src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200" alt="Banner">
-                        <label for="upload-banner" class="botao-upload-banner">
-                            <input type="file" id="upload-banner" accept="image/*" hidden>
-                            <i data-lucide="camera" style="width: 14px; margin-right: 5px;"></i> Alterar Capa
-                        </label>
-                    </div>
-
-                    <div class="caixa-avatar-perfil">
-                        <div class="avatar-wrapper">
-                            <img id="previa-avatar" src="https://cdn-icons-png.flaticon.com/512/25/25694.png"
-                                alt="Foto de Perfil">
-                            <label for="upload-avatar" class="botao-upload-avatar">
-                                <input type="file" id="upload-avatar" accept="image/*" hidden>
-                                <i data-lucide="plus" style="width: 16px;"></i>
+                <form id="formulario-config" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="clinica_config">
+                    <section class="visual-perfil">
+                        <div class="caixa-banner">
+                            {% if clinica.banner_url %}
+                                <img id="previa-banner" src="{{ clinica.banner_url }}" alt="Banner da Clínica">
+                            {% else %}
+                                <img id="previa-banner" src="{% static 'img/default-banner.jpg' %}" alt="Banner da Clínica">
+                            {% endif %}
+                            <label for="upload-banner" class="botao-upload-banner">
+                                <input type="file" id="upload-banner" name="banner" accept="image/*" hidden>
+                                <i data-lucide="camera" style="width: 14px; margin-right: 5px;"></i> Alterar Capa
                             </label>
                         </div>
-                    </div>
-                </section>
 
-                <div class="conteudo-config">
-                    <form id="formulario-config">
+                        <div class="caixa-avatar-perfil">
+                            <div class="avatar-wrapper">
+                                {% if clinica.logo_url %}
+                                    <img id="previa-avatar" src="{{ clinica.logo_url }}" alt="Logo da Clínica">
+                                {% else %}
+                                    <img id="previa-avatar" src="{% static 'img/default-avatar.svg' %}" alt="Logo da Clínica">
+                                {% endif %}
+                                <label for="upload-avatar" class="botao-upload-avatar">
+                                    <input type="file" id="upload-avatar" name="logo" accept="image/*" hidden>
+                                    <i data-lucide="plus" style="width: 16px;"></i>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="conteudo-config">
                         <div class="grade-inputs">
                             <div class="grupo-input">
-                                <label>Nome da Clínica / Profissional</label>
-                                <input type="text" id="nome" value="Clinica Lumina">
+                                <label>Nome da Clínica</label>
+                                <input type="text" name="nome" id="nome" value="{{ clinica.nome }}" required>
                             </div>
                             <div class="grupo-input">
                                 <label>E-mail de Contato</label>
-                                <input type="email" id="email" value="contato@lumina.com">
+                                <input type="email" name="email" id="email" value="{{ clinica.email }}" required>
+                            </div>
+                            <div class="grupo-input">
+                                <label>Telefone</label>
+                                <input type="text" name="telefone" id="telefone" value="{{ clinica.telefone }}" required>
                             </div>
                             <div class="grupo-input largura-total">
-                                <label>Localização (Endereço Completo)</label>
-                                <input type="text" id="localizacao" placeholder="Rua Exemplo, 123 - Centro">
+                                <label>Descrição</label>
+                                <textarea name="descricao" id="descricao" rows="3">{{ clinica.descricao }}</textarea>
                             </div>
+                            <div class="grupo-input">
+                                <label>CNPJ</label>
+                                <input type="text" name="cnpj" id="cnpj" value="{{ clinica.cnpj }}">
+                            </div>
+                            <div class="grupo-input">
+                                <label>Conta bancária</label>
+                                <input type="text" name="conta_bancaria" id="conta_bancaria" value="{{ clinica.conta_bancaria_juridica }}">
+                            </div>
+                            <div class="grupo-input">
+                                <label>Preço da consulta</label>
+                                <input type="text" name="preco_consulta" id="preco_consulta" value="{{ clinica.preco_consulta }}">
+                            </div>
+                            {% if clinica.endereco %}
+                                <div class="grupo-input largura-total">
+                                    <label>Endereço</label>
+                                    <input type="text" name="endereco_rua" id="endereco_rua" value="{{ clinica.endereco.rua }}" placeholder="Rua">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>Número</label>
+                                    <input type="text" name="endereco_numero" id="endereco_numero" value="{{ clinica.endereco.numero }}">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>Bairro</label>
+                                    <input type="text" name="endereco_bairro" id="endereco_bairro" value="{{ clinica.endereco.bairro }}">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>Cidade</label>
+                                    <input type="text" name="endereco_cidade" id="endereco_cidade" value="{{ clinica.endereco.cidade }}">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>Estado</label>
+                                    <input type="text" name="endereco_estado" id="endereco_estado" value="{{ clinica.endereco.estado }}">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>CEP</label>
+                                    <input type="text" name="endereco_cep" id="endereco_cep" value="{{ clinica.endereco.cep }}">
+                                </div>
+                            {% else %}
+                                <div class="grupo-input largura-total">
+                                    <label>Endereço</label>
+                                    <input type="text" name="endereco_rua" id="endereco_rua" value="" placeholder="Rua">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>Número</label>
+                                    <input type="text" name="endereco_numero" id="endereco_numero" value="">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>Bairro</label>
+                                    <input type="text" name="endereco_bairro" id="endereco_bairro" value="">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>Cidade</label>
+                                    <input type="text" name="endereco_cidade" id="endereco_cidade" value="">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>Estado</label>
+                                    <input type="text" name="endereco_estado" id="endereco_estado" value="">
+                                </div>
+                                <div class="grupo-input">
+                                    <label>CEP</label>
+                                    <input type="text" name="endereco_cep" id="endereco_cep" value="">
+                                </div>
+                            {% endif %}
 
                             <div class="separador-linha largura-total"></div>
 
                             <div class="grupo-input">
                                 <label>Nova Senha</label>
-                                <input type="password" id="senha" placeholder="••••••••">
+                                <input type="password" name="senha" id="senha" placeholder="••••••••">
                             </div>
                             <div class="grupo-input">
                                 <label>Confirmar Senha</label>
-                                <input type="password" id="confirmar-senha" placeholder="••••••••">
+                                <input type="password" name="confirmar_senha" id="confirmar-senha" placeholder="••••••••">
                             </div>
                         </div>
 
                         <div class="acoes-config">
                             <button type="submit" class="btn-primary">Salvar Alterações</button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </section>
 
@@ -327,7 +420,7 @@
         <div class="modal-content">
             <header class="modal-header">
                 <div class="patient-info-summary">
-                    <img src="img\1b5ef428f7403ec9d5a5818de6363ebc.jpg" id="modalAvatar"
+                            <img src="{% static 'img/1b5ef428f7403ec9d5a5818de6363ebc.jpg' %}" id="modalAvatar"
                         class="avatar-large" alt="Foto do Paciente">
                     <div>
                         <h2 id="modalName">Nome do Paciente</h2>
@@ -372,10 +465,10 @@
         </div>
     </div>
 
-    <script src="../js/painel.js"></script>
+    <script src="{% static 'js/DashboardProfissional/painel.js' %}"></script>
     <script>
         // Inicializa os ícones após o carregamento
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     </script>
 </body>
 

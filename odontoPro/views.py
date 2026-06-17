@@ -92,6 +92,27 @@ def cancelar_consulta(request, consulta_id):
     return redirect("dashboard_paciente")
 
 
+@require_POST
+def confirmar_consulta(request, consulta_id):
+    consulta = get_object_or_404(Consulta, id=consulta_id)
+
+    # Só é possível confirmar se estiver agendada
+    if consulta.status != 'agendada':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({"success": False, "error": "Só é possível confirmar consultas agendadas."}, status=400)
+        messages.error(request, "Só é possível confirmar consultas agendadas.")
+        return redirect('painel_profissional')
+
+    consulta.status = 'confirmada'
+    consulta.save()
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({"success": True, "message": "Consulta confirmada com sucesso!"})
+
+    messages.success(request, "Consulta confirmada com sucesso!")
+    return redirect('painel_profissional')
+
+
 # -------- REAGENDAR CONSULTA --------
 def reagendar_consulta(request, consulta_id):
     consulta = get_object_or_404(Consulta, id=consulta_id)
@@ -289,7 +310,7 @@ def _get_clinica_logo_url(clinica):
         if default_storage.exists(primeira.imagem.name):
             return primeira.imagem.url
 
-    return static('img/SemIcon.png')
+        return static('img/default-clinic-logo.svg')
 
 
 def dashboard_paciente(request):
@@ -415,9 +436,90 @@ def painel_profissional(request):
             return redirect('login_paciente')
         account_type = 'clinica'
 
+    # determina a clínica associada ao usuário atual
+    if account_type == 'medico':
+        clinica_obj = profissional.clinica
+    elif account_type == 'gerente':
+        clinica_obj = profissional.clinica
+    else:
+        clinica_obj = profissional
+
+    if request.method == 'POST' and request.POST.get('form_type') == 'clinica_config':
+        nome = request.POST.get('nome', '').strip()
+        email = request.POST.get('email', '').strip()
+        telefone = request.POST.get('telefone', '').strip()
+        descricao = request.POST.get('descricao', '').strip()
+        cnpj = request.POST.get('cnpj', '').strip()
+        conta_bancaria = request.POST.get('conta_bancaria', '').strip()
+        preco_consulta = request.POST.get('preco_consulta', '').strip()
+        rua = request.POST.get('endereco_rua', '').strip()
+        numero = request.POST.get('endereco_numero', '').strip()
+        bairro = request.POST.get('endereco_bairro', '').strip()
+        cidade = request.POST.get('endereco_cidade', '').strip()
+        estado = request.POST.get('endereco_estado', '').strip()
+        cep = request.POST.get('endereco_cep', '').strip()
+
+        if nome:
+            clinica_obj.nome = nome
+        if email:
+            clinica_obj.email = email
+        if telefone:
+            clinica_obj.telefone = telefone
+        clinica_obj.descricao = descricao
+        clinica_obj.cnpj = cnpj
+        clinica_obj.conta_bancaria_juridica = conta_bancaria
+        if preco_consulta:
+            try:
+                clinica_obj.preco_consulta = float(preco_consulta.replace(',', '.'))
+            except ValueError:
+                pass
+
+        if rua or numero or bairro or cidade or estado or cep:
+            endereco = clinica_obj.endereco
+            if not endereco:
+                endereco = Endereco.objects.create(cep=cep or '', numero=numero or '', rua=rua or '')
+                clinica_obj.endereco = endereco
+            endereco.rua = rua or endereco.rua
+            endereco.numero = numero or endereco.numero
+            endereco.bairro = bairro or endereco.bairro
+            endereco.cidade = cidade or endereco.cidade
+            endereco.estado = estado or endereco.estado
+            endereco.cep = cep or endereco.cep
+            endereco.save()
+
+        if request.POST.get('senha') or request.POST.get('confirmar_senha'):
+            senha = request.POST.get('senha', '').strip()
+            confirmar_senha = request.POST.get('confirmar_senha', '').strip()
+            if senha or confirmar_senha:
+                if senha != confirmar_senha:
+                    messages.error(request, 'As senhas não coincidem.')
+                    return redirect('painel_profissional')
+                clinica_obj.senha = make_password(senha)
+
+        if request.FILES.get('logo'):
+            clinica_obj.logo = request.FILES['logo']
+        if request.FILES.get('banner'):
+            clinica_obj.imagem = request.FILES['banner']
+
+        clinica_obj.save()
+        messages.success(request, 'Dados da clínica atualizados com sucesso.')
+        return redirect('painel_profissional')
+
+    now = timezone.now()
+    consultas = Consulta.objects.filter(
+        clinica=clinica_obj,
+        data_hora__gte=now
+    ).select_related('paciente', 'medico', 'especialidade').order_by('data_hora')[:12]
+
+    clinica_obj.logo_url = _get_clinica_logo_url(clinica_obj)
+    clinica_obj.banner_url = _get_clinica_imagem_url(clinica_obj)
+    clinica_obj.endereco_text = str(clinica_obj.endereco) if clinica_obj.endereco else ''
+
     return render(request, "DashboardProfissional/painel.html", {
         "profissional": profissional,
         "account_type": account_type,
+        "consultas": consultas,
+        "clinica": clinica_obj,
     })
 
 

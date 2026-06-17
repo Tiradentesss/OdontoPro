@@ -247,6 +247,21 @@ body {
     gap: 12px;
 }
 
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-outline,
+.btn-primary {
+    min-width: 90px;
+    height: 38px;
+    font-size: 0.78rem;
+    padding: 0 14px;
+}
+
 .info h3 {
     font-size: 0.95rem;
     font-weight: 600;
@@ -393,7 +408,60 @@ body {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     animation: modalSlideUp 0.3s ease-out;
 }
+.agendamento-controls {
+    display: grid;
+    grid-template-columns: 180px 1fr auto;
+    align-items: end;
+    gap: 16px;
+    margin-bottom: 20px;
+}
 
+.agendamento-controls label {
+    font-weight: 600;
+    color: #4A5568;
+}
+
+.agendamento-controls input[type="date"] {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+    background: #F8FAFC;
+    color: #1A202C;
+}
+
+.horarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+}
+
+.horario-slot {
+    background: #F1F5FF;
+    border: 1px solid #DDE8FF;
+    color: #0F4BBF;
+    padding: 14px 16px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.horario-slot:hover {
+    background: #E6EEFF;
+    transform: translateY(-1px);
+}
+
+.agendamento-list {
+    margin-top: 10px;
+}
+
+.hint {
+    color: #718096;
+    font-size: 0.95rem;
+    padding: 18px;
+    background: #F8FAFC;
+    border: 1px dashed #CBD5E0;
+    border-radius: 16px;
+}
 @keyframes modalSlideUp {
     from {
         opacity: 0;
@@ -603,7 +671,8 @@ body {
     font-weight: 500;
 }
 
-.grupo-input input {
+.grupo-input input,
+.grupo-input textarea {
     width: 100%;
     background: #f9f9f9; /* Fundo do input levemente cinza */
     border: 1px solid #ddd; /* Borda clara */
@@ -611,11 +680,18 @@ body {
     border-radius: 8px;
     color: #333; /* Texto escuro */
     transition: border-color 0.2s;
+    font-family: inherit;
 }
 
-.grupo-input input:focus {
+.grupo-input input:focus,
+.grupo-input textarea:focus {
     border-color: #007bff; /* Destaca em azul ao clicar */
     outline: none;
+}
+
+.grupo-input textarea {
+    min-height: 110px;
+    resize: vertical;
 }
 
 .separador-linha {

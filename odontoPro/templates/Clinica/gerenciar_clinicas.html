@@ -32,7 +32,7 @@
                             {% if clinica.logo %}
                                 <img src="{{ clinica.logo.url }}" alt="{{ clinica.nome }}" class="clinica-logo">
                             {% else %}
-                                <img src="{% static 'img/SemIcon.png' %}" alt="Sem logo" class="clinica-logo">
+                                <img src="{% static 'img/default-clinic-logo.svg' %}" alt="Sem logo" class="clinica-logo">
                             {% endif %}
                             <h3>{{ clinica.nome }}</h3>
                             <p>{{ clinica.telefone|default:'Telefone não informado' }}</p>

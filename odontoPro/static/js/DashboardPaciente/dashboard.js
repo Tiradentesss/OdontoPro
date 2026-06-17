@@ -556,7 +556,7 @@ function abrirModalAgendamento(clinicaId) {
             if (logoImg) {
                 logoImg.onerror = function() {
                     this.onerror = null;
-                    this.src = "/static/img/SemIcon.png";
+                    this.src = "/static/img/default-clinic-logo.svg";
                 };
 
                 if (data.logo_url) {
@@ -564,7 +564,7 @@ function abrirModalAgendamento(clinicaId) {
                 } else if (data.images && data.images.length > 0) {
                     logoImg.src = data.images[0];
                 } else {
-                    logoImg.src = "/static/img/SemIcon.png";
+                    logoImg.src = "/static/img/default-clinic-logo.svg";
                 }
             }
 
@@ -643,7 +643,7 @@ function abrirModalAgendamento(clinicaId) {
                             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
                         `;
 
-                        const foto = med.foto_url ? med.foto_url : "/static/img/SemIcon.png";
+                        const foto = med.foto_url ? med.foto_url : "/static/img/default-clinic-logo.svg";
 
                         // Buscar nomes das especialidades
                         const especialidadesNomes = [];
@@ -664,7 +664,7 @@ function abrirModalAgendamento(clinicaId) {
 
                         card.innerHTML = `
                             <img src="${foto}" 
-                                style="width:80px;height:80px;border-radius:50%;object-fit:contain;margin-bottom:10px;" onerror="this.onerror=null;this.src='/static/img/SemIcon.png';">
+                                style="width:80px;height:80px;border-radius:50%;object-fit:contain;margin-bottom:10px;" onerror="this.onerror=null;this.src='/static/img/default-clinic-logo.svg';">
                             <h4 style="margin-bottom: 5px;">Dr(a). ${med.nome}</h4>
                             ${especialidadesHtml}
                         `;
