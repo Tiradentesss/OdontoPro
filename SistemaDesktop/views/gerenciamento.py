@@ -373,7 +373,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         slots_title.grid(row=0, column=0, sticky="w", pady=(0, 12))
         
-        self.slots_grid = ctk.CTkFrame(
+        self.slots_grid = ctk.CTkScrollableFrame(
             slots_container,
             fg_color=self.colors["card_soft"],
             corner_radius=16,
@@ -384,7 +384,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         
         for i in range(4):
             self.slots_grid.grid_columnconfigure(i, weight=1)
-        self.slots_grid.grid_rowconfigure(0, weight=1)
         
         self._build_time_slots()
 

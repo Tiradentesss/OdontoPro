@@ -97,43 +97,29 @@ class ImagePreview:
 
 
 class ModernInput(ctk.CTkFrame):
-    """Componente de input padronizado com ícone e validação"""
+    """Componente de input padronizado com label em cima e validação"""
     def __init__(self, parent, label="", placeholder="", icon=None, required=False, **kwargs):
         super().__init__(parent, fg_color="transparent")
-
         self.required = required
 
+        # Label (em cima)
         label_frame = ctk.CTkFrame(self, fg_color="transparent")
-        label_frame.pack(fill="x", pady=(0, 3))
-
-        # Label alinhado ao começo (esquerda)
-        lbl = ctk.CTkLabel(
-            label_frame,
-            text=label,
-            font=font("text"),
-            text_color=COLORS["text_secondary"]
-        )
-        lbl.pack(side="left", padx=(0, 0))
-
+        label_frame.pack(fill="x", pady=(0, 2))
+        
+        # Se há ícone, adicionar padding esquerdo ao label para alinhamento com o entry
+        label_padx = (35, 0) if icon else (0, 0)
+        lbl = ctk.CTkLabel(label_frame, text=label, font=font("text"), text_color=COLORS["text_secondary"])
+        lbl.pack(side="left", padx=label_padx)
+        
         if required:
-            required_lbl = ctk.CTkLabel(
-                label_frame,
-                text="*",
-                font=font("text", "bold"),
-                text_color=COLORS["danger"]
-            )
+            required_lbl = ctk.CTkLabel(label_frame, text="*", font=font("text", "bold"), text_color=COLORS["danger"])
             required_lbl.pack(side="left", padx=(2, 0))
 
+        # Container do input
         input_container = ctk.CTkFrame(self, fg_color="transparent")
-        input_container.pack(fill="x")
-
+        input_container.pack(fill="x", pady=(2, 0))
         if icon:
-            icon_lbl = ctk.CTkLabel(
-                input_container,
-                text=icon,
-                font=font("text"),
-                width=30
-            )
+            icon_lbl = ctk.CTkLabel(input_container, text=icon, font=font("text"), width=30)
             icon_lbl.pack(side="left", padx=(0, 5))
 
         self.entry = ctk.CTkEntry(
@@ -150,7 +136,6 @@ class ModernInput(ctk.CTkFrame):
             **kwargs
         )
         self.entry.pack(side="left", fill="x", expand=True)
-
         self.entry.bind("<FocusOut>", self._validate)
 
     def _validate(self, event=None):

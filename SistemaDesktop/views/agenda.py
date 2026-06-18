@@ -1,6 +1,7 @@
 import threading
 import os
 from datetime import date
+import time
 
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont
@@ -58,6 +59,14 @@ class Agenda(BaseScreen):
         self.status_var = ctk.StringVar(value='Todos')
         self.especialidade_var = ctk.StringVar(value='Todos')
 
+        # Flag para prevenir loops de trace_add durante inicialização
+        self._trace_enabled = False
+        
+        # Proteção contra threads concorrentes
+        self._loading = False
+        self._current_thread_id = None
+        self._timeout_id = None
+
         self.data_var.trace_add('write', self.aplicar_filtros)
         self.medico_var.trace_add('write', self.aplicar_filtros)
         self.status_var.trace_add('write', self.aplicar_filtros)
@@ -71,12 +80,13 @@ class Agenda(BaseScreen):
         self.pagina_atual = 0
         self.paciente_selecionado = None
         self.current_snapshot = None
-        self._loading = False
         self._auto_refresh_ms = 10000
         self.details_panel = None
         self.row_widgets = {}
         self._update_details_pending = False
         self._detail_update_id = None
+        self._thread_count = 0
+        self._render_start_time = None
 
         self.colors = {
             'page_bg': COLORS['bg'],
@@ -111,6 +121,8 @@ class Agenda(BaseScreen):
 
         self.col_widths = {conf['key']: conf['minsize'] for conf in self.col_config}
 
+        print(f"[Agenda] __init__ concluído. Iniciando render()")
+        self._trace_enabled = True
         self.render()
         # Desabilitar auto-refresh por enquanto - causa loops infinitos
         # self.after(self._auto_refresh_ms, self._auto_check)
@@ -134,12 +146,19 @@ class Agenda(BaseScreen):
         pass
 
     def aplicar_filtros(self, *_):
+        # Prevenir execução durante inicialização
+        if not self._trace_enabled:
+            print(f"[Agenda] aplicar_filtros chamado mas trace_enabled=False, ignorando")
+            return
+
+        print(f"[Agenda] aplicar_filtros acionado")
         self.filtro_data = None if self.data_var.get() == 'Todos' else self.data_var.get()
         self.filtro_medico = None if self.medico_var.get() in ['Todos', 'Médico'] else self.medico_var.get()
         self.filtro_status = None if self.status_var.get() in ['Todos', 'Status'] else self.status_var.get()
         self.filtro_especialidade = None if self.especialidade_var.get() in ['Todos', 'Especialidade'] else self.especialidade_var.get()
 
         self.pagina_atual = 0
+        print(f"[Agenda] Filtros aplicados. Chamando refresh_data()")
         self.refresh_data()
 
     def _limpar_filtros(self):
@@ -154,28 +173,75 @@ class Agenda(BaseScreen):
         self.pagina_atual = 0
         self.refresh_data()
 
-    def _reset_loading_if_stuck(self):
-        """Desabilitado - não será mais usado"""
-        pass
-
     def _auto_check(self):
         """Auto-refresh desabilitado - usar refresh_data() manual"""
-        # Funcionalidade desabilitada por causar loops infinitos
         pass
 
     def refresh_data(self):
+        """Carrega dados em thread segura com proteção contra concorrência"""
+        print(f"\n[AGENDA] ========== REFRESH_DATA INICIADO ==========")
+        
         if self._loading:
+            print(f"[AGENDA] refresh_data: IGNORADO (já em carregamento)")
             return
+        
+        print(f"[AGENDA] refresh_data: ativando _loading")
         self._loading = True
-        thread = threading.Thread(target=self._load_data_thread, daemon=True)
+        self._thread_count += 1
+        self._current_thread_id = self._thread_count
+        thread_id = self._current_thread_id
+        
+        print(f"[AGENDA] refresh_data: iniciando thread #{thread_id}")
+        
+        def thread_wrapper():
+            print(f"[AGENDA] thread #{thread_id}: INICIADA")
+            try:
+                self._load_data_thread()
+            finally:
+                print(f"[AGENDA] thread #{thread_id}: TERMINADA")
+        
+        thread = threading.Thread(target=thread_wrapper, daemon=False)  # NÃO daemon!
         thread.start()
+        
+        # Cancelar timeout anterior se existir
+        if self._timeout_id is not None:
+            try:
+                self.after_cancel(self._timeout_id)
+                print(f"[AGENDA] refresh_data: timeout anterior cancelado")
+            except:
+                pass
+        
+        # Agendar novo timeout
+        print(f"[AGENDA] refresh_data: agendando timeout de 40s para thread #{thread_id}")
+        self._timeout_id = self.after(40000, lambda: self._timeout_loading(thread_id))
+
+    def _timeout_loading(self, thread_id):
+        """Força reset se carregamento demorar muito"""
+        print(f"\n[AGENDA] ⏱️  TIMEOUT: carregamento da thread #{thread_id} demorou > 40s")
+        
+        if self._current_thread_id == thread_id:
+            print(f"[AGENDA] ⏱️  TIMEOUT: ressetando _loading (era thread atual)")
+            self._loading = False
+            self._render_error("⏱️ Timeout: O carregamento demorou muito. Tente novamente ou verifique a conexão.")
+        else:
+            print(f"[AGENDA] ⏱️  TIMEOUT: ignorando (thread #{thread_id} não é thread atual #{self._current_thread_id})")
 
     def render(self):
+        """Renderiza tela inicial de carregamento"""
+        print(f"\n[AGENDA] ========== RENDER INICIADO ==========")
+        
         if self._loading:
+            print(f"[AGENDA] render: IGNORADO (já em carregamento)")
             return
 
+        print(f"[AGENDA] render: ativando _loading")
         self._loading = True
+        self._render_start_time = time.time()
+        self._thread_count += 1
+        self._current_thread_id = self._thread_count
+        thread_id = self._current_thread_id
 
+        print(f"[AGENDA] render: limpando widgets")
         for w in self.content_card.winfo_children():
             w.destroy()
 
@@ -201,77 +267,209 @@ class Agenda(BaseScreen):
         )
         loading_lbl.pack(padx=40, pady=28)
 
-        thread = threading.Thread(target=self._load_data_thread, daemon=True)
+        print(f"[AGENDA] render: iniciando thread #{thread_id} para carregar dados")
+        
+        def thread_wrapper():
+            print(f"[AGENDA] thread render #{thread_id}: INICIADA")
+            try:
+                self._load_data_thread()
+            finally:
+                print(f"[AGENDA] thread render #{thread_id}: TERMINADA")
+        
+        thread = threading.Thread(target=thread_wrapper, daemon=False)  # NÃO daemon!
         thread.start()
-        # Timeout de segurança
-        self.after(30000, lambda: self._reset_loading_if_stuck())
+        
+        # Cancelar timeout anterior se existir
+        if self._timeout_id is not None:
+            try:
+                self.after_cancel(self._timeout_id)
+                print(f"[AGENDA] render: timeout anterior cancelado")
+            except:
+                pass
+        
+        # Agendar novo timeout
+        print(f"[AGENDA] render: agendando timeout de 40s para thread #{thread_id}")
+        self._timeout_id = self.after(40000, lambda: self._timeout_loading(thread_id))
 
     def _load_data_thread(self):
+        """Carrega dados de consultas - GARANTE sempre resetar _loading"""
+        print(f"[AGENDA] _load_data_thread: INICIADA")
+        
         data_sql = self._get_data_sql()
-
+        consultas = None
+        total = None
+        datas = None
+        medicos = None
+        especialidades = None
+        snapshot = None
+        error_msg = None
+        
         try:
-            print(f"[Agenda] Iniciando carregamento de dados...")
-            consultas = ConsultaController.listar_por_clinica(
-                self.clinica_id,
-                pagina=self.pagina_atual,
-                limite=self.limite_por_pagina,
-                data=data_sql,
-                status=self.filtro_status,
-                medico=self.filtro_medico,
-                especialidade=self.filtro_especialidade,
-            )
-            print(f"[Agenda] Consultas carregadas: {len(consultas)}")
+            print(f"[AGENDA] _load_data_thread: analisando filtros")
+            print(f"[AGENDA]   - data={self.filtro_data}")
+            print(f"[AGENDA]   - medico={self.filtro_medico}")
+            print(f"[AGENDA]   - status={self.filtro_status}")
+            print(f"[AGENDA]   - especialidade={self.filtro_especialidade}")
             
-            total = ConsultaController.contar_por_clinica(
-                self.clinica_id,
-                data=data_sql,
-                status=self.filtro_status,
-                medico=self.filtro_medico,
-                especialidade=self.filtro_especialidade,
-            )
-            print(f"[Agenda] Total de consultas: {total}")
-
-            datas, medicos, especialidades = ConsultaController.listar_opcoes_filtro(self.clinica_id)
-            print(f"[Agenda] Opções de filtro carregadas")
+            # ============================================
+            # 1. listar_por_clinica
+            # ============================================
+            print(f"[AGENDA] → Chamando ConsultaController.listar_por_clinica()")
+            start_call = time.time()
             
-            snapshot = ConsultaController.snapshot_por_clinica(
-                self.clinica_id,
-                data=data_sql,
-                status=self.filtro_status,
-                medico=self.filtro_medico,
-                especialidade=self.filtro_especialidade,
-            )
-            print(f"[Agenda] Snapshot gerado")
+            try:
+                consultas = ConsultaController.listar_por_clinica(
+                    self.clinica_id,
+                    pagina=self.pagina_atual,
+                    limite=self.limite_por_pagina,
+                    data=data_sql,
+                    status=self.filtro_status,
+                    medico=self.filtro_medico,
+                    especialidade=self.filtro_especialidade,
+                )
+                
+                elapsed_call = time.time() - start_call
+                print(f"[AGENDA] ✓ listar_por_clinica OK ({elapsed_call:.3f}s) - retornou {len(consultas) if consultas else 'None'} registros")
+                
+                if consultas is None:
+                    raise Exception("listar_por_clinica retornou None")
+                    
+            except Exception as e:
+                elapsed_call = time.time() - start_call
+                print(f"[AGENDA] ❌ listar_por_clinica FALHOU ({elapsed_call:.3f}s): {e}")
+                import traceback
+                traceback.print_exc()
+                raise
+            
+            # ============================================
+            # 2. contar_por_clinica
+            # ============================================
+            print(f"[AGENDA] → Chamando ConsultaController.contar_por_clinica()")
+            start_call = time.time()
+            
+            try:
+                total = ConsultaController.contar_por_clinica(
+                    self.clinica_id,
+                    data=data_sql,
+                    status=self.filtro_status,
+                    medico=self.filtro_medico,
+                    especialidade=self.filtro_especialidade,
+                )
+                
+                elapsed_call = time.time() - start_call
+                print(f"[AGENDA] ✓ contar_por_clinica OK ({elapsed_call:.3f}s) - total={total}")
+                
+                if total is None:
+                    raise Exception("contar_por_clinica retornou None")
+                    
+            except Exception as e:
+                elapsed_call = time.time() - start_call
+                print(f"[AGENDA] ❌ contar_por_clinica FALHOU ({elapsed_call:.3f}s): {e}")
+                import traceback
+                traceback.print_exc()
+                raise
+            
+            # ============================================
+            # 3. listar_opcoes_filtro
+            # ============================================
+            print(f"[AGENDA] → Chamando ConsultaController.listar_opcoes_filtro()")
+            start_call = time.time()
+            
+            try:
+                datas, medicos, especialidades = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+                
+                elapsed_call = time.time() - start_call
+                print(f"[AGENDA] ✓ listar_opcoes_filtro OK ({elapsed_call:.3f}s)")
+                
+                if datas is None or medicos is None or especialidades is None:
+                    raise Exception("listar_opcoes_filtro retornou None em alguma parte")
+                    
+            except Exception as e:
+                elapsed_call = time.time() - start_call
+                print(f"[AGENDA] ❌ listar_opcoes_filtro FALHOU ({elapsed_call:.3f}s): {e}")
+                import traceback
+                traceback.print_exc()
+                raise
+            
+            # ============================================
+            # 4. snapshot_por_clinica
+            # ============================================
+            print(f"[AGENDA] → Chamando ConsultaController.snapshot_por_clinica()")
+            start_call = time.time()
+            
+            try:
+                snapshot = ConsultaController.snapshot_por_clinica(
+                    self.clinica_id,
+                    data=data_sql,
+                    status=self.filtro_status,
+                    medico=self.filtro_medico,
+                    especialidade=self.filtro_especialidade,
+                )
+                
+                elapsed_call = time.time() - start_call
+                print(f"[AGENDA] ✓ snapshot_por_clinica OK ({elapsed_call:.3f}s)")
+                
+                if snapshot is None:
+                    raise Exception("snapshot_por_clinica retornou None")
+                    
+            except Exception as e:
+                elapsed_call = time.time() - start_call
+                print(f"[AGENDA] ❌ snapshot_por_clinica FALHOU ({elapsed_call:.3f}s): {e}")
+                import traceback
+                traceback.print_exc()
+                raise
 
+            # ============================================
+            # SUCESSO: Todos os dados carregados
+            # ============================================
+            print(f"[AGENDA] ✅ TODOS OS DADOS CARREGADOS COM SUCESSO")
+            print(f"[AGENDA] → Agendando _render_after_load() no thread principal")
+            
             try:
                 self.after(0, lambda: self._render_after_load(consultas, total, datas, medicos, especialidades, snapshot))
-            except RuntimeError:
-                # Main loop pode ter terminado
-                pass
+                print(f"[AGENDA] ✓ _render_after_load agendado com sucesso")
+            except RuntimeError as e:
+                print(f"[AGENDA] ⚠️ FALHA ao agendar _render_after_load: {e}")
+                error_msg = f"Erro ao atualizar interface: {e}"
 
         except Exception as e:
+            # Qualquer erro em qualquer método do controller
             error_msg = str(e)
-            print(f"[Agenda] _load_data_thread error: {error_msg}")
+            print(f"\n[AGENDA] ❌ ERRO FATAL em _load_data_thread: {error_msg}")
             import traceback
             traceback.print_exc()
             
+            print(f"[AGENDA] → Agendando _render_error() no thread principal")
             try:
-                self.after(0, lambda msg=error_msg: self._render_error(f"Erro na carga de dados: {msg}"))
-            except RuntimeError:
-                # Main loop pode ter terminado
-                pass
+                self.after(0, lambda msg=error_msg: self._render_error(f"Falha ao carregar: {msg}"))
+                print(f"[AGENDA] ✓ _render_error agendado com sucesso")
+            except RuntimeError as e2:
+                print(f"[AGENDA] ⚠️ FALHA ao agendar _render_error: {e2}")
+        
         finally:
-            # CRÍTICO: sempre resetar o estado de carregamento
+            # ============================================
+            # CRÍTICO: SEMPRE resetar loading
+            # ============================================
+            print(f"[AGENDA] _load_data_thread: FINALIZANDO (finally block)")
+            print(f"[AGENDA] _loading antes: {self._loading}")
+            
             self._loading = False
-            print(f"[Agenda] Estado de carregamento resetado")
+            self._timeout_id = None
+            
+            print(f"[AGENDA] _loading depois: {self._loading}")
+            print(f"[AGENDA] _load_data_thread: FINALIZADA\n")
 
 
     def _render_error(self, message):
+        """Exibe erro na tela com garantia de reset"""
+        print(f"[AGENDA] _render_error: {message}")
+        
         try:
-            self._loading = False
+            print(f"[AGENDA] _render_error: destruindo widgets")
             for w in self.content_card.winfo_children():
                 w.destroy()
 
+            print(f"[AGENDA] _render_error: criando card de erro")
             wrapper = ctk.CTkFrame(self.content_card, fg_color='transparent')
             wrapper.pack(fill='both', expand=True, padx=20, pady=20)
 
@@ -279,18 +477,27 @@ class Agenda(BaseScreen):
                 wrapper,
                 fg_color=self.colors['bg_card'],
                 corner_radius=24,
-                border_width=1,
-                border_color=self.colors['border']
+                border_width=2,
+                border_color='#EF4444'
             )
             card.place(relx=0.5, rely=0.5, anchor='center')
 
             ctk.CTkLabel(
                 card,
-                text=f'Erro ao carregar agenda:\n{message}',
+                text='❌ Falha ao carregar Agenda',
                 text_color='#EF4444',
-                font=font("text", "bold"),
+                font=font("subtitle", "bold"),
                 justify='center'
-            ).pack(padx=32, pady=28)
+            ).pack(padx=32, pady=(28, 12))
+            
+            ctk.CTkLabel(
+                card,
+                text=f'{message}',
+                text_color=self.colors['text_secondary'],
+                font=font("text"),
+                justify='center',
+                wraplength=300
+            ).pack(padx=32, pady=(0, 20))
             
             # Botão para tentar novamente
             ctk.CTkButton(
@@ -301,22 +508,38 @@ class Agenda(BaseScreen):
                 text_color='white',
                 command=self.refresh_data
             ).pack(padx=32, pady=(0, 28))
+            
+            print(f"[AGENDA] _render_error: card exibido com sucesso")
+            
         except Exception as e:
-            print(f"[Agenda] Erro em _render_error: {e}")
+            print(f"[AGENDA] ❌ _render_error: ERRO ao renderizar error card: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        finally:
+            # CRÍTICO: SEMPRE garantir que loading seja False
+            print(f"[AGENDA] _render_error: finally block - resetando _loading")
             self._loading = False
 
     def _render_after_load(self, consultas, total, datas, medicos, especialidades, snapshot):
+        """Renderiza tela com dados carregados - GARANTE sempre resetar _loading"""
+        print(f"\n[AGENDA] ========== _RENDER_AFTER_LOAD INICIADA ==========")
+        
         try:
-            self._loading = False  # Resetar ANTES de renderizar
+            print(f"[AGENDA] _render_after_load: resetando _loading IMEDIATAMENTE")
+            self._loading = False
             self.current_snapshot = snapshot
 
+            print(f"[AGENDA] _render_after_load: destruindo widgets antigos")
             for w in self.content_card.winfo_children():
                 w.destroy()
 
+            print(f"[AGENDA] _render_after_load: configurando grid")
             self.content_card.grid_columnconfigure(0, weight=4)
             self.content_card.grid_columnconfigure(1, weight=1)
             self.content_card.grid_rowconfigure(0, weight=1)
 
+            print(f"[AGENDA] _render_after_load: criando frames esquerdo e direito")
             left = ctk.CTkFrame(self.content_card, fg_color='transparent')
             left.grid(row=0, column=0, sticky='nsew', padx=(20, 10), pady=20)
             left.grid_columnconfigure(0, weight=1)
@@ -327,9 +550,13 @@ class Agenda(BaseScreen):
             right.grid_columnconfigure(0, weight=1)
             self.details_panel = right
 
+            print(f"[AGENDA] _render_after_load: renderizando filtros")
             self._render_filtros(left, datas, medicos, especialidades)
+            
+            print(f"[AGENDA] _render_after_load: renderizando info")
             self._render_info_top(left, total)
 
+            print(f"[AGENDA] _render_after_load: criando tabela")
             # ==============================
             # TABELA (SEM CABEÇALHO)
             # ==============================
@@ -358,6 +585,7 @@ class Agenda(BaseScreen):
             list_area.grid_columnconfigure(0, weight=1)
 
             if not consultas:
+                print(f"[AGENDA] _render_after_load: sem consultas, exibindo empty state")
                 empty_box = ctk.CTkFrame(list_area, fg_color='transparent')
                 empty_box.grid(row=0, column=0, sticky='nsew', pady=50)
 
@@ -375,20 +603,33 @@ class Agenda(BaseScreen):
                     font=ctk.CTkFont(size=13)
                 ).pack()
             else:
+                print(f"[AGENDA] _render_after_load: renderizando {len(consultas)} linhas")
                 self._render_rows(list_area, consultas)
 
-            if self.paciente_selecionado and self.details_panel:
-                self.render_details_panel(self.details_panel)
-
+            print(f"[AGENDA] _render_after_load: renderizando paginação")
             self.render_pagination(left, total)
+            
+            print(f"[AGENDA] _render_after_load: renderizando painel de detalhes")
             self.render_details_panel(right)
+            
+            elapsed = time.time() - (self._render_start_time or time.time())
+            print(f"[AGENDA] ✅ _render_after_load CONCLUÍDA em {elapsed:.3f}s\n")
 
         except Exception as e:
-            print(f"[Agenda] _render_after_load error: {e}")
+            print(f"[AGENDA] ❌ _render_after_load ERROR: {e}")
             import traceback
             traceback.print_exc()
-            self._loading = False  # Garantir que reseta mesmo com erro
-            self._render_error(f"Falha ao renderizar agenda: {str(e)}")
+            
+            # Tentar exibir erro
+            try:
+                self._render_error(f"Falha ao renderizar agenda: {str(e)}")
+            except:
+                pass
+        
+        finally:
+            # CRÍTICO: SEMPRE garantir que loading seja False
+            print(f"[AGENDA] _render_after_load: finally block - garantindo _loading=False")
+            self._loading = False
 
     def _render_filtros(self, parent, datas, medicos, especialidades):
         filtros_card = ctk.CTkFrame(
