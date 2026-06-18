@@ -18,7 +18,7 @@
                 </a>
             </div>
             <nav class="nav-links">
-                {% if logged_in %}
+                {% if is_professional %}
                     <a href="{% url 'painel_profissional' %}" class="btn-nav">Minha Clínica</a>
                 {% else %}
                     <a href="{% url 'login_clinica' %}" class="btn-nav">Minha Clínica</a>
@@ -197,7 +197,11 @@
                         <li>🛡️ Fluxo seguro e organizado</li>
                     </ul>
                     <div class="desktop-cta">
-                        <a id="download-desktop" href="{% url 'login_clinica' %}" class="btn-primary">Acessar Painel de Gestão</a>
+                        {% if is_professional %}
+                            <a id="download-desktop" href="{% url 'painel_profissional' %}" class="btn-primary">Acessar Painel de Gestão</a>
+                        {% else %}
+                            <a id="download-desktop" href="{% url 'login_clinica' %}" class="btn-primary">Acessar Painel de Gestão</a>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="platform-preview desktop-preview">

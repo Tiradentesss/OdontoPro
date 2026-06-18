@@ -1120,11 +1120,10 @@ def home(request):
     This view renders a static marketing-like home screen. Functionality
     (downloads / redirects) can be wired later.
     """
-    logged_in = bool(
-        request.user.is_authenticated
-        or request.session.get("paciente_id")
-        or request.session.get("medico_id")
-    )
+    # Determine user type: patient vs professional/clinic
+    is_patient = bool(request.session.get("paciente_id"))
+    is_professional = bool(request.user.is_authenticated or request.session.get("medico_id"))
+    logged_in = is_patient or is_professional
 
     featured_clinics = list(
         Clinica.objects.filter(ativo=True, avaliacao__gte=4.0)
@@ -1159,6 +1158,8 @@ def home(request):
 
     return render(request, "home.html", {
         "logged_in": logged_in,
+        "is_patient": is_patient,
+        "is_professional": is_professional,
         "featured_clinics": display_featured_clinics,
     })
 

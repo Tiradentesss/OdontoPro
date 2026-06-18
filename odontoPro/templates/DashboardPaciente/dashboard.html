@@ -381,14 +381,14 @@
                 <h3>Verifique seus dados</h3>
                 <p class="subtitle">Verifique se seus dados estão corretos antes de prosseguir</p>
 
-                <input type="text" id="inputNome" name="nome" placeholder="Digite seu nome completo" required value="{{ paciente.nome|default_if_none:''|escape }}" readonly>
+                <input type="text" id="inputNome" name="nome" placeholder="Digite seu nome completo" required value="{{ paciente.nome|default_if_none:''|escape }}" {% if paciente.nome %}readonly{% endif %}>
 
                 <div class="selection-row">
                     <div class="selection-group">
                         <label class="group-title">Gênero</label>
                         <div class="radio-options">
-                            <label><input type="radio" name="gender" value="Masculino" {% if paciente.sexo|lower == 'masculino' or paciente.sexo|lower == 'm' %}checked{% endif %} disabled> Masculino</label>
-                            <label><input type="radio" name="gender" value="Feminino" {% if paciente.sexo|lower == 'feminino' or paciente.sexo|lower == 'f' %}checked{% endif %} disabled> Feminino</label>
+                            <label><input type="radio" name="gender" value="Masculino" {% if paciente.sexo|lower == 'masculino' or paciente.sexo|lower == 'm' %}checked{% endif %} {% if paciente.sexo %}disabled{% endif %}> Masculino</label>
+                            <label><input type="radio" name="gender" value="Feminino" {% if paciente.sexo|lower == 'feminino' or paciente.sexo|lower == 'f' %}checked{% endif %} {% if paciente.sexo %}disabled{% endif %}> Feminino</label>
                         </div>
                     </div>
                 </div>
@@ -401,7 +401,7 @@
                     </div>
                     <div>
                         <label>Número de Telefone</label>
-                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required value="{{ paciente.telefone|default_if_none:''|escape }}" readonly>
+                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required value="{{ paciente.telefone|default_if_none:''|escape }}" {% if paciente.telefone %}readonly{% endif %}>
                     </div>
                 </div>
 
