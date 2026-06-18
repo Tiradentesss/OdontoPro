@@ -135,6 +135,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
     filePreview(bannerInput, bannerPreview);
     filePreview(logoInput, logoPreview);
+
+    const specialtyInput = document.getElementById('especialidade_input');
+    const addSpecialtyBtn = document.getElementById('add-specialty');
+    const specialtyList = document.getElementById('specialty-list');
+
+    function updateSpecialtyPlaceholder() {
+        if (!specialtyList) return;
+        const hasItems = specialtyList.querySelectorAll('.specialty-item').length > 0;
+        const emptyMessage = specialtyList.querySelector('.specialty-empty');
+        if (hasItems) {
+            emptyMessage?.remove();
+            return;
+        }
+        if (!emptyMessage) {
+            const placeholder = document.createElement('p');
+            placeholder.className = 'specialty-empty';
+            placeholder.innerText = 'Nenhuma especialidade cadastrada.';
+            specialtyList.appendChild(placeholder);
+        }
+    }
+
+    function removeSpecialtyItem(button) {
+        const item = button.closest('.specialty-item');
+        if (!item) return;
+        item.remove();
+        updateSpecialtyPlaceholder();
+    }
+
+    function createSpecialtyItem(value) {
+        if (!specialtyList || !value) return;
+        const normalized = value.trim().toLowerCase();
+        const exists = Array.from(specialtyList.querySelectorAll('.specialty-name')).some(el => el.innerText.trim().toLowerCase() === normalized);
+        if (exists) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'specialty-item';
+
+        const span = document.createElement('span');
+        span.className = 'specialty-name';
+        span.innerText = value;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-specialty';
+        removeBtn.innerText = '-';
+        removeBtn.addEventListener('click', () => removeSpecialtyItem(removeBtn));
+
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'especialidades[]';
+        hidden.value = value;
+
+        wrapper.appendChild(span);
+        wrapper.appendChild(removeBtn);
+        wrapper.appendChild(hidden);
+        specialtyList.appendChild(wrapper);
+        updateSpecialtyPlaceholder();
+    }
+
+    if (specialtyList) {
+        specialtyList.querySelectorAll('.remove-specialty').forEach(btn => {
+            btn.addEventListener('click', () => removeSpecialtyItem(btn));
+        });
+    }
+
+    if (addSpecialtyBtn && specialtyInput) {
+        addSpecialtyBtn.addEventListener('click', () => {
+            const value = specialtyInput.value.trim();
+            if (!value) return;
+            createSpecialtyItem(value);
+            specialtyInput.value = '';
+            specialtyInput.focus();
+        });
+
+        specialtyInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSpecialtyBtn.click();
+            }
+        });
+
+        updateSpecialtyPlaceholder();
+    }
 });
 
 

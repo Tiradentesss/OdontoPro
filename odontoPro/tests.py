@@ -128,6 +128,52 @@ class LoginViewTests(TestCase):
         self.assertEqual(login_page.status_code, 200)
         self.assertTemplateUsed(login_page, 'LoginCadastro/login.html')
 
+    def test_logout_redirects_to_login_clinica_for_professional(self):
+        resp = self.client.post(reverse('login_clinica'), {'email': 'clinica@example.com', 'senha': 'clinica123'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertRedirects(resp, reverse('painel_profissional'))
+        self.assertEqual(self.client.session.get('clinica_id'), self.clinica.id)
+
+        logout_resp = self.client.post(reverse('logout'))
+        self.assertEqual(logout_resp.status_code, 302)
+        self.assertRedirects(logout_resp, reverse('login_clinica'))
+        self.assertIsNone(self.client.session.get('clinica_id'))
+        self.assertEqual(logout_resp.cookies['uid_signed']['max-age'], 0)
+
+    def test_cadastro_clinica_salva_especialidades(self):
+        logo = SimpleUploadedFile('logo3.png', b'\x89PNG\r\n\x1a\n', content_type='image/png')
+
+        response = self.client.post(
+            reverse('cadastro_clinica'),
+            {
+                'nome': 'Clinica Especialidades',
+                'descricao': 'Descrição teste',
+                'telefone': '123456789',
+                'email': 'especialidades@clinica.com',
+                'senha': '123456',
+                'confirmar_senha': '123456',
+                'cnpj': '123456789',
+                'cep': '12345678',
+                'estado': 'PA',
+                'cidade': 'Belém',
+                'bairro': 'Centro',
+                'rua': 'Rua Teste',
+                'numero': '100',
+                'especialidades': ['Ortodontia', 'Implantodontia'],
+                'logo': logo,
+            },
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, 302)
+        clinica = Clinica.objects.filter(email='especialidades@clinica.com').first()
+        self.assertIsNotNone(clinica)
+        self.assertEqual(clinica.especialidades.count(), 2)
+        self.assertSetEqual(
+            set(clinica.especialidades.values_list('nome', flat=True)),
+            {'Ortodontia', 'Implantodontia'}
+        )
+
     def test_login_wrong_password(self):
         resp = self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'wrong'})
         self.assertEqual(resp.status_code, 200)

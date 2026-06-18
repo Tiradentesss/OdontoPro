@@ -31,26 +31,9 @@
             <p class="nav-title">Área de Trabalho</p>
             <ul>
                 <li>
-                    <a href="#" class="nav-link active" data-target="painel">
-                        <i data-lucide="layout-dashboard"></i>
-                        <span>Painel</span>
-                        {% if consultas|length > 0 %}
-                            <span class="nav-badge">{{ consultas|length }}</span>
-                        {% endif %}
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="nav-link" data-target="agendamento">
-                        <i data-lucide="calendar"></i>
-                        <span>Agendamento</span>
-                    </a>
-                </li>
-                <!-- 'Meus Pacientes' removido conforme solicitado -->
-                <li>
-                    <a href="#" class="nav-link" data-target="configuracao">
+                    <a href="#" class="nav-link active" data-target="configuracao">
                         <i data-lucide="settings"></i>
                         <span>Configuração</span>
-
                     </a>
                 </li>
                 <li>
@@ -72,133 +55,7 @@
 
     <main class="main-content">
 
-        <section id="painel" class="tab-content active">
-            <header class="header">
-                <div class="user-welcome">
-                    <h1>{{ clinica.nome }}</h1>
-                    <p class="breadcrumb">Painel / Gerenciamento</p>
-                </div>
-            </header>
-
-            <section class="dashboard-grid">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Próximas Consultas</h2>
-                        <button class="text-link">Ver todos</button>
-                    </div>
-
-                    <div class="appointments-list">
-                        {% if consultas %}
-                            {% for consulta in consultas %}
-                                <div class="appointment-item" data-consulta-id="{{ consulta.id }}" data-nome="{{ consulta.nome|escapejs }}" data-horario="{{ consulta.data_hora|date:'H:i' }}">
-                                    <div class="appointment-left">
-                                        {% if consulta.paciente and consulta.paciente.foto %}
-                                            <img src="{{ consulta.paciente.foto.url }}" class="avatar">
-                                        {% else %}
-                                            <img src="{% static 'img/default-avatar.svg' %}" class="avatar">
-                                        {% endif %}
-                                        <div class="info">
-                                            {% if consulta.paciente %}
-                                                <h3>{{ consulta.paciente.nome }}</h3>
-                                            {% else %}
-                                                <h3>{{ consulta.nome }}</h3>
-                                            {% endif %}
-                                            <p>{{ consulta.data_hora|date:"d/m H:i" }}</p>
-                                        </div>
-                                    </div>
-                                    <div class="appointment-right">
-                                        <span class="badge-status">{{ consulta.get_status_display }}</span>
-                                        <div class="card-actions">
-                                            {% if consulta.status == 'agendada' or consulta.status == 'confirmada' %}
-                                                <button type="button" class="btn-outline btn-cancelar-consulta" data-consulta-id="{{ consulta.id }}">Cancelar</button>
-                                            {% endif %}
-                                            {% if consulta.status == 'agendada' %}
-                                                <button type="button" class="btn-primary btn-confirmar-consulta" data-consulta-id="{{ consulta.id }}">Confirmar</button>
-                                            {% endif %}
-                                        </div>
-                                        <i data-lucide="chevron-right" class="icon-arrow"></i>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="empty-message">Nenhuma consulta agendada.</p>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="card card-relatorio">
-                    <div class="card-header">
-                        <h2>Relatório</h2>
-                        <i data-lucide="more-horizontal" class="icon-btn-ghost"></i>
-                    </div>
-
-                    <div class="relatorio-content">
-                        <div class="chart-box">
-                            <div class="circular-chart-v2">
-                                <div class="inner-circle">
-                                    <span class="percentage">92%</span>
-                                    <span class="label">Eficiência</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <ul class="stats-list">
-                            <li>
-                                <div class="stat-info">
-                                    <span class="dot agendados"></span>
-                                    <span class="stat-name">Agendados</span>
-                                </div>
-                                <span class="stat-value">50</span>
-                            </li>
-                            <li>
-                                <div class="stat-info">
-                                    <span class="dot atendidos"></span>
-                                    <span class="stat-name">Atendidos</span>
-                                </div>
-                                <span class="stat-value">46</span>
-                            </li>
-                            <li>
-                                <div class="stat-info">
-                                    <span class="dot primeira"></span>
-                                    <span class="stat-name">Primeira vez</span>
-                                </div>
-                                <span class="stat-value">05</span>
-                            </li>
-                            <li>
-                                <div class="stat-info">
-                                    <span class="dot faltas"></span>
-                                    <span class="stat-name">Faltas</span>
-                                </div>
-                                <span class="stat-value text-red">04</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-        </section>
-        <section id="agendamento" class="tab-content" data-clinica="{{ clinica.id }}">
-            <header class="header">
-                <div class="user-welcome">
-                    <h1>Agendamento</h1>
-                    <p class="breadcrumb">Gerencie seus horários</p>
-                </div>
-            </header>
-            <div class="card">
-                <div class="agendamento-controls">
-                    <label for="agendamento-data">Data</label>
-                    <input type="date" id="agendamento-data">
-                    <button id="btnCarregarHorarios" class="btn btn-primary">Carregar horários</button>
-                </div>
-                <div id="agendamento-list" class="agendamento-list">
-                    <p class="hint">Selecione uma data e clique em "Carregar horários".</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Seção 'Meus Pacientes' removida -->
-
-
-        <section id="configuracao" class="tab-content">
+        <section id="configuracao" class="tab-content active">
             <header class="header">
                 <div class="user-welcome">
                     <h1>Configurações</h1>
@@ -255,6 +112,24 @@
                             <div class="grupo-input largura-total">
                                 <label>Descrição</label>
                                 <textarea name="descricao" id="descricao" rows="3">{{ clinica.descricao }}</textarea>
+                            </div>
+                            <div class="grupo-input largura-total">
+                                <label>Especialidades</label>
+                                <div class="specialty-input-row">
+                                    <input id="especialidade_input" type="text" placeholder="Ex: Ortodontia">
+                                    <button type="button" id="add-specialty" class="add-button">Adicionar</button>
+                                </div>
+                                <div id="specialty-list" class="specialty-list">
+                                    {% for esp in clinica.especialidades.all %}
+                                        <div class="specialty-item">
+                                            <span class="specialty-name">{{ esp.nome }}</span>
+                                            <button type="button" class="remove-specialty">-</button>
+                                            <input type="hidden" name="especialidades[]" value="{{ esp.nome }}">
+                                        </div>
+                                    {% empty %}
+                                        <p class="specialty-empty">Nenhuma especialidade cadastrada.</p>
+                                    {% endfor %}
+                                </div>
                             </div>
                             <div class="grupo-input">
                                 <label>CNPJ</label>
@@ -415,55 +290,6 @@
             </div>
         </section>
     </main>
-
-    <div id="previewModal" class="modal">
-        <div class="modal-content">
-            <header class="modal-header">
-                <div class="patient-info-summary">
-                            <img src="{% static 'img/1b5ef428f7403ec9d5a5818de6363ebc.jpg' %}" id="modalAvatar"
-                        class="avatar-large" alt="Foto do Paciente">
-                    <div>
-                        <h2 id="modalName">Nome do Paciente</h2>
-                        <p id="modalTime" class="time-label"></p>
-                    </div>
-                </div>
-                <span class="close-modal" onclick="closeModal()">&times;</span>
-            </header>
-
-            <div class="modal-body">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Procedimento</label>
-                        <p>Avaliação Geral + Limpeza</p>
-                    </div>
-                    <div class="info-item">
-                        <label>Convênio</label>
-                        <p>Unimed Odonto</p>
-                    </div>
-                    <div class="info-item">
-                        <label>Telefone</label>
-                        <p>(11) 99999-8888</p>
-                    </div>
-                    <div class="info-item">
-                        <label>Status</label>
-                        <span class="badge-success">Confirmado</span>
-                    </div>
-                </div>
-
-                <div class="modal-notes">
-                    <label>Observações</label>
-                    <p>Paciente relatou sensibilidade no molar superior direito na última consulta.</p>
-                </div>
-            </div>
-
-            <footer class="modal-footer">
-                <button class="btn-outline" onclick="closeModal()">Fechar</button>
-                <button class="btn-primary">
-                    <i data-lucide="file-text"></i> Abrir Prontuário
-                </button>
-            </footer>
-        </div>
-    </div>
 
     <script src="{% static 'js/DashboardProfissional/painel.js' %}"></script>
     <script>

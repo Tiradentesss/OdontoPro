@@ -26,6 +26,16 @@ from django.db import models
 import logging
 logger = logging.getLogger(__name__)
 
+def _parse_especialidades(post_data):
+    especialidades = []
+    for nome_esp in post_data.getlist('especialidades') + post_data.getlist('especialidades[]'):
+        nome_esp = (nome_esp or '').strip()
+        if nome_esp:
+            chave = nome_esp.lower()
+            if chave not in {e.lower() for e in especialidades}:
+                especialidades.append(nome_esp)
+    return especialidades
+
 @require_GET
 def horarios_clinica(request, clinica_id):
     data = request.GET.get("data")
@@ -496,6 +506,18 @@ def painel_profissional(request):
                     return redirect('painel_profissional')
                 clinica_obj.senha = make_password(senha)
 
+        especialidades_post = _parse_especialidades(request.POST)
+
+        existing_especialidades = {esp.nome.strip().lower(): esp for esp in clinica_obj.especialidades.all()}
+        for nome_esp in especialidades_post:
+            chave = nome_esp.strip().lower()
+            if chave not in existing_especialidades:
+                Especialidade.objects.create(clinica=clinica_obj, nome=nome_esp)
+
+        remove_names = [nome for nome in existing_especialidades if nome not in {esp.lower() for esp in especialidades_post}]
+        if remove_names:
+            Especialidade.objects.filter(clinica=clinica_obj, nome__in=remove_names).delete()
+
         if request.FILES.get('logo'):
             clinica_obj.logo = request.FILES['logo']
         if request.FILES.get('banner'):
@@ -526,9 +548,15 @@ def painel_profissional(request):
 # ---------- LOGOUT ----------
 @require_POST
 def logout_view(request):
+    is_professional = bool(
+        request.session.get('clinica_id')
+        or request.session.get('medico_id')
+        or request.session.get('gerente_id')
+    )
     request.session.flush()
     logout(request)
-    response = redirect("login_paciente")
+    target = 'login_clinica' if is_professional else 'login_paciente'
+    response = redirect(target)
     response.delete_cookie("uid_signed", path="/")
     return response
 
@@ -1375,7 +1403,7 @@ def cadastro_clinica(request):
                 imagem = logo
 
             # criar clínica
-            Clinica.objects.create(
+            clinica_obj = Clinica.objects.create(
                 nome=nome,
                 descricao=descricao,
                 telefone=telefone,
@@ -1387,6 +1415,10 @@ def cadastro_clinica(request):
                 imagem=imagem,
                 conta_bancaria_juridica=""
             )
+
+            # criar especialidades cadastradas na tela de registro
+            for nome_esp in _parse_especialidades(request.POST):
+                Especialidade.objects.create(clinica=clinica_obj, nome=nome_esp)
 
         except Exception as e:
             logger.exception("Erro ao cadastrar clínica")
