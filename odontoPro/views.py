@@ -507,14 +507,34 @@ def painel_profissional(request):
                 clinica_obj.senha = make_password(senha)
 
         especialidades_post = _parse_especialidades(request.POST)
+        precos_post = request.POST.getlist('precos_especialidades[]')
+
+        # Criar mapa de especialidades com seus preços
+        esp_preco_map = {}
+        for i, nome_esp in enumerate(especialidades_post):
+            preco = precos_post[i] if i < len(precos_post) else '0'
+            try:
+                preco_float = float(preco.replace(',', '.')) if preco else 0
+            except (ValueError, AttributeError):
+                preco_float = 0
+            esp_preco_map[nome_esp] = preco_float
 
         existing_especialidades = {esp.nome.strip().lower(): esp for esp in clinica_obj.especialidades.all()}
-        for nome_esp in especialidades_post:
+        
+        # Atualizar e criar especialidades
+        for nome_esp, preco in esp_preco_map.items():
             chave = nome_esp.strip().lower()
-            if chave not in existing_especialidades:
-                Especialidade.objects.create(clinica=clinica_obj, nome=nome_esp)
+            if chave in existing_especialidades:
+                # Atualizar preço se já existe
+                esp_obj = existing_especialidades[chave]
+                esp_obj.preco = preco
+                esp_obj.save()
+            else:
+                # Criar nova especialidade com preço
+                Especialidade.objects.create(clinica=clinica_obj, nome=nome_esp, preco=preco)
 
-        remove_names = [nome for nome in existing_especialidades if nome not in {esp.lower() for esp in especialidades_post}]
+        # Remover especialidades não listadas
+        remove_names = [nome for nome in existing_especialidades if nome not in {esp.lower() for esp in esp_preco_map.keys()}]
         if remove_names:
             Especialidade.objects.filter(clinica=clinica_obj, nome__in=remove_names).delete()
 
@@ -566,8 +586,6 @@ def logout_view(request):
 def login_clinica(request):
     if request.session.get("medico_id") or request.session.get("gerente_id") or request.session.get("clinica_id"):
         return redirect("painel_profissional")
-    if request.session.get("paciente_id"):
-        return redirect("dashboard_paciente")
 
     if request.method == "POST":
         raw_email = request.POST.get("email", "") or ""

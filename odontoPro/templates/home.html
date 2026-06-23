@@ -7,6 +7,7 @@
     <title>OdontoPlace — Home</title>
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
     <link rel="shortcut icon" href="{% static 'img/logo icon.png' %}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
     <header class="home-header">
@@ -14,7 +15,6 @@
             <div class="logo">
                 <a href="/" class="logo-link">
                     <img src="{% static 'img/logo icon.png' %}" alt="Logo" />
-                    <span class="logo-text">OdontoPlace</span>
                 </a>
             </div>
             <nav class="nav-links">
@@ -84,10 +84,6 @@
                         <span class="highlight-pill">� Experiência mobile + desktop</span>
                     </div>
 
-                    <div class="about-actions">
-                        <a href="/" class="btn-primary">Explorar plataforma</a>
-                        <a href="/" class="btn-secondary">Ver roadmap</a>
-                    </div>
                 </div>
 
                 <aside class="about-panel" aria-label="Resumo do projeto">
@@ -138,15 +134,15 @@
 
         <section class="features container">
             <div class="feature">
-                <h3>Agendamento simples</h3>
+                <h3><i class="fa-solid fa-calendar feature-icon"></i> Agendamento simples</h3>
                 <p>Marque consultas em poucos cliques e receba notificações.</p>
             </div>
             <div class="feature">
-                <h3>Multiplataforma</h3>
+                <h3><i class="fa-solid fa-globe feature-icon"></i> Multiplataforma</h3>
                 <p>App web, desktop e mobile com sincronização em tempo real.</p>
             </div>
             <div class="feature">
-                <h3>Segurança</h3>
+                <h3><i class="fa-solid fa-shield-halved feature-icon"></i> Segurança</h3>
                 <p>Dados protegidos com práticas recomendadas de segurança.</p>
             </div>
         </section>
@@ -165,11 +161,23 @@
                         </ul>
                         <div class="download-links">
                             {% if logged_in %}
-                                <a href="/dashboard-paciente/" id="link-appstore" class="store-badge">App Store</a>
-                                <a href="/dashboard-paciente/" id="link-playstore" class="store-badge">Google Play</a>
+                                <a href="/dashboard-paciente/" id="link-appstore" class="store-badge">
+                                    <img src="{% static 'img/AppStore.png' %}" alt="App Store" />
+                                    <span>App Store</span>
+                                </a>
+                                <a href="/dashboard-paciente/" id="link-playstore" class="store-badge">
+                                    <img src="{% static 'img/PlayStore.png' %}" alt="Google Play" />
+                                    <span>Google Play</span>
+                                </a>
                             {% else %}
-                                <a href="/login/?next=/dashboard-paciente/" id="link-appstore" class="store-badge">App Store</a>
-                                <a href="/login/?next=/dashboard-paciente/" id="link-playstore" class="store-badge">Google Play</a>
+                                <a href="/login/?next=/dashboard-paciente/" id="link-appstore" class="store-badge">
+                                    <img src="{% static 'img/AppStore.png' %}" alt="App Store" />
+                                    <span>App Store</span>
+                                </a>
+                                <a href="/login/?next=/dashboard-paciente/" id="link-playstore" class="store-badge">
+                                    <img src="{% static 'img/PlayStore.png' %}" alt="Google Play" />
+                                    <span>Google Play</span>
+                                </a>
                             {% endif %}
                         </div>
                     </div>
@@ -259,5 +267,6 @@
     </footer>
 
     <script defer src="{% static 'js/home.js' %}"></script>
+    <script src="{% static 'js/logo-theme-switcher.js' %}"></script>
 </body>
 </html>

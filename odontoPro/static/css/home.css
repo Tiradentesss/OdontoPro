@@ -291,9 +291,9 @@ body {
 
 .about-showcase {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: 1fr 1fr;
     gap: 24px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .about-copy,
@@ -363,12 +363,6 @@ body {
     color: var(--texto-principal);
     font-size: 12px;
     font-weight: 700;
-}
-
-.about-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
 }
 
 .about-panel {
@@ -1184,6 +1178,27 @@ body {
     z-index: 10;
 }
 
+.feature h3 {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    margin: 0 0 8px 0;
+}
+
+.feature-icon {
+    font-size: 32px;
+    color: var(--texto-principal);
+    background: none;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 .feature p {
     color: var(--texto-suave);
     margin: 8px 0 0 0;
@@ -1263,6 +1278,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     padding: 12px 18px;
     background: rgba(255, 255, 255, 0.92);
     border: 1px solid var(--cor-borda);
@@ -1277,6 +1293,16 @@ body {
     text-decoration: none;
     color: var(--texto-principal);
     font-weight: 600;
+}
+
+.store-badge img {
+    height: 24px;
+    width: auto;
+    object-fit: contain;
+}
+
+.store-badge span {
+    white-space: nowrap;
 }
 
 .store-badge:hover {
@@ -1631,11 +1657,6 @@ body:not(.theme-dark) .footer-bottom {
 
     .about-highlights {
         gap: 8px;
-    }
-
-    .about-actions {
-        display: grid;
-        grid-template-columns: 1fr;
     }
 
     .about-stat-grid {

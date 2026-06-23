@@ -147,7 +147,7 @@
                     </div>
                     <div class="field-group">
                         <label for="cnpj">CNPJ</label>
-                        <input id="cnpj" name="cnpj" type="text" placeholder="00.000.000/0001-00"/>
+                        <input id="cnpj" name="cnpj" type="text" placeholder="00.000.000/0001-00" data-mask="cnpj"/>
                     </div>
                     <div class="field-group">
                         <label for="bairro">Bairro</label>
@@ -155,7 +155,7 @@
                     </div>
                     <div class="field-group">
                         <label for="telefone">Telefone</label>
-                        <input id="telefone" name="telefone" type="tel" placeholder="(00) 00000-0000"/>
+                        <input id="telefone" name="telefone" type="tel" placeholder="(00) 00000-0000" data-mask="phone"/>
                     </div>
                 </div>
             </section>
@@ -203,6 +203,7 @@
         </div>
     </footer>
 
+    <script src="{% static 'js/masks.js' %}"></script>
     <script>
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach(input => {
@@ -285,5 +286,6 @@
             }
         });
     </script>
+    <script src="{% static 'js/logo-theme-switcher.js' %}"></script>
 </body>
 </html>

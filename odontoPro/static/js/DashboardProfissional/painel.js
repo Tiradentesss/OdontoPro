@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     filePreview(logoInput, logoPreview);
 
     const specialtyInput = document.getElementById('especialidade_input');
+    const precoSpecialtyInput = document.getElementById('preco_especialidade_input');
     const addSpecialtyBtn = document.getElementById('add-specialty');
     const specialtyList = document.getElementById('specialty-list');
 
@@ -163,9 +164,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSpecialtyPlaceholder();
     }
 
-    function createSpecialtyItem(value) {
-        if (!specialtyList || !value) return;
-        const normalized = value.trim().toLowerCase();
+    function createSpecialtyItem(nome, preco = '0') {
+        if (!specialtyList || !nome) return;
+        const normalized = nome.trim().toLowerCase();
         const exists = Array.from(specialtyList.querySelectorAll('.specialty-name')).some(el => el.innerText.trim().toLowerCase() === normalized);
         if (exists) return;
 
@@ -174,7 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const span = document.createElement('span');
         span.className = 'specialty-name';
-        span.innerText = value;
+        span.innerText = nome;
+
+        const precoFormatado = parseFloat(preco || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const priceSpan = document.createElement('span');
+        priceSpan.className = 'specialty-price';
+        priceSpan.innerText = `R$ ${precoFormatado}`;
 
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -182,14 +188,21 @@ document.addEventListener('DOMContentLoaded', () => {
         removeBtn.innerText = '-';
         removeBtn.addEventListener('click', () => removeSpecialtyItem(removeBtn));
 
-        const hidden = document.createElement('input');
-        hidden.type = 'hidden';
-        hidden.name = 'especialidades[]';
-        hidden.value = value;
+        const hiddenNome = document.createElement('input');
+        hiddenNome.type = 'hidden';
+        hiddenNome.name = 'especialidades[]';
+        hiddenNome.value = nome;
+
+        const hiddenPreco = document.createElement('input');
+        hiddenPreco.type = 'hidden';
+        hiddenPreco.name = 'precos_especialidades[]';
+        hiddenPreco.value = preco || '0';
 
         wrapper.appendChild(span);
+        wrapper.appendChild(priceSpan);
         wrapper.appendChild(removeBtn);
-        wrapper.appendChild(hidden);
+        wrapper.appendChild(hiddenNome);
+        wrapper.appendChild(hiddenPreco);
         specialtyList.appendChild(wrapper);
         updateSpecialtyPlaceholder();
     }
@@ -202,10 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (addSpecialtyBtn && specialtyInput) {
         addSpecialtyBtn.addEventListener('click', () => {
-            const value = specialtyInput.value.trim();
-            if (!value) return;
-            createSpecialtyItem(value);
+            const nome = specialtyInput.value.trim();
+            const preco = precoSpecialtyInput?.value.trim() || '0';
+            if (!nome) return;
+            createSpecialtyItem(nome, preco);
             specialtyInput.value = '';
+            precoSpecialtyInput.value = '';
             specialtyInput.focus();
         });
 

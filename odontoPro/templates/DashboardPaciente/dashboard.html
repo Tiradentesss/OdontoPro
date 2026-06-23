@@ -20,6 +20,7 @@
 </script>
 <script defer src="{% static 'js/DashboardPaciente/calendar.js' %}"></script>
 <script defer src="{% static 'js/DashboardPaciente/dashboard.js' %}"></script>
+<script defer src="{% static 'js/masks.js' %}"></script>
 </head>
 
 <body class="theme-light">
@@ -31,10 +32,6 @@
 
     <div class="seccao-logo">
         <img src="{% static 'img/logo icon.png' %}" class="logo-somente-icone" alt="OdontoPlace Logo">
-        <div class="brand-text">
-            <span class="logo-text">OdontoPlace</span>
-            <span class="logo-subtitle">Sistema de Agendamento</span>
-        </div>
     </div>
 
     <div class="itens-navegacao">
@@ -401,7 +398,7 @@
                     </div>
                     <div>
                         <label>Número de Telefone</label>
-                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required value="{{ paciente.telefone|default_if_none:''|escape }}" {% if paciente.telefone %}readonly{% endif %}>
+                        <input type="tel" id="inputTelefone" name="telefone" placeholder="(91) 99999-9999" required value="{{ paciente.telefone|default_if_none:''|escape }}" data-mask="phone" {% if paciente.telefone %}readonly{% endif %}>
                     </div>
                 </div>
 
@@ -808,12 +805,12 @@
 
                 <div class="input-grupo">
                     <label for="cpfPaciente">CPF</label>
-                    <input type="text" id="cpfPaciente" name="cpf" value="{{ paciente.cpf|default:'' }}">
+                    <input type="text" id="cpfPaciente" name="cpf" value="{{ paciente.cpf|default:'' }}" data-mask="cpf">
                 </div>
 
                 <div class="input-grupo">
                     <label for="telefonePaciente">Telefone</label>
-                    <input type="text" id="telefonePaciente" name="telefone" value="{{ paciente.telefone|default:'' }}">
+                    <input type="text" id="telefonePaciente" name="telefone" value="{{ paciente.telefone|default:'' }}" data-mask="phone">
                 </div>
 
                 <div class="input-grupo">
@@ -1111,6 +1108,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 </script>
+    <script src="{% static 'js/logo-theme-switcher.js' %}"></script>
 
 </body>
 </html>

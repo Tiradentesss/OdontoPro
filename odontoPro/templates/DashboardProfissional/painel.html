@@ -21,10 +21,6 @@
     <aside class="sidebar">
         <div class="logo-container">
             <img src="{{ default_logo }}" alt="Logo do OdontoPlace" class="logo-small">
-            <div class="brand-text">
-                <span class="logo-text">OdontoPlace</span>
-                <span class="logo-subtitle">Painel Profissional</span>
-            </div>
         </div>
 
         <nav class="nav-menu">
@@ -34,6 +30,12 @@
                     <a href="#" class="nav-link active" data-target="configuracao">
                         <i data-lucide="settings"></i>
                         <span>Configuração</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-target="assinatura">
+                        <i data-lucide="credit-card"></i>
+                        <span>Assinatura</span>
                     </a>
                 </li>
                 <li>
@@ -107,24 +109,27 @@
                             </div>
                             <div class="grupo-input">
                                 <label>Telefone</label>
-                                <input type="text" name="telefone" id="telefone" value="{{ clinica.telefone }}" required>
+                                <input type="text" name="telefone" id="telefone" value="{{ clinica.telefone }}" data-mask="phone" required>
                             </div>
                             <div class="grupo-input largura-total">
                                 <label>Descrição</label>
                                 <textarea name="descricao" id="descricao" rows="3">{{ clinica.descricao }}</textarea>
                             </div>
                             <div class="grupo-input largura-total">
-                                <label>Especialidades</label>
+                                <label>Especialidades com Preço</label>
                                 <div class="specialty-input-row">
                                     <input id="especialidade_input" type="text" placeholder="Ex: Ortodontia">
+                                    <input id="preco_especialidade_input" type="text" placeholder="Preço (R$)" data-mask="currency">
                                     <button type="button" id="add-specialty" class="add-button">Adicionar</button>
                                 </div>
                                 <div id="specialty-list" class="specialty-list">
                                     {% for esp in clinica.especialidades.all %}
                                         <div class="specialty-item">
                                             <span class="specialty-name">{{ esp.nome }}</span>
+                                            <span class="specialty-price">R$ {% if esp.preco %}{{ esp.preco|floatformat:2 }}{% else %}0,00{% endif %}</span>
                                             <button type="button" class="remove-specialty">-</button>
                                             <input type="hidden" name="especialidades[]" value="{{ esp.nome }}">
+                                            <input type="hidden" name="precos_especialidades[]" value="{{ esp.preco|default:0 }}">
                                         </div>
                                     {% empty %}
                                         <p class="specialty-empty">Nenhuma especialidade cadastrada.</p>
@@ -133,15 +138,11 @@
                             </div>
                             <div class="grupo-input">
                                 <label>CNPJ</label>
-                                <input type="text" name="cnpj" id="cnpj" value="{{ clinica.cnpj }}">
+                                <input type="text" name="cnpj" id="cnpj" value="{{ clinica.cnpj }}" data-mask="cnpj">
                             </div>
                             <div class="grupo-input">
                                 <label>Conta bancária</label>
                                 <input type="text" name="conta_bancaria" id="conta_bancaria" value="{{ clinica.conta_bancaria_juridica }}">
-                            </div>
-                            <div class="grupo-input">
-                                <label>Preço da consulta</label>
-                                <input type="text" name="preco_consulta" id="preco_consulta" value="{{ clinica.preco_consulta }}">
                             </div>
                             {% if clinica.endereco %}
                                 <div class="grupo-input largura-total">
@@ -289,13 +290,137 @@
                 </div>
             </div>
         </section>
+
+        <section id="assinatura" class="tab-content">
+            <header class="header">
+                <div class="user-welcome">
+                    <h1>Assinatura</h1>
+                    <p class="breadcrumb">Escolha o plano ideal para sua clínica</p>
+                </div>
+            </header>
+
+            <div class="subscription-container">
+                <!-- Hero Section -->
+                <div class="subscription-hero">
+                    <h2>Escolha a excelência para sua clínica</h2>
+                    <p>Potencialize seu consultório com as ferramentas mais avançadas de gestão odontológica do mercado.</p>
+                </div>
+
+                <!-- Plans Grid -->
+                <div class="subscription-grid">
+                    <!-- Main Plan -->
+                    <div class="subscription-card main-plan">
+                        <div class="plan-header">
+                            <div class="plan-info">
+                                <span class="plan-badge">MAIS POPULAR</span>
+                                <h3>Plano Profissional</h3>
+                                <p class="plan-description">Ideal para clínicas em crescimento que buscam automatização total.</p>
+                            </div>
+                            <div class="plan-price">
+                                <span class="price">R$ 149,90</span>
+                                <span class="period">/mês</span>
+                            </div>
+                        </div>
+
+                        <div class="plan-features">
+                            <div class="feature-item">
+                                <i data-lucide="check-circle" style="color: #2563eb;"></i>
+                                <span>Gestão completa de pacientes</span>
+                            </div>
+                            <div class="feature-item">
+                                <i data-lucide="check-circle" style="color: #2563eb;"></i>
+                                <span>Prontuário eletrônico ilimitado</span>
+                            </div>
+                            <div class="feature-item">
+                                <i data-lucide="check-circle" style="color: #2563eb;"></i>
+                                <span>Agenda inteligente com lembretes SMS/WhatsApp</span>
+                            </div>
+                            <div class="feature-item">
+                                <i data-lucide="check-circle" style="color: #2563eb;"></i>
+                                <span>Suporte prioritário 24/7</span>
+                            </div>
+                        </div>
+
+                        <button class="btn-subscription-primary">Assinar Agora</button>
+                        <p class="plan-footer">Sem taxas de cancelamento. Altere seu plano a qualquer momento.</p>
+                    </div>
+
+                    <!-- Side Panel -->
+                    <div class="subscription-side">
+                        <!-- Security Card -->
+                        <div class="side-card security-card">
+                            <div class="card-icon">
+                                <i data-lucide="shield-check"></i>
+                            </div>
+                            <h4>Segurança de Dados</h4>
+                            <p>Seus dados e de seus pacientes protegidos com criptografia de ponta a ponta seguindo a LGPD.</p>
+                        </div>
+
+                        <!-- Benefits Card -->
+                        <div class="side-card benefits-card">
+                            <h4>Por que assinar?</h4>
+                            <div class="benefits-list">
+                                <div class="benefit-item">
+                                    <div class="benefit-icon">
+                                        <i data-lucide="star"></i>
+                                    </div>
+                                    <div>
+                                        <p class="benefit-title">Acesso Total</p>
+                                        <p class="benefit-desc">Todas as funcionalidades liberadas sem restrições.</p>
+                                    </div>
+                                </div>
+                                <div class="benefit-item">
+                                    <div class="benefit-icon">
+                                        <i data-lucide="headphones"></i>
+                                    </div>
+                                    <div>
+                                        <p class="benefit-title">Suporte Prioritário</p>
+                                        <p class="benefit-desc">Atendimento especializado em menos de 5 minutos.</p>
+                                    </div>
+                                </div>
+                                <div class="benefit-item">
+                                    <div class="benefit-icon">
+                                        <i data-lucide="lock"></i>
+                                    </div>
+                                    <div>
+                                        <p class="benefit-title">Segurança Avançada</p>
+                                        <p class="benefit-desc">Backup automático e criptografia de nível bancário.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trust Badge -->
+                        <div class="side-card trust-badge">
+                            <div class="avatars-group">
+                                <div class="avatar"></div>
+                                <div class="avatar"></div>
+                                <div class="avatar-count">+2k</div>
+                            </div>
+                            <p>Junte-se a mais de <strong>2.000 dentistas</strong> que já transformaram sua rotina.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ Section -->
+                <div class="subscription-faq">
+                    <div class="faq-content">
+                        <h3>Ainda tem dúvidas?</h3>
+                        <p>Nossa equipe comercial está pronta para te ajudar a escolher o melhor caminho.</p>
+                    </div>
+                    <button class="btn-consultant">Falar com Consultor</button>
+                </div>
+            </div>
+        </section>
     </main>
 
+    <script src="{% static 'js/masks.js' %}"></script>
     <script src="{% static 'js/DashboardProfissional/painel.js' %}"></script>
     <script>
         // Inicializa os ícones após o carregamento
         if (typeof lucide !== 'undefined') lucide.createIcons();
     </script>
+    <script src="{% static 'js/logo-theme-switcher.js' %}"></script>
 </body>
 
 </html>
