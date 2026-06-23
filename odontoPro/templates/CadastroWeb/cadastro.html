@@ -50,14 +50,6 @@
                             <label for="descricao">Descrição</label>
                             <textarea id="descricao" name="descricao" rows="4" placeholder="Breve história e missão da sua clínica..."></textarea>
                         </div>
-                        <div class="field-group">
-                            <label for="especialidade_input">Especialidades</label>
-                            <div class="specialty-input-row">
-                                <input id="especialidade_input" type="text" placeholder="Ex: Ortodontia" />
-                                <button type="button" id="add-specialty" class="add-button">Adicionar</button>
-                            </div>
-                            <div id="specialty-list" class="specialty-list"></div>
-                        </div>
                     </div>
                     <div class="field-column">
                         <div class="field-group">
@@ -235,47 +227,6 @@
                 card.classList.remove('upload-card-hover');
                 text.innerText = 'Arquivo selecionado com sucesso!';
             });
-        });
-
-        // Especialidades: adicionar / remover
-        const addBtn = document.getElementById('add-specialty');
-        const specialtyInput = document.getElementById('especialidade_input');
-        const specialtyList = document.getElementById('specialty-list');
-
-        function createSpecialtyItem(value) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'specialty-item';
-
-            const span = document.createElement('span');
-            span.className = 'specialty-name';
-            span.innerText = value;
-
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'remove-specialty';
-            removeBtn.innerText = '-';
-
-            // hidden input for form submission
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'especialidades[]';
-            hidden.value = value;
-
-            removeBtn.addEventListener('click', () => wrapper.remove());
-
-            wrapper.appendChild(span);
-            wrapper.appendChild(removeBtn);
-            wrapper.appendChild(hidden);
-            return wrapper;
-        }
-
-        addBtn?.addEventListener('click', () => {
-            const val = specialtyInput.value.trim();
-            if (!val) return;
-            const item = createSpecialtyItem(val);
-            specialtyList.appendChild(item);
-            specialtyInput.value = '';
-            specialtyInput.focus();
         });
 
         // allow enter to add

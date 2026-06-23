@@ -1435,10 +1435,6 @@ def cadastro_clinica(request):
                 conta_bancaria_juridica=""
             )
 
-            # criar especialidades cadastradas na tela de registro
-            for nome_esp in _parse_especialidades(request.POST):
-                Especialidade.objects.create(clinica=clinica_obj, nome=nome_esp)
-
         except Exception as e:
             logger.exception("Erro ao cadastrar clínica")
             messages.error(request, f"Erro ao cadastrar clínica: {str(e)}")

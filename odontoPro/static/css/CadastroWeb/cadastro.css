@@ -273,60 +273,6 @@ select:focus {
     pointer-events: none;
 }
 
-/* Especialidades */
-.specialty-input-row {
-    display: flex;
-    gap: 12px;
-}
-
-.specialty-input-row input[type="text"] {
-    flex: 1;
-}
-
-.add-button {
-    padding: 10px 14px;
-    border-radius: 10px;
-    background: var(--primary);
-    color: var(--on-primary);
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.specialty-list {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.specialty-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    background: #fff6f6;
-    border: 1px solid rgba(220, 53, 69, 0.08);
-}
-
-.specialty-name {
-    color: var(--on-surface);
-    font-weight: 600;
-}
-
-.remove-specialty {
-    background: transparent;
-    border: none;
-    color: #b71c1c;
-    font-weight: 700;
-    font-size: 18px;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-}
 
 .form-actions {
     display: flex;

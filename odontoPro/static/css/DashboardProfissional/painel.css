@@ -596,12 +596,12 @@ body {
 }
 
 .container-config {
-    background: #FFFFFF;
-    border-radius: 12px;
-    border: 1px solid #e0e0e0;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
     overflow: hidden;
     margin-top: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Sombra leve para destacar no fundo branco */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .visual-perfil {
@@ -611,7 +611,7 @@ body {
 
 .caixa-banner {
     height: 160px;
-    background: #f0f2f5; /* Cinza bem claro */
+    background: linear-gradient(135deg, #f0f4f8 0%, #e8ecf1 100%);
     position: relative;
 }
 
@@ -625,16 +625,24 @@ body {
     position: absolute;
     top: 15px;
     right: 15px;
-    background: rgba(255, 255, 255, 0.8); /* Fundo branco translúcido */
-    color: #444; /* Texto escuro para leitura */
-    padding: 8px 12px;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #0f172a;
+    padding: 8px 14px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 12px;
     display: flex;
     align-items: center;
-    backdrop-filter: blur(4px);
-    border: 1px solid #ddd;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.botao-upload-banner:hover {
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .caixa-avatar-perfil {
@@ -653,16 +661,17 @@ body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 5px solid #FFFFFF; /* Borda branca para separar do banner */
-    background: #f8f9fa;
+    border: 4px solid #ffffff;
+    background: #f8fafc;
     object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .botao-upload-avatar {
     position: absolute;
     bottom: 5px;
     right: 0;
-    background: #007bff; /* Azul padrão do sistema */
+    background: #2563eb;
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -670,18 +679,25 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border: 3px solid #FFFFFF; /* Borda branca ao redor do botão azul */
+    border: 3px solid #ffffff;
     color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.botao-upload-avatar:hover {
+    background: #1d4ed8;
+    transform: scale(1.1);
 }
 
 .conteudo-config {
-    padding: 30px;
+    padding: 40px;
 }
 
 .grade-inputs {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 24px;
 }
 
 .largura-total {
@@ -691,13 +707,31 @@ body {
 .grupo-input label {
     display: block;
     font-size: 13px;
-    color: #666; /* Cinza médio para o label */
+    color: #0f172a;
     margin-bottom: 8px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .grupo-input input,
 .grupo-input textarea {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    padding: 12px 14px;
+    border-radius: 8px;
+    color: #0f172a;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.grupo-input input:focus,
+.grupo-input textarea:focus {
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    outline: none;
+}
     width: 100%;
     background: #f9f9f9; /* Fundo do input levemente cinza */
     border: 1px solid #ddd; /* Borda clara */
@@ -809,39 +843,47 @@ body {
 
 .separador-linha {
     height: 1px;
-    background: #eeeeee;
-    margin: 10px 0;
+    background: #e5e7eb;
+    margin: 24px 0;
 }
 
 .acoes-config {
-    margin-top: 30px;
+    margin-top: 32px;
     display: flex;
     justify-content: flex-end;
+    gap: 12px;
 }
 
-/* Garante que o botão primário seja azul */
 .acoes-config .btn-primary {
-    background: #007bff;
+    background: #2563eb;
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 12px 28px;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
-    transition: background 0.2s;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
 .acoes-config .btn-primary:hover {
-    background: #0056b3;
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.acoes-config .btn-primary:active {
+    transform: translateY(0);
 }
 
 .card-download-container {
     background: #ffffff;
-    border-radius: 12px;
-    border: 1px solid #e0e0e0;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
     margin-top: 20px;
     padding: 40px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .download-hero {
