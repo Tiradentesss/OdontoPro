@@ -766,7 +766,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
     def _create_avatar(self, nome, size):
         inicial = nome[0].upper() if nome else "?"
-        bg_color = "#4db8ff"
+        bg_color = COLORS["primary"]
         
         img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)

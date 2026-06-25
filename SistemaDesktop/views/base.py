@@ -30,11 +30,11 @@ class ActionButtons(ctk.CTkFrame):
             font=font("button_large", "bold"),
             height=32,
             width=110,
-            fg_color="#DC2626",
-            hover_color="#991B1B",
+            fg_color=COLORS["danger"],
+            hover_color=COLORS["danger"],
             text_color="white",
             border_width=2,
-            border_color="#7F1D1D",
+            border_color=COLORS["danger"],
             corner_radius=6,
             command=on_secondary
         )

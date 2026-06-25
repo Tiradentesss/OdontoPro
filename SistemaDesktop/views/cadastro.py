@@ -122,7 +122,7 @@ class Cadastro(BaseScreen):
         estilo_inativo = {
             "fg_color": "transparent",
             "text_color": self.cor_texto_inativo,
-            "hover_color": "#243756"
+            "hover_color": COLORS["hover"]
         }
 
         if ativa == "Pacientes":
@@ -666,7 +666,7 @@ class Cadastro(BaseScreen):
 
     def _mostrar_mensagem(self, mensagem, sucesso=True):
         """Exibe uma mensagem de feedback ao usuário"""
-        cor = "#10B981" if sucesso else "#EF4444"
+        cor = COLORS["success"] if sucesso else COLORS["danger"]
         msg_label = ctk.CTkLabel(
             self.content_card,
             text=mensagem,

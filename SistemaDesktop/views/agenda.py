@@ -478,14 +478,14 @@ class Agenda(BaseScreen):
                 fg_color=self.colors['bg_card'],
                 corner_radius=24,
                 border_width=2,
-                border_color='#EF4444'
+                border_color=COLORS["danger"]
             )
             card.place(relx=0.5, rely=0.5, anchor='center')
 
             ctk.CTkLabel(
                 card,
                 text='❌ Falha ao carregar Agenda',
-                text_color='#EF4444',
+                text_color=COLORS["danger"],
                 font=font("subtitle", "bold"),
                 justify='center'
             ).pack(padx=32, pady=(28, 12))
@@ -682,7 +682,7 @@ class Agenda(BaseScreen):
                 values=values,
                 height=34,
                 fg_color=COLORS['input_bg'],
-                border_color=COLORS['primary'],
+                border_color=COLORS['border'],
                 button_color=COLORS['primary'],
                 button_hover_color=COLORS['primary_dark'],
                 corner_radius=8,
@@ -702,49 +702,50 @@ class Agenda(BaseScreen):
         filtro_status.pack(side='left', expand=True, fill='x', padx=5, pady=5)
         filtro_especialidade.pack(side='left', expand=True, fill='x', padx=5, pady=5)
 
-        button_wrap = ctk.CTkFrame(linha, fg_color='transparent', width=120, height=110)
-        button_wrap.pack(side='left', padx=10, pady=(30, 5), anchor='center')
-        button_wrap.pack_propagate(False)
+        button_width = 140
+        button_wrap = ctk.CTkFrame(linha, fg_color='transparent')
+        button_wrap.pack(side='left', padx=(4, 0), pady=(12, 4), anchor='n')
+        button_wrap.pack_propagate(True)
 
         botao_limpar = ctk.CTkButton(
             button_wrap,
             text='🗑 Limpar',
-            width=120,
-            height=32,
-            fg_color='#EF4444',
-            hover_color='#DC2626',
+            width=button_width,
+            height=30,
+            fg_color=COLORS["danger"],
+            hover_color=COLORS["danger"],
             text_color='white',
             corner_radius=10,
-            font=ctk.CTkFont(size=12, weight='bold'),
+            font=ctk.CTkFont(size=11, weight='bold'),
             command=self._limpar_filtros
         )
-        botao_limpar.pack(fill='x', padx=10, pady=(6, 6))
+        botao_limpar.pack(fill='x', pady=(2, 2))
 
         botao = ctk.CTkButton(
             button_wrap,
             text='↻ Atualizar',
-            width=120,
-            height=32,
+            width=button_width,
+            height=30,
             fg_color=COLORS['primary'],
             hover_color=COLORS['primary_dark'],
             corner_radius=10,
-            font=ctk.CTkFont(size=12, weight='bold'),
+            font=ctk.CTkFont(size=11, weight='bold'),
             command=self.refresh_data
         )
-        botao.pack(fill='x', padx=10, pady=(0, 5))
+        botao.pack(fill='x', pady=(2, 2))
 
         botao_marcar = ctk.CTkButton(
             button_wrap,
-            text='➕ Marcar',
-            width=120,
+            text='➕ Marcar Consulta',
+            width=button_width,
             height=32,
-            fg_color='#10B981',
-            hover_color='#059669',
+            fg_color=COLORS["success"],
+            hover_color=COLORS["success"],
             corner_radius=10,
-            font=ctk.CTkFont(size=12, weight='bold'),
+            font=ctk.CTkFont(size=11, weight='bold'),
             command=self.abrir_dialogo_marcar_consulta
         )
-        botao_marcar.pack(fill='x', padx=10, pady=(5, 10))
+        botao_marcar.pack(fill='x', pady=(2, 2))
 
     def _render_info_top(self, parent, total):
         info_wrap = ctk.CTkFrame(parent, fg_color='transparent')
@@ -1048,7 +1049,7 @@ class Agenda(BaseScreen):
             ctk.CTkLabel(
                 card,
                 text='Consulta não encontrada.',
-                text_color='#EF4444'
+                text_color=COLORS["danger"]
             ).pack(pady=20)
             return
 
@@ -1245,7 +1246,7 @@ class Agenda(BaseScreen):
             variable=paciente_var,
             height=40,
             fg_color=COLORS['input_bg'],
-            border_color=COLORS['primary'],
+            border_color=COLORS['border'],
             button_color=COLORS['primary'],
             button_hover_color=COLORS['primary_dark'],
             corner_radius=8
@@ -1267,7 +1268,7 @@ class Agenda(BaseScreen):
             variable=medico_var,
             height=40,
             fg_color=COLORS['input_bg'],
-            border_color=COLORS['primary'],
+            border_color=COLORS['border'],
             button_color=COLORS['primary'],
             button_hover_color=COLORS['primary_dark'],
             corner_radius=8
@@ -1288,7 +1289,7 @@ class Agenda(BaseScreen):
             placeholder_text="DD/MM/YYYY",
             height=40,
             fg_color=COLORS['input_bg'],
-            border_color=COLORS['primary'],
+            border_color=COLORS['border'],
             corner_radius=8,
             textvariable=data_var
         )
@@ -1308,7 +1309,7 @@ class Agenda(BaseScreen):
             placeholder_text="HH:MM",
             height=40,
             fg_color=COLORS['input_bg'],
-            border_color=COLORS['primary'],
+            border_color=COLORS['border'],
             corner_radius=8,
             textvariable=hora_var
         )
@@ -1329,7 +1330,7 @@ class Agenda(BaseScreen):
             variable=especialidade_var,
             height=40,
             fg_color=COLORS['input_bg'],
-            border_color=COLORS['primary'],
+            border_color=COLORS['border'],
             button_color=COLORS['primary'],
             button_hover_color=COLORS['primary_dark'],
             corner_radius=8
@@ -1349,7 +1350,7 @@ class Agenda(BaseScreen):
             canvas_frame,
             height=100,
             fg_color=COLORS['input_bg'],
-            border_color=COLORS['primary'],
+            border_color=COLORS['border'],
             border_width=1,
             corner_radius=8
         )
@@ -1437,8 +1438,8 @@ class Agenda(BaseScreen):
             button_frame,
             text="✕ Cancelar",
             height=40,
-            fg_color='#EF4444',
-            hover_color='#DC2626',
+            fg_color=COLORS["danger"],
+            hover_color=COLORS["danger"],
             font=font("button", "bold"),
             command=dialogo.destroy
         )

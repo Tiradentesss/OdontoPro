@@ -326,7 +326,7 @@ class Financeiro(BaseScreen):
             text="+ Adicionar Despesa",
             font=font("small", "bold"),
             fg_color=COLORS["danger"],
-            hover_color="#991B1B",
+            hover_color=COLORS["danger"],
             text_color="white",
             height=32,
             corner_radius=6,
@@ -571,6 +571,7 @@ class Financeiro(BaseScreen):
                 variable=dia_var,
                 height=35,
                 corner_radius=6,
+                border_color=COLORS['border'],
                 font=font("text")
             )
             dia_menu.pack(fill="x", pady=(0, 10))
@@ -586,6 +587,7 @@ class Financeiro(BaseScreen):
                 variable=mes_var,
                 height=35,
                 corner_radius=6,
+                border_color=COLORS['border'],
                 font=font("text")
             )
             mes_menu.pack(fill="x", pady=(0, 10))
@@ -600,6 +602,7 @@ class Financeiro(BaseScreen):
                 variable=ano_var,
                 height=35,
                 corner_radius=6,
+                border_color=COLORS['border'],
                 font=font("text")
             )
             ano_menu.pack(fill="x", pady=(0, 15))
@@ -757,7 +760,7 @@ class Financeiro(BaseScreen):
             text="✕  Cancelar",
             font=font("button", "bold"),
             fg_color=COLORS["danger"],
-            hover_color="#DC2626",
+            hover_color=COLORS["danger"],
             text_color="white",
             height=45,
             corner_radius=8,

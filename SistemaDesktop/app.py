@@ -39,16 +39,11 @@ class App(ctk.CTk):
         self.configure(fg_color=COLORS["bg"])
         self.sidebar.configure(fg_color=COLORS["card"], border_color=COLORS["border"])
         
-        # Cores para o botão de Sair (responsivo ao tema)
-        logout_color = "#DC2626" if not get_dark_mode() else "#EF4444"
-        logout_hover = "#991B1B" if not get_dark_mode() else "#7F1D1D"
-        logout_border = "#7F1D1D" if not get_dark_mode() else "#DC2626"
-        
-        # Atualizar botão de Sair
+        # Atualizar botão de Sair com cores do tema
         self.logout_button.configure(
-            fg_color=logout_color,
-            hover_color=logout_hover,
-            border_color=logout_border
+            fg_color=COLORS["danger"],
+            hover_color=COLORS["danger"],
+            border_color=COLORS["danger"]
         )
         
         # Atualizar cores dos botões do menu
@@ -255,7 +250,7 @@ class App(ctk.CTk):
             "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
             "agenda": Agenda(self.container, self.clinica_id),
             "financeiro": Financeiro(self.container, self.clinica_id),
-            "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id),
+            "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),
             "permissao": Permissoes(self.container, self.clinica_id),

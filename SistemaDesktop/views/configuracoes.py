@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from .base import BaseScreen, ActionButtons
-from .theme import font, ICON_SIZE, COLORS
+from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode
 import os
 from PIL import Image, ImageTk, ImageDraw
 
@@ -155,12 +155,13 @@ class ModernInput(ctk.CTkFrame):
 
 
 class Configuracoes(BaseScreen):
-    def __init__(self, parent, tipo_usuario="clinica", clinica_id=None, usuario_id=None):
+    def __init__(self, parent, tipo_usuario="clinica", clinica_id=None, usuario_id=None, app=None):
         super().__init__(parent, "Configurações")
 
         self.tipo_usuario = tipo_usuario
         self.clinica_id = clinica_id
         self.usuario_id = usuario_id
+        self.app = app  # Referência à aplicação principal para alternar tema globalmente
 
         self.colors = {
             "bg_main": COLORS["content_bg"],
@@ -196,8 +197,29 @@ class Configuracoes(BaseScreen):
         self.setup_ui()
 
     def setup_ui(self):
-        self.tab_bar = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
-        self.tab_bar.pack(fill="x", padx=15, pady=(9, 0), anchor="nw")
+        # Header com tabs e botão de tema
+        header_container = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
+        header_container.pack(fill="x", padx=15, pady=(9, 0), anchor="nw")
+        header_container.pack_propagate(False)
+
+        # Tabs à esquerda
+        self.tab_bar = ctk.CTkFrame(header_container, fg_color="transparent")
+        self.tab_bar.pack(side="left", fill="x", expand=True)
+
+        # Botão de tema à direita
+        theme_btn = ctk.CTkButton(
+            header_container,
+            text="🌙",
+            width=40,
+            height=40,
+            font=ctk.CTkFont(size=18),
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
+            corner_radius=8,
+            command=self._toggle_theme_global
+        )
+        theme_btn.pack(side="right", padx=(10, 0))
+        self.theme_btn = theme_btn
 
         self._build_tabs()
 
@@ -243,6 +265,43 @@ class Configuracoes(BaseScreen):
             padx_val = (0, 5) if i < len(tabs_disponiveis) - 1 else 0
             btn.pack(side="left", padx=padx_val)
             self.tab_buttons[tab["name"]] = btn
+
+    def _toggle_theme_global(self):
+        """Alterna tema globalmente através da aplicação principal"""
+        if self.app and hasattr(self.app, 'toggle_theme'):
+            # Chamar o método da app que recria todos os frames
+            self.app.toggle_theme()
+        else:
+            # Fallback: atualizar apenas localmente
+            toggle_dark_mode()
+            self._refresh_colors_after_theme_change()
+
+    def _refresh_colors_after_theme_change(self):
+        """Atualiza as cores após alternar tema"""
+        self.colors = {
+            "bg_main": COLORS["content_bg"],
+            "bg_card": COLORS["card"],
+            "text_primary": COLORS["text"],
+            "text_secondary": COLORS["text_secondary"],
+            "text_muted": COLORS["text_muted"],
+            "accent": COLORS["primary"],
+            "accent_hover": COLORS["accent_hover"],
+            "accent_light": COLORS["accent_light"],
+            "border": COLORS["border"],
+            "border_focus": COLORS["primary"],
+            "success": COLORS["success"],
+            "error": COLORS["danger"],
+            "input_bg": COLORS["input_bg"],
+            "tab_active": COLORS["tab_active"],
+            "tab_inactive": COLORS["tab_inactive"]
+        }
+        self.theme_btn.configure(
+            fg_color=self.colors["accent"],
+            hover_color=COLORS["primary_dark"]
+        )
+        # Recarregar aba atual para aplicar novas cores
+        if hasattr(self, 'current_tab'):
+            self.switch_tab(self.current_tab)
 
     def switch_tab(self, tab_name):
         self.current_tab = tab_name
@@ -892,7 +951,7 @@ class Configuracoes(BaseScreen):
         self.logo_upload_btn.configure(
             text="✓ Logo carregada",
             fg_color=self.colors["success"],
-            hover_color="#0f9c6d",
+            hover_color=self.colors["success"],
             state="normal"
         )
 

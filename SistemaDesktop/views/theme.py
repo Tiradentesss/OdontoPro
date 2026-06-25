@@ -51,39 +51,58 @@ COLORS_LIGHT = {
 
 # Paleta de cores - Modo Escuro
 COLORS_DARK = {
-    "bg": "#0F172A",
-    "content_bg": "#1E293B",
-    "card": "#1E293B",
-    "card_soft": "#334155",
+    # Fundos
+    "bg": "#0D1117",
+    "content_bg": "#161B22",
+    "card": "#161B22",
+    "card_soft": "#21262D",
+    "bg_soft": "#161B22",
+    "bg_header": "#111827",
+    "input_bg": "#21262D",
+    "sidebar_bg": "#111827",
+    
+    # Destaques - Cyan
     "primary": "#06B6D4",
     "primary_dark": "#0891B2",
     "primary_soft": "#164E63",
     "secondary": "#3B82F6",
-    "text": "#F1F5F9",
+    
+    # Textos
+    "text": "#F8FAFC",
+    "text_primary": "#F8FAFC",
+    "text_secondary": "#CBD5E1",
+    "text_muted": "#94A3B8",
     "muted": "#94A3B8",
-    "border": "#334155",
-    "hover": "#334155",
-    "selected_row": "#1E3A4C",
+    
+    # Acentos
+    "accent": "#06B6D4",
+    "accent_hover": "#0891B2",
+    "accent_light": "#164E63",
+    
+    # Estados e Bordas
+    "border": "#30363D",
+    "hover": "#262C36",
+    "selected_row": "#083344",
+    "divider": "#30363D",
+    
+    # Abas/Tabs
+    "tab_active": "#161B22",
+    "tab_inactive": "transparent",
+    
+    # Linhas/Rows
+    "row_bg": "#161B22",
+    "row_hover": "#262C36",
+    
+    # Status
     "success": "#10B981",
-    "success_light": "#065F46",
+    "success_light": "#083B2A",
     "warning": "#F59E0B",
     "warning_light": "#78350F",
     "danger": "#EF4444",
     "danger_light": "#7F1D1D",
-    "accent": "#06B6D4",
-    "accent_hover": "#0891B2",
-    "accent_light": "#164E63",
-    "text_primary": "#F1F5F9",
-    "text_secondary": "#CBD5E1",
-    "text_muted": "#64748B",
-    "bg_soft": "#1E293B",
-    "bg_header": "#0F172A",
-    "input_bg": "#334155",
-    "tab_active": "#1E293B",
-    "tab_inactive": "transparent",
-    "row_bg": "#1E293B",
-    "row_hover": "#334155",
-    "divider": "#334155"
+    
+    # Efeitos
+    "focus": "#0E7490"
 }
 
 # Paleta ativa (começará com modo claro)
