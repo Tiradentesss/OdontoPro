@@ -8,6 +8,7 @@ import {
   ImageBackground,
 } from 'react-native';
 import CustomInput from '../components/CustomInput';
+import CustomButton3 from '../components/CustomButton3';
 import CustomButton from '../components/CustomButton';
 import { registerPatient } from '../services/api';
 

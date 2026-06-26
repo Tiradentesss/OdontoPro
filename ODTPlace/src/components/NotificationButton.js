@@ -1,9 +1,9 @@
 import React from 'react';
 import { TouchableOpacity, Image, StyleSheet } from 'react-native';
 
-export default function NotificationButton({ onPress }) {
+export default function NotificationButton({ onPress, style }) {
     return (
-        <TouchableOpacity style={styles.button} onPress={onPress} activeOpacity={0.8}>
+        <TouchableOpacity style={[styles.button, style]} onPress={onPress} activeOpacity={0.8}>
             <Image
                 source={require('../../assets/IconNotificacao.png')}
                 style={styles.icon}

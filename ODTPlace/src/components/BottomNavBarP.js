@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+const insets = useSafeAreaInsets();
 const tabs = [
     { key: 'home', label: 'Home', icon: require('../../assets/IconHome.png') },
     { key: 'schedule', label: 'Agendamentos', icon: require('../../assets/IconClipboard.png') },
@@ -10,7 +12,7 @@ const tabs = [
 
 export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {} }) {
     return (
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { paddingBottom: insets.bottom || 10 }]}>
             {tabs.map((tab) => {
                 const isActive = activeTab === tab.key;
                 return (
@@ -32,16 +34,20 @@ export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {}
 const styles = StyleSheet.create({
     bottomBar: {
         position: 'absolute',
-        left: 20,
-        right: 20,
-        bottom: 34,
-        borderRadius: 32,
-        backgroundColor: '#ffffff',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        height: 70,
+        backgroundColor: '#ffff',
+        borderRadius: 15,
         flexDirection: 'row',
-        justifyContent: 'space-around',
+        justufyContent: 'space-around',
         alignItems: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#e5e7eb',
+        paddingVertical: 10,
+        paddingHorizontal: 21,
         shadowColor: '#000',
         shadowOpacity: 0.12,
         shadowOffset: { width: 0, height: 10 },

@@ -96,7 +96,7 @@ export default function CheckEmail({ navigation, route }) {
         onPress={resendCode}
       >
         <Text
-          style={[
+          style={[0,
             styles.resend,
             { color: timer > 0 ? '#ffffff00' : '#fff' },
           ]}

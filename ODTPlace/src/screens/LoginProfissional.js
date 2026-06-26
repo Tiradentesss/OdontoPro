@@ -63,11 +63,7 @@ export default function LoginProfissional({ navigation }) {
         <Text style={styles.forgot}>Esqueceu a Senha?</Text>
       </TouchableOpacity>
 
-      <CustomButton
-        title="Entrar na Conta"
-        onPress={handleLogin}
-        style={{ width: 335, alignSelf: 'center' }}
-      />
+      <CustomButton title="Entrar na Conta" onPress={handleLogin} />
 
     <View style={styles.orContainer}>
       <View style={styles.line} />
@@ -77,6 +73,14 @@ export default function LoginProfissional({ navigation }) {
 
       <TouchableOpacity style={styles.socialButton} onPress={handleLogin} activeOpacity={0.8}>
         <Text style={styles.socialText}>Continuar com Google</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.socialButton} onPress={handleLogin} activeOpacity={0.8}>
+        <Text style={styles.socialText}>Continuar com Facebook</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('CadastroP')}>
+        <Text style={styles.signup}>Quero me cadastrar</Text>
       </TouchableOpacity>
     </LinearGradient>
   );

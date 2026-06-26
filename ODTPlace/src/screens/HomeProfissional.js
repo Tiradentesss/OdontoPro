@@ -1,262 +1,351 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  FlatList,
-  Image,
-  ScrollView,
-} from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Dimensions } from 'react-native';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
+import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
 
-import HomeHeader from '../components/HomeHeaderP';
-import BottomNavBar from '../components/BottomNavBar';
+const { width } = Dimensions.get('window');
 
-export default function HomeProfissional({ route, navigation }) {
-  const usuario = route?.params?.userName ?? 'Profissional';
+export default function HomeScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
+  
+  // 2. Consome o estado do tema e a paleta de cores dinâmica
+  const { isDarkMode, colors } = useTheme();
 
-  const [search, setSearch] = useState('');
-
-  const pacientes = [
-    {
-      id: '1',
-      nome: 'Alex Batista',
-      consulta: 'Presencial',
-      convenio: 'Particular',
-      imagem:
-        'https://randomuser.me/api/portraits/men/32.jpg',
-    },
-    {
-      id: '2',
-      nome: 'Eduarda Maria',
-      consulta: 'Online',
-      convenio: 'Amil',
-      imagem:
-        'https://randomuser.me/api/portraits/women/44.jpg',
-    },
-    {
-      id: '3',
-      nome: 'Hugo Pontes',
-      consulta: 'Presencial',
-      convenio: 'Unimed',
-      imagem:
-        'https://randomuser.me/api/portraits/men/11.jpg',
-    },
-  ];
+  const nextAppointment = {
+    patient: "Luciana Alencar",
+    procedure: "Manutenção de Aparelho",
+    time: "14:30",
+    date: "Hoje, 27 de Maio",
+    avatarColor: isDarkMode ? '#1E3A8A' : '#EFF6FF',
+    textColor: isDarkMode ? '#60A5FA' : '#163783'
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <HomeHeader
-        usuario={usuario}
-        search={search}
-        setSearch={setSearch}
-        onBellPress={() => navigation.navigate('Notifications')}
-        onFilterPress={() => {}}
+    <View style={[styles.container, { backgroundColor: colors.container }]}>
+      <StatusBar 
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'} 
+        backgroundColor={colors.container} 
+        translucent={false} 
       />
-
-      <ScrollView
+      
+      <ScrollView 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.scrollContent, 
+          { paddingTop: Platform.OS === 'android' ? insets.top + 16 : 16 }
+        ]}
       >
-        {/* MÉTRICAS */}
-        <View style={styles.metricsRow}>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricNumber}>50</Text>
-            <Text style={styles.metricLabel}>Pacientes</Text>
+        
+        {/* Cabeçalho */}
+        <View style={styles.header}>
+          <View style={styles.textGroup}>
+            <Text style={[styles.greeting, { color: colors.text }]}>Olá, Gabriel</Text>
+            <Text style={styles.subtitle}>Veja o panorama e a agenda da sua clínica para hoje.</Text>
           </View>
-
-          <View style={styles.metricCard}>
-            <Text style={styles.metricNumber}>23</Text>
-            <Text style={styles.metricLabel}>Consultas</Text>
-          </View>
-
-          <View style={styles.metricCard}>
-            <Text style={styles.metricNumber}>92%</Text>
-            <Text style={styles.metricLabel}>Avaliação</Text>
-          </View>
-        </View>
-
-        {/* GRÁFICO */}
-        <Text style={styles.sectionTitle}>
-          Consultas da Semana
-        </Text>
-
-        <View style={styles.graphCard}>
-          <View style={styles.fakeGraph}>
-            <View style={styles.graphLine} />
-          </View>
-        </View>
-
-        {/* PACIENTES */}
-        <Text style={styles.sectionTitle}>
-          Pacientes recentes
-        </Text>
-
-        {pacientes.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            style={styles.patientCard}
-            activeOpacity={0.85}
+          
+          <TouchableOpacity 
+            style={[styles.notificationBtn, { backgroundColor: colors.card, borderColor: colors.border }]} 
+            activeOpacity={0.6}
+            onPress={() => navigation?.navigate('NotificationsScreen')}
           >
-            <Image
-              source={{ uri: item.imagem }}
-              style={styles.avatar}
-            />
+            <Feather name="bell" size={20} color={colors.text} />
+            <View style={styles.badge} />
+          </TouchableOpacity>
+        </View>
 
-            <View style={styles.patientInfo}>
-              <Text style={styles.patientName}>
-                {item.nome}
-              </Text>
+        {/* Grade de Ações Principais */}
+        <View style={styles.actionGrid}>
+          <TouchableOpacity 
+            style={[styles.gridCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => navigation?.navigate('AgendaTab')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.gridIconBg, { backgroundColor: isDarkMode ? '#1E3A8A' : '#EFF6FF' }]}>
+              <Feather name="calendar" size={20} color={isDarkMode ? '#60A5FA' : '#163783'} />
+            </View>
+            <Text style={[styles.gridCardTitle, { color: colors.text }]}>Agenda</Text>
+          </TouchableOpacity>
 
-              <Text style={styles.patientText}>
-                Convênio: {item.convenio}
-              </Text>
+          <TouchableOpacity 
+            style={[styles.gridCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => navigation?.navigate('ReportsScreen')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.gridIconBg, { backgroundColor: isDarkMode ? '#064E3B' : '#F0FDF4' }]}>
+              <Feather name="bar-chart-2" size={20} color={isDarkMode ? '#34D399' : '#10B981'} />
+            </View>
+            <Text style={[styles.gridCardTitle, { color: colors.text }]}>Relatórios</Text>
+          </TouchableOpacity>
 
-              <Text style={styles.patientText}>
-                Consulta: {item.consulta}
+          <TouchableOpacity 
+            style={[styles.gridCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => navigation?.navigate('PatientsScreen')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.gridIconBg, { backgroundColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
+              <Feather name="users" size={20} color={isDarkMode ? '#94A3B8' : '#475569'} />
+            </View>
+            <Text style={[styles.gridCardTitle, { color: colors.text }]}>Pacientes</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Próximo Atendimento */}
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Próximo Atendimento</Text>
+        <TouchableOpacity 
+          style={[styles.reminderCard, { backgroundColor: colors.card, borderColor: colors.border }]} 
+          activeOpacity={0.8}
+          onPress={() => navigation?.navigate('AgendaTab')}
+        >
+          <View style={styles.reminderHeader}>
+            <View style={[styles.avatarPlaceholder, { backgroundColor: nextAppointment.avatarColor }]}>
+              <Text style={[styles.avatarText, { color: nextAppointment.textColor }]}>
+                {nextAppointment.patient.charAt(0)}
               </Text>
             </View>
+            <View style={styles.reminderInfo}>
+              <Text style={[styles.patientName, { color: colors.text }]}>{nextAppointment.patient}</Text>
+              <Text style={styles.procedureName}>{nextAppointment.procedure}</Text>
+            </View>
+            <View style={[styles.timeTag, { backgroundColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
+              <Text style={[styles.timeTagText, { color: colors.text }]}>{nextAppointment.time}</Text>
+            </View>
+          </View>
+          
+          <View style={[styles.reminderFooter, { borderColor: colors.border }]}>
+            <Feather name="clock" size={12} color="#64748B" style={{ marginRight: 6 }} />
+            <Text style={styles.reminderFooterText}>{nextAppointment.date}</Text>
+          </View>
+        </TouchableOpacity>
 
-            <Text style={styles.more}>⋮</Text>
-          </TouchableOpacity>
-        ))}
+        {/* Destaques da Clínica */}
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Destaques da Clínica</Text>
+        <View style={[styles.insightsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.insightRow}>
+            <View style={[styles.insightIconWrapper, { backgroundColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
+              <MaterialCommunityIcons name="account-group-outline" size={20} color={isDarkMode ? '#94A3B8' : '#475569'} />
+            </View>
+            <View style={styles.insightBody}>
+              <Text style={[styles.insightTitle, { color: colors.text }]}>Volume de Pacientes</Text>
+              <Text style={styles.insightMeta}>142 ativos em tratamento contínuo</Text>
+            </View>
+            <View style={[styles.statusBadge, { backgroundColor: isDarkMode ? '#064E3B' : '#F0FDF4' }]}>
+              <Text style={[styles.statusText, { color: isDarkMode ? '#34D399' : '#16A34A' }]}>Estável</Text>
+            </View>
+          </View>
+
+          <View style={[styles.insightDivider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.insightRow}>
+            <View style={[styles.insightIconWrapper, { backgroundColor: isDarkMode ? '#0C4A6E' : '#E0F2FE' }]}>
+              <MaterialCommunityIcons name="currency-usd" size={20} color={isDarkMode ? '#38BDF8' : '#0369A1'} />
+            </View>
+            <View style={styles.insightBody}>
+              <Text style={[styles.insightTitle, { color: colors.text }]}>Balanço Estimado do Mês</Text>
+              <Text style={styles.insightMeta}>Metas de fechamento alinhadas com o esperado</Text>
+            </View>
+            <View style={[styles.statusBadge, { backgroundColor: isDarkMode ? '#0C4A6E' : '#E0F2FE' }]}>
+              <Text style={[styles.statusText, { color: isDarkMode ? '#38BDF8' : '#0369A1' }]}>+14%</Text>
+            </View>
+          </View>
+
+          <View style={[styles.insightDivider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.insightRow}>
+            <View style={[styles.insightIconWrapper, { backgroundColor: isDarkMode ? '#4C1D95' : '#FFF7ED' }]}>
+              <MaterialCommunityIcons name="lightbulb-on-outline" size={20} color={isDarkMode ? '#C084FC' : '#EA580C'} />
+            </View>
+            <View style={styles.insightBody}>
+              <Text style={[styles.insightTitle, { color: colors.text }]}>Oportunidade de Retenção</Text>
+              <Text style={styles.insightMeta}>3 pacientes não retornam há mais de 6 meses.</Text>
+            </View>
+          </View>
+        </View>
+
       </ScrollView>
-
-      <BottomNavBar
-        activeTab="home"
-        onTabPress={(tab) => {
-          if (tab === 'schedule') {
-            navigation.navigate('Schedule');
-          } else if (tab === 'settings') {
-            navigation.navigate('Settings');
-          } else if (tab === 'notifications') {
-            navigation.navigate('Notifications');
-          }
-        }}
-      />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f7fb',
   },
-
-  content: {
-    padding: 20,
-    paddingBottom: 140,
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 140, 
   },
-
-  metricsRow: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 28,
+    alignItems: 'flex-start',
+    marginBottom: 24,
   },
-
-  metricCard: {
-    width: '31%',
-    backgroundColor: '#fff',
-    borderRadius: 22,
-    paddingVertical: 20,
-    alignItems: 'center',
-
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 10,
-    elevation: 4,
+  textGroup: {
+    flex: 1,
+    paddingRight: 16,
   },
-
-  metricNumber: {
-    fontSize: 24,
+  greeting: {
+    fontSize: 26,
     fontWeight: '800',
-    color: '#0a247c',
+    letterSpacing: -0.5,
   },
-
-  metricLabel: {
-    marginTop: 6,
-    color: '#64748b',
+  subtitle: {
     fontSize: 13,
+    color: '#64748B', 
+    marginTop: 4,
+    fontWeight: '500',
+    lineHeight: 18,
+    letterSpacing: -0.1,
   },
-
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#111827',
-    marginBottom: 18,
+  notificationBtn: {
+    padding: 10,
+    borderRadius: 12,
+    position: 'relative',
+    borderWidth: 1,
+    marginTop: 2,
   },
-
-  graphCard: {
-    backgroundColor: '#fff',
-    borderRadius: 28,
-    padding: 20,
-    marginBottom: 30,
-
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-    elevation: 4,
+  badge: {
+    position: 'absolute',
+    top: 9,
+    right: 10,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#EF4444', 
   },
-
-  fakeGraph: {
-    height: 180,
+  actionGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+    marginTop: 4,
+  },
+  gridCard: {
+    width: (width - 64) / 3, 
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  gridIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 8,
   },
-
-  graphLine: {
-    width: '100%',
-    height: 6,
-    borderRadius: 20,
-    backgroundColor: '#1bc4eb',
+  gridCardTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: -0.1,
   },
-
-  patientCard: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 24,
+    marginBottom: 12,
+    letterSpacing: -0.2,
+  },
+  reminderCard: {
+    borderRadius: 16,
     padding: 16,
+    borderWidth: 1,
+  },
+  reminderHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 10,
-    elevation: 4,
   },
-
-  avatar: {
-    width: 68,
-    height: 68,
-    borderRadius: 18,
-    marginRight: 14,
+  avatarPlaceholder: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-
-  patientInfo: {
+  avatarText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  reminderInfo: {
     flex: 1,
   },
-
   patientName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1565d8',
-    marginBottom: 4,
+    fontSize: 15,
+    fontWeight: '700',
   },
-
-  patientText: {
-    color: '#333',
-    fontSize: 14,
-    marginBottom: 2,
+  procedureName: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
+    marginTop: 1,
   },
-
-  more: {
-    fontSize: 26,
-    color: '#1565d8',
-    marginBottom: 20,
+  timeTag: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  timeTagText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  reminderFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    marginTop: 14,
+    paddingTop: 12,
+  },
+  reminderFooterText: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  insightsCard: {
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+  },
+  insightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  insightIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  insightBody: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  insightTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  insightMeta: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '500',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  insightDivider: {
+    height: 1,
   },
 });
