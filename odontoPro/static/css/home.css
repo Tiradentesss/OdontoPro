@@ -5,9 +5,9 @@
     --branco: #FFFFFF;
     --texto-principal: #0F172A;
     --texto-suave: #64748B;
-    --azul-claro: #4db8ff;
-    --azul-claro-escuro: #1BC3EA;
-    --gradiente-azul: linear-gradient(135deg, #4db8ff 0%, #1BC3EA 100%);
+    --azul-claro: #1bc3ea;
+    --azul-claro-escuro: #1bc3ea;
+    --gradiente-azul: linear-gradient(135deg, #1bc3ea 0%, #1bc3ea 100%);
     --cor-borda: #E5E7EB;
     --verde-sucesso: #22C55E;
     --texto-secundario: #94A3B8;
@@ -22,9 +22,9 @@
     --branco: #162135;
     --texto-principal: #E2E8F0;
     --texto-suave: #94A3B8;
-    --azul-claro: #60A5FA;
-    --azul-claro-escuro: #3B82F6;
-    --gradiente-azul: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+    --azul-claro: #1bc3ea;
+    --azul-claro-escuro: #1bc3ea;
+    --gradiente-azul: linear-gradient(135deg, #1bc3ea 0%, #1bc3ea 100%);
     --cor-borda: rgba(255,255,255,0.14);
     --verde-sucesso: #22C55E;
     --texto-secundario: #94A3B8;
@@ -59,14 +59,14 @@
 }
 
 .theme-dark .platform-tag {
-    background: rgba(96, 165, 250, 0.2);
-    color: #BFDBFE;
+    background: rgba(27, 195, 234, 0.2);
+    color: #1bc3ea;
 }
 
 .theme-dark .mini-card {
     background: rgba(15, 23, 42, 0.82);
     color: #E2E8F0;
-    border-color: rgba(96, 165, 250, 0.24);
+    border-color: rgba(27, 195, 234, 0.24);
 }
 
 * { box-sizing: border-box; }
@@ -118,8 +118,9 @@ body {
 }
 
 .home-header .logo img {
-    height: 36px;
-}
+        height: 48px;
+        width: auto;
+    }
 
 .home-header .logo-text {
     font-weight: 700;
@@ -315,8 +316,8 @@ body {
     margin: 0 0 12px;
     padding: 5px 10px;
     border-radius: 999px;
-    background: rgba(77, 184, 255, 0.14);
-    color: #0284C7;
+    background: rgba(27, 195, 234, 0.14);
+    color: #1bc3ea;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.12em;
@@ -339,8 +340,8 @@ body {
 .about-copy .about-quote {
     padding: 14px 16px;
     border-radius: 16px;
-    background: linear-gradient(180deg, rgba(77, 184, 255, 0.11), rgba(59, 130, 246, 0.08));
-    border: 1px solid rgba(77, 184, 255, 0.22);
+    background: linear-gradient(180deg, rgba(27, 195, 234, 0.11), rgba(27, 195, 234, 0.08));
+    border: 1px solid rgba(27, 195, 234, 0.22);
     color: var(--texto-principal);
     margin: 16px 0 18px;
 }
@@ -376,8 +377,8 @@ body {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at top left, rgba(77, 184, 255, 0.18), transparent 32%),
-        radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 36%);
+        radial-gradient(circle at top left, rgba(27, 195, 234, 0.18), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(27, 195, 234, 0.12), transparent 36%);
     pointer-events: none;
 }
 
@@ -495,7 +496,7 @@ body {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(77, 184, 255, 0.3);
+    box-shadow: 0 8px 16px rgba(27, 195, 234, 0.3);
 }
 
 .btn-secondary {
@@ -534,7 +535,7 @@ body {
 
 .theme-dark .download-shell {
     background: rgba(22, 33, 53, 0.78);
-    border-color: rgba(96, 165, 250, 0.16);
+    border-color: rgba(27, 195, 234, 0.16);
 }
 
 .download-hero {
@@ -549,8 +550,8 @@ body {
     align-items: center;
     padding: 6px 10px;
     border-radius: 999px;
-    background: rgba(77, 184, 255, 0.12);
-    color: #0f6f96;
+    background: rgba(27, 195, 234, 0.12);
+    color: #1bc3ea;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -558,8 +559,8 @@ body {
 }
 
 .theme-dark .download-eyebrow {
-    background: rgba(96, 165, 250, 0.16);
-    color: #BFDBFE;
+    background: rgba(27, 195, 234, 0.16);
+    color: #1bc3ea;
 }
 
 .download-hero-copy h1 {
@@ -686,9 +687,9 @@ body {
 }
 
 .download-status-badge.platform {
-    background: rgba(77, 184, 255, 0.14);
-    color: #0b79b6;
-    border-color: rgba(77, 184, 255, 0.2);
+    background: rgba(27, 195, 234, 0.14);
+    color: #1bc3ea;
+    border-color: rgba(27, 195, 234, 0.2);
 }
 
 .theme-dark .download-status-badge.unavailable {
@@ -696,7 +697,7 @@ body {
 }
 
 .theme-dark .download-status-badge.platform {
-    color: #BFDBFE;
+    color: #1bc3ea;
 }
 
 .download-cta-row {
@@ -846,7 +847,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    border: 1px solid rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(27, 195, 234, 0.12);
 }
 
 .preview-stat-icon {
@@ -855,7 +856,7 @@ body {
     border-radius: 50%;
     display: inline-grid;
     place-items: center;
-    background: linear-gradient(180deg, #4db8ff, #1BC3EA);
+    background: linear-gradient(180deg, #1bc3ea, #1bc3ea);
     color: #fff;
     font-size: 12px;
 }
@@ -889,7 +890,7 @@ body {
 
 .theme-dark .download-card {
     background: rgba(22, 33, 53, 0.78);
-    border-color: rgba(96, 165, 250, 0.16);
+    border-color: rgba(27, 195, 234, 0.16);
 }
 
 .download-card-top {
@@ -900,7 +901,7 @@ body {
 
 .download-card-tag {
     margin: 0;
-    color: #0f6f96;
+    color: #1bc3ea;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -914,8 +915,8 @@ body {
 
 .download-placeholder {
     border-radius: 22px;
-    border: 1px dashed rgba(77, 184, 255, 0.5);
-    background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(241,248,255,0.9));
+    border: 1px dashed rgba(27, 195, 234, 0.5);
+    background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(27, 195, 234, 0.15));
     padding: 18px;
     display: flex;
     flex-direction: column;
@@ -924,7 +925,7 @@ body {
 
 .theme-dark .download-placeholder {
     background: linear-gradient(180deg, rgba(18, 31, 52, 0.9), rgba(8, 15, 25, 0.88));
-    border-color: rgba(96, 165, 250, 0.24);
+    border-color: rgba(27, 195, 234, 0.24);
 }
 
 .download-placeholder-icon {
@@ -933,7 +934,7 @@ body {
     border-radius: 10px;
     display: inline-grid;
     place-items: center;
-    background: linear-gradient(180deg, #4db8ff, #1BC3EA);
+    background: linear-gradient(180deg, #1bc3ea, #1bc3ea);
     color: #fff;
     font-size: 16px;
 }
@@ -984,12 +985,12 @@ body {
     border-radius: 14px;
     padding: 12px 13px;
     background: rgba(248, 250, 252, 0.85);
-    border: 1px solid rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(27, 195, 234, 0.1);
 }
 
 .theme-dark .download-info-list li {
     background: rgba(12, 18, 30, 0.72);
-    border-color: rgba(96, 165, 250, 0.16);
+    border-color: rgba(27, 195, 234, 0.16);
 }
 
 .info-label {
@@ -1022,12 +1023,12 @@ body {
     border-radius: 16px;
     padding: 12px 13px;
     background: rgba(248, 250, 252, 0.9);
-    border: 1px solid rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(27, 195, 234, 0.1);
 }
 
 .theme-dark .download-feature-item {
     background: rgba(12, 18, 30, 0.72);
-    border-color: rgba(96, 165, 250, 0.16);
+    border-color: rgba(27, 195, 234, 0.16);
 }
 
 .feature-icon {
@@ -1038,7 +1039,7 @@ body {
     place-items: center;
     flex-shrink: 0;
     margin-top: 2px;
-    background: linear-gradient(180deg, #4db8ff, #1BC3EA);
+    background: linear-gradient(180deg, #1bc3ea, #1BC3EA);
     color: #fff;
     font-size: 11px;
 }
@@ -1244,8 +1245,8 @@ body {
     align-items: center;
     padding: 4px 10px;
     border-radius: 999px;
-    background: rgba(77, 184, 255, 0.12);
-    color: #0284C7;
+    background: rgba(27, 195, 234, 0.12);
+    color: #1bc3ea;
     font-size: 12px;
     font-weight: 700;
     margin: 0 0 12px !important;
@@ -1466,7 +1467,7 @@ body {
 }
 
 .footer-section ul li a:hover {
-    color: #60A5FA;
+    color: #1bc3ea;
 }
 
 .footer-bottom {
@@ -1503,7 +1504,7 @@ body:not(.theme-dark) .footer-bottom {
 }
 
 body:not(.theme-dark) .footer-section ul li a:hover {
-    color: #4db8ff;
+    color: #1bc3ea;
 }
 
 body:not(.theme-dark) .footer-bottom {
@@ -1516,7 +1517,7 @@ body:not(.theme-dark) .footer-bottom {
 .theme-dark .about-stat-card,
 .theme-dark .about-step {
     background: rgba(22, 33, 53, 0.84);
-    border-color: rgba(96, 165, 250, 0.24);
+    border-color: rgba(27, 195, 234, 0.24);
 }
 
 .theme-dark .about-copy p,
@@ -1531,7 +1532,7 @@ body:not(.theme-dark) .footer-bottom {
 
 .theme-dark .about-copy .about-quote {
     background: rgba(14, 53, 96, 0.38);
-    border-color: rgba(96, 165, 250, 0.26);
+    border-color: rgba(27, 195, 234, 0.26);
 }
 
 /* Responsive */

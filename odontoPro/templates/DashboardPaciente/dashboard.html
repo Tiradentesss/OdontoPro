@@ -5,12 +5,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard do Paciente - OdontoPlace</title>
+    <title>Dashboard do Paciente - OdontoHub</title>
 
     <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/DashboardPaciente/dashboardresponsivo.css' %}">
     <link rel="stylesheet" href="{% static 'css/DashboardPaciente/calendar.css' %}">
-    <link rel="shortcut icon" href="{% static 'img/logo icon.png' %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'img/Icon Transparente.png' %}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
@@ -31,7 +31,12 @@
     </button>
 
     <div class="seccao-logo">
-        <img src="{% static 'img/logo icon.png' %}" class="logo-somente-icone" alt="OdontoPlace Logo">
+        <img
+            src="{% static 'img/Icon Transparente.png' %}"
+            class="logo-somente-icone"
+            alt="OdontoHub Logo"
+            data-collapsed-src="{% static 'img/Icon Transparente.png' %}"
+            data-expanded-src="{% static 'img/Logo Transparente 1.png' %}">
     </div>
 
     <div class="itens-navegacao">
@@ -49,6 +54,11 @@
             <i class="fa-solid fa-gear"></i>
             <span class="legenda">Ajustes</span>
         </div>
+
+        <a href="/" class="item-menu item-home-sidebar" title="Home">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span class="legenda">Home</span>
+        </a>
     </div>
 
 </nav>

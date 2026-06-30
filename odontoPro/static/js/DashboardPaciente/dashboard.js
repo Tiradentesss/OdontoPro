@@ -35,8 +35,26 @@ function carregarHorariosHandler() {
 }
 
 /* ================= MENU LATERAL ================= */
+function atualizarLogoMenu() {
+    const menu = document.getElementById("menuLateral");
+    const logo = document.querySelector(".logo-somente-icone");
+
+    if (!menu || !logo) return;
+
+    const isAberto = menu.classList.contains("aberto");
+    const src = isAberto ? logo.dataset.expandedSrc : logo.dataset.collapsedSrc;
+
+    if (src) {
+        logo.src = src;
+    }
+}
+
 function alternarMenu() {
-    document.getElementById("menuLateral").classList.toggle("aberto");
+    const menu = document.getElementById("menuLateral");
+    if (!menu) return;
+
+    menu.classList.toggle("aberto");
+    atualizarLogoMenu();
 }
 
 /* ================= TROCAR DE TELA ================= */
@@ -60,6 +78,8 @@ function mostrarTela(id, btn) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    atualizarLogoMenu();
+
     const inputBusca = document.getElementById("inputBuscaClinica");
 
     if (inputBusca) {

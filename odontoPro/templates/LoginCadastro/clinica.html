@@ -5,11 +5,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OdontoPlace - Sistema de Agendamento</title>
+    <title>OdontoHub - Sistema de Agendamento</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="shortcut icon" href="{% static 'img/logo icon.png' %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'img/Icon Transparente.png' %}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
@@ -27,8 +27,12 @@
             <div class="conteudo-login">
 
                 <header class="logo-container">
-                    <img src="{% static 'img/logo icon.png' %}" alt="OdontoPlace Logo" class="logo-icone">
+                    <img src="{% static 'img/Icon Transparente.png' %}" alt="OdontoHub Icon" class="logo-icone">
                 </header>
+
+                <div class="login-home-link" style="margin-bottom: 20px;">
+                    <a href="/" class="botao-google">← Voltar para a Home</a>
+                </div>
 
                 <!-- ================= LOGIN ================= -->
                 <section id="secao-login">
@@ -103,7 +107,7 @@
                 <!-- ================= PAGAMENTO ================= -->
                 <section id="secao-pagamento" class="hidden">
                     <div class="boas-vindas">
-                        <h2>Assinatura OdontoPlace</h2>
+                        <h2>Assinatura OdontoHub</h2>
                         <p>Escaneie o QR Code abaixo para ativar sua licença.</p>
                     </div>
 
@@ -111,7 +115,7 @@
                         <div class="valor-destaque">R$ 149,90/mês</div>
 
                         <div class="qr-code-box">
-                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ChavePixOdontoPlace"
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ChavePixOdontoHub"
                                 alt="QR Code Pix">
                         </div>
 

@@ -52,13 +52,13 @@ html {
 .logo-container {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     margin-bottom: 40px;
 }
 
 .logo-icone {
-    width: 45px;
-    height: auto;
+    height: 48px;
+    width: auto;
 }
 
 .brand-text {
@@ -70,7 +70,7 @@ html {
 .logo-text {
     font-size: 26px;
     font-weight: 500;
-    color: #0E56A8;
+    color: #1bc3ea;
     font-family: 'Poppins', sans-serif;
 }
 
@@ -173,7 +173,7 @@ button {
 }
 
 .botao-acessar:hover {
-    background-color: #0056b3;
+    background-color: #1bc3ea;
     transform: translateY(-1px);
 }
 
@@ -416,14 +416,14 @@ button {
 
 .modal-content input:focus {
     outline: none;
-    border-color: #3b82f6; /* Azul destaque */
+    border-color: #1bc3ea; /* Azul destaque */
 }
 
 /* Botão do Modal */
 .btn-modal-acao {
     width: 100%;
     padding: 14px;
-    background: #3b82f6;
+    background: #1bc3ea;
     color: white;
     border: none;
     border-radius: 10px;

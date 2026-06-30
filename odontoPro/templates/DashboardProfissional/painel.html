@@ -1,12 +1,12 @@
 {% load static %}
-{% static 'img/logo icon.png' as default_logo %}
+{% static 'img/Logo Transparente 1.png' as default_logo %}
 <!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OdontoPlace - Painel Profissional</title>
+    <title>OdontoHub - Painel Profissional</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
@@ -20,7 +20,7 @@
 
     <aside class="sidebar">
         <div class="logo-container">
-            <img src="{{ default_logo }}" alt="Logo do OdontoPlace" class="logo-small">
+            <img src="{{ default_logo }}" alt="Logo do OdontoHub" class="logo-small">
         </div>
 
         <nav class="nav-menu">
@@ -48,6 +48,10 @@
         </nav>
 
         <div class="sidebar-footer">
+            <a href="{% url 'home' %}" class="botao-home">
+                <i data-lucide="home"></i>
+                <span>Home</span>
+            </a>
             <button id="btnLogout" class="botao-sair" type="button">
                 <i data-lucide="log-out"></i>
                 <span>Sair</span>
@@ -219,7 +223,7 @@
         <section id="download" class="tab-content">
             <header class="header">
                 <div class="user-welcome">
-                    <h1>Download OdontoPlace</h1>
+                    <h1>Download OdontoHub</h1>
                     <p class="breadcrumb">Versão Desktop para Windows e macOS</p>
                 </div>
             </header>
@@ -227,7 +231,7 @@
             <div class="card-download-container">
                 <div class="download-hero">
                     <div class="download-info">
-                        <h2>Leve a OdontoPlace para o seu computador</h2>
+                        <h2>Leve a OdontoHub para o seu computador</h2>
                         <p>Tenha uma experiência mais rápida, estável e com acesso offline aos dados básicos da sua
                             clínica.</p>
 
@@ -265,7 +269,7 @@
                     <div class="download-visual">
                         <div class="mockup-desktop">
                             <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80"
-                                alt="OdontoPlace Desktop Mockup"
+                                alt="OdontoHub Desktop Mockup"
                                 style="width: 100%; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
                         </div>
                     </div>
@@ -333,11 +337,11 @@
                             </div>
                             <div class="feature-item">
                                 <i data-lucide="check-circle" style="color: #2563eb;"></i>
-                                <span>Agenda inteligente com lembretes SMS/WhatsApp</span>
+                                <span>Agenda inteligente com confirmações automáticas</span>
                             </div>
                             <div class="feature-item">
                                 <i data-lucide="check-circle" style="color: #2563eb;"></i>
-                                <span>Suporte prioritário 24/7</span>
+                                <span>Gestão completa de consultas e prontuários</span>
                             </div>
                         </div>
 
@@ -374,8 +378,8 @@
                                         <i data-lucide="headphones"></i>
                                     </div>
                                     <div>
-                                        <p class="benefit-title">Suporte Prioritário</p>
-                                        <p class="benefit-desc">Atendimento especializado em menos de 5 minutos.</p>
+                                        <p class="benefit-title">Fluxo de trabalho otimizado</p>
+                                        <p class="benefit-desc">Monitore agendamentos, históricos e pagamentos em um só painel.</p>
                                     </div>
                                 </div>
                                 <div class="benefit-item">

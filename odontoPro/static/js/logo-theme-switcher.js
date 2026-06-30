@@ -2,14 +2,11 @@
     'use strict';
 
     function updateLogoSrc() {
-        const isDarkMode = document.body.classList.contains('theme-dark');
-        const logos = document.querySelectorAll('img[src*="logo icon.png"], img[alt="OdontoPlace"], img[alt*="OdontoPlace"]');
-        
+        const logos = document.querySelectorAll('img[src*="logo icon.png"], img[src*="logo-odontohub"], img[alt="OdontoHub"], img[alt*="OdontoHub"]');
+
         logos.forEach(logo => {
-            if (isDarkMode) {
-                logo.src = logo.src.replace('logo icon.png', 'logo-dark.png');
-            } else {
-                logo.src = logo.src.replace('logo-dark.png', 'logo icon.png');
+            if (!logo.src.includes('logo-odontohub%20(1)-imagens-3.jpg') && !logo.src.includes('logo-odontohub (1)-imagens-3.jpg')) {
+                logo.src = logo.src.replace('logo icon.png', 'logo-odontohub%20(1)-imagens-3.jpg');
             }
         });
     }

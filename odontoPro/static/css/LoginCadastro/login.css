@@ -58,7 +58,7 @@ body {
 .logo-text {
     font-size: 26px;
     font-weight: 500;
-    color: #0E56A8;
+    color: #1bc3ea;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -128,8 +128,8 @@ body {
     gap: 8px;
     padding: 10px 12px;
     border-radius: 999px;
-    background: #f2fbfe;
-    color: #0f8fb8;
+    background: rgba(27,195,234,0.08);
+    color: #1bc3ea;
     text-decoration: none;
     font-size: 13px;
     font-weight: 700;
@@ -148,7 +148,7 @@ body {
     width: 100%;
     min-height: 52px;
     padding: 15px 18px;
-    background: #1BC3EA;
+    background: #1bc3ea;
     color: white;
     border: none;
     border-radius: 8px;

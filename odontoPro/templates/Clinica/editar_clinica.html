@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Editar Clínica - OdontoPlace</title>
+    <title>Editar Clínica - OdontoHub</title>
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
     <style>
         body {
@@ -164,7 +164,10 @@
 </head>
 <body>
     <div class="container-ec">
-        <a href="{% url 'gerenciar_clinicas' %}" class="back-link">← Voltar para Clínicas</a>
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+            <a href="{% url 'gerenciar_clinicas' %}" class="back-link">← Voltar para Clínicas</a>
+            <a href="/" class="back-link">← Voltar para a Home</a>
+        </div>
         
         {% if messages %}
             {% for message in messages %}

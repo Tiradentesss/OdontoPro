@@ -5,8 +5,8 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>OdontoPlace - Cadastro de Clínica</title>
-    <link rel="shortcut icon" href="{% static 'img/logo icon.png' %}" type="image/x-icon">
+    <title>OdontoHub - Cadastro de Clínica</title>
+    <link rel="shortcut icon" href="{% static 'img/Icon Transparente.png' %}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&display=swap" rel="stylesheet"/>
@@ -20,9 +20,13 @@
                 <span class="material-symbols-outlined icon-sm">arrow_back</span>
                 Voltar ao Login
             </a>
+            <a href="{% url 'home' %}" class="back-button" style="margin-left:10px;">
+                <span class="material-symbols-outlined icon-sm">home</span>
+                Voltar para a Home
+            </a>
             <div class="topbar-brand">
-                <img src="{% static 'img/logo icon.png' %}" alt="OdontoPlace Logo" class="topbar-logo"/>
-                <span class="topbar-title">OdontoPlace</span>
+                <img src="{% static 'img/Logo Transparente 1.png' %}" alt="OdontoHub Logo" class="topbar-logo"/>
+                <span class="topbar-title">OdontoHub</span>
             </div>
         </div>
     </header>
@@ -185,13 +189,13 @@
 
     <footer class="page-footer">
         <div class="container footer-inner">
-            <span>Sistema OdontoPlace</span>
+            <span>Sistema OdontoHub</span>
             <div class="footer-links">
                 <a href="#">Política de Privacidade</a>
                 <a href="#">Termos de Serviço</a>
                 <a href="#">Central de Ajuda</a>
             </div>
-            <p>© {% now "Y" %} Sistema OdontoPlace. Todos os direitos reservados.</p>
+            <p>© {% now "Y" %} Sistema OdontoHub. Todos os direitos reservados.</p>
         </div>
     </footer>
 
