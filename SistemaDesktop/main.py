@@ -13,8 +13,8 @@ class MainWindow:
             load_theme_preference()
             
             self.current_app = None
-            # Na primeira vez, permitir auto-login com credenciais salvas
-            self.show_login(auto_login_enabled=True)
+            # Iniciar sem auto-login; exigirá clique no botão 'ENTRAR'
+            self.show_login(auto_login_enabled=False)
         except Exception as e:
             print(f"Erro na inicialização: {e}")
             import traceback

@@ -1,4 +1,6 @@
 import customtkinter as ctk
+import os
+from PIL import Image
 
 from views.painel import Painel
 from views.agenda import Agenda
@@ -8,10 +10,7 @@ from views.configuracoes import Configuracoes
 from views.gerenciamento import Gerenciamento
 from views.permissao import Permissoes
 from controllers.gerenciamento_controller import GerenciamentoController
-from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode, font
-
-from PIL import Image
-import os
+from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode, font, ASSETS_DIR
 
 
 class App(ctk.CTk):
@@ -38,6 +37,7 @@ class App(ctk.CTk):
         # Atualizar cores da aplicação
         self.configure(fg_color=COLORS["bg"])
         self.sidebar.configure(fg_color=COLORS["card"], border_color=COLORS["border"])
+        
         
         # Atualizar botão de Sair com cores do tema
         self.logout_button.configure(
@@ -173,20 +173,48 @@ class App(ctk.CTk):
         self.sidebar.grid(row=0, column=0, sticky="nsew")
         self.sidebar.grid_propagate(False)
 
-        # Logo / Nome
-        ctk.CTkLabel(
-            self.sidebar,
-            text="OdontoPro",
-            font=font("large_title", "bold"),
-            text_color=COLORS["primary"]
-        ).pack(pady=(40, 5))
+        # Header: centered logo
+        brand_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        brand_frame.pack(pady=(16, 8), padx=8, fill="x")
 
-        ctk.CTkLabel(
-            self.sidebar,
-            text="Clinical Management",
-            font=font("small"),
-            text_color=COLORS["text_secondary"]
-        ).pack(pady=(0, 30))
+        # Carrega a logo OdontoHub (diferente para tema claro e escuro)
+        self.brand_logo_img = None
+        try:
+            # Se estiver em tema escuro, usar a versão branca/clara
+            if get_dark_mode():
+                brand_logo_path = os.path.join(ASSETS_DIR, "clinicas", "logo", "logo-odontohub (1).pdf (1).png")
+            else:
+                brand_logo_path = os.path.join(ASSETS_DIR, "clinicas", "logo", "logo-odontohub (1).pdf.png")
+            
+            if os.path.exists(brand_logo_path):
+                pil = Image.open(brand_logo_path)
+                prop = pil.width / pil.height if pil.height else 1
+                w = 200
+                h = int(w / prop)
+                self.brand_logo_img = ctk.CTkImage(light_image=pil, dark_image=pil, size=(w, h))
+        except Exception:
+            self.brand_logo_img = None
+
+        if self.brand_logo_img:
+            ctk.CTkLabel(
+                brand_frame,
+                text="",
+                image=self.brand_logo_img
+            ).pack(pady=12, padx=8, anchor="center")
+        else:
+            ctk.CTkLabel(
+                brand_frame,
+                text="OdontoHub",
+                font=font("large_title", "bold"),
+                text_color=COLORS["primary"]
+            ).pack(pady=(8, 4), anchor="center")
+
+            ctk.CTkLabel(
+                brand_frame,
+                text="Clinical Management",
+                font=font("small"),
+                text_color=COLORS["text_secondary"]
+            ).pack(pady=(0, 16), anchor="center")
 
         # Menu
         self.buttons = {}

@@ -2,6 +2,14 @@ import customtkinter as ctk
 import json
 import os
 
+# Pasta de ativos compartilhados
+ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets")
+
+LOGO_CANDIDATES = {
+    "light": ["OdontoHub_icon.png", "logo.png"],
+    "dark": ["OdontoHub_icon_branco.png", "logo_branco.png", "logo.png"]
+}
+
 # Aparência padrão
 ctk.set_appearance_mode("light")
 ctk.set_default_color_theme("blue")
@@ -153,6 +161,23 @@ def font_title():
 def font_subtitle():
     return font("subtitle", weight="bold")
 
+
+def get_brand_logo_path():
+    """Retorna o caminho do logo da marca apropriado ao tema atual."""
+    mode = "dark" if DARK_MODE else "light"
+
+    for filename in LOGO_CANDIDATES[mode]:
+        path = os.path.join(ASSETS_DIR, filename)
+        if os.path.exists(path):
+            return path
+
+    for filenames in LOGO_CANDIDATES.values():
+        for filename in filenames:
+            path = os.path.join(ASSETS_DIR, filename)
+            if os.path.exists(path):
+                return path
+
+    return None
 def font_text():
     return font("text")
 
