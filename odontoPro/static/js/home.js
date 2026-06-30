@@ -12,10 +12,10 @@ document.addEventListener('DOMContentLoaded', function(){
     const applyTheme = (theme) => {
         if (theme === 'dark') {
             document.body.classList.add('theme-dark');
-            if (themeToggle) themeToggle.textContent = '☀️';
+            if (themeToggle) themeToggle.textContent = 'Tema escuro';
         } else {
             document.body.classList.remove('theme-dark');
-            if (themeToggle) themeToggle.textContent = '🌙';
+            if (themeToggle) themeToggle.textContent = 'Tema claro';
         }
     };
 
@@ -72,5 +72,41 @@ document.addEventListener('DOMContentLoaded', function(){
         };
 
         setInterval(rotateFeaturedClinics, 5000);
+    }
+
+    const navToggle = document.getElementById('nav-toggle');
+    const navLinks = document.querySelector('.nav-links');
+
+    if (navToggle && navLinks) {
+        navLinks.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.setAttribute('aria-label', 'Abrir menu');
+        navToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+
+        navToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = navLinks.classList.toggle('open');
+            navToggle.setAttribute('aria-expanded', String(isOpen));
+            navToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+            navToggle.innerHTML = isOpen ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+        });
+
+        document.addEventListener('click', (event) => {
+            if (navLinks.classList.contains('open') && !navLinks.contains(event.target) && !navToggle.contains(event.target)) {
+                navLinks.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navToggle.setAttribute('aria-label', 'Abrir menu');
+                navToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 900 && navLinks.classList.contains('open')) {
+                navLinks.classList.remove('open');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navToggle.setAttribute('aria-label', 'Abrir menu');
+                navToggle.innerHTML = '<i class="fa-solid fa-bars"></i>';
+            }
+        });
     }
 });

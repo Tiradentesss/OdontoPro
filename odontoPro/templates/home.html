@@ -17,7 +17,10 @@
                     <img src="{% static 'img/Logo Transparente 1.png' %}" alt="Logo" />
                 </a>
             </div>
-            <nav class="nav-links">
+            <button id="nav-toggle" class="nav-toggle" type="button" aria-label="Abrir menu" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <nav class="nav-links" aria-label="Navegação principal">
                 {% if is_professional %}
                     <a href="{% url 'painel_profissional' %}" class="btn-nav">Minha Clínica</a>
                 {% else %}
@@ -30,7 +33,7 @@
                 {% else %}
                     <a href="/login/" class="btn-outline">Entrar</a>
                 {% endif %}
-                <button id="theme-toggle" class="theme-toggle" aria-label="Alternar tema">☀️</button>
+                <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">Tema claro</button>
             </nav>
         </div>
     </header>
