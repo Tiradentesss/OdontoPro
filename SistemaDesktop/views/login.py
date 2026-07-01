@@ -144,30 +144,67 @@ class Login(ctk.CTk):
             text_color=COLORS["muted"]
         ).pack(anchor="center", pady=(0, 20))
 
-        self.ent_user = ctk.CTkEntry(
-            conteudo,
+        form_frame = ctk.CTkFrame(conteudo, fg_color="transparent", width=420)
+        form_frame.pack(anchor="center")
+
+        ctk.CTkLabel(
+            form_frame,
+            text="Email",
+            font=font("small"),
+            text_color=COLORS["text"]
+        ).pack(anchor="w", pady=(0, 4))
+
+        user_entry_container = ctk.CTkFrame(
+            form_frame,
+            fg_color=COLORS["content_bg"],
             width=420,
-            height=50,
+            height=54,
+            corner_radius=10,
+            border_width=1,
+            border_color=COLORS["border"]
+        )
+        user_entry_container.pack(fill="x", pady=(0, 10))
+        self.ent_user = ctk.CTkEntry(
+            user_entry_container,
+            width=400,
+            height=44,
             placeholder_text="Usuário",
             fg_color=COLORS["card"],
             border_width=0
         )
-        self.ent_user.pack(pady=(0, 10), anchor="center")
+        self.ent_user.pack(padx=10, pady=5, anchor="w")
 
-        self.ent_pass = ctk.CTkEntry(
-            conteudo,
+        ctk.CTkLabel(
+            form_frame,
+            text="Senha",
+            font=font("small"),
+            text_color=COLORS["text"]
+        ).pack(anchor="w", pady=(0, 4))
+
+        pass_entry_container = ctk.CTkFrame(
+            form_frame,
+            fg_color=COLORS["content_bg"],
             width=420,
-            height=50,
+            height=54,
+            corner_radius=10,
+            border_width=1,
+            border_color=COLORS["border"]
+        )
+        pass_entry_container.pack(fill="x", pady=(0, 10))
+        self.ent_pass = ctk.CTkEntry(
+            pass_entry_container,
+            width=400,
+            height=44,
             placeholder_text="Senha",
             show="*",
             fg_color=COLORS["card"],
             border_width=0
         )
-        self.ent_pass.pack(pady=(0, 10), anchor="center")
+        self.ent_pass.pack(padx=10, pady=5, anchor="w")
 
         self.remember_var = ctk.BooleanVar(value=False)
-        linha = ctk.CTkFrame(conteudo, fg_color="transparent")
-        linha.pack(anchor="center", pady=(0, 12))
+        linha = ctk.CTkFrame(form_frame, fg_color="transparent")
+        linha.pack(fill="x", pady=(0, 12))
 
         chk = ctk.CTkCheckBox(linha, text="Lembrar-me", variable=self.remember_var)
         chk.pack(side="left", padx=(0, 8))
@@ -185,7 +222,7 @@ class Login(ctk.CTk):
         ).pack(side="left")
 
         ctk.CTkButton(
-            conteudo,
+            form_frame,
             text="ENTRAR",
             width=420,
             height=50,
@@ -193,36 +230,36 @@ class Login(ctk.CTk):
             hover_color=COLORS["primary_dark"],
             font=font("button", "bold"),
             command=self.autenticar
-        ).pack(pady=(20, 15), anchor="center")
+        ).pack(pady=(20, 15))
 
         ctk.CTkLabel(
-            conteudo,
+            form_frame,
             text="────────────  ou continue com  ────────────",
             text_color=COLORS["muted"]
         ).pack(pady=(15, 12))
 
         ctk.CTkButton(
-            conteudo,
+            form_frame,
             text="Entrar com Google",
             width=420,
             height=48,
             fg_color=COLORS["primary"],
             hover_color=COLORS["primary_dark"],
             font=font("button", "bold")
-        ).pack(pady=(0, 6), anchor="center")
+        ).pack(pady=(0, 6))
 
         ctk.CTkButton(
-            conteudo,
+            form_frame,
             text="Entrar com Facebook",
             width=420,
             height=48,
             fg_color=COLORS["primary"],
             hover_color=COLORS["primary_dark"],
             font=font("button", "bold")
-        ).pack(pady=(0, 16), anchor="center")
+        ).pack(pady=(0, 16))
 
-        rodape = ctk.CTkFrame(conteudo, fg_color="transparent")
-        rodape.pack(anchor="center", pady=(0, 0))
+        rodape = ctk.CTkFrame(form_frame, fg_color="transparent")
+        rodape.pack(fill="x", pady=(0, 0))
 
         ctk.CTkLabel(rodape, text="Não tem conta?").grid(row=0, column=0)
         ctk.CTkLabel(
