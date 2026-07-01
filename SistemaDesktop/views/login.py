@@ -54,13 +54,26 @@ class Login(ctk.CTk):
             dentista_path = os.path.join(ASSETS_DIR, "dentistalogin.png")
             if os.path.exists(dentista_path):
                 dentista_pil = Image.open(dentista_path)
-                dentista_prop = dentista_pil.width / dentista_pil.height
-                dentista_w = int(largura * 0.42)
-                dentista_h = int(dentista_w / dentista_prop)
+                target_w = largura // 2
+                target_h = altura
+                target_aspect = target_w / target_h
+                src_w, src_h = dentista_pil.size
+                src_aspect = src_w / src_h
+
+                if src_aspect > target_aspect:
+                    crop_w = int(src_h * target_aspect)
+                    left = (src_w - crop_w) // 2
+                    dentista_pil = dentista_pil.crop((left, 0, left + crop_w, src_h))
+                else:
+                    crop_h = int(src_w / target_aspect)
+                    top = (src_h - crop_h) // 2
+                    dentista_pil = dentista_pil.crop((0, top, src_w, top + crop_h))
+
+                dentista_pil = dentista_pil.resize((target_w, target_h), Image.LANCZOS)
                 dentista_img = ctk.CTkImage(
                     light_image=dentista_pil,
                     dark_image=dentista_pil,
-                    size=(dentista_w, dentista_h)
+                    size=(target_w, target_h)
                 )
         except Exception:
             dentista_img = None
@@ -69,13 +82,15 @@ class Login(ctk.CTk):
         # ================= ESQUERDA =================
         frame_img = ctk.CTkFrame(self, fg_color=COLORS["content_bg"], corner_radius=0)
         frame_img.grid(row=0, column=0, sticky="nsew")
+        frame_img.grid_rowconfigure(0, weight=1)
+        frame_img.grid_columnconfigure(0, weight=1)
 
         if dentista_img:
             ctk.CTkLabel(
                 frame_img,
                 text="",
                 image=dentista_img
-            ).place(relx=0.5, rely=0.5, anchor="center")
+            ).place(x=0, y=0, relwidth=1, relheight=1)
 
         # ================= DIREITA =================
         frame_login = ctk.CTkFrame(self, fg_color=COLORS["content_bg"], corner_radius=0)
