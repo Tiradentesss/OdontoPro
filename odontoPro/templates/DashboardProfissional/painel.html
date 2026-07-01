@@ -39,6 +39,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#" class="nav-link" data-target="relatorio">
+                        <i data-lucide="wallet"></i>
+                        <span>Relatório</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#" class="nav-link" data-target="download">
                         <i data-lucide="download"></i>
                         <span>Download</span>
@@ -413,6 +419,101 @@
                         <p>Nossa equipe comercial está pronta para te ajudar a escolher o melhor caminho.</p>
                     </div>
                     <button class="btn-consultant">Falar com Consultor</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="relatorio" class="tab-content">
+            <header class="header">
+                <div class="user-welcome">
+                    <h1>Relatório</h1>
+                    <p class="breadcrumb">Acompanhe o desempenho da clínica em um único painel.</p>
+                </div>
+                <button class="btn-download-pdf" id="btnExportarRelatorio" type="button">
+                    <i data-lucide="download"></i>
+                    <span>Baixar PDF</span>
+                </button>
+            </header>
+
+            <div class="dashboard-grid finance-dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Próximas Consultas</h2>
+                        {% if consultas|length > 4 %}
+                            <button class="text-link toggle-appointments-btn" type="button" data-expanded="false">Ver todos</button>
+                        {% endif %}
+                    </div>
+
+                    <div class="appointment-list" id="finance-appointments-list">
+                        {% if consultas %}
+                            {% for consulta in consultas %}
+                                <div class="appointment-item{% if forloop.counter > 4 %} is-hidden{% endif %}" data-nome="{{ consulta.paciente.nome|default:consulta.nome|default:'Paciente' }}" data-horario="{{ consulta.data_hora|date:'d/m/Y' }} às {{ consulta.data_hora|date:'H:i' }}">
+                                    <div class="appointment-left">
+                                        <div class="avatar-placeholder">
+                                            {{ consulta.paciente.nome|default:consulta.nome|default:'P'|slice:":1"|upper }}
+                                        </div>
+                                        <div class="info">
+                                            <h3>{{ consulta.paciente.nome|default:consulta.nome|default:'Paciente' }}</h3>
+                                            <p>{{ consulta.data_hora|date:"d/m/Y" }} às {{ consulta.data_hora|date:"H:i" }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="appointment-right">
+                                        <span class="badge-status {{ consulta.status }}">{{ consulta.get_status_display }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">Nenhuma consulta agendada no momento.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Relatório</h2>
+                    </div>
+
+                    <div class="relatorio-content">
+                        <div class="chart-box">
+                            <div class="circular-chart-v2" style="--percentual: {{ eficiencia_percentual|default:0 }}%; background: conic-gradient(#ffd54a {{ eficiencia_percentual|default:0 }}%, #edf2f7 0);">
+                                <div class="inner-circle">
+                                    <span class="percentage">{{ eficiencia_percentual|default:0 }}%</span>
+                                    <span class="label">Eficiência</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-bars" aria-label="Resumo do relatório">
+                            <div class="metric-bar-item">
+                                <div class="metric-bar-label">
+                                    <span>Agendados</span>
+                                    <strong>{{ total_agendados|default:0 }}</strong>
+                                </div>
+                                <div class="metric-bar-track"><div class="metric-bar-fill blue" style="width: {{ total_agendados|default:0 }}0%;"></div></div>
+                            </div>
+                            <div class="metric-bar-item">
+                                <div class="metric-bar-label">
+                                    <span>Atendidos</span>
+                                    <strong>{{ total_atendidos|default:0 }}</strong>
+                                </div>
+                                <div class="metric-bar-track"><div class="metric-bar-fill green" style="width: {% if total_atendidos %}{{ total_atendidos|floatformat:0 }}0%{% else %}0%{% endif %};"></div></div>
+                            </div>
+                            <div class="metric-bar-item">
+                                <div class="metric-bar-label">
+                                    <span>Primeira vez</span>
+                                    <strong>{{ total_primeira_vez|default:0 }}</strong>
+                                </div>
+                                <div class="metric-bar-track"><div class="metric-bar-fill yellow" style="width: {% if total_primeira_vez %}{{ total_primeira_vez|floatformat:0 }}0%{% else %}0%{% endif %};"></div></div>
+                            </div>
+                            <div class="metric-bar-item">
+                                <div class="metric-bar-label">
+                                    <span class="text-red">Faltas</span>
+                                    <strong class="text-red">{{ total_faltas|default:0 }}</strong>
+                                </div>
+                                <div class="metric-bar-track"><div class="metric-bar-fill red" style="width: {% if total_faltas %}{{ total_faltas|floatformat:0 }}0%{% else %}0%{% endif %};"></div></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

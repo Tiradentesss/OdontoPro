@@ -136,6 +136,40 @@ document.addEventListener('DOMContentLoaded', () => {
     filePreview(bannerInput, bannerPreview);
     filePreview(logoInput, logoPreview);
 
+    const exportPdfBtn = document.getElementById('btnExportarRelatorio');
+    if (exportPdfBtn) {
+        exportPdfBtn.addEventListener('click', () => {
+            const printWindow = window.open('', '_blank', 'width=900,height=700');
+            if (!printWindow) {
+                alert('Seu navegador bloqueou a abertura da janela de impressão.');
+                return;
+            }
+
+            const reportContent = document.getElementById('relatorio').outerHTML;
+            printWindow.document.write(`<!DOCTYPE html><html><head><title>Relatório da Clínica</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111;} .card{border:1px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;} .badge-status{display:inline-block;padding:6px 10px;border-radius:999px;background:#eff6ff;color:#2563eb;font-size:12px;font-weight:700;} .stats-list{list-style:none;padding:0;margin:0;} .stats-list li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f7;} .btn-download-pdf{display:none;} .appointment-item{padding:10px 0;border-bottom:1px solid #f1f5f9;} .avatar-placeholder{display:none;} .text-link{display:none;}</style></head><body>${reportContent}</body></html>`);
+            printWindow.document.close();
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+            }, 300);
+        });
+    }
+
+    const toggleAppointmentsBtn = document.querySelector('.toggle-appointments-btn');
+    if (toggleAppointmentsBtn) {
+        toggleAppointmentsBtn.addEventListener('click', () => {
+            const hiddenItems = document.querySelectorAll('#finance-appointments-list .appointment-item.is-hidden');
+            const isExpanded = toggleAppointmentsBtn.dataset.expanded === 'true';
+
+            hiddenItems.forEach(item => {
+                item.classList.toggle('is-hidden', isExpanded);
+            });
+
+            toggleAppointmentsBtn.dataset.expanded = String(!isExpanded);
+            toggleAppointmentsBtn.textContent = isExpanded ? 'Ver todos' : 'Ver menos';
+        });
+    }
+
     const specialtyInput = document.getElementById('especialidade_input');
     const precoSpecialtyInput = document.getElementById('preco_especialidade_input');
     const addSpecialtyBtn = document.getElementById('add-specialty');

@@ -14,8 +14,9 @@ from django.core.management import call_command
 from django.templatetags.static import static
 from django.core.files.storage import default_storage
 
-from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade, Gerenciamento
+from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade, Gerenciamento, Financeiro
 from datetime import datetime, timedelta
+from decimal import Decimal
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from .models import DiaSemanaDisponivel, HorarioAberto
@@ -551,17 +552,54 @@ def painel_profissional(request):
     consultas = Consulta.objects.filter(
         clinica=clinica_obj,
         data_hora__gte=now
-    ).select_related('paciente', 'medico', 'especialidade').order_by('data_hora')[:12]
+    ).select_related('paciente', 'medico', 'especialidade').order_by('data_hora')[:6]
+
+    consultas_realizadas = Consulta.objects.filter(clinica=clinica_obj, status='realizada')
+    consultas_totais = Consulta.objects.filter(clinica=clinica_obj)
+    total_agendados = consultas_totais.filter(status__in=['agendada', 'confirmada']).count()
+    total_atendidos = consultas_realizadas.count()
+    total_primeira_vez = 0
+    for consulta in consultas_realizadas.order_by('data_hora'):
+        if consulta.paciente_id and not consultas_totais.filter(
+            paciente=consulta.paciente,
+            data_hora__lt=consulta.data_hora
+        ).exists():
+            total_primeira_vez += 1
+    total_faltas = consultas_totais.filter(status__in=['cancelada', 'perdida']).count()
+    eficiencia_percentual = int(round((total_atendidos / total_agendados * 100) if total_agendados else 0))
 
     clinica_obj.logo_url = _get_clinica_logo_url(clinica_obj)
     clinica_obj.banner_url = _get_clinica_imagem_url(clinica_obj)
     clinica_obj.endereco_text = str(clinica_obj.endereco) if clinica_obj.endereco else ''
+
+    transacoes = Financeiro.objects.filter(clinica=clinica_obj).order_by('-data')
+    receitas = transacoes.filter(tipo='receita')
+    despesas = transacoes.filter(tipo='despesa')
+    total_receitas = receitas.aggregate(total=models.Sum('valor'))['total'] or Decimal('0.00')
+    total_despesas = despesas.aggregate(total=models.Sum('valor'))['total'] or Decimal('0.00')
+    saldo = total_receitas - total_despesas
+
+    def _format_currency(value: Decimal) -> str:
+        return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
     return render(request, "DashboardProfissional/painel.html", {
         "profissional": profissional,
         "account_type": account_type,
         "consultas": consultas,
         "clinica": clinica_obj,
+        "transacoes_financeiras": transacoes,
+        "saldo_financeiro": saldo,
+        "saldo_financeiro_display": _format_currency(saldo),
+        "total_receitas_display": _format_currency(total_receitas),
+        "total_despesas_display": _format_currency(total_despesas),
+        "total_receitas": total_receitas,
+        "total_despesas": total_despesas,
+        "ultima_transacao": transacoes.first(),
+        "total_agendados": total_agendados,
+        "total_atendidos": total_atendidos,
+        "total_primeira_vez": total_primeira_vez,
+        "total_faltas": total_faltas,
+        "eficiencia_percentual": eficiencia_percentual,
     })
 
 

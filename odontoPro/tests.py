@@ -3,7 +3,91 @@ from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from django.core import signing
 from django.core.files.uploadedfile import SimpleUploadedFile
-from .models import Paciente, Medico, Clinica, Consulta, Endereco, Gerenciamento, Permissao
+from django.utils import timezone
+from .models import Paciente, Medico, Clinica, Consulta, Endereco, Gerenciamento, Permissao, Financeiro
+
+
+class FinanceiroDashboardTests(TestCase):
+    def setUp(self):
+        self.endereco = Endereco.objects.create(
+            cep="00000000",
+            numero="1",
+            quadra="",
+            rua="Rua X",
+            bairro="Centro",
+            cidade="Belém",
+            estado="PA"
+        )
+        self.clinica = Clinica.objects.create(
+            nome="Clinica Financeira",
+            cnpj="00000000",
+            endereco=self.endereco,
+            telefone="999999999",
+            conta_bancaria_juridica="0000-0",
+            email="financeiro@example.com",
+            senha=make_password("clinica123")
+        )
+        self.paciente = Paciente.objects.create(
+            nome="Paciente Teste",
+            email="paciente@example.com",
+            senha=make_password("123456"),
+            telefone="999999999",
+            clinica=self.clinica,
+        )
+        self.medico = Medico.objects.create(
+            nome="Dr. Financeiro",
+            email="medico-financeiro@example.com",
+            senha=make_password("medsenha"),
+            telefone="988888888",
+            crm_cro="9999",
+            clinica=self.clinica,
+        )
+        Consulta.objects.create(
+            paciente=self.paciente,
+            nome=self.paciente.nome,
+            email=self.paciente.email,
+            telefone=self.paciente.telefone,
+            clinica=self.clinica,
+            medico=self.medico,
+            data_hora=timezone.now() + timezone.timedelta(days=1),
+            status='agendada',
+        )
+        Consulta.objects.create(
+            paciente=self.paciente,
+            nome=self.paciente.nome,
+            email=self.paciente.email,
+            telefone=self.paciente.telefone,
+            clinica=self.clinica,
+            medico=self.medico,
+            data_hora=timezone.now(),
+            status='realizada',
+        )
+        Financeiro.objects.create(
+            clinica=self.clinica,
+            tipo='receita',
+            descricao='Consulta de retorno',
+            valor='150.00',
+            categoria='consulta'
+        )
+        Financeiro.objects.create(
+            clinica=self.clinica,
+            tipo='despesa',
+            descricao='Aluguel',
+            valor='80.00',
+            categoria='aluguel'
+        )
+
+    def test_finance_dashboard_uses_database_entries(self):
+        session = self.client.session
+        session['clinica_id'] = self.clinica.id
+        session.save()
+
+        response = self.client.get(reverse('painel_profissional'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-target="relatorio"')
+        self.assertContains(response, 'Relatório')
+        self.assertContains(response, '100%')
 
 
 class LoginViewTests(TestCase):

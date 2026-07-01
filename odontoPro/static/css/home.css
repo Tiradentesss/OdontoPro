@@ -154,9 +154,13 @@ body {
 }
 
 .home-header .logo img {
-        height: 48px;
-        width: auto;
-    }
+    height: 48px;
+    width: auto;
+}
+
+.theme-dark .home-header .logo img {
+    height: 40px;
+}
 
 .home-header .logo-text {
     font-weight: 700;
