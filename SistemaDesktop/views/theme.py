@@ -6,8 +6,8 @@ import os
 ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets")
 
 LOGO_CANDIDATES = {
-    "light": ["OdontoHub_icon.png", "logo.png"],
-    "dark": ["OdontoHub_icon_branco.png", "logo_branco.png", "logo.png"]
+    "light": ["OdontoHub.png", "logo.png"],
+    "dark": ["OdontoHub_dark.png", "logo.png"]
 }
 
 # Aparência padrão

@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from .base import BaseScreen, ActionButtons
-from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode
+from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode, get_dark_mode
 import os
 from PIL import Image, ImageTk, ImageDraw
 
@@ -209,10 +209,10 @@ class Configuracoes(BaseScreen):
         # Botão de tema à direita
         theme_btn = ctk.CTkButton(
             header_container,
-            text="🌙",
-            width=40,
+            text="Modo Escuro" if not get_dark_mode() else "Modo Claro",
+            width=120,
             height=40,
-            font=ctk.CTkFont(size=18),
+            font=ctk.CTkFont(size=12),
             fg_color=COLORS["primary"],
             hover_color=COLORS["primary_dark"],
             corner_radius=8,
@@ -296,6 +296,7 @@ class Configuracoes(BaseScreen):
             "tab_inactive": COLORS["tab_inactive"]
         }
         self.theme_btn.configure(
+            text="Modo Escuro" if not get_dark_mode() else "Modo Claro",
             fg_color=self.colors["accent"],
             hover_color=COLORS["primary_dark"]
         )

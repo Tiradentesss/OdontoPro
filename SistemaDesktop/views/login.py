@@ -22,6 +22,9 @@ class Login(ctk.CTk):
         altura = self.winfo_screenheight()
 
         self.geometry(f"{largura}x{altura}+0+0")
+        self.fullscreen = False
+        self.bind("<F11>", self._toggle_fullscreen)
+        self.bind("<Escape>", self._exit_fullscreen)
 
         self.configure(fg_color=COLORS["content_bg"])
 
@@ -309,6 +312,15 @@ class Login(ctk.CTk):
             email = self.ent_user.get().strip()
             senha = self.ent_pass.get().strip()
             salvar_credenciais(email, senha)
+
+    def _toggle_fullscreen(self, event=None):
+        self.fullscreen = not self.fullscreen
+        self.attributes("-fullscreen", self.fullscreen)
+
+    def _exit_fullscreen(self, event=None):
+        if self.fullscreen:
+            self.fullscreen = False
+            self.attributes("-fullscreen", False)
 
     def _carregar_credenciais_salvas(self):
         """Carrega credenciais salvas e pré-preenche os campos

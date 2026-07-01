@@ -10,7 +10,7 @@ from views.configuracoes import Configuracoes
 from views.gerenciamento import Gerenciamento
 from views.permissao import Permissoes
 from controllers.gerenciamento_controller import GerenciamentoController
-from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode, font, ASSETS_DIR
+from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode, font, ASSETS_DIR, get_brand_logo_path
 
 
 class App(ctk.CTk):
@@ -84,7 +84,21 @@ class App(ctk.CTk):
         if current_frame_name in self.frames:
             self.show_frame(current_frame_name)
             self.current_frame.pack(expand=True, fill="both")
+        # Atualizar a logo imediatamente após a mudança de tema
+        try:
+            self.update_logo()
+        except Exception:
+            pass
 
+
+    def _toggle_fullscreen(self, event=None):
+        self.fullscreen = not self.fullscreen
+        self.attributes("-fullscreen", self.fullscreen)
+
+    def _exit_fullscreen(self, event=None):
+        if self.fullscreen:
+            self.fullscreen = False
+            self.attributes("-fullscreen", False)
 
     def _carregar_permissoes_usuario(self):
         """Carrega as permissões do gerente logado"""
@@ -152,6 +166,9 @@ class App(ctk.CTk):
         altura = self.winfo_screenheight()
 
         self.geometry(f"{largura}x{altura}+0+0")
+        self.fullscreen = False
+        self.bind("<F11>", self._toggle_fullscreen)
+        self.bind("<Escape>", self._exit_fullscreen)
         self.minsize(1000, 650)
         self.configure(fg_color=COLORS["bg"])
 
@@ -177,15 +194,14 @@ class App(ctk.CTk):
         brand_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         brand_frame.pack(pady=(16, 8), padx=8, fill="x")
 
-        # Carrega a logo OdontoHub (diferente para tema claro e escuro)
+# Carrega a logo OdontoHub da sidebar usando apenas os arquivos corretos para cada tema
         self.brand_logo_img = None
         try:
-            # Se estiver em tema escuro, usar a versão branca/clara
             if get_dark_mode():
                 brand_logo_path = os.path.join(ASSETS_DIR, "clinicas", "logo", "logo-odontohub (1).pdf (1).png")
             else:
                 brand_logo_path = os.path.join(ASSETS_DIR, "clinicas", "logo", "logo-odontohub (1).pdf.png")
-            
+
             if os.path.exists(brand_logo_path):
                 pil = Image.open(brand_logo_path)
                 prop = pil.width / pil.height if pil.height else 1
@@ -195,26 +211,25 @@ class App(ctk.CTk):
         except Exception:
             self.brand_logo_img = None
 
-        if self.brand_logo_img:
-            ctk.CTkLabel(
-                brand_frame,
-                text="",
-                image=self.brand_logo_img
-            ).pack(pady=12, padx=8, anchor="center")
-        else:
-            ctk.CTkLabel(
-                brand_frame,
-                text="OdontoHub",
-                font=font("large_title", "bold"),
-                text_color=COLORS["primary"]
-            ).pack(pady=(8, 4), anchor="center")
-
-            ctk.CTkLabel(
+        # Criar widget da logo e manter referência para atualizações dinâmicas
+        self.brand_logo_label = ctk.CTkLabel(
+            brand_frame,
+            text="",
+            image=self.brand_logo_img
+        )
+        self.brand_logo_label.pack(pady=12, padx=8, anchor="center")
+        # subtítulo (pode existir quando não há imagem)
+        self.brand_subtitle_label = None
+        if not self.brand_logo_img:
+            # exibir texto como fallback quando não há imagem
+            self.brand_logo_label.configure(text="OdontoHub", font=font("large_title", "bold"), text_color=COLORS["primary"], image=None)
+            self.brand_subtitle_label = ctk.CTkLabel(
                 brand_frame,
                 text="Clinical Management",
                 font=font("small"),
                 text_color=COLORS["text_secondary"]
-            ).pack(pady=(0, 16), anchor="center")
+            )
+            self.brand_subtitle_label.pack(pady=(0, 16), anchor="center")
 
         # Menu
         self.buttons = {}
@@ -342,6 +357,47 @@ class App(ctk.CTk):
                     text_color=COLORS["text_secondary"],
                     hover_color=COLORS["hover"]
                 )
+
+    def update_logo(self):
+        """Atualiza a logo do sidebar de acordo com o tema atual, sem recriar widgets."""
+        try:
+            # Usar apenas os arquivos de logo corretos para cada tema
+            if get_dark_mode():
+                path = os.path.join(ASSETS_DIR, "clinicas", "logo", "logo-odontohub (1).pdf (1).png")
+            else:
+                path = os.path.join(ASSETS_DIR, "clinicas", "logo", "logo-odontohub (1).pdf.png")
+
+            new_img = None
+            if os.path.exists(path):
+                pil = Image.open(path)
+                prop = pil.width / pil.height if pil.height else 1
+                w = 200
+                h = int(w / prop)
+                new_img = ctk.CTkImage(light_image=pil, dark_image=pil, size=(w, h))
+
+            # Guardar referência e aplicar no widget existente
+            self.brand_logo_img = new_img
+            if hasattr(self, 'brand_logo_label'):
+                if new_img:
+                    # remover subtítulo se existir
+                    if getattr(self, 'brand_subtitle_label', None):
+                        try:
+                            self.brand_subtitle_label.pack_forget()
+                        except Exception:
+                            pass
+                        self.brand_subtitle_label = None
+                    self.brand_logo_label.configure(image=new_img, text="")
+                    # manter referência para GC
+                    self.brand_logo_label.image = new_img
+                else:
+                    # exibir fallback textual
+                    self.brand_logo_label.configure(image=None, text="OdontoHub", font=font("large_title", "bold"), text_color=COLORS["primary"])
+                    if not getattr(self, 'brand_subtitle_label', None):
+                        parent = self.brand_logo_label.master
+                        self.brand_subtitle_label = ctk.CTkLabel(parent, text="Clinical Management", font=font("small"), text_color=COLORS["text_secondary"])
+                        self.brand_subtitle_label.pack(pady=(0, 16), anchor="center")
+        except Exception as e:
+            print(f"Erro ao atualizar logo: {e}")
 
     pass
 

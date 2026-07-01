@@ -432,9 +432,14 @@ class Cadastro(BaseScreen):
         container.pack(fill="x", padx=self.padding_lateral, pady=5)
 
         entries_list = []
-        for label in (label1, label2, label3):
+        for index, label in enumerate((label1, label2, label3)):
             frame_i = ctk.CTkFrame(container, fg_color="transparent")
-            frame_i.pack(side="left", expand=True, fill="x", padx=5)
+            frame_i.pack(
+                side="left",
+                expand=True,
+                fill="x",
+                padx=(0, 5) if index < 2 else (0, 0)
+            )
 
             ctk.CTkLabel(
                 frame_i,
