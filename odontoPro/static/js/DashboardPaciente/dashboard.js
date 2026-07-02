@@ -11,6 +11,8 @@ function aplicarTema(tema) {
     }
     localStorage.setItem('dashboardTheme', tema);
     atualizarBotaoTema();
+    // ensure menu logo reflects the currently applied theme
+    if (typeof atualizarLogoMenu === 'function') atualizarLogoMenu();
 }
 
 function definirTemaInicial() {
@@ -42,7 +44,22 @@ function atualizarLogoMenu() {
     if (!menu || !logo) return;
 
     const isAberto = menu.classList.contains("aberto");
-    const src = isAberto ? logo.dataset.expandedSrc : logo.dataset.collapsedSrc;
+    let src = isAberto ? logo.dataset.expandedSrc : logo.dataset.collapsedSrc;
+    const isDark = document.body.classList.contains('theme-dark');
+
+    if (isDark) {
+        // prefer explicit dark variants if provided
+        if (isAberto && logo.dataset.expandedDarkSrc) {
+            src = logo.dataset.expandedDarkSrc;
+        } else if (!isAberto && logo.dataset.collapsedDarkSrc) {
+            src = logo.dataset.collapsedDarkSrc;
+        } else if (src) {
+            // fallback: swap known light filenames to their white/dark counterparts
+            src = src.replace('Logo%20Transparente%201.png', 'Logo%20Transparente%20white.png')
+                     .replace('Logo Transparente 1.png', 'Logo Transparente white.png')
+                     .replace('logo icon.png', 'Logo%20Transparente%20white.png');
+        }
+    }
 
     if (src) {
         logo.src = src;

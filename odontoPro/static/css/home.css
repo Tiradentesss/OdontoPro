@@ -45,14 +45,6 @@
     background: rgba(22, 33, 53, 0.92);
 }
 
-.theme-dark .download {
-    background: rgba(22, 33, 53, 0.92);
-}
-
-.theme-dark .desktop-section {
-    background: rgba(22, 33, 53, 0.92);
-}
-
 .theme-dark .platform-card {
     background: rgba(22, 33, 53, 0.92);
     border-color: var(--cor-borda);
@@ -279,6 +271,22 @@ body {
     align-items: center;
     border: 1px solid var(--cor-borda);
     transition: transform 0.35s ease, box-shadow 0.35s ease, opacity 0.35s ease;
+}
+
+/* Dark-mode overrides for home clinic cards */
+.theme-dark .clinic-card,
+.theme-dark .floating-clinic-cards .clinic-card {
+    background: var(--fundo-claro);
+    border: 1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.32);
+}
+
+.theme-dark .clinic-card img {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.theme-dark .clinic-card .clinic-info strong {
+    color: var(--texto-principal);
 }
 .clinic-card.is-active {
     display: flex;
@@ -665,6 +673,18 @@ body {
     border: 1px solid rgba(226, 232, 240, 1);
 }
 
+/* Dark mode adjustments for clinic cards and store badges */
+.theme-dark .clinica-card {
+    background: var(--fundo-claro);
+    border: 1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.25);
+}
+
+.theme-dark .clinica-logo {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
 .clinica-card h3 {
     margin: 0;
     font-size: 1.1rem;
@@ -741,6 +761,18 @@ body {
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 20px;
+}
+
+/* Store badge images (App Store / Play Store) adapt to theme */
+.store-badge img {
+    display: block;
+    height: 36px;
+    width: auto;
+}
+
+.theme-dark .store-badge img {
+    filter: brightness(0.85) contrast(0.95);
+    opacity: 0.95;
 }
 
 .download-preview-panel {
@@ -1346,6 +1378,20 @@ body {
     background: var(--azul-claro);
     color: white;
     border-color: var(--azul-claro);
+}
+
+/* Dark-mode store badge appearance */
+.theme-dark .store-badge {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.06);
+    box-shadow: none;
+    color: var(--texto-principal);
+}
+
+.theme-dark .store-badge img {
+    /* keep icons visible on dark bg without forcing color inversion */
+    filter: none;
+    opacity: 0.95;
 }
 
 .platform-preview {
