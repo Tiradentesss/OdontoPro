@@ -98,10 +98,12 @@ class ImagePreview:
 
 class ModernInput(ctk.CTkFrame):
     """Componente de input padronizado com label em cima e validação"""
-    def __init__(self, parent, label="", placeholder="", icon=None, required=False, read_only=False, **kwargs):
+    def __init__(self, parent, label="", placeholder="", icon=None, required=False, read_only=False, mask=None, **kwargs):
         super().__init__(parent, fg_color="transparent")
         self.required = required
         self.read_only = read_only
+        self.mask = mask
+        self.applying_mask = False  # Flag para evitar loops de aplicação de máscara
 
         # Label (em cima)
         label_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -139,9 +141,129 @@ class ModernInput(ctk.CTkFrame):
         self.entry.pack(side="left", fill="x", expand=True)
         self.entry.bind("<FocusOut>", self._validate)
         
+        # Se tem máscara, configurar
+        if self.mask:
+            self._setup_mask()
+        
         # Se é read-only, bloquear modificações
         if self.read_only:
             self._setup_read_only()
+
+    def _setup_mask(self):
+        """Configura a máscara para o campo"""
+        # Bloquear caracteres especiais (só números e caracteres da máscara)
+        self.entry.bind("<KeyRelease>", self._on_mask_key_release)
+        self.entry.bind("<Control-v>", self._on_paste)
+        self.entry.bind("<Control-V>", self._on_paste)
+
+    def _on_mask_key_release(self, event):
+        """Aplica a máscara após cada digitação"""
+        if self.applying_mask:
+            return
+        
+        self.applying_mask = True
+        current_text = self.entry.get()
+        current_pos = self.entry.index(tk.INSERT)
+        
+        # Extrair apenas números
+        numbers_only = ''.join(c for c in current_text if c.isdigit())
+        
+        # Aplicar máscara
+        if self.mask == "cpf":
+            formatted = self._format_cpf(numbers_only)
+        elif self.mask == "telefone":
+            formatted = self._format_telefone(numbers_only)
+        elif self.mask == "data":
+            formatted = self._format_data(numbers_only)
+        else:
+            formatted = numbers_only
+        
+        # Atualizar o entry
+        self.entry.delete(0, "end")
+        self.entry.insert(0, formatted)
+        
+        # Posicionar cursor inteligentemente
+        new_pos = self._calculate_cursor_position(current_pos, formatted, numbers_only)
+        self.entry.icursor(new_pos)
+        
+        self.applying_mask = False
+
+    def _on_paste(self, event):
+        """Trata cola (Ctrl+V) com máscara"""
+        try:
+            pasted_text = self.entry.clipboard_get()
+            # Extrair apenas números
+            numbers_only = ''.join(c for c in pasted_text if c.isdigit())
+            
+            # Aplicar máscara
+            if self.mask == "cpf":
+                formatted = self._format_cpf(numbers_only)
+            elif self.mask == "telefone":
+                formatted = self._format_telefone(numbers_only)
+            elif self.mask == "data":
+                formatted = self._format_data(numbers_only)
+            else:
+                formatted = numbers_only
+            
+            # Substituir seleção ou inserir
+            try:
+                sel_start = self.entry.index("sel.first")
+                sel_end = self.entry.index("sel.last")
+                self.entry.delete(sel_start, sel_end)
+                self.entry.insert(sel_start, formatted)
+            except tk.TclError:
+                # Sem seleção, inserir no cursor
+                insert_pos = self.entry.index(tk.INSERT)
+                self.entry.insert(insert_pos, formatted)
+            
+            return "break"
+        except Exception:
+            pass
+
+    def _format_cpf(self, numbers):
+        """Formata números como CPF: 000.000.000-00"""
+        # Limitar a 11 dígitos
+        numbers = numbers[:11]
+        if len(numbers) <= 3:
+            return numbers
+        elif len(numbers) <= 6:
+            return f"{numbers[:3]}.{numbers[3:]}"
+        elif len(numbers) <= 9:
+            return f"{numbers[:3]}.{numbers[3:6]}.{numbers[6:]}"
+        else:
+            return f"{numbers[:3]}.{numbers[3:6]}.{numbers[6:9]}-{numbers[9:]}"
+
+    def _format_telefone(self, numbers):
+        """Formata números como Telefone: (00) 00000-0000"""
+        # Limitar a 11 dígitos
+        numbers = numbers[:11]
+        if len(numbers) == 0:
+            return ""
+        elif len(numbers) <= 2:
+            return f"({numbers}"
+        elif len(numbers) <= 7:
+            return f"({numbers[:2]}) {numbers[2:]}"
+        else:
+            return f"({numbers[:2]}) {numbers[2:7]}-{numbers[7:]}"
+
+    def _format_data(self, numbers):
+        """Formata números como Data: 00/00/0000"""
+        # Limitar a 8 dígitos
+        numbers = numbers[:8]
+        if len(numbers) <= 2:
+            return numbers
+        elif len(numbers) <= 4:
+            return f"{numbers[:2]}/{numbers[2:]}"
+        else:
+            return f"{numbers[:2]}/{numbers[2:4]}/{numbers[4:]}"
+
+    def _calculate_cursor_position(self, old_pos, formatted, numbers_only):
+        """Calcula a posição do cursor após aplicar máscara"""
+        # Contar quantos números estão antes da posição do cursor
+        current_text = self.entry.get()  # Pega o texto antes da máscara ser aplicada
+        
+        # Retornar o fim do novo texto (cursor seguirá a digitação)
+        return len(formatted)
 
     def _setup_read_only(self):
         """Configura o entry como read-only bloqueando todas as modificações"""
@@ -796,10 +918,10 @@ class Configuracoes(BaseScreen):
 
         fields = [
             {"label": "Nome Completo", "placeholder": "Gabriel Gomes", "row": 0, "col": 0, "icon": "👤", "required": True},
-            {"label": "CPF", "placeholder": "000.000.000-00", "row": 0, "col": 1, "icon": "📄", "required": True},
+            {"label": "CPF", "placeholder": "000.000.000-00", "row": 0, "col": 1, "icon": "📄", "required": True, "mask": "cpf"},
             {"label": "E-mail", "placeholder": "gabriel@email.com", "row": 1, "col": 0, "icon": "✉️", "required": True},
-            {"label": "Telefone", "placeholder": "(00) 00000-0000", "row": 1, "col": 1, "icon": "📞", "required": True},
-            {"label": "Data de Nascimento", "placeholder": "24/05/2002", "row": 2, "col": 0, "icon": "🎂", "required": False},
+            {"label": "Telefone", "placeholder": "(00) 00000-0000", "row": 1, "col": 1, "icon": "📞", "required": True, "mask": "telefone"},
+            {"label": "Data de Nascimento", "placeholder": "24/05/2002", "row": 2, "col": 0, "icon": "🎂", "required": False, "mask": "data"},
             {"label": "Profissão", "placeholder": "Dentista", "row": 2, "col": 1, "icon": "💼", "required": False, "read_only": True}
         ]
 
@@ -808,7 +930,7 @@ class Configuracoes(BaseScreen):
             input_widget = ModernInput(
                 form_body, label=field["label"], placeholder=field["placeholder"],
                 icon=field["icon"], required=field.get("required", False),
-                read_only=field.get("read_only", False)
+                read_only=field.get("read_only", False), mask=field.get("mask", None)
             )
             padx_val = (0, 8) if field["col"] == 0 else (8, 0)
 
