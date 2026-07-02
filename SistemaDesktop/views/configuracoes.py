@@ -98,9 +98,10 @@ class ImagePreview:
 
 class ModernInput(ctk.CTkFrame):
     """Componente de input padronizado com label em cima e validação"""
-    def __init__(self, parent, label="", placeholder="", icon=None, required=False, **kwargs):
+    def __init__(self, parent, label="", placeholder="", icon=None, required=False, read_only=False, **kwargs):
         super().__init__(parent, fg_color="transparent")
         self.required = required
+        self.read_only = read_only
 
         # Label (em cima)
         label_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -137,6 +138,51 @@ class ModernInput(ctk.CTkFrame):
         )
         self.entry.pack(side="left", fill="x", expand=True)
         self.entry.bind("<FocusOut>", self._validate)
+        
+        # Se é read-only, bloquear modificações
+        if self.read_only:
+            self._setup_read_only()
+
+    def _setup_read_only(self):
+        """Configura o entry como read-only bloqueando todas as modificações"""
+        # Bloquear foco (não permitir que o cursor pisque)
+        self.entry.bind("<FocusIn>", self._block_focus)
+        # Bloquear cliques do mouse
+        self.entry.bind("<Button-1>", lambda e: "break")
+        # Bloquear inserção de texto via teclado
+        self.entry.bind("<KeyPress>", self._block_key_input)
+        # Bloquear cola (Ctrl+V)
+        self.entry.bind("<Control-v>", lambda e: "break")
+        self.entry.bind("<Control-V>", lambda e: "break")
+        # Bloquear corte (Ctrl+X)
+        self.entry.bind("<Control-x>", lambda e: "break")
+        self.entry.bind("<Control-X>", lambda e: "break")
+        # Bloquear backspace e delete
+        self.entry.bind("<BackSpace>", lambda e: "break")
+        self.entry.bind("<Delete>", lambda e: "break")
+
+    def _block_focus(self, event):
+        """Impede que o entry receba foco, redirecionando para o parent"""
+        # Redirecionar foco para o parent frame
+        self.focus()
+        return "break"
+
+    def _block_key_input(self, event):
+        """Bloqueia entrada de teclado, permitindo apenas navegação e seleção"""
+        # Permitir teclas de navegação e seleção (sem modificação)
+        allowed_keys = ["Left", "Right", "Home", "End", "Control_L", "Control_R"]
+        modifiers = ["Shift", "Control"]
+        
+        # Se é uma tecla de navegação, modificador ou Ctrl+A (select all), permitir
+        if event.keysym in allowed_keys or event.keysym in modifiers:
+            return None
+        
+        # Permitir Ctrl+A (selecionar tudo) e Ctrl+C (copiar)
+        if event.state & 0x4 and event.keysym.lower() in ["a", "c"]:
+            return None
+        
+        # Bloquear qualquer outra entrada
+        return "break"
 
     def _validate(self, event=None):
         if self.required and not self.entry.get().strip():
@@ -754,14 +800,15 @@ class Configuracoes(BaseScreen):
             {"label": "E-mail", "placeholder": "gabriel@email.com", "row": 1, "col": 0, "icon": "✉️", "required": True},
             {"label": "Telefone", "placeholder": "(00) 00000-0000", "row": 1, "col": 1, "icon": "📞", "required": True},
             {"label": "Data de Nascimento", "placeholder": "24/05/2002", "row": 2, "col": 0, "icon": "🎂", "required": False},
-            {"label": "Profissão", "placeholder": "Dentista", "row": 2, "col": 1, "icon": "💼", "required": False}
+            {"label": "Profissão", "placeholder": "Dentista", "row": 2, "col": 1, "icon": "💼", "required": False, "read_only": True}
         ]
 
         self.profile_entries = {}
         for field in fields:
             input_widget = ModernInput(
                 form_body, label=field["label"], placeholder=field["placeholder"],
-                icon=field["icon"], required=field.get("required", False)
+                icon=field["icon"], required=field.get("required", False),
+                read_only=field.get("read_only", False)
             )
             padx_val = (0, 8) if field["col"] == 0 else (8, 0)
 
