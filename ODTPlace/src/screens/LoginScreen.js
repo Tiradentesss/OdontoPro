@@ -23,7 +23,7 @@ export default function LoginScreen({ navigation }) {
 
     try {
       const user = await loginPatient(email, senha);
-      if (user && user.id) {
+      if (user && (user.id || user.email)) {
         login(user);
         navigation.replace('Home');
       } else {

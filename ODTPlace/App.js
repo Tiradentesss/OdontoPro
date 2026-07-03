@@ -36,6 +36,11 @@ import PersonalDataScreen from './src/screens/PersonalDataScreen';
 import ReportsScreen from './src/screens/ReportsScreen';
 import RescheduleScreen from './src/screens/RescheduleScreen';
 import SuccessScreen from './src/screens/SuccessScreen';
+import ProfessionalInfoScreen from './src/screens/ProfessionalInfoScreen';
+import AppointmentBookingScreen from './src/screens/AppointmentBookingScreen';
+import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
+import SystemScreen from './src/screens/SystemScreen';
+import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
 
 import CustomTabBar from './src/components/CustomTabBar';
 
@@ -92,6 +97,11 @@ export default function App() {
             <Stack.Screen name="Schedule" component={ScheduleScreen} />
             <Stack.Screen name="ClinicDetail" component={ClinicDetailScreen} />
             <Stack.Screen name="Professionals" component={ProfessionalsScreen} />
+            <Stack.Screen name="ProfessionalInfo" component={ProfessionalInfoScreen} />
+            <Stack.Screen name="AppointmentBooking" component={AppointmentBookingScreen} />
+            <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+            <Stack.Screen name="System" component={SystemScreen} />
+            <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
 

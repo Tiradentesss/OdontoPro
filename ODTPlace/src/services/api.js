@@ -1,14 +1,21 @@
 import axios from "axios";
+import { Platform } from "react-native";
 
-// Configure your backend URL here
-// For development:
-// - Android Emulator/Web: http://localhost:3001/api
-// - Physical Device/iOS: Use your machine's local IP (e.g., http://192.168.X.X:3001/api)
-// - To find your IP on Windows: run `ipconfig` in terminal and look for IPv4 Address
+// Configure your backend URL here.
+// Android Emulator should use 10.0.2.2, while physical devices need your machine's LAN IP.
+const resolveApiBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
 
-// Change this to your machine's IP if connecting from a physical device
-// Your machine IP: 10.0.60.217
-const API_BASE_URL = "http://10.0.60.217:3001/api"; // Change to your IP for physical devices
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:3001/api";
+  }
+
+  return "http://localhost:3001/api";
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,

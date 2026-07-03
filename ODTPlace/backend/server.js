@@ -1,4 +1,7 @@
-require('dotenv').config();
+const path = require('path');
+const envPath = path.resolve(__dirname, '../../.env');
+console.log('Loading env from:', envPath);
+require('dotenv').config({ path: envPath });
 
 const express = require('express');
 const cors = require('cors');
@@ -6,17 +9,26 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const db = require('./config/database');
 
-// Helper function: only accept Django PBKDF2 hash
-function verifyPassword(inputPassword, storedHash) {
-  if (!storedHash.startsWith('pbkdf2_sha256')) return Promise.resolve(false);
-  const parts = storedHash.split('$');
-  if (parts.length !== 4) return Promise.resolve(false);
-  const iterations = parseInt(parts[1]);
-  const salt = parts[2];
-  const expectedHash = parts[3];
-  const derived = crypto.pbkdf2Sync(inputPassword, salt, iterations, 32, 'sha256');
-  const computedHash = derived.toString('base64');
-  return Promise.resolve(computedHash === expectedHash);
+// Support both Django PBKDF2 hashes and bcrypt hashes for backward compatibility.
+async function verifyPassword(inputPassword, storedHash) {
+  if (!storedHash) return false;
+
+  if (storedHash.startsWith('pbkdf2_sha256')) {
+    const parts = storedHash.split('$');
+    if (parts.length !== 4) return false;
+    const iterations = parseInt(parts[1], 10);
+    const salt = parts[2];
+    const expectedHash = parts[3];
+    const derived = crypto.pbkdf2Sync(inputPassword, salt, iterations, 32, 'sha256');
+    const computedHash = derived.toString('base64');
+    return computedHash === expectedHash;
+  }
+
+  if (storedHash.startsWith('$2') && storedHash.length >= 60) {
+    return bcrypt.compare(inputPassword, storedHash);
+  }
+
+  return false;
 }
 
 // Debug: Check if .env is loaded
