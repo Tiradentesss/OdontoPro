@@ -1,15 +1,30 @@
 import axios from "axios";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 
-// Configure your backend URL here.
-// Android Emulator should use 10.0.2.2, while physical devices need your machine's LAN IP.
+const normalizeBaseUrl = (value) => {
+  if (!value) return null;
+  return value.trim().replace(/\/+$/, "");
+};
+
 const resolveApiBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+  const configuredUrl = normalizeBaseUrl(process.env.EXPO_PUBLIC_API_URL);
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
+  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
+  if (hostUri) {
+    const host = hostUri.split(":")[0];
+    return `http://${host}:3001/api`;
   }
 
   if (Platform.OS === "android") {
     return "http://10.0.2.2:3001/api";
+  }
+
+  if (Platform.OS === "ios") {
+    return "http://127.0.0.1:3001/api";
   }
 
   return "http://localhost:3001/api";

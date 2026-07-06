@@ -37,6 +37,7 @@ console.log('USE_MOCK_DATA:', process.env.USE_MOCK_DATA);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(cors());
 app.use(express.json());
@@ -194,7 +195,7 @@ app.post('/api/register', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server running on http://${HOST}:${PORT}`);
   console.log(`Development mode: ${useMockData() ? 'Using mock data' : 'Connected to database'}`);
 });
