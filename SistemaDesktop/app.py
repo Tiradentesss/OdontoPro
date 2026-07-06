@@ -77,7 +77,7 @@ class App(ctk.CTk):
             "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),
-            "permissao": Permissoes(self.container, self.clinica_id),
+            "permissao": Permissoes(self.container, self.clinica_id, self.usuario_id),
         }
         
         # Mostrar o frame que estava ativo
@@ -296,7 +296,7 @@ class App(ctk.CTk):
             "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),
-            "permissao": Permissoes(self.container, self.clinica_id),
+            "permissao": Permissoes(self.container, self.clinica_id, self.usuario_id),
         }
 
         # ================= Configuração de Padding/Espaçamento da Agenda =================

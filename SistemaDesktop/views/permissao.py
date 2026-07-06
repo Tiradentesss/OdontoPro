@@ -479,9 +479,10 @@ class AdminListFrame(ctk.CTkFrame):
 
 
 class Permissoes(BaseScreen):
-    def __init__(self, parent, clinica_id=None):
+    def __init__(self, parent, clinica_id=None, usuario_id=None):
         super().__init__(parent, "Permissões")
         self.clinica_id = clinica_id
+        self.usuario_logado_id = usuario_id
 
         resultado_perms = GerenciamentoController.inicializar_permissoes_padrao()
         if not resultado_perms.get("sucesso"):
@@ -710,6 +711,15 @@ class Permissoes(BaseScreen):
         if not self.selected_admin_id:
             messagebox.showwarning("Aviso", "Selecione um administrador para salvar permissões")
             return
+
+        novo_status = "Ativo" if self.account_status_switch.get() else "Inativo"
+        if self.selected_admin_id == self.usuario_logado_id and novo_status == "Inativo":
+            messagebox.showerror(
+                "Erro",
+                "Você não pode desativar sua própria conta. Peça para outro administrador realizar essa ação, caso seja realmente necessário."
+            )
+            return
+
         try:
             gerente_id = self.selected_admin_id
             GerenciamentoController.remover_todas_permissoes_gerente(gerente_id)
@@ -723,7 +733,10 @@ class Permissoes(BaseScreen):
             if self.account_status_switch.get():
                 GerenciamentoController.ativar_gerente(gerente_id)
             else:
-                GerenciamentoController.desativar_gerente(gerente_id)
+                resultado = GerenciamentoController.desativar_gerente(gerente_id, current_user_id=self.usuario_logado_id)
+                if not resultado.get("sucesso"):
+                    messagebox.showerror("Erro", resultado.get("mensagem", "Erro ao salvar permissões"))
+                    return
             self.admins_data = self.load_gerentes_from_database()
             messagebox.showinfo("Sucesso", "✅ Permissões e status da conta salvos com sucesso!")
             self.admin_list_panel.admins_data = self.admins_data

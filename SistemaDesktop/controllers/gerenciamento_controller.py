@@ -197,10 +197,16 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def desativar_gerente(gerente_id):
+    def desativar_gerente(gerente_id, current_user_id=None):
         """
         Desativa um gerente (soft delete)
         """
+        if current_user_id is not None and current_user_id == gerente_id:
+            return {
+                "sucesso": False,
+                "mensagem": "Você não pode desativar sua própria conta. Peça para outro administrador realizar essa ação, caso seja realmente necessário."
+            }
+
         conn = None
         cursor = None
         try:
