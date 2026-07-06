@@ -89,6 +89,18 @@ class FinanceiroDashboardTests(TestCase):
         self.assertContains(response, 'Relatório')
         self.assertContains(response, '100%')
 
+    def test_painel_profissional_shows_new_reports_center(self):
+        session = self.client.session
+        session['clinica_id'] = self.clinica.id
+        session.save()
+
+        response = self.client.get(reverse('painel_profissional'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Centro de Relatórios')
+        self.assertContains(response, 'Exportar para Excel (CSV)')
+        self.assertContains(response, 'Relatório Gerencial Odontológico')
+
 
 class LoginViewTests(TestCase):
     def setUp(self):

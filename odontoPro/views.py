@@ -15,7 +15,9 @@ from django.templatetags.static import static
 from django.core.files.storage import default_storage
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade, Gerenciamento, Financeiro
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
+from django.db.models import Sum, Count
+import json
 from decimal import Decimal
 from django.utils import timezone
 from django.utils.timezone import make_aware
@@ -549,9 +551,10 @@ def painel_profissional(request):
         return redirect('painel_profissional')
 
     now = timezone.now()
+    # Mostra todas as consultas agendadas/confirmadas, independentemente da hora
     consultas = Consulta.objects.filter(
         clinica=clinica_obj,
-        data_hora__gte=now
+        status__in=['agendada', 'confirmada']
     ).select_related('paciente', 'medico', 'especialidade').order_by('data_hora')[:6]
 
     consultas_realizadas = Consulta.objects.filter(clinica=clinica_obj, status='realizada')
@@ -565,7 +568,7 @@ def painel_profissional(request):
             data_hora__lt=consulta.data_hora
         ).exists():
             total_primeira_vez += 1
-    total_faltas = consultas_totais.filter(status__in=['cancelada', 'perdida']).count()
+    total_faltas = consultas_totais.filter(status='cancelada').count()
     eficiencia_percentual = int(round((total_atendidos / total_agendados * 100) if total_agendados else 0))
 
     clinica_obj.logo_url = _get_clinica_logo_url(clinica_obj)
@@ -581,6 +584,141 @@ def painel_profissional(request):
 
     def _format_currency(value: Decimal) -> str:
         return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    # --- Charts data generation ---
+    # Daily evolution (last 30 days): receita (soma de transacoes) e consultas (contagem)
+    today_date = now.date()
+    start_date = today_date - timedelta(days=29)
+    daily_evolution = []
+    for i in range(30):
+        d = start_date + timedelta(days=i)
+        consultas_count = consultas_totais.filter(data_hora__date=d).count()
+        receita_total = transacoes.filter(tipo='receita', data__date=d).aggregate(total=Sum('valor'))['total'] or Decimal('0.00')
+        daily_evolution.append({
+            'date': d.strftime('%d/%m'),
+            'receita': float(receita_total),
+            'consultas': consultas_count,
+        })
+
+    # Appointments by specialty (recent period)
+    appointments_by_specialty = []
+    spec_qs = consultas_totais.filter(
+        especialidade__isnull=False,
+        especialidade__nome__isnull=False
+    ).values('especialidade__nome').annotate(value=Count('id')).order_by('-value')
+    for s in spec_qs:
+        esp_nome = s.get('especialidade__nome', 'Sem especialidade')
+        if esp_nome and esp_nome.strip():  # Garante que não é vazio ou whitespace
+            appointments_by_specialty.append({'name': esp_nome, 'value': s['value']})
+
+    # Monthly evolution (last 12 months) for receitas/despesas
+    monthly_evolution = []
+    def month_start_year_month(months_ago):
+        month = today_date.month - months_ago
+        year = today_date.year
+        while month <= 0:
+            month += 12
+            year -= 1
+        return year, month
+
+    for months_ago in range(11, -1, -1):
+        y, m = month_start_year_month(months_ago)
+        start = date(y, m, 1)
+        if m == 12:
+            next_month = date(y + 1, 1, 1)
+        else:
+            next_month = date(y, m + 1, 1)
+        receita_m = transacoes.filter(tipo='receita', data__date__gte=start, data__date__lt=next_month).aggregate(total=Sum('valor'))['total'] or Decimal('0.00')
+        despesa_m = transacoes.filter(tipo='despesa', data__date__gte=start, data__date__lt=next_month).aggregate(total=Sum('valor'))['total'] or Decimal('0.00')
+        monthly_evolution.append({
+            'month': start.strftime('%b %y'),
+            'receita': float(receita_m),
+            'despesa': float(despesa_m),
+        })
+
+    charts = {
+        'dailyEvolution': daily_evolution,
+        'appointmentsBySpecialty': appointments_by_specialty,
+        'monthlyEvolution': monthly_evolution,
+    }
+    charts_json = json.dumps(charts, ensure_ascii=False)
+
+    # --- Report data (serialized) ---
+    transactions_list = []
+    for tx in transacoes[:500]:
+        transactions_list.append({
+            'id': tx.id,
+            'description': tx.descricao,
+            'category': tx.categoria,
+            'type': 'Entrada' if tx.tipo == 'receita' else 'Saída',
+            'date': tx.data.date().isoformat(),
+            'status': 'Pago',
+            'paymentMethod': None,
+            'amount': float(tx.valor),
+        })
+
+    appointments_list = []
+    for ap in consultas_totais.order_by('-data_hora')[:500]:
+        appointments_list.append({
+            'id': ap.id,
+            'patientName': ap.paciente.nome if ap.paciente else (ap.nome or ''),
+            'dentistName': ap.medico.nome if ap.medico else '',
+            'specialty': ap.especialidade.nome if ap.especialidade else '',
+            'procedureName': ap.especialidade.nome if ap.especialidade else '',
+            'date': ap.data_hora.date().isoformat(),
+            'time': ap.data_hora.time().strftime('%H:%M'),
+            'room': '',
+            'insurance': '',
+            'status': ap.get_status_display(),
+            'price': float(ap.especialidade.preco) if ap.especialidade and ap.especialidade.preco else 0.0,
+        })
+
+    patients_list = []
+    for p in Paciente.objects.filter(clinica=clinica_obj)[:1000]:
+        patients_list.append({
+            'name': p.nome,
+            'age': None,
+            'gender': p.sexo,
+            'city': '',
+            'origin': '',
+            'lastVisitDate': None,
+            'absencesCount': 0,
+            'revenueGenerated': 0.0,
+        })
+
+    dentists_list = []
+    for m in Medico.objects.filter(clinica=clinica_obj)[:200]:
+        dentists_list.append({
+            'id': m.id,
+            'name': m.nome,
+            'specialty': ', '.join([e.nome for e in m.especialidades.all()]) if m.especialidades.exists() else '',
+            'rating': float(m.avaliacao) if m.avaliacao else None,
+            'time': None,
+            'conversion': None,
+            'returnRate': None,
+        })
+
+    procedures_stats = []
+    # Aggregate by especialidade
+    for esp in Especialidade.objects.filter(clinica=clinica_obj):
+        cnt = consultas_totais.filter(especialidade=esp).count()
+        procedures_stats.append({
+            'name': esp.nome,
+            'count': cnt,
+            'avgDurationMinutes': None,
+            'revenue': 0.0,
+            'profit': 0.0,
+            'topDentistName': ''
+        })
+
+    report_data = {
+        'transactions': transactions_list,
+        'appointments': appointments_list,
+        'patients': patients_list,
+        'dentists': dentists_list,
+        'proceduresStats': procedures_stats,
+    }
+    report_data_json = json.dumps(report_data, ensure_ascii=False)
 
     return render(request, "DashboardProfissional/painel.html", {
         "profissional": profissional,
@@ -600,6 +738,9 @@ def painel_profissional(request):
         "total_primeira_vez": total_primeira_vez,
         "total_faltas": total_faltas,
         "eficiencia_percentual": eficiencia_percentual,
+        "charts": charts,
+        "charts_json": charts_json,
+        "report_data_json": report_data_json,
     })
 
 

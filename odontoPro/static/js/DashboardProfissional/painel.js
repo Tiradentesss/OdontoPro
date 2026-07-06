@@ -104,6 +104,331 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const reportPills = document.querySelectorAll('.report-pill');
+    const reportCards = document.querySelectorAll('#reports-kpis .reports-stat-card');
+    const visualCards = document.querySelectorAll('.reports-visual-grid .reports-visual-card');
+    const panelTitle = document.getElementById('reports-panel-title');
+    const panelSubtitle = document.getElementById('reports-panel-subtitle');
+    const metricsTitle = document.getElementById('reports-metrics-title');
+    const metricsSubtitle = document.getElementById('reports-metrics-subtitle');
+    const metricsContent = document.getElementById('reports-metrics-content');
+
+    if (reportPills.length) {
+        const totalAgendadas = panelSubtitle?.dataset.totalAgendadas || '0';
+        const views = {
+            financeiro: {
+                title: 'Próximas consultas',
+                subtitle: `${totalAgendadas} agendadas`,
+                metricsTitle: 'Resumo de atendimento',
+                metricsSubtitle: 'Base atual da clínica',
+                cards: ['financeiro']
+            },
+            consultas: {
+                title: 'Fluxo de consultas',
+                subtitle: 'Acompanhamento do dia a dia',
+                metricsTitle: 'Produtividade do período',
+                metricsSubtitle: 'Agendamentos e execução',
+                cards: ['consultas']
+            },
+            pacientes: {
+                title: 'Pacientes e recorrência',
+                subtitle: 'Leads, retornos e faltas',
+                metricsTitle: 'Comportamento da base',
+                metricsSubtitle: 'Recorrência e presença',
+                cards: ['pacientes']
+            },
+            desempenho: {
+                title: 'Desempenho geral',
+                subtitle: 'Indicadores de execução',
+                metricsTitle: 'Desempenho operacional',
+                metricsSubtitle: 'Eficiência da operação',
+                cards: ['desempenho']
+            }
+        };
+
+        function setReportView(view) {
+            reportPills.forEach(pill => {
+                pill.classList.toggle('active', pill.dataset.view === view);
+            });
+
+            reportCards.forEach(card => {
+                card.style.display = views[view].cards.includes(card.dataset.view) ? 'flex' : 'none';
+            });
+
+                // toggle visual cards by data-view
+                if (visualCards && visualCards.length) {
+                    visualCards.forEach(vc => {
+                        vc.style.display = (vc.dataset.view === view) ? 'block' : 'none';
+                    });
+                }
+
+            if (panelTitle) panelTitle.textContent = views[view].title;
+            if (panelSubtitle) panelSubtitle.textContent = views[view].subtitle;
+            if (metricsTitle) metricsTitle.textContent = views[view].metricsTitle;
+            if (metricsSubtitle) metricsSubtitle.textContent = views[view].metricsSubtitle;
+
+            const metricItems = metricsContent?.querySelectorAll('.metric-bar-item');
+            if (metricItems && metricItems.length) {
+                metricItems.forEach((item, index) => {
+                    item.style.display = view === 'financeiro' || view === 'consultas' ? 'flex' : 'none';
+                    if (view === 'financeiro') {
+                        item.style.display = index < 4 ? 'flex' : 'none';
+                    }
+                    if (view === 'consultas') {
+                        item.style.display = index < 4 ? 'flex' : 'none';
+                    }
+                    if (view === 'pacientes') {
+                        item.style.display = index === 2 || index === 3 ? 'flex' : 'none';
+                    }
+                    if (view === 'desempenho') {
+                        item.style.display = index === 0 || index === 1 ? 'flex' : 'none';
+                    }
+                });
+            }
+
+            // show/hide monthly finance chart container
+            const financeChartCard = document.getElementById('reports-finance-chart');
+            if (financeChartCard) financeChartCard.style.display = view === 'financeiro' ? 'block' : 'none';
+
+            // initialize charts only for their intended views
+            if (view === 'consultas') {
+                initDailyChart();
+                initSpecialties();
+            } else if (view === 'financeiro') {
+                initMonthly();
+            }
+        }
+
+        reportPills.forEach(pill => {
+            pill.addEventListener('click', () => setReportView(pill.dataset.view));
+        });
+
+        setReportView('financeiro');
+    }
+
+    // --- Charts (Chart.js) initialization per view ---
+    const chartInstances = {};
+
+    function initDailyChart(){
+        const el = document.getElementById('chart-daily');
+        if (!el || chartInstances.daily) return;
+        let data = window.REPORT_CHARTS && window.REPORT_CHARTS.dailyEvolution ? window.REPORT_CHARTS.dailyEvolution : [];
+        
+        // Se não há dados, cria dados default com 30 dias zerados
+        if (!data || data.length === 0) {
+            data = [];
+            const today = new Date();
+            for (let i = 29; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(d.getDate() - i);
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                data.push({
+                    date: `${day}/${month}`,
+                    receita: 0,
+                    consultas: 0
+                });
+            }
+        }
+        
+        const labels = data.map(d=>d.date);
+        const receita = data.map(d=>d.receita);
+        const consultas = data.map(d=>d.consultas);
+
+        chartInstances.daily = new Chart(el.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Receita (R$)', data: receita, borderColor: '#00B6F0', backgroundColor: 'rgba(0,182,240,0.08)', tension:0.3, fill:true, yAxisID: 'y'},
+                    { label: 'Consultas', data: consultas, borderColor: '#00C97F', backgroundColor: 'rgba(0,201,127,0.06)', tension:0.3, fill:true, yAxisID: 'y1' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { position: 'left', ticks: { color: '#6b7280' } },
+                    y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#6b7280' } }
+                },
+                plugins: { legend: { display: true, position: 'top' } }
+            }
+        });
+    }
+
+    function initSpecialties(){
+        const el = document.getElementById('chart-specialties');
+        if (!el || chartInstances.spec) return;
+        let data = window.REPORT_CHARTS && window.REPORT_CHARTS.appointmentsBySpecialty ? window.REPORT_CHARTS.appointmentsBySpecialty : [];
+        
+        // Se não há dados, cria dados default com especialidades comuns zeradas
+        if (!data || data.length === 0) {
+            data = [
+                { name: 'Limpeza', value: 0 },
+                { name: 'Restauração', value: 0 },
+                { name: 'Extração', value: 0 },
+                { name: 'Endodontia', value: 0 },
+                { name: 'Ortodontia', value: 0 },
+                { name: 'Outras', value: 0 }
+            ];
+        }
+        
+        const labels = data.map(d=>d.name);
+        const values = data.map(d=>d.value);
+        const colors = ['#00B6F0','#00C97F','#3b82f6','#f59e0b','#8b5cf6','#ec4899'];
+
+        chartInstances.spec = new Chart(el.getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: labels, datasets: [{ data: values, backgroundColor: labels.map((_,i)=>colors[i%colors.length]) }] },
+            options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+        });
+
+        // render a small legend
+        const legendEl = document.getElementById('specialty-legend');
+        if(legendEl){
+            legendEl.innerHTML = '';
+            data.slice(0,6).forEach((item, idx)=>{
+                const row = document.createElement('div');
+                row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.fontSize='0.9rem'; row.style.padding='6px 0';
+                const left = document.createElement('div'); left.style.display='flex'; left.style.alignItems='center';
+                const dot = document.createElement('span'); dot.style.width='10px'; dot.style.height='10px'; dot.style.borderRadius='50%'; dot.style.display='inline-block'; dot.style.marginRight='8px'; dot.style.background = colors[idx%colors.length];
+                left.appendChild(dot);
+                const label = document.createElement('span'); label.textContent = item.name; left.appendChild(label);
+                const right = document.createElement('div'); right.textContent = item.value + ' un';
+                row.appendChild(left); row.appendChild(right);
+                legendEl.appendChild(row);
+            });
+        }
+    }
+
+    function initMonthly(){
+        const el = document.getElementById('chart-monthly');
+        if (!el || chartInstances.monthly) return;
+        let data = window.REPORT_CHARTS && window.REPORT_CHARTS.monthlyEvolution ? window.REPORT_CHARTS.monthlyEvolution : [];
+        
+        // Se não há dados, cria dados default com 12 meses zerados
+        if (!data || data.length === 0) {
+            data = [];
+            const today = new Date();
+            const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            
+            for (let i = 11; i >= 0; i--) {
+                const month = today.getMonth() - i;
+                const year = today.getFullYear();
+                const monthIndex = ((month % 12) + 12) % 12;
+                const yearAdjusted = year + Math.floor((today.getMonth() - i) / 12);
+                
+                data.push({
+                    month: `${months[monthIndex]} ${String(yearAdjusted).slice(-2)}`,
+                    receita: 0,
+                    despesa: 0
+                });
+            }
+        }
+        
+        const labels = data.map(d=>d.month);
+        const receita = data.map(d=>d.receita);
+        const despesa = data.map(d=>d.despesa);
+
+        chartInstances.monthly = new Chart(el.getContext('2d'), {
+            type: 'bar',
+            data: { labels: labels, datasets: [
+                { label: 'Receita', data: receita, backgroundColor: '#10b981' },
+                { label: 'Despesa', data: despesa, backgroundColor: '#ef4444' }
+            ] },
+            options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}}, scales:{y:{ticks:{color:'#6b7280'}}} }
+        });
+    }
+
+    // --- Report preview and CSV export using server-provided REPORT_DATA ---
+    function setReportType(type){
+        window._selectedReport = type;
+        document.querySelectorAll('.report-select-btn').forEach(btn=>{
+            btn.classList.remove('bg-brand-bgLight','text-brand-blue');
+            btn.classList.add('bg-gray-50','text-gray-600');
+        });
+        const act = document.getElementById('report-tab-' + type);
+        if(act){ act.classList.remove('bg-gray-50','text-gray-600'); act.classList.add('bg-brand-bgLight','text-brand-blue'); }
+        renderReportsPreview();
+    }
+
+    function renderReportsPreview(){
+        const head = document.getElementById('report-preview-head');
+        const body = document.getElementById('report-preview-body');
+        head.innerHTML = '';
+        body.innerHTML = '';
+        const data = window.REPORT_DATA || { transactions: [], appointments: [], patients: [], proceduresStats: [], dentists: [] };
+        const selected = window._selectedReport || 'finance';
+
+        if(selected === 'finance'){
+            head.innerHTML = `<tr> <th class="px-6 py-3">Descrição</th> <th class="px-6 py-3">Categoria</th> <th class="px-6 py-3">Tipo</th> <th class="px-6 py-3">Data</th> <th class="px-6 py-3">Valor (R$)</th> </tr>`;
+            data.transactions.forEach(tx=>{
+                const tr = document.createElement('tr'); tr.className='border-b border-gray-50 hover:bg-gray-50/50';
+                tr.innerHTML = `<td class="px-6 py-2.5 font-bold text-gray-900">${tx.description}</td><td class="px-6 py-2.5 text-gray-500">${tx.category}</td><td class="px-6 py-2.5 font-semibold">${tx.type}</td><td class="px-6 py-2.5 text-gray-500">${tx.date}</td><td class="px-6 py-2.5 text-gray-900 font-mono">R$ ${Number(tx.amount).toLocaleString('pt-BR')}</td>`;
+                body.appendChild(tr);
+            });
+        } else if(selected === 'appointments'){
+            head.innerHTML = `<tr> <th class="px-6 py-3">Paciente</th> <th class="px-6 py-3">Dentista</th> <th class="px-6 py-3">Procedimento</th> <th class="px-6 py-3">Preço (R$)</th> </tr>`;
+            data.appointments.forEach(ap=>{
+                const tr = document.createElement('tr'); tr.className='border-b border-gray-50 hover:bg-gray-50/50';
+                tr.innerHTML = `<td class="px-6 py-2.5 font-bold text-gray-900">${ap.patientName}</td><td class="px-6 py-2.5 text-gray-500">${ap.dentistName}</td><td class="px-6 py-2.5">${ap.procedureName}</td><td class="px-6 py-2.5 font-mono">R$ ${Number(ap.price).toLocaleString('pt-BR')}</td>`;
+                body.appendChild(tr);
+            });
+        } else if(selected === 'patients'){
+            head.innerHTML = `<tr><th class="px-6 py-3">Nome</th><th class="px-6 py-3">Cidade</th><th class="px-6 py-3">Origem</th><th class="px-6 py-3">Faturamento Total</th></tr>`;
+            data.patients.forEach(pt=>{
+                const tr = document.createElement('tr'); tr.className='border-b border-gray-50 hover:bg-gray-50/50';
+                tr.innerHTML = `<td class="px-6 py-2.5 font-bold text-gray-900">${pt.name}</td><td class="px-6 py-2.5 text-gray-500">${pt.city || ''}</td><td class="px-6 py-2.5">${pt.origin || ''}</td><td class="px-6 py-2.5 font-mono">R$ ${Number(pt.revenueGenerated || 0).toLocaleString('pt-BR')}</td>`;
+                body.appendChild(tr);
+            });
+        } else if(selected === 'procedures'){
+            head.innerHTML = `<tr><th class="px-6 py-3">Procedimento</th><th class="px-6 py-3">Quantidade</th><th class="px-6 py-3">Faturamento</th><th class="px-6 py-3">Lucro Estimado</th></tr>`;
+            data.proceduresStats.forEach(pr=>{
+                const tr = document.createElement('tr'); tr.className='border-b border-gray-50 hover:bg-gray-50/50';
+                tr.innerHTML = `<td class="px-6 py-2.5 font-bold text-gray-900">${pr.name}</td><td class="px-6 py-2.5 text-gray-500 font-mono">${pr.count}</td><td class="px-6 py-2.5 font-mono">R$ ${Number(pr.revenue||0).toLocaleString('pt-BR')}</td><td class="px-6 py-2.5 font-mono text-emerald-600">R$ ${Number(pr.profit||0).toLocaleString('pt-BR')}</td>`;
+                body.appendChild(tr);
+            });
+        } else if(selected === 'dentists'){
+            head.innerHTML = `<tr><th class="px-6 py-3">Nome</th><th class="px-6 py-3">Especialidade</th><th class="px-6 py-3">Classificação</th><th class="px-6 py-3">Retorno de Pacientes</th></tr>`;
+            data.dentists.forEach(dt=>{
+                const tr = document.createElement('tr'); tr.className='border-b border-gray-50 hover:bg-gray-50/50';
+                tr.innerHTML = `<td class="px-6 py-2.5 font-bold text-gray-900">${dt.name}</td><td class="px-6 py-2.5 text-gray-500">${dt.specialty}</td><td class="px-6 py-2.5 font-bold text-amber-500">⭐ ${dt.rating||''}</td><td class="px-6 py-2.5">${dt.returnRate||''}%</td>`;
+                body.appendChild(tr);
+            });
+        }
+    }
+
+    function exportToCSV(){
+        const data = window.REPORT_DATA || { transactions: [], appointments: [], patients: [], proceduresStats: [], dentists: [] };
+        const selected = window._selectedReport || 'finance';
+        let csvContent = '';
+        let fileName = '';
+        if(selected === 'finance'){
+            fileName = 'financeiro.csv'; csvContent += 'Descrição;Categoria;Tipo;Data;Meio de Pagamento;Status;Valor (R$)\n';
+            data.transactions.forEach(tx=>{ csvContent += `"${tx.description}";"${tx.category}";"${tx.type}";"${tx.date}";"${tx.paymentMethod || ''}";"${tx.status}";${String(tx.amount).replace('.',',')}\n`; });
+        } else if(selected === 'appointments'){
+            fileName = 'consultas.csv'; csvContent += 'Paciente;Dentista;Especialidade;Procedimento;Data;Hora;Consultório;Convênio;Status;Preço (R$)\n';
+            data.appointments.forEach(ap=>{ csvContent += `"${ap.patientName}";"${ap.dentistName}";"${ap.specialty}";"${ap.procedureName}";"${ap.date}";"${ap.time}";"${ap.room || ''}";"${ap.insurance || ''}";"${ap.status}";${String(ap.price).replace('.',',')}\n`; });
+        } else if(selected === 'patients'){
+            fileName = 'pacientes.csv'; csvContent += 'Nome;Idade;Gênero;Cidade;Origem;Última Visita;Faltas;Faturamento Total (R$)\n';
+            data.patients.forEach(pt=>{ csvContent += `"${pt.name}";${pt.age||''};"${pt.gender||''}";"${pt.city||''}";"${pt.origin||''}";"${pt.lastVisitDate||''}";${pt.absencesCount||0};${String(pt.revenueGenerated||0).replace('.',',')}\n`; });
+        } else if(selected === 'procedures'){
+            fileName = 'procedimentos.csv'; csvContent += 'Procedimento;Quantidade;Tempo Médio (min);Faturamento (R$);Lucro Líquido (R$);Dentista Líder\n';
+            data.proceduresStats.forEach(pr=>{ csvContent += `"${pr.name}";${pr.count||0};${pr.avgDurationMinutes||''};${String(pr.revenue||0).replace('.',',')};${String(pr.profit||0).replace('.',',')};"${pr.topDentistName||''}"\n`; });
+        } else if(selected === 'dentists'){
+            fileName = 'dentistas.csv'; csvContent += 'Nome;Especialidade;Nota Média;Retorno de Pacientes (%)\n';
+            data.dentists.forEach(dt=>{ csvContent += `"${dt.name}";"${dt.specialty||''}";${String(dt.rating||'').replace('.',',')};${dt.returnRate||''}\n`; });
+        }
+
+        const BOM = '\uFEFF'; const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.setAttribute('href', url); link.setAttribute('download', fileName); document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+    }
+
+    // expose for inline buttons
+    window.setReportType = setReportType;
+    window.renderReportsPreview = renderReportsPreview;
+    window.exportToCSV = exportToCSV;
+
+
     // inicializar valor do input de data para hoje
     const dataInput = document.getElementById('agendamento-data');
     if (dataInput) {

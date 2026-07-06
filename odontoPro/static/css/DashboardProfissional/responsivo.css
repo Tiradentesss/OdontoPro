@@ -116,6 +116,26 @@
     }
 
     .caixa-avatar-perfil {
+    }
+}
+
+@media (max-width: 600px) {
+    .reports-toolbar-wrapper {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .reports-toolbar {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .btn-download-pdf {
+        width: 100%;
+        justify-content: center;
+    }
+}
         left: 50% !important;
         transform: translateX(-50%) !important;
         bottom: -25px !important;
