@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from .base import BaseScreen, ActionButtons
 from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode, get_dark_mode
+from ..services.endereco_service import EnderecoService
 import os
 from PIL import Image, ImageTk, ImageDraw
 
@@ -140,11 +141,11 @@ class ModernInput(ctk.CTkFrame):
         )
         self.entry.pack(side="left", fill="x", expand=True)
         self.entry.bind("<FocusOut>", self._validate)
-        
+
         # Se tem máscara, configurar
         if self.mask:
             self._setup_mask()
-        
+
         # Se é read-only, bloquear modificações
         if self.read_only:
             self._setup_read_only()
@@ -160,62 +161,65 @@ class ModernInput(ctk.CTkFrame):
         """Aplica a máscara após cada digitação"""
         if self.applying_mask:
             return
-        
+
         self.applying_mask = True
         current_text = self.entry.get()
         current_pos = self.entry.index(tk.INSERT)
-        
-        # Extrair apenas números
-        numbers_only = ''.join(c for c in current_text if c.isdigit())
-        
-        # Aplicar máscara
+
         if self.mask == "cpf":
-            formatted = self._format_cpf(numbers_only)
+            formatted = self._format_cpf(''.join(c for c in current_text if c.isdigit()))
+            cursor_pos = len(formatted)
         elif self.mask == "telefone":
-            formatted = self._format_telefone(numbers_only)
+            formatted = self._format_telefone(''.join(c for c in current_text if c.isdigit()))
+            cursor_pos = len(formatted)
         elif self.mask == "data":
-            formatted = self._format_data(numbers_only)
+            formatted = self._format_data(''.join(c for c in current_text if c.isdigit()))
+            cursor_pos = len(formatted)
+        elif self.mask == "cep":
+            formatted, cursor_pos = EnderecoService.formatar_cep(current_text)
+        elif self.mask == "uf":
+            formatted, cursor_pos = EnderecoService.formatar_uf(current_text)
+        elif self.mask == "cidade":
+            formatted, cursor_pos = EnderecoService.formatar_cidade(current_text)
         else:
-            formatted = numbers_only
-        
-        # Atualizar o entry
+            formatted = current_text
+            cursor_pos = len(formatted)
+
         self.entry.delete(0, "end")
         self.entry.insert(0, formatted)
-        
-        # Posicionar cursor inteligentemente
-        new_pos = self._calculate_cursor_position(current_pos, formatted, numbers_only)
-        self.entry.icursor(new_pos)
-        
+        self.entry.icursor(min(cursor_pos, len(formatted)))
+
         self.applying_mask = False
 
     def _on_paste(self, event):
         """Trata cola (Ctrl+V) com máscara"""
         try:
             pasted_text = self.entry.clipboard_get()
-            # Extrair apenas números
-            numbers_only = ''.join(c for c in pasted_text if c.isdigit())
-            
-            # Aplicar máscara
+
             if self.mask == "cpf":
-                formatted = self._format_cpf(numbers_only)
+                formatted = self._format_cpf(''.join(c for c in pasted_text if c.isdigit()))
             elif self.mask == "telefone":
-                formatted = self._format_telefone(numbers_only)
+                formatted = self._format_telefone(''.join(c for c in pasted_text if c.isdigit()))
             elif self.mask == "data":
-                formatted = self._format_data(numbers_only)
+                formatted = self._format_data(''.join(c for c in pasted_text if c.isdigit()))
+            elif self.mask == "cep":
+                formatted, _ = EnderecoService.formatar_cep(pasted_text)
+            elif self.mask == "uf":
+                formatted, _ = EnderecoService.formatar_uf(pasted_text)
+            elif self.mask == "cidade":
+                formatted, _ = EnderecoService.formatar_cidade(pasted_text)
             else:
-                formatted = numbers_only
-            
-            # Substituir seleção ou inserir
+                formatted = pasted_text
+
             try:
                 sel_start = self.entry.index("sel.first")
                 sel_end = self.entry.index("sel.last")
                 self.entry.delete(sel_start, sel_end)
                 self.entry.insert(sel_start, formatted)
             except tk.TclError:
-                # Sem seleção, inserir no cursor
                 insert_pos = self.entry.index(tk.INSERT)
                 self.entry.insert(insert_pos, formatted)
-            
+
             return "break"
         except Exception:
             pass
@@ -319,7 +323,21 @@ class ModernInput(ctk.CTkFrame):
 
     def set(self, value):
         self.entry.delete(0, "end")
-        self.entry.insert(0, value)
+        if self.mask == "cpf":
+            formatted = self._format_cpf(''.join(c for c in str(value) if c.isdigit()))
+        elif self.mask == "telefone":
+            formatted = self._format_telefone(''.join(c for c in str(value) if c.isdigit()))
+        elif self.mask == "data":
+            formatted = self._format_data(''.join(c for c in str(value) if c.isdigit()))
+        elif self.mask == "cep":
+            formatted, _ = EnderecoService.formatar_cep(str(value))
+        elif self.mask == "uf":
+            formatted, _ = EnderecoService.formatar_uf(str(value))
+        elif self.mask == "cidade":
+            formatted, _ = EnderecoService.formatar_cidade(str(value))
+        else:
+            formatted = str(value)
+        self.entry.insert(0, formatted)
 
 
 class Configuracoes(BaseScreen):
@@ -827,9 +845,9 @@ class Configuracoes(BaseScreen):
         self.address_entries = {}
 
         fields = [
-            {"label": "CEP", "placeholder": "00000-000", "row": 0, "col": 0},
-            {"label": "Estado", "placeholder": "UF", "row": 0, "col": 1},
-            {"label": "Cidade", "placeholder": "Nome da cidade", "row": 0, "col": 2},
+            {"label": "CEP", "placeholder": "00000-000", "row": 0, "col": 0, "mask": "cep"},
+            {"label": "Estado", "placeholder": "UF", "row": 0, "col": 1, "mask": "uf"},
+            {"label": "Cidade", "placeholder": "Nome da cidade", "row": 0, "col": 2, "mask": "cidade"},
             {"label": "Rua", "placeholder": "Nome da rua", "row": 1, "col": 0},
             {"label": "Número", "placeholder": "123", "row": 1, "col": 1},
             {"label": "Bairro", "placeholder": "Nome do bairro", "row": 1, "col": 2},
@@ -839,7 +857,8 @@ class Configuracoes(BaseScreen):
             input_widget = ModernInput(
                 endereco_body,
                 label=field["label"],
-                placeholder=field["placeholder"]
+                placeholder=field["placeholder"],
+                mask=field.get("mask")
             )
             input_widget.grid(
                 row=field["row"],
@@ -850,6 +869,8 @@ class Configuracoes(BaseScreen):
             )
             self.address_entries[field["label"]] = input_widget
 
+        self._bind_address_fields()
+
         if endereco_data:
             self.address_entries["Rua"].set(endereco_data.get("rua", ""))
             self.address_entries["Número"].set(endereco_data.get("numero", ""))
@@ -857,6 +878,76 @@ class Configuracoes(BaseScreen):
             self.address_entries["Cidade"].set(endereco_data.get("cidade", ""))
             self.address_entries["Estado"].set(endereco_data.get("estado", ""))
             self.address_entries["CEP"].set(endereco_data.get("cep", ""))
+
+    def _bind_address_fields(self):
+        if not self.address_entries:
+            return
+
+        cep_entry = self.address_entries.get("CEP")
+        if cep_entry:
+            cep_entry.entry.bind("<KeyRelease>", self._on_cep_field_change, add="+")
+
+        if self.address_entries.get("CEP") and self.address_entries.get("CEP").get().strip():
+            self.after(200, lambda: self._on_cep_field_change(None))
+
+    def _on_cep_field_change(self, event=None):
+        if not self.address_entries or "CEP" not in self.address_entries:
+            return
+
+        cep_value = self.address_entries["CEP"].get().strip()
+        cep_numero = EnderecoService.extrair_cep_numeros(cep_value)
+
+        if len(cep_numero) != 8:
+            return
+
+        self.after(100, lambda: self._buscar_cep_automatico(cep_numero))
+
+    def _buscar_cep_automatico(self, cep_numero):
+        if not self.address_entries:
+            return
+
+        cep_entry = self.address_entries.get("CEP")
+        if not cep_entry:
+            return
+
+        cep_texto = cep_entry.get().strip()
+        if EnderecoService.extrair_cep_numeros(cep_texto) != cep_numero:
+            return
+
+        EnderecoService.buscar_cep_async(
+            cep_numero,
+            callback=self._preencher_endereco_por_cep,
+            erro_callback=self._tratar_erro_busca_cep
+        )
+
+    def _preencher_endereco_por_cep(self, endereco):
+        if not endereco:
+            self.after(0, self._limpar_endereco_automatico)
+            return
+
+        self.after(0, lambda: self._aplicar_endereco_preenchido(endereco))
+
+    def _aplicar_endereco_preenchido(self, endereco):
+        if "Rua" in self.address_entries:
+            self.address_entries["Rua"].set(endereco.get("rua", ""))
+        if "Bairro" in self.address_entries:
+            self.address_entries["Bairro"].set(endereco.get("bairro", ""))
+        if "Cidade" in self.address_entries:
+            self.address_entries["Cidade"].set(endereco.get("cidade", ""))
+        if "Estado" in self.address_entries:
+            self.address_entries["Estado"].set(endereco.get("estado", ""))
+
+    def _tratar_erro_busca_cep(self, mensagem):
+        self.after(0, lambda: self._mostrar_erro_cep(mensagem))
+
+    def _mostrar_erro_cep(self, mensagem):
+        self._limpar_endereco_automatico()
+        messagebox.showwarning("CEP não encontrado", f"{mensagem}.\n\nOs campos de endereço preenchidos automaticamente foram limpos.")
+
+    def _limpar_endereco_automatico(self):
+        for campo in ["Rua", "Bairro", "Cidade", "Estado"]:
+            if campo in self.address_entries:
+                self.address_entries[campo].set("")
 
     def _render_preferences_services(self, parent):
         scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
