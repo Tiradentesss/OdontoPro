@@ -4,6 +4,7 @@ import customtkinter as ctk
 from controllers.paciente_controller import PacienteController
 from controllers.medico_controller import MedicoController
 from controllers.gerenciamento_controller import GerenciamentoController
+from services.campos_mascarados import GerenciadorMascaras
 import hashlib
 
 class Cadastro(BaseScreen):
@@ -46,6 +47,10 @@ class Cadastro(BaseScreen):
 
         self.paciente_entries = []
         self.profissional_entries = []
+        
+        # Gerenciador de máscaras
+        self.mascaras_paciente = GerenciadorMascaras()
+        self.mascaras_profissional = GerenciadorMascaras()
 
         # =============================
         # 1. BARRA DE ABAS (TOPO)
@@ -146,8 +151,14 @@ class Cadastro(BaseScreen):
 
         e1, e2 = self._campo_duplo(frame, "Nome completo", "CPF")
         entries.extend([e1, e2])
+        # Aplicar máscara de CPF
+        self.mascaras_paciente.adicionar_campo('cpf_paciente', e2, 'cpf')
+        
         e1, e2 = self._campo_duplo(frame, "Data de nascimento", "Telefone")
         entries.extend([e1, e2])
+        # Aplicar máscaras de Data e Telefone
+        self.mascaras_paciente.adicionar_campo('data_paciente', e1, 'data')
+        self.mascaras_paciente.adicionar_campo('telefone_paciente', e2, 'telefone')
 
         self._secao_titulo(frame, "Endereço")
         e1, e2, e3 = self._campo_triplo(frame, "CEP", "UF", "Cidade")
@@ -324,6 +335,8 @@ class Cadastro(BaseScreen):
             self.frame_medico, "CRO", "Telefone"
         )
         entries.extend([self.cro_entry, self.telefone_entry])
+        # Aplicar máscara de Telefone para profissional
+        self.mascaras_profissional.adicionar_campo('telefone_medico', self.telefone_entry, 'telefone')
 
         # Adicionar campo de especialidade para médico
         self._secao_titulo(self.frame_medico, "Especialidade")
@@ -543,9 +556,9 @@ class Cadastro(BaseScreen):
         """Valida e salva paciente no banco de dados"""
         try:
             nome = entries[0].get().strip()
-            cpf = entries[1].get().strip()
+            cpf = self.mascaras_paciente.obter_valor_numerico().get('cpf_paciente', '').strip()
             data_nasc = entries[2].get().strip()
-            telefone = entries[3].get().strip()
+            telefone = self.mascaras_paciente.obter_valor_numerico().get('telefone_paciente', '').strip()
             cep = entries[4].get().strip()
             uf = entries[5].get().strip()
             cidade = entries[6].get().strip()
@@ -585,7 +598,7 @@ class Cadastro(BaseScreen):
             nome = entries[0].get().strip()
             email = entries[1].get().strip()
             cro = self.cro_entry.get().strip()
-            telefone = self.telefone_entry.get().strip()
+            telefone = self.mascaras_profissional.obter_valor_numerico().get('telefone_medico', '').strip()
             senha = self.senha_entry.get().strip()
             confirma_senha = self.confirma_senha_entry.get().strip()
             especialidade = self.especialidade_medico.get().strip()
