@@ -339,8 +339,14 @@ class Painel(BaseScreen):
                 conn = get_connection()
                 cursor = conn.cursor(dictionary=True)
                 
-                # Contar pacientes
-                cursor.execute("SELECT COUNT(*) as total FROM odontoPro_paciente WHERE clinica_id = %s", (self.clinica_id,))
+                # Contar pacientes vinculados à clínica
+                cursor.execute("""
+                    SELECT COUNT(*) as total
+                    FROM paciente_clinica pc
+                    JOIN odontoPro_paciente p ON p.id = pc.paciente_id
+                    WHERE pc.clinica_id = %s
+                      AND pc.status = 'ativo'
+                """, (self.clinica_id,))
                 pacientes = cursor.fetchone()['total']
                 
                 # Contar médicos

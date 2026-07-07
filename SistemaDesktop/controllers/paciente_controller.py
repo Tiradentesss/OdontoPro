@@ -7,30 +7,118 @@ import hashlib
 class PacienteController:
     
     @staticmethod
-    def criar_paciente(nome, cpf, sexo, email, data_nascimento, telefone, clinica_id, senha=None):
-        """
-        Cria um novo paciente no banco de dados
-        
-        senha: senha fornecida pelo usuário (se None, usa "123456" como padrão)
-        """
+    def _obter_paciente_por_cpf(cpf):
+        if not cpf:
+            return None
+
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute(
+                "SELECT * FROM odontoPro_paciente WHERE cpf = %s",
+                (cpf,)
+            )
+            return cursor.fetchone()
+        except Exception as e:
+            print(f"Erro ao buscar paciente por CPF: {e}")
+            return None
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def _vinculo_existe(paciente_id, clinica_id):
         conn = None
         cursor = None
         try:
             conn = get_connection()
             cursor = conn.cursor()
+            cursor.execute(
+                "SELECT 1 FROM paciente_clinica WHERE paciente_id = %s AND clinica_id = %s",
+                (paciente_id, clinica_id)
+            )
+            return cursor.fetchone() is not None
+        except Exception as e:
+            print(f"Erro ao verificar vínculo paciente-clínica: {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
-            # Usar senha fornecida ou "123456" como padrão
+    @staticmethod
+    def _criar_vinculo_clinica(paciente_id, clinica_id):
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT IGNORE INTO paciente_clinica (paciente_id, clinica_id, data_vinculo, status) VALUES (%s, %s, NOW(), 'ativo')",
+                (paciente_id, clinica_id)
+            )
+            conn.commit()
+            return True
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            print(f"Erro ao criar vínculo paciente-clínica: {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def criar_paciente(nome, cpf, sexo, email, data_nascimento, telefone, clinica_id, senha=None):
+        """
+        Cria um paciente no banco de dados e vincula à clínica.
+
+        Se um paciente com o mesmo CPF já existir, apenas vincula o paciente à clínica.
+        """
+        conn = None
+        cursor = None
+        try:
+            paciente_existente = PacienteController._obter_paciente_por_cpf(cpf)
+            if paciente_existente:
+                paciente_id = paciente_existente['id']
+                if PacienteController._vinculo_existe(paciente_id, clinica_id):
+                    return {"sucesso": False, "mensagem": "Paciente já cadastrado nesta clínica."}
+
+                if not PacienteController._criar_vinculo_clinica(paciente_id, clinica_id):
+                    return {"sucesso": False, "mensagem": "Erro ao vincular paciente à clínica."}
+
+                return {
+                    "sucesso": True,
+                    "id": paciente_id,
+                    "mensagem": "Paciente existente vinculado à clínica com sucesso."
+                }
+
+            conn = get_connection()
+            cursor = conn.cursor()
+
             senha_para_hash = senha if senha else "123456"
             senha_hash = hashlib.sha256(senha_para_hash.encode()).hexdigest()
 
             cursor.execute("""
                 INSERT INTO odontoPro_paciente 
-                (nome, cpf, sexo, email, data_nascimento, telefone, senha, ativo, clinica_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (nome, cpf, sexo, email, data_nascimento, telefone, senha_hash, 1, clinica_id))
+                (nome, cpf, sexo, email, data_nascimento, telefone, senha, ativo)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (nome, cpf, sexo, email, data_nascimento, telefone, senha_hash, 1))
 
+            paciente_id = cursor.lastrowid
             conn.commit()
-            return {"sucesso": True, "id": cursor.lastrowid, "mensagem": "Paciente cadastrado com sucesso"}
+
+            if not PacienteController._criar_vinculo_clinica(paciente_id, clinica_id):
+                return {"sucesso": False, "mensagem": "Paciente criado, mas falha ao vincular à clínica."}
+
+            return {"sucesso": True, "id": paciente_id, "mensagem": "Paciente cadastrado com sucesso."}
 
         except Exception as e:
             if conn:
@@ -46,7 +134,7 @@ class PacienteController:
     @staticmethod
     def listar_pacientes(clinica_id=None):
         """
-        Lista todos os pacientes ou filtra por clínica
+        Lista todos os pacientes ou filtra por clínica.
         """
         conn = None
         cursor = None
@@ -56,10 +144,15 @@ class PacienteController:
 
             if clinica_id:
                 cursor.execute("""
-                    SELECT * FROM odontoPro_paciente WHERE clinica_id = %s
+                    SELECT p.*
+                    FROM odontoPro_paciente p
+                    JOIN paciente_clinica pc ON pc.paciente_id = p.id
+                    WHERE pc.clinica_id = %s
+                      AND pc.status = 'ativo'
+                    ORDER BY p.nome ASC
                 """, (clinica_id,))
             else:
-                cursor.execute("SELECT * FROM odontoPro_paciente")
+                cursor.execute("SELECT * FROM odontoPro_paciente ORDER BY nome ASC")
 
             return cursor.fetchall()
 

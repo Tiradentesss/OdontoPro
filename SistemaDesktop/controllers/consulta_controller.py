@@ -31,88 +31,124 @@ class ConsultaController:
 
     @staticmethod
     def listar_por_clinica(clinica_id, pagina=0, limite=LIMITE_CONSULTAS, data=None, status=None, medico=None, especialidade=None):
-        conn = get_connection()
-        cursor = conn.cursor()
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
 
-        where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico, especialidade)
+            where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico, especialidade)
 
-        query = f"""
-            SELECT
-                c.id,
-                p.nome,
-                c.data_hora,
-                c.status,
-                p.telefone,
-                p.email,
-                p.sexo,
-                p.data_nascimento,
-                p.cpf,
-                p.foto,
-                c.observacoes,
-                m.nome AS medico_nome,
-                COALESCE((
-                    SELECT e.nome
-                    FROM odontoPro_medico_especialidades me
-                    JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
-                    WHERE me.medico_id = m.id
-                    ORDER BY e.nome
-                    LIMIT 1
-                ), '') AS especialidade
-            FROM odontoPro_consulta c
-            LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
-            LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
-            WHERE {where_clause}
-            ORDER BY c.data_hora DESC
-            LIMIT %s OFFSET %s
-        """
+            query = f"""
+                SELECT
+                    c.id,
+                    p.nome,
+                    c.data_hora,
+                    c.status,
+                    p.telefone,
+                    p.email,
+                    p.sexo,
+                    p.data_nascimento,
+                    p.cpf,
+                    p.foto,
+                    c.observacoes,
+                    m.nome AS medico_nome,
+                    COALESCE((
+                        SELECT e.nome
+                        FROM odontoPro_medico_especialidades me
+                        JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                        WHERE me.medico_id = m.id
+                        ORDER BY e.nome
+                        LIMIT 1
+                    ), '') AS especialidade
+                FROM odontoPro_consulta c
+                LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
+                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                WHERE {where_clause}
+                ORDER BY c.data_hora DESC
+                LIMIT %s OFFSET %s
+            """
 
-        params.extend([limite, pagina * limite])
-        cursor.execute(query, tuple(params))
-        dados = cursor.fetchall()
-        conn.close()
-        return dados
+            params.extend([limite, pagina * limite])
+            cursor.execute(query, tuple(params))
+            dados = cursor.fetchall()
+            return dados or []
+        except Exception as e:
+            print(f"[ConsultaController] Erro em listar_por_clinica: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     @staticmethod
     def contar_por_clinica(clinica_id, data=None, status=None, medico=None, especialidade=None):
-        conn = get_connection()
-        cursor = conn.cursor()
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
 
-        where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico, especialidade)
+            where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico, especialidade)
 
-        cursor.execute(f"""
-            SELECT COUNT(*)
-            FROM odontoPro_consulta c
-            LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
-            WHERE {where_clause}
-        """, tuple(params))
+            cursor.execute(f"""
+                SELECT COUNT(*)
+                FROM odontoPro_consulta c
+                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                WHERE {where_clause}
+            """, tuple(params))
 
-        total = cursor.fetchone()[0]
-        conn.close()
-        return total
+            total = cursor.fetchone()[0]
+            return int(total or 0)
+        except Exception as e:
+            print(f"[ConsultaController] Erro em contar_por_clinica: {e}")
+            import traceback
+            traceback.print_exc()
+            return 0
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     @staticmethod
     def listar_opcoes_filtro(clinica_id):
-        conn = get_connection()
-        cursor = conn.cursor()
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
 
-        cursor.execute("""
-            SELECT DISTINCT DATE(c.data_hora), m.nome, e.nome AS especialidade
-            FROM odontoPro_consulta c
-            LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
-            LEFT JOIN odontoPro_medico_especialidades me ON me.medico_id = m.id
-            LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
-            WHERE c.clinica_id = %s
-            ORDER BY DATE(c.data_hora) DESC, m.nome ASC, e.nome ASC
-        """, (clinica_id,))
+            cursor.execute("""
+                SELECT DISTINCT DATE(c.data_hora), m.nome, e.nome AS especialidade
+                FROM odontoPro_consulta c
+                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                LEFT JOIN odontoPro_medico_especialidades me ON me.medico_id = m.id
+                LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                WHERE c.clinica_id = %s
+                ORDER BY DATE(c.data_hora) DESC, m.nome ASC, e.nome ASC
+            """, (clinica_id,))
 
-        resultados = cursor.fetchall()
-        conn.close()
+            resultados = cursor.fetchall() or []
 
-        datas = sorted({r[0] for r in resultados if r[0]}, reverse=True)
-        medicos = sorted({r[1] for r in resultados if r[1]})
-        especialidades = sorted({r[2] for r in resultados if r[2]})
+            datas = sorted({r[0] for r in resultados if r[0]}, reverse=True)
+            medicos = sorted({r[1] for r in resultados if r[1]})
+            especialidades = sorted({r[2] for r in resultados if r[2]})
 
-        return datas, medicos, especialidades
+            return datas, medicos, especialidades
+        except Exception as e:
+            print(f"[ConsultaController] Erro em listar_opcoes_filtro: {e}")
+            import traceback
+            traceback.print_exc()
+            return [], [], []
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     @staticmethod
     def buscar_por_id(consulta_id):
@@ -153,21 +189,33 @@ class ConsultaController:
 
     @staticmethod
     def snapshot_por_clinica(clinica_id, data=None, status=None, medico=None, especialidade=None):
-        conn = get_connection()
-        cursor = conn.cursor()
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
 
-        where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico, especialidade)
+            where_clause, params = ConsultaController._build_filters(clinica_id, data, status, medico, especialidade)
 
-        cursor.execute(f"""
-            SELECT CONCAT(COUNT(*), '-', IFNULL(MAX(c.id), 0), '-', IFNULL(MIN(c.id), 0), '-', COALESCE(MAX(UNIX_TIMESTAMP(c.data_hora)), 0))
-            FROM odontoPro_consulta c
-            LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
-            WHERE {where_clause}
-        """, tuple(params))
+            cursor.execute(f"""
+                SELECT CONCAT(COUNT(*), '-', IFNULL(MAX(c.id), 0), '-', IFNULL(MIN(c.id), 0), '-', COALESCE(MAX(UNIX_TIMESTAMP(c.data_hora)), 0))
+                FROM odontoPro_consulta c
+                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                WHERE {where_clause}
+            """, tuple(params))
 
-        snapshot = cursor.fetchone()[0]
-        conn.close()
-        return snapshot
+            snapshot = cursor.fetchone()[0]
+            return snapshot or "0-0-0-0"
+        except Exception as e:
+            print(f"[ConsultaController] Erro em snapshot_por_clinica: {e}")
+            import traceback
+            traceback.print_exc()
+            return "0-0-0-0"
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     @staticmethod
     def listar_pacientes(clinica_id):
@@ -176,10 +224,12 @@ class ConsultaController:
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT id, nome
-            FROM odontoPro_paciente
-            WHERE clinica_id = %s
-            ORDER BY nome ASC
+            SELECT p.id, p.nome
+            FROM odontoPro_paciente p
+            JOIN paciente_clinica pc ON pc.paciente_id = p.id
+            WHERE pc.clinica_id = %s
+              AND pc.status = 'ativo'
+            ORDER BY p.nome ASC
         """, (clinica_id,))
         
         pacientes = cursor.fetchall()

@@ -2,6 +2,7 @@ import threading
 import os
 from datetime import date
 import time
+import queue
 
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont
@@ -45,10 +46,13 @@ class CustomOptionMenu(ctk.CTkOptionMenu):
 
 
 class Agenda(BaseScreen):
-    def __init__(self, parent, clinica_id):
+    def __init__(self, parent, clinica_id=None):
         super().__init__(parent, 'Agenda')
 
         self.clinica_id = clinica_id
+        if self.clinica_id is None:
+            print("[AGENDA] AVISO: clinica_id não fornecido; usando fallback 1")
+            self.clinica_id = 1
 
         # --- DEFINIÇÃO DO LIMITE DE USUÁRIOS POR ABA ---
         self.limite_por_pagina = 7 
@@ -87,6 +91,7 @@ class Agenda(BaseScreen):
         self._detail_update_id = None
         self._thread_count = 0
         self._render_start_time = None
+        self._load_queue = queue.Queue()
 
         self.colors = {
             'page_bg': COLORS['bg'],
@@ -213,7 +218,8 @@ class Agenda(BaseScreen):
         
         # Agendar novo timeout
         print(f"[AGENDA] refresh_data: agendando timeout de 40s para thread #{thread_id}")
-        self._timeout_id = self.after(40000, lambda: self._timeout_loading(thread_id))
+        self._timeout_id = self.winfo_toplevel().after(40000, lambda: self._timeout_loading(thread_id))
+        self.winfo_toplevel().after(100, self._process_load_queue)
 
     def _timeout_loading(self, thread_id):
         """Força reset se carregamento demorar muito"""
@@ -222,7 +228,8 @@ class Agenda(BaseScreen):
         if self._current_thread_id == thread_id:
             print(f"[AGENDA] ⏱️  TIMEOUT: ressetando _loading (era thread atual)")
             self._loading = False
-            self._render_error("⏱️ Timeout: O carregamento demorou muito. Tente novamente ou verifique a conexão.")
+            self._timeout_id = None
+            self._render_after_load([], 0, [], [], [], "0-0-0-0")
         else:
             print(f"[AGENDA] ⏱️  TIMEOUT: ignorando (thread #{thread_id} não é thread atual #{self._current_thread_id})")
 
@@ -289,19 +296,21 @@ class Agenda(BaseScreen):
         
         # Agendar novo timeout
         print(f"[AGENDA] render: agendando timeout de 40s para thread #{thread_id}")
-        self._timeout_id = self.after(40000, lambda: self._timeout_loading(thread_id))
+        self._timeout_id = self.winfo_toplevel().after(40000, lambda: self._timeout_loading(thread_id))
+        self.winfo_toplevel().after(100, self._process_load_queue)
 
     def _load_data_thread(self):
-        """Carrega dados de consultas - GARANTE sempre resetar _loading"""
+        """Carrega dados de consultas - envia resultados para o thread principal via fila"""
         print(f"[AGENDA] _load_data_thread: INICIADA")
         
+        thread_id = self._current_thread_id
         data_sql = self._get_data_sql()
-        consultas = None
-        total = None
-        datas = None
-        medicos = None
-        especialidades = None
-        snapshot = None
+        consultas = []
+        total = 0
+        datas = []
+        medicos = []
+        especialidades = []
+        snapshot = "0-0-0-0"
         error_msg = None
         
         try:
@@ -329,11 +338,7 @@ class Agenda(BaseScreen):
                 )
                 
                 elapsed_call = time.time() - start_call
-                print(f"[AGENDA] ✓ listar_por_clinica OK ({elapsed_call:.3f}s) - retornou {len(consultas) if consultas else 'None'} registros")
-                
-                if consultas is None:
-                    raise Exception("listar_por_clinica retornou None")
-                    
+                print(f"[AGENDA] ✓ listar_por_clinica OK ({elapsed_call:.3f}s) - retornou {len(consultas) if consultas else 0} registros")
             except Exception as e:
                 elapsed_call = time.time() - start_call
                 print(f"[AGENDA] ❌ listar_por_clinica FALHOU ({elapsed_call:.3f}s): {e}")
@@ -358,10 +363,6 @@ class Agenda(BaseScreen):
                 
                 elapsed_call = time.time() - start_call
                 print(f"[AGENDA] ✓ contar_por_clinica OK ({elapsed_call:.3f}s) - total={total}")
-                
-                if total is None:
-                    raise Exception("contar_por_clinica retornou None")
-                    
             except Exception as e:
                 elapsed_call = time.time() - start_call
                 print(f"[AGENDA] ❌ contar_por_clinica FALHOU ({elapsed_call:.3f}s): {e}")
@@ -380,10 +381,6 @@ class Agenda(BaseScreen):
                 
                 elapsed_call = time.time() - start_call
                 print(f"[AGENDA] ✓ listar_opcoes_filtro OK ({elapsed_call:.3f}s)")
-                
-                if datas is None or medicos is None or especialidades is None:
-                    raise Exception("listar_opcoes_filtro retornou None em alguma parte")
-                    
             except Exception as e:
                 elapsed_call = time.time() - start_call
                 print(f"[AGENDA] ❌ listar_opcoes_filtro FALHOU ({elapsed_call:.3f}s): {e}")
@@ -408,10 +405,6 @@ class Agenda(BaseScreen):
                 
                 elapsed_call = time.time() - start_call
                 print(f"[AGENDA] ✓ snapshot_por_clinica OK ({elapsed_call:.3f}s)")
-                
-                if snapshot is None:
-                    raise Exception("snapshot_por_clinica retornou None")
-                    
             except Exception as e:
                 elapsed_call = time.time() - start_call
                 print(f"[AGENDA] ❌ snapshot_por_clinica FALHOU ({elapsed_call:.3f}s): {e}")
@@ -425,12 +418,8 @@ class Agenda(BaseScreen):
             print(f"[AGENDA] ✅ TODOS OS DADOS CARREGADOS COM SUCESSO")
             print(f"[AGENDA] → Agendando _render_after_load() no thread principal")
             
-            try:
-                self.after(0, lambda: self._render_after_load(consultas, total, datas, medicos, especialidades, snapshot))
-                print(f"[AGENDA] ✓ _render_after_load agendado com sucesso")
-            except RuntimeError as e:
-                print(f"[AGENDA] ⚠️ FALHA ao agendar _render_after_load: {e}")
-                error_msg = f"Erro ao atualizar interface: {e}"
+            self._load_queue.put((thread_id, consultas, total, datas, medicos, especialidades, snapshot, None))
+            print(f"[AGENDA] ✓ _load_data_thread: resultado enviado para UI thread")
 
         except Exception as e:
             # Qualquer erro em qualquer método do controller
@@ -439,24 +428,15 @@ class Agenda(BaseScreen):
             import traceback
             traceback.print_exc()
             
-            print(f"[AGENDA] → Agendando _render_error() no thread principal")
-            try:
-                self.after(0, lambda msg=error_msg: self._render_error(f"Falha ao carregar: {msg}"))
-                print(f"[AGENDA] ✓ _render_error agendado com sucesso")
-            except RuntimeError as e2:
-                print(f"[AGENDA] ⚠️ FALHA ao agendar _render_error: {e2}")
+            self._load_queue.put((thread_id, [], 0, [], [], [], "0-0-0-0", error_msg))
+            print(f"[AGENDA] ✓ _load_data_thread: erro enviado para UI thread")
         
         finally:
             # ============================================
-            # CRÍTICO: SEMPRE resetar loading
+            # FINALIZAR thread de dados sem tocar na UI diretamente
             # ============================================
             print(f"[AGENDA] _load_data_thread: FINALIZANDO (finally block)")
             print(f"[AGENDA] _loading antes: {self._loading}")
-            
-            self._loading = False
-            self._timeout_id = None
-            
-            print(f"[AGENDA] _loading depois: {self._loading}")
             print(f"[AGENDA] _load_data_thread: FINALIZADA\n")
 
 
@@ -520,6 +500,37 @@ class Agenda(BaseScreen):
             # CRÍTICO: SEMPRE garantir que loading seja False
             print(f"[AGENDA] _render_error: finally block - resetando _loading")
             self._loading = False
+
+    def _process_load_queue(self):
+        print(f"[AGENDA] _process_load_queue chamado; _loading={self._loading} queue_size={self._load_queue.qsize()}")
+        try:
+            item = self._load_queue.get_nowait()
+        except queue.Empty:
+            print(f"[AGENDA] _process_load_queue: fila vazia")
+            if self._loading:
+                self.after(100, self._process_load_queue)
+            return
+
+        thread_id, consultas, total, datas, medicos, especialidades, snapshot, error_msg = item
+        if thread_id != self._current_thread_id:
+            print(f"[AGENDA] _process_load_queue: ignorando resultado de thread #{thread_id} (atual #{self._current_thread_id})")
+            return
+
+        if self._timeout_id is not None:
+            try:
+                self.winfo_toplevel().after_cancel(self._timeout_id)
+            except Exception:
+                pass
+            self._timeout_id = None
+
+        self._loading = False
+
+        if error_msg:
+            print(f"[AGENDA] _process_load_queue: erro na carga, renderizando vazio")
+            self._render_after_load([], 0, [], [], [], "0-0-0-0")
+            return
+
+        self._render_after_load(consultas, total, datas, medicos, especialidades, snapshot)
 
     def _render_after_load(self, consultas, total, datas, medicos, especialidades, snapshot):
         """Renderiza tela com dados carregados - GARANTE sempre resetar _loading"""
