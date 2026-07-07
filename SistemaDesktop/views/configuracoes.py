@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from .base import BaseScreen, ActionButtons
 from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode, get_dark_mode
-from ..services.endereco_service import EnderecoService
+from services.endereco_service import EnderecoService
 import os
 from PIL import Image, ImageTk, ImageDraw
 
