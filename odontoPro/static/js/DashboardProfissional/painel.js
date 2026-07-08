@@ -190,18 +190,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const financeChartCard = document.getElementById('reports-finance-chart');
             if (financeChartCard) financeChartCard.style.display = view === 'financeiro' ? 'block' : 'none';
 
-            // initialize charts only for their intended views
+            // initialize charts based on view and ensure they are visible
             if (view === 'consultas') {
-                initDailyChart();
-                initSpecialties();
+                setTimeout(() => {
+                    if (!chartInstances.daily) initDailyChart();
+                    if (!chartInstances.spec) initSpecialties();
+                }, 50);
             } else if (view === 'financeiro') {
-                initMonthly();
+                setTimeout(() => {
+                    if (!chartInstances.monthly) initMonthly();
+                }, 50);
             }
         }
 
         reportPills.forEach(pill => {
             pill.addEventListener('click', () => setReportView(pill.dataset.view));
         });
+
+        // Inicializar todos os gráficos ao carregar a página (aparecerão com dados zerados se não houver dados)
+        setTimeout(() => {
+            initDailyChart();
+            initSpecialties();
+            initMonthly();
+        }, 100);
 
         setReportView('financeiro');
     }
