@@ -248,44 +248,7 @@ class Login(ctk.CTk):
             hover_color=COLORS["primary_dark"],
             font=font("button", "bold"),
             command=self.autenticar
-        ).pack(pady=(20, 15))
-
-        ctk.CTkLabel(
-            form_frame,
-            text="────────────  ou continue com  ────────────",
-            text_color=COLORS["muted"]
-        ).pack(pady=(15, 12))
-
-        ctk.CTkButton(
-            form_frame,
-            text="Entrar com Google",
-            width=420,
-            height=48,
-            fg_color=COLORS["primary"],
-            hover_color=COLORS["primary_dark"],
-            font=font("button", "bold")
-        ).pack(pady=(0, 6))
-
-        ctk.CTkButton(
-            form_frame,
-            text="Entrar com Facebook",
-            width=420,
-            height=48,
-            fg_color=COLORS["primary"],
-            hover_color=COLORS["primary_dark"],
-            font=font("button", "bold")
-        ).pack(pady=(0, 16))
-
-        rodape = ctk.CTkFrame(form_frame, fg_color="transparent")
-        rodape.pack(fill="x", pady=(0, 0))
-
-        ctk.CTkLabel(rodape, text="Não tem conta?").grid(row=0, column=0)
-        ctk.CTkLabel(
-            rodape,
-            text=" Cadastre-se",
-            text_color=COLORS["primary"],
-            font=font("button", "bold")
-        ).grid(row=0, column=1)
+        ).pack(pady=(20, 0))
 
         self._carregar_credenciais_salvas()
 

@@ -82,12 +82,7 @@ class EnderecoService:
         Returns:
             tuple: (valor_formatado, posicao_cursor)
         """
-        # Remove caracteres inválidos (apenas letras, espaços e acentos)
-        # Permite caracteres acentuados e espaços
-        formatado = ''
-        for c in valor:
-            if c.isalpha() or c == ' ' or c in 'áàâãéèêíïóôõöúùûüçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÙÛÜÇÑ':
-                formatado += c
+        formatado = ''.join(c for c in valor if c.isalpha() or c == ' ')
         
         # Converter para um formato de nome próprio mais natural para cidades
         formatado = EnderecoService._to_title_case_cidade(formatado)
@@ -116,8 +111,8 @@ class EnderecoService:
                 continue
 
             if index == 0 or index == len(palavras) - 1 or palavra.lower() not in palavras_pequenas:
-                if palavra.lower() in {"sao", "são"}:
-                    formatada = "São"
+                if palavra.lower() in {"sao", "s\u00e3o"}:
+                    formatada = "S\u00e3o"
                 else:
                     formatada = palavra[0].upper() + palavra[1:].lower()
             else:

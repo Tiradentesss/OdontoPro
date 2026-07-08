@@ -5,7 +5,213 @@ from controllers.paciente_controller import PacienteController
 from controllers.medico_controller import MedicoController
 from controllers.gerenciamento_controller import GerenciamentoController
 from services.campos_mascarados import GerenciadorMascaras
+from services.endereco_service import EnderecoService
+from services.localidades_service import LocalidadesService
 import hashlib
+
+
+class CidadeSearchComboBox(ctk.CTkFrame):
+    def __init__(self, master, values=None, command=None, **kwargs):
+        super().__init__(master, fg_color="transparent")
+        self.values = list(values or [])
+        self.filtered_values = self.values.copy()
+        self.command = command
+        self.dropdown = None
+        self.selected_index = 0
+
+        self.entry = ctk.CTkEntry(self, **kwargs)
+        self.entry.pack(fill="x")
+        self.entry.bind("<Button-1>", lambda event: self.abrir_lista())
+        self.entry.bind("<FocusIn>", lambda event: self.abrir_lista())
+        self.entry.bind("<KeyRelease>", self._filtrar_pelo_campo)
+        self.entry.bind("<Down>", self._mover_selecao_baixo)
+        self.entry.bind("<Up>", self._mover_selecao_cima)
+        self.entry.bind("<Return>", self._selecionar_atual)
+        self.entry.bind("<Escape>", lambda event: self.fechar_lista())
+
+    def get(self):
+        return self.entry.get()
+
+    def set(self, value):
+        self.entry.delete(0, "end")
+        self.entry.insert(0, str(value or ""))
+
+    def delete(self, first, last=None):
+        self.entry.delete(first, last)
+
+    def insert(self, index, text):
+        self.entry.insert(index, text)
+
+    def bind(self, sequence=None, command=None, add=None):
+        return self.entry.bind(sequence, command, add)
+
+    def configure(self, **kwargs):
+        if "values" in kwargs:
+            self.values = list(kwargs.pop("values") or [])
+            self.filtered_values = self.values.copy()
+            if self.dropdown and self.dropdown.winfo_exists():
+                self._atualizar_lista(self.filtered_values)
+
+        if kwargs:
+            self.entry.configure(**kwargs)
+
+    config = configure
+
+    def abrir_lista(self):
+        if self.dropdown and self.dropdown.winfo_exists():
+            return
+
+        self.filtered_values = self.values.copy()
+        largura = max(self.winfo_width(), 260)
+        altura = 420
+        x = self.winfo_rootx()
+        y = self.winfo_rooty() + self.winfo_height() + 2
+
+        self.dropdown = ctk.CTkToplevel(self)
+        self.dropdown.overrideredirect(True)
+        self.dropdown.geometry(f"{largura}x{altura}+{x}+{y}")
+        self.dropdown.configure(fg_color=COLORS["card"])
+        self.dropdown.bind("<Escape>", lambda event: self.fechar_lista())
+        self.dropdown.bind("<FocusOut>", self._fechar_se_foco_sair)
+
+        self.search_entry = ctk.CTkEntry(
+            self.dropdown,
+            height=34,
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
+            border_width=1,
+            corner_radius=8,
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"],
+            placeholder_text="Pesquisar cidade"
+        )
+        self.search_entry.pack(fill="x", padx=6, pady=(6, 4))
+        self.search_entry.bind("<KeyRelease>", self._filtrar_pelo_dropdown)
+        self.search_entry.bind("<Down>", self._mover_selecao_baixo)
+        self.search_entry.bind("<Up>", self._mover_selecao_cima)
+        self.search_entry.bind("<Return>", self._selecionar_atual)
+        self.search_entry.bind("<Escape>", lambda event: self.fechar_lista())
+
+        self.lista_frame = ctk.CTkScrollableFrame(
+            self.dropdown,
+            height=360,
+            fg_color=COLORS["card"],
+            corner_radius=8
+        )
+        self.lista_frame.pack(fill="both", expand=True, padx=6, pady=(0, 6))
+
+        self.selected_index = 0
+        self._atualizar_lista(self.filtered_values)
+        self.search_entry.focus_set()
+
+    def fechar_lista(self):
+        if self.dropdown and self.dropdown.winfo_exists():
+            self.dropdown.destroy()
+        self.dropdown = None
+
+    def _filtrar_pelo_campo(self, event=None):
+        if event and event.keysym in {"Up", "Down", "Return", "Escape"}:
+            return
+
+        if self.dropdown and self.dropdown.winfo_exists():
+            self._filtrar(self.entry.get())
+
+    def _filtrar_pelo_dropdown(self, event=None):
+        if event and event.keysym in {"Up", "Down", "Return", "Escape"}:
+            return
+
+        self._filtrar(self.search_entry.get())
+
+    def _filtrar(self, termo):
+        self.filtered_values = self._filtrar_valores(termo)
+        self.selected_index = 0
+        self._atualizar_lista(self.filtered_values)
+
+    def _filtrar_valores(self, termo):
+        termo_normalizado = LocalidadesService._normalizar(termo)
+        if not termo_normalizado:
+            return self.values.copy()
+
+        comeca = [
+            cidade for cidade in self.values
+            if LocalidadesService._normalizar(cidade).startswith(termo_normalizado)
+        ]
+        contem = [
+            cidade for cidade in self.values
+            if termo_normalizado in LocalidadesService._normalizar(cidade)
+            and not LocalidadesService._normalizar(cidade).startswith(termo_normalizado)
+        ]
+        return comeca + contem
+
+    def _atualizar_lista(self, cidades):
+        for child in self.lista_frame.winfo_children():
+            child.destroy()
+
+        if not cidades:
+            ctk.CTkLabel(
+                self.lista_frame,
+                text="Nenhuma cidade encontrada",
+                text_color=COLORS["text_muted"],
+                anchor="w"
+            ).pack(fill="x", padx=8, pady=8)
+            return
+
+        for indice, cidade in enumerate(cidades):
+            fg_color = COLORS["hover"] if indice == self.selected_index else "transparent"
+            botao = ctk.CTkButton(
+                self.lista_frame,
+                text=cidade,
+                height=30,
+                fg_color=fg_color,
+                hover_color=COLORS["hover"],
+                text_color=COLORS["text"],
+                anchor="w",
+                corner_radius=6,
+                command=lambda valor=cidade: self._selecionar(valor)
+            )
+            botao.pack(fill="x", padx=2, pady=1)
+
+    def _mover_selecao_baixo(self, event=None):
+        if not self.dropdown or not self.filtered_values:
+            self.abrir_lista()
+            return "break"
+
+        self.selected_index = min(self.selected_index + 1, len(self.filtered_values) - 1)
+        self._atualizar_lista(self.filtered_values)
+        return "break"
+
+    def _mover_selecao_cima(self, event=None):
+        if not self.dropdown or not self.filtered_values:
+            return "break"
+
+        self.selected_index = max(self.selected_index - 1, 0)
+        self._atualizar_lista(self.filtered_values)
+        return "break"
+
+    def _selecionar_atual(self, event=None):
+        if self.filtered_values:
+            self._selecionar(self.filtered_values[self.selected_index])
+        return "break"
+
+    def _selecionar(self, cidade):
+        self.set(cidade)
+        if self.command:
+            self.command(cidade)
+        self.fechar_lista()
+
+    def _fechar_se_foco_sair(self, event=None):
+        self.after(120, self._fechar_se_sem_foco)
+
+    def _fechar_se_sem_foco(self):
+        if not self.dropdown or not self.dropdown.winfo_exists():
+            return
+
+        foco = self.focus_get()
+        if foco and (foco == self.entry or str(foco).startswith(str(self.dropdown))):
+            return
+
+        self.fechar_lista()
+
 
 class Cadastro(BaseScreen):
     # Especialidades de Odontologia
@@ -51,6 +257,9 @@ class Cadastro(BaseScreen):
         # Gerenciador de máscaras
         self.mascaras_paciente = GerenciadorMascaras()
         self.mascaras_profissional = GerenciadorMascaras()
+        self._aplicando_mascara_endereco = False
+        self._cep_after_id = None
+        self._ultimo_cep_consultado = None
 
         # =============================
         # 1. BARRA DE ABAS (TOPO)
@@ -167,6 +376,8 @@ class Cadastro(BaseScreen):
         entries.append(e)
         e1, e2 = self._campo_duplo(frame, "Número", "Complemento")
         entries.extend([e1, e2])
+
+        self._configurar_campos_endereco_paciente(entries[4], entries[5], entries[6], entries[7])
 
         self._secao_titulo(frame, "Acesso ao Sistema")
         e1, e2 = self._campo_duplo(frame, "Email", "Senha", show2="*")
@@ -462,21 +673,274 @@ class Cadastro(BaseScreen):
                 anchor="w"
             ).pack(anchor="w", pady=(0, 3))
 
-            entry_i = ctk.CTkEntry(
-                frame_i,
-                placeholder_text=f"Digite {label.lower()}",
-                height=44,
-                fg_color=COLORS["input_bg"],
-                border_color=COLORS["border"],
-                border_width=1,
-                corner_radius=8,
-                text_color=COLORS["text"],
-                placeholder_text_color=COLORS["text_muted"]
-            )
+            if label == "UF":
+                entry_i = ctk.CTkComboBox(
+                    frame_i,
+                    values=self.carregar_estados(),
+                    height=44,
+                    state="readonly",
+                    fg_color=COLORS["input_bg"],
+                    border_color=COLORS["border"],
+                    border_width=1,
+                    corner_radius=8,
+                    text_color=COLORS["text"],
+                    button_color=COLORS["border"],
+                    button_hover_color=COLORS["border"],
+                    dropdown_fg_color=COLORS["card"],
+                    dropdown_text_color=COLORS["text"],
+                    dropdown_font=font("text"),
+                    command=self._ao_selecionar_uf_paciente
+                )
+                entry_i.set("")
+            elif label == "Cidade":
+                entry_i = CidadeSearchComboBox(
+                    frame_i,
+                    values=[],
+                    height=44,
+                    fg_color=COLORS["input_bg"],
+                    border_color=COLORS["border"],
+                    border_width=1,
+                    corner_radius=8,
+                    text_color=COLORS["text"],
+                    placeholder_text_color=COLORS["text_muted"]
+                )
+                entry_i.set("")
+            else:
+                entry_i = ctk.CTkEntry(
+                    frame_i,
+                    placeholder_text=f"Digite {label.lower()}",
+                    height=44,
+                    fg_color=COLORS["input_bg"],
+                    border_color=COLORS["border"],
+                    border_width=1,
+                    corner_radius=8,
+                    text_color=COLORS["text"],
+                    placeholder_text_color=COLORS["text_muted"]
+                )
             entry_i.pack(fill="x")
             entries_list.append(entry_i)
 
         return tuple(entries_list)
+
+    def _configurar_campos_endereco_paciente(self, cep_entry, uf_entry, cidade_entry, rua_entry):
+        self.endereco_paciente_entries = {
+            "CEP": cep_entry,
+            "UF": uf_entry,
+            "Cidade": cidade_entry,
+            "Logradouro": rua_entry
+        }
+
+        cep_entry.bind("<KeyRelease>", self._ao_digitar_cep_paciente, add="+")
+        self._bind_combobox_keyrelease(cidade_entry, self._ao_digitar_cidade_paciente)
+        cidade_entry.bind("<FocusOut>", self._validar_cidade_paciente, add="+")
+
+    def carregar_estados(self):
+        return LocalidadesService.carregar_estados()
+
+    def carregar_cidades(self, uf):
+        cidades = LocalidadesService.carregar_cidades(uf)
+        cidade_entry = getattr(self, "endereco_paciente_entries", {}).get("Cidade")
+        if cidade_entry:
+            cidade_atual = cidade_entry.get().strip()
+            cidade_entry.configure(values=cidades)
+            if cidade_atual and not LocalidadesService.cidade_existe(uf, cidade_atual):
+                cidade_entry.set("")
+        return cidades
+
+    def filtrar_cidades(self, termo):
+        uf = self.endereco_paciente_entries["UF"].get().strip()
+        cidades = LocalidadesService.filtrar_cidades(uf, termo)
+        self.endereco_paciente_entries["Cidade"].configure(values=cidades)
+        return cidades
+
+    def selecionar_cidade(self, cidade):
+        campos = self.endereco_paciente_entries
+        uf = campos["UF"].get().strip()
+        cidade_valida = LocalidadesService.selecionar_cidade(uf, cidade)
+        campos["Cidade"].set(cidade_valida)
+        return cidade_valida
+
+    def preencher_por_cep(self, endereco):
+        self._aplicar_endereco_paciente(endereco)
+
+    def _ao_selecionar_uf_paciente(self, uf):
+        self.carregar_cidades(uf)
+
+    def _ao_digitar_cidade_paciente(self, event=None):
+        if self._aplicando_mascara_endereco:
+            return
+
+        if not getattr(self, "endereco_paciente_entries", None):
+            return
+
+        cidade_entry = self.endereco_paciente_entries["Cidade"]
+        self.filtrar_cidades(cidade_entry.get())
+
+    def _validar_cidade_paciente(self, event=None):
+        if not getattr(self, "endereco_paciente_entries", None):
+            return
+
+        cidade_entry = self.endereco_paciente_entries["Cidade"]
+        cidade = cidade_entry.get().strip()
+        if cidade and not self.selecionar_cidade(cidade):
+            cidade_entry.set("")
+
+    def _bind_combobox_keyrelease(self, combobox, callback):
+        combobox.bind("<KeyRelease>", callback, add="+")
+        entry_interno = getattr(combobox, "_entry", None)
+        if entry_interno:
+            entry_interno.bind("<KeyRelease>", callback, add="+")
+
+    def formatar_cep(self, valor):
+        return EnderecoService.formatar_cep(valor)
+
+    def buscar_cep(self, cep):
+        EnderecoService.buscar_cep_async(
+            cep,
+            callback=self._preencher_endereco_paciente_por_cep,
+            erro_callback=self._tratar_erro_cep_paciente
+        )
+
+    def formatar_uf(self, valor):
+        return EnderecoService.formatar_uf(valor)
+
+    def formatar_cidade(self, valor):
+        filtrado = ''.join(c for c in valor if c.isalpha() or c == " ")
+        palavras_pequenas = {"de", "da", "do", "dos", "das", "e"}
+        palavras = []
+
+        for indice, palavra in enumerate(filtrado.split(" ")):
+            if not palavra:
+                palavras.append(palavra)
+                continue
+
+            palavra_lower = palavra.lower()
+            if palavra_lower in {"sao", "s\u00e3o"}:
+                palavras.append("S\u00e3o")
+            elif indice > 0 and palavra_lower in palavras_pequenas:
+                palavras.append(palavra_lower)
+            else:
+                palavras.append(palavra_lower.capitalize())
+
+        formatado = " ".join(palavras)
+        return formatado, len(formatado)
+
+    def _ao_digitar_cep_paciente(self, event=None):
+        if not hasattr(self, "endereco_paciente_entries"):
+            return
+
+        cep_entry = self.endereco_paciente_entries["CEP"]
+        self._aplicar_mascara_entry(
+            cep_entry,
+            self.formatar_cep,
+            lambda texto: [c for c in texto if c.isdigit()]
+        )
+
+        cep_numeros = EnderecoService.extrair_cep_numeros(cep_entry.get())
+        if len(cep_numeros) != 8:
+            self._ultimo_cep_consultado = None
+            return
+
+        if cep_numeros == self._ultimo_cep_consultado:
+            return
+
+        if self._cep_after_id:
+            try:
+                self.after_cancel(self._cep_after_id)
+            except Exception:
+                pass
+
+        self._cep_after_id = self.after(350, lambda: self._consultar_cep_paciente(cep_numeros))
+
+    def _consultar_cep_paciente(self, cep_numeros):
+        if not hasattr(self, "endereco_paciente_entries"):
+            return
+
+        cep_atual = EnderecoService.extrair_cep_numeros(self.endereco_paciente_entries["CEP"].get())
+        if cep_atual != cep_numeros:
+            return
+
+        self._ultimo_cep_consultado = cep_numeros
+        self.buscar_cep(cep_numeros)
+
+    def _preencher_endereco_paciente_por_cep(self, endereco):
+        if not endereco:
+            self.after(0, self._limpar_endereco_paciente_automatico)
+            return
+
+        self.after(0, lambda: self._aplicar_endereco_paciente(endereco))
+
+    def _aplicar_endereco_paciente(self, endereco):
+        if not hasattr(self, "endereco_paciente_entries"):
+            return
+
+        campos = self.endereco_paciente_entries
+        uf, _ = self.formatar_uf(endereco.get("estado", ""))
+        campos["UF"].set(uf)
+        self.carregar_cidades(uf)
+        self.selecionar_cidade(endereco.get("cidade", ""))
+        self._definir_valor_entry(campos["Logradouro"], endereco.get("rua", ""))
+
+    def _tratar_erro_cep_paciente(self, mensagem):
+        self.after(0, lambda: self._mostrar_erro_cep_paciente(mensagem))
+
+    def _mostrar_erro_cep_paciente(self, mensagem):
+        self._limpar_endereco_paciente_automatico()
+        self._mostrar_mensagem(
+            f"{mensagem}. Campos de endereco preenchidos automaticamente foram limpos.",
+            sucesso=False
+        )
+
+    def _limpar_endereco_paciente_automatico(self):
+        if not hasattr(self, "endereco_paciente_entries"):
+            return
+
+        for nome in ("UF", "Cidade", "Logradouro"):
+            self._definir_valor_entry(self.endereco_paciente_entries[nome], "")
+
+    def _aplicar_mascara_entry(self, entry, formatter, contador_logico):
+        if self._aplicando_mascara_endereco:
+            return
+
+        try:
+            self._aplicando_mascara_endereco = True
+            texto_antigo = entry.get()
+            pos_antiga = entry.index("insert")
+            logicos_antes = len(contador_logico(texto_antigo[:pos_antiga]))
+            formatado, _ = formatter(texto_antigo)
+
+            if texto_antigo != formatado:
+                entry.delete(0, "end")
+                entry.insert(0, formatado)
+
+            entry.icursor(self._calcular_cursor_logico(formatado, logicos_antes, contador_logico))
+        finally:
+            self._aplicando_mascara_endereco = False
+
+    def _calcular_cursor_logico(self, texto, quantidade_logica, contador_logico):
+        if quantidade_logica <= 0:
+            return 0
+
+        vistos = 0
+        for indice, caractere in enumerate(texto):
+            if contador_logico(caractere):
+                vistos += 1
+                if vistos >= quantidade_logica:
+                    return indice + 1
+
+        return len(texto)
+
+    def _definir_valor_entry(self, entry, valor, formatter=None):
+        texto = str(valor or "")
+        if formatter:
+            texto, _ = formatter(texto)
+
+        if isinstance(entry, ctk.CTkComboBox):
+            entry.set(texto)
+            return
+
+        entry.delete(0, "end")
+        entry.insert(0, texto)
 
     def _ao_mudar_tipo_profissional(self, choice):
         try:
@@ -518,7 +982,10 @@ class Cadastro(BaseScreen):
                 try:
                     content = e.get()
                     if content:
-                        e.delete(0, "end")
+                        if isinstance(e, ctk.CTkComboBox):
+                            e.set("")
+                        else:
+                            e.delete(0, "end")
                 except Exception:
                     pass
 
@@ -678,7 +1145,10 @@ class Cadastro(BaseScreen):
         """Limpa os campos de entrada"""
         for e in entries:
             try:
-                e.delete(0, "end")
+                if isinstance(e, ctk.CTkComboBox):
+                    e.set("")
+                else:
+                    e.delete(0, "end")
             except Exception:
                 pass
 
