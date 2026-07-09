@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 from .base import BaseScreen
 from .theme import font, COLORS
 from controllers.consulta_controller import ConsultaController
+from .paciente_search_combo import PacienteSearchComboBox
 
 
 LOCAL_STATUS_COLORS = {
@@ -1222,7 +1223,7 @@ class Agenda(BaseScreen):
         )
         canvas_frame.pack(fill='both', expand=True, pady=(0, 15))
         
-        # ===================== CAMPO PACIENTE (BUSCA DINÂMICA) =====================
+        # ===================== CAMPO PACIENTE (SEARCH COMBOBOX) =====================
         ctk.CTkLabel(
             canvas_frame,
             text="👤 Paciente*",
@@ -1230,44 +1231,23 @@ class Agenda(BaseScreen):
             text_color=COLORS['text_primary']
         ).pack(anchor='w', padx=15, pady=(15, 5))
         
-        paciente_display = {}
         paciente_id_selecionado = {'id': None}
+        paciente_info_selecionado = {'data': None}
         
-        def atualizar_sugestoes_paciente(termo):
-            """Atualiza lista de pacientes conforme usuário digita"""
-            if len(termo) < 2:
-                paciente_combo.configure(values=[])
-                return
-            
-            try:
-                resultados = ConsultaController.buscar_pacientes_dinamico(termo, limite=10)
-                if resultados:
-                    display_list = []
-                    for id_pac, nome, cpf in resultados:
-                        display_text = f"{nome} ({cpf})"
-                        display_list.append(display_text)
-                        paciente_display[display_text] = id_pac
-                    paciente_combo.configure(values=display_list)
-                else:
-                    paciente_combo.configure(values=["Nenhum paciente encontrado"])
-            except Exception as e:
-                print(f"Erro ao buscar pacientes: {e}")
-                paciente_combo.configure(values=["Erro ao buscar"])
+        def ao_selecionar_paciente(id_pac, nome, cpf, email, telefone, data_nasc):
+            """Callback ao selecionar um paciente."""
+            paciente_id_selecionado['id'] = id_pac
+            paciente_info_selecionado['data'] = (id_pac, nome, cpf, email, telefone, data_nasc)
         
-        paciente_var = ctk.StringVar()
-        paciente_combo = ctk.CTkComboBox(
+        paciente_combo = PacienteSearchComboBox(
             canvas_frame,
-            variable=paciente_var,
             height=40,
             fg_color=COLORS['input_bg'],
             border_color=COLORS['border'],
-            button_color=COLORS['primary'],
-            button_hover_color=COLORS['primary_dark'],
             corner_radius=8,
-            command=lambda v: paciente_id_selecionado.update({'id': paciente_display.get(v, None)})
+            command=ao_selecionar_paciente
         )
-        paciente_combo.pack(fill='x', padx=15, pady=(0, 5))
-        paciente_combo.bind('<KeyRelease>', lambda e: atualizar_sugestoes_paciente(paciente_var.get()))
+        paciente_combo.pack(fill='x', padx=15, pady=(0, 15))
         
         # ===================== CAMPO ESPECIALIDADE (AUTO-PREENCHIDO) =====================
         ctk.CTkLabel(
@@ -1523,8 +1503,9 @@ class Agenda(BaseScreen):
             button_frame,
             text="✕ Cancelar",
             height=40,
-            fg_color=COLORS['border'],
-            hover_color=COLORS['bg_soft'],
+            fg_color="#DC3545",
+            hover_color="#C82333",
+            text_color="#FFFFFF",
             font=font("button", "bold"),
             command=dialogo.destroy
         )

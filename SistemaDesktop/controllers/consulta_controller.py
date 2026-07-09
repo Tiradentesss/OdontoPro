@@ -296,13 +296,13 @@ class ConsultaController:
     # ==================== NOVOS MÉTODOS COM SERVICES ====================
 
     @staticmethod
-    def buscar_pacientes_dinamico(termo_busca, limite=10, offset=0):
+    def buscar_pacientes_dinamico(termo_busca, limite=20, offset=0):
         """
         Busca pacientes de forma dinâmica por CPF ou Nome.
         
         Args:
             termo_busca: CPF ou Nome (parcial)
-            limite: Número máximo de resultados
+            limite: Número máximo de resultados (padrão: 20)
             offset: Deslocamento para paginação
         
         Returns:

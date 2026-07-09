@@ -13,16 +13,18 @@ class PacienteService:
     @staticmethod
     def buscar_por_cpf_ou_nome(clinica_id, termo_busca, limite=10, offset=0):
         """
-        Busca pacientes por CPF ou Nome com paginação.
+        Busca pacientes por CPF ou Nome com paginação e relevância.
+        Ignora pontos e traços do CPF na busca.
         
         Args:
-            clinica_id: ID da clínica
+            clinica_id: ID da clínica (ignorado - busca em todos os pacientes)
             termo_busca: CPF ou Nome (parcial)
             limite: Número máximo de resultados
             offset: Deslocamento para paginação
         
         Returns:
-            Lista de tuplas (id, nome, cpf, email, telefone)
+            Lista de tuplas (id, nome, cpf, email, telefone, data_nascimento)
+            Ordenada por relevância
         """
         conn = None
         cursor = None
@@ -31,9 +33,16 @@ class PacienteService:
             cursor = conn.cursor()
 
             # Limpar termo de busca
-            termo = f"%{termo_busca.strip()}%"
+            termo_busca_limpo = termo_busca.strip()
+            # Remover pontos e traços do termo (para buscar CPF sem formatação)
+            termo_cpf = termo_busca_limpo.replace('.', '').replace('-', '')
+            termo_nome = f"%{termo_busca_limpo}%"
+            termo_cpf_pattern = f"%{termo_cpf}%"
 
-            # Buscar pacientes que correspondem ao termo
+            # Busca com ordenação por relevância:
+            # 1. Nome começa com termo (mais relevante)
+            # 2. Nome contém termo
+            # 3. CPF contém termo
             query = """
                 SELECT 
                     id, 
@@ -45,13 +54,28 @@ class PacienteService:
                 FROM odontoPro_paciente
                 WHERE (
                     LOWER(nome) LIKE LOWER(%s) OR 
+                    REPLACE(REPLACE(cpf, '.', ''), '-', '') LIKE %s OR
                     cpf LIKE %s
                 )
-                ORDER BY nome ASC
+                ORDER BY 
+                    CASE 
+                        WHEN LOWER(nome) LIKE LOWER(CONCAT(%s, '%%')) THEN 1
+                        WHEN LOWER(nome) LIKE LOWER(%s) THEN 2
+                        ELSE 3
+                    END,
+                    nome ASC
                 LIMIT %s OFFSET %s
             """
 
-            cursor.execute(query, (termo, termo, limite, offset))
+            cursor.execute(query, (
+                termo_nome,              # LOWER(nome) LIKE LOWER(?)
+                termo_cpf_pattern,       # REPLACE(REPLACE(cpf, '.', ''), '-', '') LIKE ?
+                termo_cpf_pattern,       # cpf LIKE ?
+                termo_busca_limpo,       # CASE WHEN nome LIKE (termo + '%')
+                termo_nome,              # CASE WHEN nome LIKE %termo%
+                limite,
+                offset
+            ))
             pacientes = cursor.fetchall()
             return pacientes or []
 
@@ -64,6 +88,7 @@ class PacienteService:
                 cursor.close()
             if conn:
                 conn.close()
+
 
     @staticmethod
     def contar_por_busca(termo_busca):
