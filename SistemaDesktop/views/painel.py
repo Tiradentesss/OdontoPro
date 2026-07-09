@@ -97,14 +97,14 @@ class Painel(BaseScreen):
 
         ctk.CTkLabel(
             header, text=titulo,
-            font=font("card_title", "bold"),
+            font=ctk.CTkFont(family="Segoe UI", size=18, weight="bold"),
             text_color=self.colors['text']
         ).pack(anchor="w")
 
         if subtitulo:
             ctk.CTkLabel(
                 header, text=subtitulo,
-                font=font("text"),
+                font=ctk.CTkFont(family="Segoe UI", size=12),
                 text_color=self.colors['text_secondary']
             ).pack(anchor="w")
             
@@ -129,20 +129,20 @@ class Painel(BaseScreen):
             avatar = ctk.CTkLabel(
                 row_item, text=nome[0].upper(), width=38, height=38,
                 corner_radius=19, fg_color=self.colors['primary_soft'],
-                text_color=self.colors['primary'], font=font("button", "bold")
+                text_color=self.colors['primary'], font=ctk.CTkFont(weight="bold")
             )
             avatar.pack(side="left", padx=(5, 12))
 
             info = ctk.CTkFrame(row_item, fg_color="transparent")
             info.pack(side="left", fill="both", expand=True)
             
-            ctk.CTkLabel(info, text=nome, font=font("card_title", "bold"), text_color=self.colors['text']).pack(anchor="w")
-            ctk.CTkLabel(info, text=f"Horário: {horario}h", font=font("text_large"), text_color=self.colors['text_secondary']).pack(anchor="w")
+            ctk.CTkLabel(info, text=nome, font=ctk.CTkFont(size=18, weight="bold"), text_color=self.colors['text']).pack(anchor="w")
+            ctk.CTkLabel(info, text=f"Horário: {horario}h", font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor="w")
 
             # Badge Status
             badge = ctk.CTkFrame(row_item, fg_color=self.colors['info_soft'], corner_radius=8)
             badge.pack(side="right", padx=5)
-            ctk.CTkLabel(badge, text="Confirmado", text_color=self.colors['info'], font=font("small", "bold")).pack(padx=8, pady=2)
+            ctk.CTkLabel(badge, text="Confirmado", text_color=self.colors['info'], font=ctk.CTkFont(size=10, weight="bold")).pack(padx=8, pady=2)
 
     def _render_resumo_financeiro(self, row, col):
         card = self._criar_card("Resumo Financeiro", "Receita e despesas do mês", row, col, padx=(10, 0))
@@ -162,13 +162,13 @@ class Painel(BaseScreen):
             box = ctk.CTkFrame(container, fg_color=self.colors['bg_app'], corner_radius=12)
             box.grid(row=0, column=i, padx=4, sticky="nsew")
             
-            ctk.CTkLabel(box, text=lab, font=font("text_large"), text_color=self.colors['text_secondary']).pack(pady=(10, 0))
-            ctk.CTkLabel(box, text=val, font=font("large_title", "bold"), text_color=col_text).pack(pady=(0, 10))
+            ctk.CTkLabel(box, text=lab, font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(pady=(10, 0))
+            ctk.CTkLabel(box, text=val, font=ctk.CTkFont(size=19, weight="bold"), text_color=col_text).pack(pady=(0, 10))
 
         # Footer Info
         footer = ctk.CTkLabel(
             card, text=f"✓ {f['realizadas']} de {f['total_consultas']} consultas concluídas este mês",
-            font=font("text"), text_color=self.colors['text_muted']
+            font=ctk.CTkFont(size=12, slant="italic"), text_color=self.colors['text_muted']
         )
         footer.pack(pady=(15, 20))
 
@@ -194,8 +194,8 @@ class Painel(BaseScreen):
             lbl_f = ctk.CTkFrame(row_f, fg_color="transparent")
             lbl_f.pack(fill="x")
             
-            ctk.CTkLabel(lbl_f, text=label, font=font("subtitle"), text_color=self.colors['text']).pack(side="left")
-            ctk.CTkLabel(lbl_f, text=f"{valor}", font=font("subtitle", "bold"), text_color=self.colors['text']).pack(side="right")
+            ctk.CTkLabel(lbl_f, text=label, font=ctk.CTkFont(size=16), text_color=self.colors['text']).pack(side="left")
+            ctk.CTkLabel(lbl_f, text=f"{valor}", font=ctk.CTkFont(size=16, weight="bold"), text_color=self.colors['text']).pack(side="right")
             
             prog = ctk.CTkProgressBar(row_f, height=8, progress_color=cor, fg_color=self.colors['bg_app'])
             prog.pack(fill="x", pady=(5, 0))
@@ -209,8 +209,8 @@ class Painel(BaseScreen):
         hero.pack(fill="x", padx=20, pady=10)
         
         ctk.CTkLabel(hero, text=str(self.dados_cadastros['total_usuarios']), 
-                     font=font("large_title", "bold"), text_color=self.colors['primary']).pack(pady=(15,0))
-        ctk.CTkLabel(hero, text="TOTAL DE USUÁRIOS", font=font("text_large", "bold"), 
+                     font=ctk.CTkFont(size=48, weight="bold"), text_color=self.colors['primary']).pack(pady=(15,0))
+        ctk.CTkLabel(hero, text="TOTAL DE USUÁRIOS", font=ctk.CTkFont(size=14, weight="bold"), 
                      text_color=self.colors['primary']).pack(pady=(0, 15))
 
         # Grid de detalhes
@@ -221,8 +221,8 @@ class Painel(BaseScreen):
         for label, key, color_key in itens:
             f = ctk.CTkFrame(detalhe, fg_color=self.colors['bg_app'], corner_radius=10)
             f.pack(fill="x", pady=3)
-            ctk.CTkLabel(f, text=label, font=font("text"), text_color=self.colors['text_secondary']).pack(side="left", padx=15, pady=8)
-            ctk.CTkLabel(f, text=str(self.dados_cadastros[key]), font=font("card_title", "bold"), 
+            ctk.CTkLabel(f, text=label, text_color=self.colors['text_secondary']).pack(side="left", padx=15, pady=8)
+            ctk.CTkLabel(f, text=str(self.dados_cadastros[key]), font=ctk.CTkFont(size=15, weight="bold"), 
                          text_color=self.colors[color_key]).pack(side="right", padx=15)
 
     def _render_profissionais_ativos(self, row, col):
@@ -240,11 +240,11 @@ class Painel(BaseScreen):
             item.pack(fill="x", padx=20, pady=4)
             
             # Avatar Style
-            ctk.CTkLabel(item, text="🩺", font=font("button_large")).pack(side="left", padx=15)
+            ctk.CTkLabel(item, text="🩺", font=ctk.CTkFont(size=20)).pack(side="left", padx=15)
             txt_f = ctk.CTkFrame(item, fg_color="transparent")
             txt_f.pack(side="left", pady=10)
-            ctk.CTkLabel(txt_f, text=nome, font=font("text_large", "bold"), text_color=self.colors['text']).pack(anchor="w")
-            ctk.CTkLabel(txt_f, text=espec, font=font("text"), text_color=self.colors['text_muted']).pack(anchor="w")
+            ctk.CTkLabel(txt_f, text=nome, font=ctk.CTkFont(size=15, weight="bold"), text_color=self.colors['text']).pack(anchor="w")
+            ctk.CTkLabel(txt_f, text=espec, font=ctk.CTkFont(size=14), text_color=self.colors['text_muted']).pack(anchor="w")
 
     def _render_alertas(self, row, col):
         card = self._criar_card("Notificações", "Alertas e avisos importantes", row, col, padx=(10, 0))
@@ -258,11 +258,11 @@ class Painel(BaseScreen):
         for icon, msg, color in alertas:
             f = ctk.CTkFrame(card, fg_color=self.colors['bg_app'], corner_radius=10, border_width=1, border_color=self.colors['border'])
             f.pack(fill="x", padx=20, pady=4)
-            ctk.CTkLabel(f, text=f"{icon}  {msg}", text_color=color, font=font("text_large", "bold")).pack(padx=15, pady=12, anchor="w")
+            ctk.CTkLabel(f, text=f"{icon}  {msg}", text_color=color, font=ctk.CTkFont(size=14, weight="bold")).pack(padx=15, pady=12, anchor="w")
 
     def _render_vazio(self, parent, mensagem):
         ctk.CTkLabel(parent, text=mensagem, text_color=self.colors['text_muted'], 
-                     font=font("text")).pack(pady=40)
+                     font=ctk.CTkFont(slant="italic")).pack(pady=40)
 
     # --- Métodos de Dados (Conectados ao Banco de Dados) ---
     def _carregar_consultas_hoje(self):
@@ -339,14 +339,8 @@ class Painel(BaseScreen):
                 conn = get_connection()
                 cursor = conn.cursor(dictionary=True)
                 
-                # Contar pacientes vinculados à clínica
-                cursor.execute("""
-                    SELECT COUNT(*) as total
-                    FROM paciente_clinica pc
-                    JOIN odontoPro_paciente p ON p.id = pc.paciente_id
-                    WHERE pc.clinica_id = %s
-                      AND pc.status = 'ativo'
-                """, (self.clinica_id,))
+                # Contar pacientes
+                cursor.execute("SELECT COUNT(*) as total FROM odontoPro_paciente WHERE clinica_id = %s", (self.clinica_id,))
                 pacientes = cursor.fetchone()['total']
                 
                 # Contar médicos

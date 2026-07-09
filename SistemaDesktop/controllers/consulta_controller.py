@@ -1,5 +1,8 @@
 from config.database import get_connection
 from models.data import LIMITE_CONSULTAS
+from services.paciente_service import PacienteService
+from services.medico_service import MedicoService
+from services.consulta_service import ConsultaService
 
 class ConsultaController:
 
@@ -289,3 +292,191 @@ class ConsultaController:
             return {"sucesso": True, "consulta_id": consulta_id}
         except Exception as e:
             return {"sucesso": False, "erro": str(e)}
+
+    # ==================== NOVOS MÉTODOS COM SERVICES ====================
+
+    @staticmethod
+    def buscar_pacientes_dinamico(termo_busca, limite=10, offset=0):
+        """
+        Busca pacientes de forma dinâmica por CPF ou Nome.
+        
+        Args:
+            termo_busca: CPF ou Nome (parcial)
+            limite: Número máximo de resultados
+            offset: Deslocamento para paginação
+        
+        Returns:
+            Lista de pacientes formatados
+        """
+        return PacienteService.buscar_por_cpf_ou_nome(
+            clinica_id=None,
+            termo_busca=termo_busca,
+            limite=limite,
+            offset=offset
+        )
+
+    @staticmethod
+    def contar_pacientes_busca(termo_busca):
+        """
+        Conta total de pacientes que correspondem ao termo de busca.
+        
+        Args:
+            termo_busca: CPF ou Nome (parcial)
+        
+        Returns:
+            Total de pacientes encontrados
+        """
+        return PacienteService.contar_por_busca(termo_busca)
+
+    @staticmethod
+    def obter_paciente_formatado(paciente_tupla):
+        """
+        Formata um paciente para exibição.
+        
+        Args:
+            paciente_tupla: Tupla retornada do serviço
+        
+        Returns:
+            String formatada "Nome (CPF)"
+        """
+        return PacienteService.formatar_exibicao(paciente_tupla)
+
+    @staticmethod
+    def extrair_id_paciente(display_text, termo_original):
+        """
+        Extrai ID do paciente a partir do texto de exibição.
+        """
+        return PacienteService.extrair_id_de_display(display_text, termo_original)
+
+    @staticmethod
+    def listar_medicos_por_clinica(clinica_id):
+        """
+        Lista todos os médicos de uma clínica com especialidades.
+        
+        Args:
+            clinica_id: ID da clínica
+        
+        Returns:
+            Lista de tuplas (id, nome, especialidades_str, especialidade_ids)
+        """
+        return MedicoService.listar_por_clinica(clinica_id)
+
+    @staticmethod
+    def obter_medico_formatado(medico_tupla):
+        """
+        Formata um médico para exibição.
+        
+        Args:
+            medico_tupla: Tupla retornada do serviço
+        
+        Returns:
+            String formatada "Nome - Especialidade(s)"
+        """
+        return MedicoService.formatar_exibicao(medico_tupla)
+
+    @staticmethod
+    def extrair_id_medico(display_text, clinica_id):
+        """
+        Extrai ID do médico a partir do texto de exibição.
+        """
+        return MedicoService.extrair_id_de_display(display_text, clinica_id)
+
+    @staticmethod
+    def obter_especialidade_medico(medico_id):
+        """
+        Obtém a especialidade principal de um médico.
+        
+        Args:
+            medico_id: ID do médico
+        
+        Returns:
+            Nome da especialidade principal ou string vazia
+        """
+        return MedicoService.obter_especialidade_principal(medico_id)
+
+    @staticmethod
+    def validar_data_consulta(data_str):
+        """
+        Valida data da consulta.
+        
+        Args:
+            data_str: Data em formato DD/MM/YYYY
+        
+        Returns:
+            Tupla (válido: bool, mensagem: str, data_obj: datetime ou None)
+        """
+        return ConsultaService.validar_data(data_str)
+
+    @staticmethod
+    def validar_hora_consulta(hora_str):
+        """
+        Valida hora da consulta.
+        
+        Args:
+            hora_str: Hora em formato HH:MM
+        
+        Returns:
+            Tupla (válido: bool, mensagem: str, hora_obj: time ou None)
+        """
+        return ConsultaService.validar_hora(hora_str)
+
+    @staticmethod
+    def verificar_disponibilidade_horario(medico_id, data_consulta, hora_consulta):
+        """
+        Verifica se um horário está disponível.
+        
+        Args:
+            medico_id: ID do médico
+            data_consulta: datetime.date object
+            hora_consulta: datetime.time object
+        
+        Returns:
+            Tupla (disponível: bool, mensagem: str)
+        """
+        return ConsultaService.verificar_horario_disponivel(
+            medico_id, 
+            data_consulta, 
+            hora_consulta
+        )
+
+    @staticmethod
+    def obter_horarios_ocupados(medico_id, data_consulta):
+        """
+        Lista horários ocupados de um médico em um dia.
+        
+        Args:
+            medico_id: ID do médico
+            data_consulta: datetime.date object
+        
+        Returns:
+            Lista de horários (HH:MM) ocupados
+        """
+        return ConsultaService.listar_horarios_ocupados_no_dia(medico_id, data_consulta)
+
+    @staticmethod
+    def salvar_nova_consulta(clinica_id, paciente_id, medico_id, data_hora, 
+                             especialidade, status='agendada', observacoes=''):
+        """
+        Salva uma nova consulta com transação e todas as validações.
+        
+        Args:
+            clinica_id: ID da clínica
+            paciente_id: ID do paciente
+            medico_id: ID do médico
+            data_hora: datetime object
+            especialidade: Nome da especialidade
+            status: Status da consulta (padrão: 'agendada')
+            observacoes: Observações adicionais
+        
+        Returns:
+            Dicionário com resultado {'sucesso': bool, 'mensagem': str, 'consulta_id': int ou None, 'erro': str ou None}
+        """
+        return ConsultaService.criar_consulta(
+            clinica_id,
+            paciente_id,
+            medico_id,
+            data_hora,
+            especialidade,
+            status,
+            observacoes
+        )

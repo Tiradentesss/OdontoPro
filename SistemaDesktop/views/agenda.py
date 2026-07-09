@@ -1190,15 +1190,14 @@ class Agenda(BaseScreen):
         return f'{anos} anos'
 
     def abrir_dialogo_marcar_consulta(self):
-        """Abre uma janela de diálogo para marcar uma nova consulta"""
+        """Abre uma janela de diálogo para marcar uma nova consulta com integração ao banco"""
+        from datetime import datetime
+        from tkinter import messagebox
+        
         dialogo = ctk.CTkToplevel(self.master)
         dialogo.title("Marcar Consulta")
-        dialogo.geometry("600x700")
+        dialogo.geometry("650x800")
         dialogo.resizable(False, False)
-        
-        # Centralizar a janela
-        dialogo.update_idletasks()
-        x = dialogo.winfo_parent
         dialogo.grab_set()
         
         # Frame principal
@@ -1208,7 +1207,7 @@ class Agenda(BaseScreen):
         # Título
         ctk.CTkLabel(
             main_frame,
-            text="Marcar Nova Consulta",
+            text="➕ Marcar Nova Consulta",
             font=font("large_title", "bold"),
             text_color=COLORS['text_primary']
         ).pack(pady=(0, 20))
@@ -1223,73 +1222,119 @@ class Agenda(BaseScreen):
         )
         canvas_frame.pack(fill='both', expand=True, pady=(0, 15))
         
-        # Carregar dados
-        try:
-            pacientes = ConsultaController.listar_pacientes(self.clinica_id)
-            medicos = ConsultaController.listar_medicos(self.clinica_id)
-            especialidades = ConsultaController.listar_especialidades()
-        except Exception as e:
-            print(f"Erro ao carregar dados: {e}")
-            pacientes = []
-            medicos = []
-            especialidades = []
-        
-        paciente_nomes = [p[1] for p in pacientes]
-        paciente_ids = {p[1]: p[0] for p in pacientes}
-        
-        medico_nomes = [m[1] for m in medicos]
-        medico_ids = {m[1]: m[0] for m in medicos}
-        
-        especialidade_nomes = [e[1] for e in especialidades]
-        
-        # Campo Paciente
+        # ===================== CAMPO PACIENTE (BUSCA DINÂMICA) =====================
         ctk.CTkLabel(
             canvas_frame,
-            text="Paciente",
+            text="👤 Paciente*",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
         ).pack(anchor='w', padx=15, pady=(15, 5))
         
-        paciente_var = ctk.StringVar(value=paciente_nomes[0] if paciente_nomes else "")
+        paciente_display = {}
+        paciente_id_selecionado = {'id': None}
+        
+        def atualizar_sugestoes_paciente(termo):
+            """Atualiza lista de pacientes conforme usuário digita"""
+            if len(termo) < 2:
+                paciente_combo.configure(values=[])
+                return
+            
+            try:
+                resultados = ConsultaController.buscar_pacientes_dinamico(termo, limite=10)
+                if resultados:
+                    display_list = []
+                    for id_pac, nome, cpf in resultados:
+                        display_text = f"{nome} ({cpf})"
+                        display_list.append(display_text)
+                        paciente_display[display_text] = id_pac
+                    paciente_combo.configure(values=display_list)
+                else:
+                    paciente_combo.configure(values=["Nenhum paciente encontrado"])
+            except Exception as e:
+                print(f"Erro ao buscar pacientes: {e}")
+                paciente_combo.configure(values=["Erro ao buscar"])
+        
+        paciente_var = ctk.StringVar()
         paciente_combo = ctk.CTkComboBox(
             canvas_frame,
-            values=paciente_nomes,
             variable=paciente_var,
             height=40,
             fg_color=COLORS['input_bg'],
             border_color=COLORS['border'],
             button_color=COLORS['primary'],
             button_hover_color=COLORS['primary_dark'],
-            corner_radius=8
+            corner_radius=8,
+            command=lambda v: paciente_id_selecionado.update({'id': paciente_display.get(v, None)})
         )
-        paciente_combo.pack(fill='x', padx=15, pady=(0, 15))
+        paciente_combo.pack(fill='x', padx=15, pady=(0, 5))
+        paciente_combo.bind('<KeyRelease>', lambda e: atualizar_sugestoes_paciente(paciente_var.get()))
         
-        # Campo Médico
+        # ===================== CAMPO ESPECIALIDADE (AUTO-PREENCHIDO) =====================
         ctk.CTkLabel(
             canvas_frame,
-            text="Médico",
+            text="🦷 Especialidade*",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
         ).pack(anchor='w', padx=15, pady=(0, 5))
         
-        medico_var = ctk.StringVar(value=medico_nomes[0] if medico_nomes else "")
+        especialidade_var = ctk.StringVar(value="")
+        especialidade_entry = ctk.CTkEntry(
+            canvas_frame,
+            height=40,
+            fg_color=COLORS['bg_soft'],
+            border_color=COLORS['border'],
+            corner_radius=8,
+            textvariable=especialidade_var
+        )
+        especialidade_entry.pack(fill='x', padx=15, pady=(0, 15))
+        especialidade_entry.configure(state='disabled')
+        
+        # ===================== CAMPO MÉDICO (VINCULADO À CLÍNICA) =====================
+        ctk.CTkLabel(
+            canvas_frame,
+            text="🩺 Médico*",
+            font=font("subtitle"),
+            text_color=COLORS['text_primary']
+        ).pack(anchor='w', padx=15, pady=(0, 5))
+        
+        medico_display = {}
+        medico_id_selecionado = {'id': None}
+        
+        try:
+            medicos = ConsultaController.listar_medicos_por_clinica(self.clinica_id)
+            medico_list = []
+            for id_med, nome in medicos:
+                especialidade = ConsultaController.obter_especialidade_medico(id_med)
+                display_text = f"{nome} - {especialidade}" if especialidade else nome
+                medico_list.append(display_text)
+                medico_display[display_text] = id_med
+        except Exception as e:
+            print(f"Erro ao carregar médicos: {e}")
+            medico_list = []
+        
+        medico_var = ctk.StringVar(value=medico_list[0] if medico_list else "")
         medico_combo = ctk.CTkComboBox(
             canvas_frame,
-            values=medico_nomes,
+            values=medico_list,
             variable=medico_var,
             height=40,
             fg_color=COLORS['input_bg'],
             border_color=COLORS['border'],
             button_color=COLORS['primary'],
             button_hover_color=COLORS['primary_dark'],
-            corner_radius=8
+            corner_radius=8,
+            command=lambda v: self._atualizar_especialidade_auto(v, medico_display, especialidade_var)
         )
         medico_combo.pack(fill='x', padx=15, pady=(0, 15))
         
-        # Data
+        if medico_list:
+            medico_id_selecionado['id'] = medico_display.get(medico_list[0])
+            self._atualizar_especialidade_auto(medico_list[0], medico_display, None)
+        
+        # ===================== CAMPO DATA =====================
         ctk.CTkLabel(
             canvas_frame,
-            text="Data da Consulta",
+            text="📅 Data da Consulta*",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
         ).pack(anchor='w', padx=15, pady=(0, 5))
@@ -1304,12 +1349,12 @@ class Agenda(BaseScreen):
             corner_radius=8,
             textvariable=data_var
         )
-        data_entry.pack(fill='x', padx=15, pady=(0, 15))
+        data_entry.pack(fill='x', padx=15, pady=(0, 5))
         
-        # Hora
+        # ===================== CAMPO HORA =====================
         ctk.CTkLabel(
             canvas_frame,
-            text="Hora da Consulta",
+            text="🕐 Hora da Consulta*",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
         ).pack(anchor='w', padx=15, pady=(0, 5))
@@ -1324,39 +1369,54 @@ class Agenda(BaseScreen):
             corner_radius=8,
             textvariable=hora_var
         )
-        hora_entry.pack(fill='x', padx=15, pady=(0, 15))
+        hora_entry.pack(fill='x', padx=15, pady=(0, 5))
         
-        # Especialidade
-        ctk.CTkLabel(
+        # Info de horários ocupados
+        info_label = ctk.CTkLabel(
             canvas_frame,
-            text="Especialidade",
-            font=font("subtitle"),
-            text_color=COLORS['text_primary']
-        ).pack(anchor='w', padx=15, pady=(0, 5))
-        
-        especialidade_var = ctk.StringVar(value=especialidade_nomes[0] if especialidade_nomes else "")
-        especialidade_combo = ctk.CTkComboBox(
-            canvas_frame,
-            values=especialidade_nomes,
-            variable=especialidade_var,
-            height=40,
-            fg_color=COLORS['input_bg'],
-            border_color=COLORS['border'],
-            button_color=COLORS['primary'],
-            button_hover_color=COLORS['primary_dark'],
-            corner_radius=8
+            text="",
+            font=font("text"),
+            text_color=COLORS['text_muted'],
+            justify='left'
         )
-        especialidade_combo.pack(fill='x', padx=15, pady=(0, 15))
+        info_label.pack(anchor='w', padx=15, pady=(0, 10))
         
-        # Observações
+        def carregar_horarios_ocupados(*args):
+            """Carrega horários ocupados quando data ou médico mudam"""
+            if not data_var.get() or not medico_id_selecionado.get('id'):
+                info_label.configure(text="")
+                return
+            
+            try:
+                from datetime import datetime as dt
+                data_obj = dt.strptime(data_var.get(), "%d/%m/%Y").date()
+                horarios = ConsultaController.obter_horarios_ocupados(
+                    medico_id_selecionado['id'], 
+                    data_obj
+                )
+                
+                if horarios:
+                    info_label.configure(
+                        text=f"⚠️ Horários ocupados: {', '.join(horarios)}",
+                        text_color=COLORS["warning"] if "warning" in COLORS else "#FFA500"
+                    )
+                else:
+                    info_label.configure(text="✓ Todos os horários disponíveis")
+            except Exception as e:
+                print(f"Erro ao carregar horários: {e}")
+                info_label.configure(text="")
+        
+        data_var.trace_add('write', carregar_horarios_ocupados)
+        medico_var.trace_add('write', lambda *args: carregar_horarios_ocupados())
+        
+        # ===================== CAMPO OBSERVAÇÕES =====================
         ctk.CTkLabel(
             canvas_frame,
-            text="Observações (opcional)",
+            text="📝 Observações (opcional)",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
         ).pack(anchor='w', padx=15, pady=(0, 5))
         
-        obs_var = ctk.StringVar(value="")
         obs_text = ctk.CTkTextbox(
             canvas_frame,
             height=100,
@@ -1367,72 +1427,87 @@ class Agenda(BaseScreen):
         )
         obs_text.pack(fill='x', padx=15, pady=(0, 15))
         
+        # ===================== VALIDAÇÃO E SALVAMENTO =====================
+        def validar_e_salvar():
+            """Valida todos os campos e salva a consulta"""
+            
+            # Validação 1: Paciente
+            if not paciente_id_selecionado.get('id'):
+                messagebox.showerror("Validação", "❌ Selecione um paciente válido")
+                return
+            
+            # Validação 2: Médico
+            if not medico_id_selecionado.get('id'):
+                messagebox.showerror("Validação", "❌ Selecione um médico")
+                return
+            
+            # Validação 3: Data
+            if not data_var.get():
+                messagebox.showerror("Validação", "❌ Preencha a data")
+                return
+            
+            valido_data, msg_data, data_obj = ConsultaController.validar_data_consulta(data_var.get())
+            if not valido_data:
+                messagebox.showerror("Validação", f"❌ {msg_data}")
+                return
+            
+            # Validação 4: Hora
+            if not hora_var.get():
+                messagebox.showerror("Validação", "❌ Preencha a hora")
+                return
+            
+            valido_hora, msg_hora, hora_obj = ConsultaController.validar_hora_consulta(hora_var.get())
+            if not valido_hora:
+                messagebox.showerror("Validação", f"❌ {msg_hora}")
+                return
+            
+            # Validação 5: Especialidade
+            if not especialidade_var.get():
+                messagebox.showerror("Validação", "❌ Especialidade não preenchida automaticamente")
+                return
+            
+            # Validação 6: Verificar disponibilidade de horário
+            from datetime import datetime as dt
+            data_hora = dt.combine(data_obj.date(), hora_obj)
+            
+            disponivel, msg_horario = ConsultaController.verificar_disponibilidade_horario(
+                medico_id_selecionado['id'],
+                data_hora.date(),
+                data_hora.time()
+            )
+            
+            if not disponivel:
+                messagebox.showerror("Horário Indisponível", f"❌ {msg_horario}")
+                return
+            
+            # ============ SALVAR CONSULTA ============
+            resultado = ConsultaController.salvar_nova_consulta(
+                self.clinica_id,
+                paciente_id_selecionado['id'],
+                medico_id_selecionado['id'],
+                data_hora,
+                especialidade_var.get(),
+                status='agendada',
+                observacoes=obs_text.get('1.0', 'end-1c')
+            )
+            
+            if resultado.get('sucesso'):
+                messagebox.showinfo(
+                    "Sucesso",
+                    f"✓ Consulta marcada com sucesso!\n\nID: {resultado.get('consulta_id')}"
+                )
+                self.refresh_data()
+                dialogo.destroy()
+            else:
+                messagebox.showerror(
+                    "Erro ao Salvar",
+                    f"❌ {resultado.get('mensagem', 'Erro desconhecido')}"
+                )
+        
         # Frame de botões
         button_frame = ctk.CTkFrame(main_frame, fg_color='transparent')
         button_frame.pack(fill='x', pady=(0, 0))
         
-        def salvar_consulta():
-            try:
-                # Validações
-                if not paciente_var.get():
-                    from tkinter import messagebox
-                    messagebox.showerror("Erro", "Selecione um paciente")
-                    return
-                
-                if not medico_var.get():
-                    from tkinter import messagebox
-                    messagebox.showerror("Erro", "Selecione um médico")
-                    return
-                
-                if not data_var.get():
-                    from tkinter import messagebox
-                    messagebox.showerror("Erro", "Preencha a data")
-                    return
-                
-                if not hora_var.get():
-                    from tkinter import messagebox
-                    messagebox.showerror("Erro", "Preencha a hora")
-                    return
-                
-                # Converter data e hora
-                from datetime import datetime
-                try:
-                    d, m, a = data_var.get().split('/')
-                    h, min = hora_var.get().split(':')
-                    data_hora = datetime(int(a), int(m), int(d), int(h), int(min))
-                except:
-                    from tkinter import messagebox
-                    messagebox.showerror("Erro", "Formato de data/hora inválido. Use DD/MM/YYYY e HH:MM")
-                    return
-                
-                # Buscar IDs
-                paciente_id = paciente_ids[paciente_var.get()]
-                medico_id = medico_ids[medico_var.get()]
-                
-                # Salvar consulta
-                resultado = ConsultaController.criar_consulta(
-                    self.clinica_id,
-                    paciente_id,
-                    medico_id,
-                    data_hora,
-                    status='agendada',
-                    especialidade=especialidade_var.get(),
-                    observacoes=obs_text.get('1.0', 'end-1c')
-                )
-                
-                if resultado['sucesso']:
-                    from tkinter import messagebox
-                    messagebox.showinfo("Sucesso", f"Consulta marcada com sucesso!")
-                    self.refresh_data()
-                    dialogo.destroy()
-                else:
-                    from tkinter import messagebox
-                    messagebox.showerror("Erro", f"Erro ao marcar consulta: {resultado['erro']}")
-            except Exception as e:
-                from tkinter import messagebox
-                messagebox.showerror("Erro", f"Erro ao salvar: {str(e)}")
-        
-        # Botão Salvar
         btn_salvar = ctk.CTkButton(
             button_frame,
             text="✓ Salvar Consulta",
@@ -1440,18 +1515,31 @@ class Agenda(BaseScreen):
             fg_color=COLORS['primary'],
             hover_color=COLORS['primary_dark'],
             font=font("button", "bold"),
-            command=salvar_consulta
+            command=validar_e_salvar
         )
         btn_salvar.pack(side='left', fill='x', expand=True, padx=(0, 5))
         
-        # Botão Cancelar
         btn_cancelar = ctk.CTkButton(
             button_frame,
             text="✕ Cancelar",
             height=40,
-            fg_color=COLORS["danger"],
-            hover_color=COLORS["danger"],
+            fg_color=COLORS['border'],
+            hover_color=COLORS['bg_soft'],
             font=font("button", "bold"),
             command=dialogo.destroy
         )
         btn_cancelar.pack(side='left', fill='x', expand=True, padx=(5, 0))
+    
+    def _atualizar_especialidade_auto(self, medico_display_text, medico_display_dict, especialidade_var):
+        """Atualiza automaticamente a especialidade quando médico é selecionado"""
+        if not especialidade_var:
+            return
+        
+        try:
+            medico_id = medico_display_dict.get(medico_display_text)
+            if medico_id:
+                especialidade = ConsultaController.obter_especialidade_medico(medico_id)
+                if especialidade:
+                    especialidade_var.set(especialidade)
+        except Exception as e:
+            print(f"Erro ao atualizar especialidade: {e}")
