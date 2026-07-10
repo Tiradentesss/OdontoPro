@@ -1,28 +1,39 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  Platform, 
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Platform,
   StatusBar,
   Modal,
-  Dimensions
+  Dimensions,
+  Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext'; // Importação do tema global
+import { updateAppointment } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
 export default function RescheduleScreen({ route, navigation }) {
-  const { patientName } = route.params || { patientName: 'Victor Araújo' };
+  const { patientName, appointment } = route.params || { patientName: 'Victor Araújo' };
   const [selectedTime, setSelectedTime] = useState('10:30');
   const [selectedDate, setSelectedDate] = useState('23 de Maio, 2026');
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [dateOptions] = useState(['23 de Maio, 2026', '24 de Maio, 2026', '25 de Maio, 2026']);
 
   // Consome as propriedades globais do tema
   const { isDarkMode, colors } = useTheme();
+
+  useEffect(() => {
+    if (appointment?.data_hora) {
+      const appointmentDate = new Date(appointment.data_hora);
+      setSelectedDate(appointmentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }));
+      setSelectedTime(appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+    }
+  }, [appointment]);
 
   // Abre o modal de revisão
   const handleOpenConfirmation = () => {
@@ -30,9 +41,47 @@ export default function RescheduleScreen({ route, navigation }) {
   };
 
   // Fecha o modal e consolida o fluxo indo para a SuccessScreen
-  const handleConfirmReschedule = () => {
-    setIsModalVisible(false);
-    navigation.navigate('SuccessScreen');
+  const handleConfirmReschedule = async () => {
+    try {
+      const monthMap = {
+        janeiro: 0,
+        fevereiro: 1,
+        março: 2,
+        abril: 3,
+        maio: 4,
+        junho: 5,
+        julho: 6,
+        agosto: 7,
+        setembro: 8,
+        outubro: 9,
+        novembro: 10,
+        dezembro: 11,
+      };
+
+      const match = selectedDate.match(/(\d{1,2}) de ([^,]+), (\d{4})/);
+      if (match && appointment?.id) {
+        const [, day, monthName, year] = match;
+        const [hours, minutes] = selectedTime.split(':').map((value) => Number(value));
+        const newDate = new Date(Number(year), monthMap[monthName.toLowerCase()], Number(day), hours, minutes);
+        await updateAppointment(appointment.id, { data_hora: newDate.toISOString(), status: 'reagendada' });
+      }
+
+      setIsModalVisible(false);
+      navigation.navigate('SuccessScreen');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível reagendar a consulta.');
+    }
+  };
+
+  const handleSelectDate = () => {
+    Alert.alert(
+      'Escolher nova data',
+      'Selecione uma nova data para o atendimento',
+      dateOptions.map((date) => ({
+        text: date,
+        onPress: () => setSelectedDate(date),
+      }))
+    );
   };
 
   return (
@@ -69,6 +118,7 @@ export default function RescheduleScreen({ route, navigation }) {
         <TouchableOpacity 
           style={[styles.pickerSelector, { backgroundColor: colors.card, borderColor: colors.border }]} 
           activeOpacity={0.7}
+          onPress={handleSelectDate}
         >
           <View style={[styles.iconBox, { backgroundColor: isDarkMode ? '#1E293B' : '#EFF6FF' }]}>
             <Feather name="calendar" size={18} color={colors.brandBlue} />

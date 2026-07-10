@@ -108,7 +108,7 @@ export default function RegisterScreen({ navigation }) {
         secureTextEntry
       />
 
-      <CustomButton title="Registrar Conta" onPress={handleRegister} />
+      <CustomButton3 title="Registrar Conta" onPress={handleRegister} />
 
       <Text style={styles.or}>Ou</Text>
 
@@ -139,13 +139,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.8)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   backText: {
-    fontSize: 24,
+    fontSize: 34,
     color: '#07336d',
     lineHeight: 26,
   },
@@ -179,6 +178,8 @@ const styles = StyleSheet.create({
   },
   socialText: {
     fontSize: 15,
-    color: '#24325f',
+    fontFamily: 'Poppins-Bold',
+    fontWeight: 'bold',
+    color: '#000',
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -12,54 +12,13 @@ import {
 } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
-
-// Base de dados simulada para busca por ID
-const APPOINTMENTS_DATA = [
-  {
-    id: "1",
-    patientNumber: "PAC-001",
-    timeStart: "09:00",
-    timeEnd: "09:30",
-    status: "Novo Agendamento",
-    patientName: "Gabriel Gomes",
-    motivo: "Extração de siso",
-    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=120&h=120",
-  },
-  {
-    id: "2",
-    patientNumber: "PAC-002",
-    timeStart: "10:30",
-    timeEnd: "11:15",
-    status: "Não Confirmado",
-    patientName: "Mariana Costa",
-    motivo: "Dor de dente aguda",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=120&h=120",
-  },
-  {
-    id: "3",
-    patientNumber: "PAC-003",
-    timeStart: "12:00",
-    timeEnd: "12:30",
-    status: "Confirmado",
-    patientName: "Hugo Pontes",
-    motivo: "Ajuste de Prótese",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120&h=120",
-  },
-  {
-    id: "4",
-    patientNumber: "PAC-004",
-    timeStart: "14:00",
-    timeEnd: "14:30",
-    status: "Reagendado",
-    patientName: "Natália Silva",
-    motivo: "Clareamento Dental",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120&h=120",
-  },
-];
+import { getProfessionalAppointments } from '../services/api';
 
 export default function PatientProfileScreen({ route, navigation }) {
   const params = route.params || {};
+  const [appointment, setAppointment] = useState(params?.appointment || null);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const fromPatientsHistory = Boolean(params?.fromPatientsHistory);
   
   // 2. Consome o estado do tema e a paleta de cores dinâmica
   const { isDarkMode, colors } = useTheme();
@@ -69,31 +28,61 @@ export default function PatientProfileScreen({ route, navigation }) {
     avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=120&h=120',
   };
 
-  // Resolução lógica do paciente atual
-  let currentPatient = fallbackPatient;
-  let appointmentMotivo = "Extração de siso";
+  useEffect(() => {
+    const loadAppointment = async () => {
+      if (params?.appointment?.id) {
+        setAppointment(params.appointment);
+        return;
+      }
 
-  if (params.patient) {
-    currentPatient = {
-      name: params.patient.name,
-      avatar: params.patient.avatar
+      if (!params?.id) {
+        return;
+      }
+
+      try {
+        const data = await getProfessionalAppointments();
+        const found = Array.isArray(data)
+          ? data.find((item) => String(item.id) === String(params.id))
+          : null;
+        setAppointment(found || null);
+      } catch (error) {
+        console.log('Error loading appointment details:', error);
+      }
     };
-  } else if (params.id) {
-    const found = APPOINTMENTS_DATA.find(item => item.id === params.id);
-    if (found) {
-      currentPatient = {
-        name: found.patientName,
-        avatar: found.avatar
-      };
-      appointmentMotivo = found.motivo;
-    }
-  }
 
-  // Lógica centralizada para abrir a tela de Detalhes do Agendamento
+    loadAppointment();
+  }, [params?.appointment?.id, params?.id]);
+
+  const currentPatient = appointment
+    ? {
+        name: appointment.nome,
+        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=120&h=120',
+      }
+    : params?.patient
+      ? {
+          name: params.patient.name,
+          avatar: params.patient.avatar,
+        }
+      : fallbackPatient;
+
+  const appointmentMotivo = appointment?.observacoes || params?.motivo || 'Consulta';
+  const appointmentDate = appointment?.data_hora ? new Date(appointment.data_hora) : null;
+  const appointmentTime = appointmentDate?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const appointmentDateLabel = appointmentDate?.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const appointmentStatus = appointment?.status === 'confirmada' ? 'Confirmada' : appointment?.status === 'cancelada' ? 'Cancelada' : 'Pendente';
+
   const handleNavigateToDetails = () => {
-    navigation?.navigate('AppointmentDetailsScreen', { 
+    navigation?.navigate('AppointmentDetails', {
       patientName: currentPatient?.name,
-      motivo: appointmentMotivo
+      motivo: appointmentMotivo,
+      allowReschedule: !fromPatientsHistory,
+      appointment: appointment || {
+        id: params?.id,
+        nome: currentPatient?.name,
+        observacoes: appointmentMotivo,
+        data_hora: appointmentDate?.toISOString?.() || null,
+        status: appointment?.status || 'pendente',
+      },
     });
   };
 
@@ -140,7 +129,7 @@ export default function PatientProfileScreen({ route, navigation }) {
             </View>
             <View style={styles.contactTextContainer}>
               <Text style={[styles.contactLabel, { color: colors.mutedText }]}>Telefone</Text>
-              <Text style={[styles.contactValue, { color: colors.text }]}>(91) 98452-0000</Text>
+              <Text style={[styles.contactValue, { color: colors.text }]}>{appointment?.telefone || '(91) 98452-0000'}</Text>
             </View>
           </View>
 
@@ -152,7 +141,7 @@ export default function PatientProfileScreen({ route, navigation }) {
             </View>
             <View style={styles.contactTextContainer}>
               <Text style={[styles.contactLabel, { color: colors.mutedText }]}>E-mail</Text>
-              <Text style={[styles.contactValue, { color: colors.text }]}>paciente@gmail.com</Text>
+              <Text style={[styles.contactValue, { color: colors.text }]}>{appointment?.email || 'paciente@gmail.com'}</Text>
             </View>
           </View>
 
@@ -183,11 +172,11 @@ export default function PatientProfileScreen({ route, navigation }) {
           <View style={styles.appointmentBadgeRow}>
             <View style={[styles.dateBadgeContainer, { backgroundColor: isDarkMode ? '#1E3A8A' : '#EFF6FF' }]}>
               <Feather name="calendar" size={15} color={isDarkMode ? '#60A5FA' : '#163783'} style={{ marginRight: 6 }} />
-              <Text style={[styles.dateBadgeText, { color: isDarkMode ? '#60A5FA' : '#163783' }]}>22 de Maio, 2026</Text>
+              <Text style={[styles.dateBadgeText, { color: isDarkMode ? '#60A5FA' : '#163783' }]}>{appointmentDateLabel || 'Data a definir'}</Text>
             </View>
             <View style={[styles.timeBadgeContainer, { backgroundColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
               <Feather name="clock" size={13} color={colors.mutedText} style={{ marginRight: 4 }} />
-              <Text style={[styles.timeBadgeText, { color: isDarkMode ? '#94A3B8' : '#475569' }]}>09:00</Text>
+              <Text style={[styles.timeBadgeText, { color: isDarkMode ? '#94A3B8' : '#475569' }]}>{appointmentTime || '--:--'}</Text>
             </View>
 
             {/* Badge de Status */}
@@ -203,7 +192,7 @@ export default function PatientProfileScreen({ route, navigation }) {
                   ? { color: isDarkMode ? '#34D399' : '#059669' } 
                   : { color: isDarkMode ? '#FBBF24' : '#D97706' }
               ]}>
-                {isConfirmed ? 'Confirmada' : 'Pendente'}
+                {isConfirmed ? 'Confirmada' : appointmentStatus}
               </Text>
             </View>
           </View>

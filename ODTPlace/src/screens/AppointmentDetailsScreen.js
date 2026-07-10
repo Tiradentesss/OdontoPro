@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -9,26 +9,73 @@ import {
   StatusBar 
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { Alert } from 'react-native';
 import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
+import { getProfessionalAppointments, updateAppointment } from '../services/api';
 
 export default function AppointmentDetailsScreen({ route, navigation }) {
-  // Recebe os dados do paciente para exibir o nome dinamicamente no cabeçalho
-  const { patientName } = route.params || { patientName: 'Victor Araújo' };
-  
-  // Estado para simular o status da consulta localmente
-  const [status, setStatus] = useState('Pendente');
+  const { patientName, allowReschedule = true, appointment: routeAppointment } = route.params || { patientName: 'Victor Araújo' };
+  const [appointment, setAppointment] = useState(routeAppointment || null);
+  const [status, setStatus] = useState(routeAppointment?.status === 'confirmada' ? 'Confirmada' : routeAppointment?.status === 'cancelada' ? 'Cancelada' : 'Pendente');
 
   // 2. Consome o estado do tema e a paleta de cores dinâmica
   const { isDarkMode, colors } = useTheme();
 
-  // Redireciona para a tela de sucesso configurada anteriormente
-  const handleConfirm = () => {
-    navigation.navigate('SuccessScreen');
+  useEffect(() => {
+    const loadAppointment = async () => {
+      if (routeAppointment?.id) {
+        setAppointment(routeAppointment);
+        setStatus(routeAppointment.status === 'confirmada' ? 'Confirmada' : routeAppointment.status === 'cancelada' ? 'Cancelada' : 'Pendente');
+        return;
+      }
+
+      if (!route.params?.id) {
+        return;
+      }
+
+      try {
+        const data = await getProfessionalAppointments();
+        const found = Array.isArray(data) ? data.find((item) => String(item.id) === String(route.params.id)) : null;
+        setAppointment(found || null);
+        setStatus(found?.status === 'confirmada' ? 'Confirmada' : found?.status === 'cancelada' ? 'Cancelada' : 'Pendente');
+      } catch (error) {
+        console.log('Error loading appointment details:', error);
+      }
+    };
+
+    loadAppointment();
+  }, [routeAppointment?.id, route.params?.id]);
+
+  const appointmentDate = appointment?.data_hora ? new Date(appointment.data_hora) : null;
+  const appointmentDateLabel = appointmentDate?.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const appointmentTimeLabel = appointmentDate?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const appointmentReason = appointment?.observacoes || route.params?.motivo || 'Consulta';
+
+  const handleConfirm = async () => {
+    try {
+      if (appointment?.id) {
+        await updateAppointment(appointment.id, { status: 'confirmada' });
+        setStatus('Confirmada');
+      }
+      navigation.navigate('SuccessScreen');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível confirmar a consulta.');
+    }
   };
 
-  // Abre a tela extra de reagendamento de consulta
   const handleReschedule = () => {
-    navigation.navigate('RescheduleScreen', { patientName: patientName });
+    navigation.navigate('RescheduleScreen', { patientName: appointment?.nome || patientName, appointment });
+  };
+
+  const handleCancelAppointment = async () => {
+    try {
+      if (appointment?.id) {
+        await updateAppointment(appointment.id, { status: 'cancelada' });
+      }
+      setStatus('Cancelada');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível cancelar a consulta.');
+    }
   };
 
   return (
@@ -70,7 +117,7 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
             </View>
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Data do Atendimento</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>22 de Maio, 2026</Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>{appointmentDateLabel || 'Data a definir'}</Text>
             </View>
           </View>
 
@@ -82,7 +129,7 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
             </View>
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Horário Marcado</Text>
-              <Text style={[styles.infoValue, { color: colors.text }]}>09:00 — 09:30</Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>{appointmentTimeLabel ? `${appointmentTimeLabel} — ${new Date(appointmentDate.getTime() + 30 * 60000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : 'Horário a definir'}</Text>
             </View>
           </View>
 
@@ -119,7 +166,7 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
         <Text style={styles.sectionTitle}>Motivo / Sintomas</Text>
         <View style={[styles.reasonCard, { backgroundColor: colors.card, borderColor: colors.border, borderLeftColor: colors.brandBlue }]}>
           <Text style={[styles.reasonText, { color: isDarkMode ? '#94A3B8' : '#334155' }]}>
-            Paciente relatou episódios frequentes de dor aguda na região molar inferior direita ao ingerir alimentos frios. Suspeita clínica inicial de necessidade de extração de siso.
+            {appointmentReason}
           </Text>
         </View>
 
@@ -128,7 +175,7 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
 
         {/* Botões de Ação Inferiores Premium */}
         <View style={styles.footerActions}>
-          {status === 'Pendente' && (
+          {status !== 'Confirmada' && status !== 'Cancelada' && (
             <TouchableOpacity 
               style={[styles.confirmButton, isDarkMode && { shadowColor: '#000000', backgroundColor: '#059669' }]} 
               activeOpacity={0.8}
@@ -139,17 +186,30 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity 
-            style={[
-              styles.rescheduleButton, 
-              { backgroundColor: colors.card, borderColor: colors.border }
-            ]} 
-            activeOpacity={0.7}
-            onPress={handleReschedule}
-          >
-            <Feather name="calendar" size={16} color={colors.mutedText} style={{ marginRight: 8 }} />
-            <Text style={[styles.rescheduleButtonText, { color: colors.text }]}>Reagendar ou Cancelar</Text>
-          </TouchableOpacity>
+          {allowReschedule && (
+            <>
+              <TouchableOpacity 
+                style={[
+                  styles.rescheduleButton, 
+                  { backgroundColor: colors.card, borderColor: colors.border }
+                ]} 
+                activeOpacity={0.7}
+                onPress={handleReschedule}
+              >
+                <Feather name="calendar" size={16} color={colors.mutedText} style={{ marginRight: 8 }} />
+                <Text style={[styles.rescheduleButtonText, { color: colors.text }]}>Reagendar Consulta</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.cancelButton} 
+                activeOpacity={0.8}
+                onPress={handleCancelAppointment}
+              >
+                <Feather name="x-circle" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.cancelButtonText}>Cancelar Consulta</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
       </View>
@@ -296,5 +356,19 @@ const styles = StyleSheet.create({
   rescheduleButtonText: {
     fontSize: 14,
     fontWeight: '700',
+  },
+  cancelButton: {
+    flexDirection: 'row',
+    backgroundColor: '#DC2626',
+    borderRadius: 14,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

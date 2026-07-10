@@ -7,10 +7,15 @@ const normalizeBaseUrl = (value) => {
   return value.trim().replace(/\/+$/, "");
 };
 
+const ensureApiSuffix = (value) => {
+  if (!value) return value;
+  return value.endsWith('/api') ? value : `${value}/api`;
+};
+
 const resolveApiBaseUrl = () => {
   const configuredUrl = normalizeBaseUrl(process.env.EXPO_PUBLIC_API_URL);
   if (configuredUrl) {
-    return configuredUrl;
+    return ensureApiSuffix(configuredUrl);
   }
 
   const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
@@ -27,7 +32,8 @@ const resolveApiBaseUrl = () => {
     return "http://127.0.0.1:3001/api";
   }
 
-  return "http://localhost:3001/api";
+  const fallbackHost = "192.168.61.104";
+  return `http://${fallbackHost}:3001/api`;
 };
 
 const API_BASE_URL = resolveApiBaseUrl();
@@ -133,6 +139,26 @@ export const createAppointment = async (appointmentData) => {
 export const getPatientAppointments = async (email) => {
   try {
     const response = await api.get(`/appointments/${email}`);
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+export const getProfessionalAppointments = async (params = {}) => {
+  try {
+    const response = await api.get('/appointments', { params });
+    return response.data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+export const updateAppointment = async (appointmentId, payload) => {
+  try {
+    const response = await api.put(`/appointments/${appointmentId}`, payload);
     return response.data;
   } catch (error) {
     console.error('API Error:', error);

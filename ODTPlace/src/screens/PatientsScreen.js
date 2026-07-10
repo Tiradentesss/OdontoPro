@@ -189,7 +189,15 @@ export default function PatientsHistoryScreen({ navigation }) {
               const statusColor = getStatusColor(item.recordStatus, isDarkMode);
 
               return (
-                <View key={item.id} style={[styles.patientCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <TouchableOpacity
+                  key={item.id}
+                  activeOpacity={0.85}
+                  onPress={() => navigation?.navigate('PatientProfileScreen', {
+                    patient: { name: item.name, avatar: item.avatar },
+                    motivo: item.lastProcedure,
+                    fromPatientsHistory: true,
+                  })}
+                  style={[styles.patientCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                   <Image source={{ uri: item.avatar }} style={[styles.avatar, { borderColor: colors.border }]} />
                   
                   <View style={styles.infoContainer}>
@@ -221,7 +229,7 @@ export default function PatientsHistoryScreen({ navigation }) {
                       <Text style={[styles.statusIndicatorText, { color: statusColor }]}>{item.recordStatus}</Text>
                     </View>
                   </View>
-                </View>
+                </TouchableOpacity>
               );
             })}
           </View>

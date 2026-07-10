@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, ImageBackground } from 'react-native';
 import CustomInput from '../components/CustomInput';
-import CustomButton from '../components/CustomButton';
+import CustomButton3 from '../components/CustomButton3';
 import { loginPatient } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -43,11 +43,16 @@ export default function LoginScreen({ navigation }) {
       resizeMode="cover"
     >
       <View style={styles.header}>
-        <Image
-          source={require('../../assets/LogoODTPlace.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('PreLogin')}
+        >
+          <Image
+            source={require('../../assets/LogoODTPlace.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>OdontoPlace</Text>
           <Text style={styles.headerSubtitle}>Sistema de gerenciamento</Text>
@@ -76,7 +81,7 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.forgot}>Esqueceu a Senha ?</Text>
       </TouchableOpacity>
 
-      <CustomButton
+      <CustomButton3
         title="Entrar na Conta"
         onPress={handleLogin}
         style={{ width: 335, alignSelf: 'center' }}
@@ -149,15 +154,26 @@ const styles = StyleSheet.create({
   },
   forgot: {
     textAlign: 'right',
-    marginTop: 10,
+    fontWeight: 'bold',
     marginBottom: 20,
-    color: '#1f4ed8',
+    color: '#00bceb',
     fontSize: 13,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#fff',
+    opacity: 0.5,
+  },
+  orText: {
+    marginHorizontal: 10,
+    color: '#fff',
+    fontSize: 14,
   },
   or: {
     textAlign: 'center',
     marginVertical: 16,
-    color: '#888',
+    color: '#000',
     fontSize: 14,
   },
   socialButton: {
@@ -171,12 +187,15 @@ const styles = StyleSheet.create({
   },
   socialText: {
     fontSize: 15,
-    color: '#24325f',
+    fontFamily: 'Poppins-Bold',
+    fontWeight: 'bold',
+    color: '#000',
   },
   signup: {
     textAlign: 'center',
+    fontWeight: 'bold',
     marginTop: 22,
-    color: '#1f4ed8',
+    color: '#00bceb',
     fontSize: 15,
   },
 });

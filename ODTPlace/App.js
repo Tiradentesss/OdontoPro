@@ -122,6 +122,10 @@ export default function App() {
               component={AppointmentDetailsScreen}
             />
             <Stack.Screen
+              name="AppointmentDetailsScreen"
+              component={AppointmentDetailsScreen}
+            />
+            <Stack.Screen
               name="ConfigScreen"
               component={ConfigScreen}
             />

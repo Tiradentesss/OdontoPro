@@ -53,6 +53,13 @@ const mockDoctors = [
   { id: 2, nome: 'Dra. Ana Borges', especialidades: ['Endodontia'], rating: 4.9, reviews: 95 },
 ];
 
+const mockAppointments = [
+  { id: 1, nome: 'Gabriel Gomes', email: 'gabriel@example.com', telefone: '(91) 99999-1111', data_hora: '2026-05-22T09:00:00.000Z', observacoes: 'Extração de siso', status: 'agendada', clinica_nome: 'Clínica Sorriso Vivo', medico_nome: 'Dr. Lucas Castro', especialidade_nome: 'Ortodontia', paciente_id: 1 },
+  { id: 2, nome: 'Mariana Costa', email: 'mariana@example.com', telefone: '(91) 98888-2222', data_hora: '2026-05-22T10:30:00.000Z', observacoes: 'Dor de dente aguda', status: 'pendente', clinica_nome: 'Clínica Sorriso Vivo', medico_nome: 'Dr. Lucas Castro', especialidade_nome: 'Ortodontia', paciente_id: 2 },
+  { id: 3, nome: 'Hugo Pontes', email: 'hugo@example.com', telefone: '(91) 97777-3333', data_hora: '2026-05-23T12:00:00.000Z', observacoes: 'Ajuste de prótese', status: 'confirmada', clinica_nome: 'Clínica Sorriso Vivo', medico_nome: 'Dr. Lucas Castro', especialidade_nome: 'Ortodontia', paciente_id: 3 },
+  { id: 4, nome: 'Natália Silva', email: 'natalia@example.com', telefone: '(91) 96666-4444', data_hora: '2026-05-24T14:00:00.000Z', observacoes: 'Clareamento dental', status: 'reagendada', clinica_nome: 'Clínica Sorriso Vivo', medico_nome: 'Dr. Lucas Castro', especialidade_nome: 'Ortodontia', paciente_id: 4 },
+];
+
 const useMockData = () => process.env.USE_MOCK_DATA === 'true';
 
 app.get('/api/test', (req, res) => {
@@ -118,7 +125,41 @@ app.get('/api/clinics/:clinicId/doctors', (req, res) => {
   });
 });
 
-app.get('/api/appointments/:patientEmail', (req, res) => {
+app.get(['/api/appointments', '/appointments'], (req, res) => {
+  if (useMockData()) {
+    return res.json(mockAppointments);
+  }
+
+  const { medico_id, clinica_id } = req.query;
+  let query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id WHERE 1=1`;
+  const params = [];
+
+  if (medico_id) {
+    query += ' AND c.medico_id = ?';
+    params.push(medico_id);
+  }
+
+  if (clinica_id) {
+    query += ' AND c.clinica_id = ?';
+    params.push(clinica_id);
+  }
+
+  query += ' ORDER BY c.data_hora ASC';
+
+  db.query(query, params, (err, results) => {
+    if (err) {
+      console.error('Appointments query failed, returning mock data:', err.message);
+      return res.json(mockAppointments);
+    }
+    res.json(results);
+  });
+});
+
+app.get(['/api/appointments/:patientEmail', '/appointments/:patientEmail'], (req, res) => {
+  if (useMockData()) {
+    return res.json(mockAppointments);
+  }
+
   const patientEmail = req.params.patientEmail;
   // Tentar buscar por paciente_id primeiro (número), depois por email
   const isNumericId = /^\d+$/.test(patientEmail);
@@ -140,7 +181,54 @@ app.get('/api/appointments/:patientEmail', (req, res) => {
   });
 });
 
-app.post('/api/appointments', (req, res) => {
+app.put(['/api/appointments/:id', '/appointments/:id'], (req, res) => {
+  if (useMockData()) {
+    const appointmentId = Number(req.params.id);
+    const appointment = mockAppointments.find((item) => item.id === appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+
+    Object.assign(appointment, req.body);
+    return res.json({ message: 'Appointment updated successfully', appointment });
+  }
+
+  const appointmentId = req.params.id;
+  const { status, data_hora, observacoes } = req.body;
+  const updates = [];
+  const params = [];
+
+  if (status !== undefined) {
+    updates.push('status = ?');
+    params.push(status);
+  }
+
+  if (data_hora !== undefined) {
+    updates.push('data_hora = ?');
+    params.push(data_hora);
+  }
+
+  if (observacoes !== undefined) {
+    updates.push('observacoes = ?');
+    params.push(observacoes);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'No valid fields to update' });
+  }
+
+  params.push(appointmentId);
+  const query = `UPDATE odontoPro_consulta SET ${updates.join(', ')} WHERE id = ?`;
+
+  db.query(query, params, (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: 'Appointment updated successfully', affectedRows: result.affectedRows });
+  });
+});
+
+app.post(['/api/appointments', '/appointments'], (req, res) => {
   const { nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, paciente_id } = req.body;
   const query = `INSERT INTO odontoPro_consulta (nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, status, paciente_id, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'agendada', ?, NOW())`;
   db.query(query, [nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, paciente_id], (err, result) => {

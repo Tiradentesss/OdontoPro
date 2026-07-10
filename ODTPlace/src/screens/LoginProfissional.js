@@ -30,11 +30,16 @@ export default function LoginProfissional({ navigation }) {
     colors={['#0a247c', '#1BC4EB']}
     style={styles.container}>
       <View style={styles.header}>
-        <Image
-          source={require('../../assets/LogoP.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('PreLogin')}
+        >
+          <Image
+            source={require('../../assets/LogoP.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>OdontoPlace</Text>
           <Text style={styles.headerSubtitle}>Sistema de gerenciamento</Text>

@@ -1,25 +1,58 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Dimensions } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
+import { getProfessionalAppointments } from '../services/api';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const [appointments, setAppointments] = useState([]);
   
   // 2. Consome o estado do tema e a paleta de cores dinâmica
   const { isDarkMode, colors } = useTheme();
 
-  const nextAppointment = {
-    patient: "Luciana Alencar",
-    procedure: "Manutenção de Aparelho",
-    time: "14:30",
-    date: "Hoje, 27 de Maio",
-    avatarColor: isDarkMode ? '#1E3A8A' : '#EFF6FF',
-    textColor: isDarkMode ? '#60A5FA' : '#163783'
-  };
+  useEffect(() => {
+    const loadAppointments = async () => {
+      try {
+        const data = await getProfessionalAppointments();
+        setAppointments(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.log('Error loading professional appointments:', error);
+      }
+    };
+
+    loadAppointments();
+  }, []);
+
+  const nextAppointment = useMemo(() => {
+    const next = [...appointments]
+      .filter((item) => item && item.data_hora)
+      .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora))[0];
+
+    if (!next) {
+      return {
+        patient: 'Sem consultas',
+        procedure: 'Nenhum atendimento previsto',
+        time: '--:--',
+        date: 'Ainda não há agenda',
+        avatarColor: isDarkMode ? '#1E3A8A' : '#EFF6FF',
+        textColor: isDarkMode ? '#60A5FA' : '#163783'
+      };
+    }
+
+    const appointmentDate = new Date(next.data_hora);
+    return {
+      patient: next.nome,
+      procedure: next.observacoes || next.especialidade_nome || 'Consulta',
+      time: appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      date: appointmentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' }),
+      avatarColor: isDarkMode ? '#1E3A8A' : '#EFF6FF',
+      textColor: isDarkMode ? '#60A5FA' : '#163783'
+    };
+  }, [appointments, isDarkMode]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.container }]}>
@@ -47,7 +80,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity 
             style={[styles.notificationBtn, { backgroundColor: colors.card, borderColor: colors.border }]} 
             activeOpacity={0.6}
-            onPress={() => navigation?.navigate('NotificationsScreen')}
+            onPress={() => navigation?.navigate('NotificationSetting')}
           >
             <Feather name="bell" size={20} color={colors.text} />
             <View style={styles.badge} />

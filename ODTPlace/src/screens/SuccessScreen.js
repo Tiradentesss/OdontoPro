@@ -20,11 +20,11 @@ export default function SuccessScreen({ navigation }) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   
-  // Limpa o histórico de navegação e joga o profissional de volta à Agenda
+  // Redireciona o profissional de volta para a agenda usando uma rota válida no stack atual
   const handleGoBackToAgenda = () => {
-    navigation.reset({
+    navigation?.reset({
       index: 0,
-      routes: [{ name: 'Main', state: { routes: [{ name: 'AgendaTab' }] } }],
+      routes: [{ name: 'HomeP' }],
     });
   };
 

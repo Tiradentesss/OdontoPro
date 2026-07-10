@@ -36,6 +36,19 @@ export default function ConfigScreen({ navigation }) {
           style: "destructive",
           onPress: () => {
             console.log("Usuário deslogado");
+            const parentNavigation = navigation?.getParent?.();
+
+            if (parentNavigation?.reset) {
+              parentNavigation.reset({
+                index: 0,
+                routes: [{ name: 'PreLogin' }],
+              });
+            } else {
+              navigation?.reset({
+                index: 0,
+                routes: [{ name: 'PreLogin' }],
+              });
+            }
           }
         }
       ]
@@ -115,7 +128,7 @@ export default function ConfigScreen({ navigation }) {
           <TouchableOpacity 
             style={styles.menuItem} 
             activeOpacity={0.6}
-            onPress={() => navigation?.navigate('NotificationSettingsScreen')}
+            onPress={() => navigation?.navigate('NotificationSetting')}
           >
             <View style={[styles.iconWrapper, { backgroundColor: '#FFF7ED' }]}>
               <Feather name="bell" size={18} color="#EA580C" />
