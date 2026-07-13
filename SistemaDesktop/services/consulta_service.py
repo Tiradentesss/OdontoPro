@@ -149,7 +149,7 @@ class ConsultaService:
 
     @staticmethod
     def criar_consulta(clinica_id, paciente_id, medico_id, data_hora, especialidade, 
-                       status='agendada', observacoes=''):
+                       status='agendada', observacoes='', especialidade_id=None):
         """
         Cria uma nova consulta no banco com transação.
         
@@ -206,6 +206,22 @@ class ConsultaService:
                     'erro': 'Médico inválido'
                 }
 
+            especialidade_nome = especialidade
+            if especialidade_id is not None:
+                cursor.execute(
+                    "SELECT id, nome FROM odontoPro_especialidade WHERE id = %s",
+                    (especialidade_id,)
+                )
+                especialidade_db = cursor.fetchone()
+                if not especialidade_db:
+                    return {
+                        'sucesso': False,
+                        'mensagem': 'Especialidade não encontrada.',
+                        'consulta_id': None,
+                        'erro': 'Especialidade inválida'
+                    }
+                especialidade_nome = especialidade_db[1]
+
             # Verificar conflito de horário
             disponivel, msg_horario = ConsultaService.verificar_horario_disponivel(
                 medico_id, 
@@ -223,20 +239,38 @@ class ConsultaService:
                 }
 
             # Inserir consulta (com autocommit=True, é automático)
-            query = """
-                INSERT INTO odontoPro_consulta 
-                (clinica_id, paciente_id, medico_id, data_hora, status, observacoes)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """
+            cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'odontoPro_consulta'")
+            colunas_consulta = [row[0].lower() for row in cursor.fetchall()]
 
-            cursor.execute(query, (
-                clinica_id,
-                paciente_id,
-                medico_id,
-                data_hora,
-                status.lower(),
-                observacoes
-            ))
+            if 'especialidade_id' in colunas_consulta:
+                query = """
+                    INSERT INTO odontoPro_consulta 
+                    (clinica_id, paciente_id, medico_id, especialidade_id, data_hora, status, observacoes)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (
+                    clinica_id,
+                    paciente_id,
+                    medico_id,
+                    especialidade_id,
+                    data_hora,
+                    status.lower(),
+                    observacoes
+                ))
+            else:
+                query = """
+                    INSERT INTO odontoPro_consulta 
+                    (clinica_id, paciente_id, medico_id, data_hora, status, observacoes)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (
+                    clinica_id,
+                    paciente_id,
+                    medico_id,
+                    data_hora,
+                    status.lower(),
+                    observacoes
+                ))
 
             consulta_id = cursor.lastrowid
 

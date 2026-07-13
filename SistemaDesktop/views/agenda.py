@@ -1249,7 +1249,7 @@ class Agenda(BaseScreen):
         )
         paciente_combo.pack(fill='x', padx=15, pady=(0, 15))
         
-        # ===================== CAMPO ESPECIALIDADE (AUTO-PREENCHIDO) =====================
+        # ===================== CAMPO ESPECIALIDADE (SELETOR) =====================
         ctk.CTkLabel(
             canvas_frame,
             text="🦷 Especialidade*",
@@ -1258,16 +1258,73 @@ class Agenda(BaseScreen):
         ).pack(anchor='w', padx=15, pady=(0, 5))
         
         especialidade_var = ctk.StringVar(value="")
-        especialidade_entry = ctk.CTkEntry(
+        especialidade_id_selecionado = {'id': None}
+        especialidade_status_var = ctk.StringVar(value="")
+        especialidades_carregadas = []
+
+        def atualizar_especialidade_selecionada(value):
+            """Atualiza o ID interno com base na lista já carregada."""
+            for especialidade_id, nome in especialidades_carregadas:
+                if nome == value:
+                    especialidade_id_selecionado['id'] = especialidade_id
+                    break
+            else:
+                especialidade_id_selecionado['id'] = None
+            especialidade_status_var.set("")
+
+        def carregar_especialidades_combo():
+            """Carrega as especialidades cadastradas no banco uma vez ao abrir a janela."""
+            nonlocal especialidades_carregadas
+            try:
+                especialidades_db = ConsultaController.listar_especialidades()
+                especialidades = ConsultaController.preparar_especialidades_para_combo(especialidades_db)
+                especialidades_carregadas = especialidades
+
+                if not especialidades:
+                    especialidade_combo.configure(values=[], state='disabled')
+                    especialidade_var.set("")
+                    especialidade_id_selecionado['id'] = None
+                    especialidade_status_var.set("Nenhuma especialidade cadastrada.")
+                    return
+
+                valores = [nome for _, nome in especialidades]
+                especialidade_combo.configure(values=valores, state='normal')
+                especialidade_var.set(valores[0])
+                especialidade_id_selecionado['id'] = especialidades[0][0]
+                especialidade_status_var.set("")
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                print(f"[agenda] Erro ao carregar especialidades: {e}")
+                especialidades_carregadas = []
+                especialidade_combo.configure(values=[], state='disabled')
+                especialidade_var.set("")
+                especialidade_id_selecionado['id'] = None
+                especialidade_status_var.set("Não foi possível carregar as especialidades.")
+                messagebox.showerror("Erro", "Não foi possível carregar as especialidades no momento.")
+
+        especialidade_combo = ctk.CTkComboBox(
             canvas_frame,
+            variable=especialidade_var,
+            values=[],
             height=40,
-            fg_color=COLORS['bg_soft'],
+            fg_color=COLORS['input_bg'],
             border_color=COLORS['border'],
+            button_color=COLORS['primary'],
+            button_hover_color=COLORS['primary_dark'],
             corner_radius=8,
-            textvariable=especialidade_var
+            command=atualizar_especialidade_selecionada
         )
-        especialidade_entry.pack(fill='x', padx=15, pady=(0, 15))
-        especialidade_entry.configure(state='disabled')
+        especialidade_combo.pack(fill='x', padx=15, pady=(0, 5))
+        carregar_especialidades_combo()
+
+        especialidade_status_label = ctk.CTkLabel(
+            canvas_frame,
+            textvariable=especialidade_status_var,
+            font=font("text"),
+            text_color=COLORS['warning'] if 'warning' in COLORS else '#FFA500'
+        )
+        especialidade_status_label.pack(anchor='w', padx=15, pady=(0, 10))
         
         # ===================== CAMPO MÉDICO (VINCULADO À CLÍNICA) =====================
         ctk.CTkLabel(
@@ -1303,13 +1360,12 @@ class Agenda(BaseScreen):
             button_color=COLORS['primary'],
             button_hover_color=COLORS['primary_dark'],
             corner_radius=8,
-            command=lambda v: self._atualizar_especialidade_auto(v, medico_display, especialidade_var)
+            command=lambda v: None
         )
         medico_combo.pack(fill='x', padx=15, pady=(0, 15))
         
         if medico_list:
             medico_id_selecionado['id'] = medico_display.get(medico_list[0])
-            self._atualizar_especialidade_auto(medico_list[0], medico_display, None)
         
         # ===================== CAMPO DATA =====================
         ctk.CTkLabel(
@@ -1442,8 +1498,8 @@ class Agenda(BaseScreen):
                 return
             
             # Validação 5: Especialidade
-            if not especialidade_var.get():
-                messagebox.showerror("Validação", "❌ Especialidade não preenchida automaticamente")
+            if not especialidade_id_selecionado.get('id'):
+                messagebox.showerror("Validação", "❌ Selecione uma especialidade")
                 return
             
             # Validação 6: Verificar disponibilidade de horário
@@ -1468,7 +1524,8 @@ class Agenda(BaseScreen):
                 data_hora,
                 especialidade_var.get(),
                 status='agendada',
-                observacoes=obs_text.get('1.0', 'end-1c')
+                observacoes=obs_text.get('1.0', 'end-1c'),
+                especialidade_id=especialidade_id_selecionado['id']
             )
             
             if resultado.get('sucesso'):

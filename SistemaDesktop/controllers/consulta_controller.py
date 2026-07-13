@@ -258,32 +258,97 @@ class ConsultaController:
 
     @staticmethod
     def listar_especialidades():
-        """Lista todas as especialidades odontológicas"""
-        conn = get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT id, nome
-            FROM odontoPro_especialidade
-            ORDER BY nome ASC
-        """)
-        
-        especialidades = cursor.fetchall()
-        conn.close()
-        return especialidades
+        """Lista todas as especialidades odontológicas, adaptando-se à estrutura real da tabela."""
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            try:
+                cursor.execute("""
+                    SELECT id, nome
+                    FROM odontoPro_especialidade
+                    ORDER BY nome ASC
+                """)
+                especialidades = cursor.fetchall()
+                if especialidades:
+                    return especialidades
+            except Exception:
+                pass
+
+            cursor.execute("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = DATABASE()
+                  AND LOWER(table_name) LIKE '%especialidade%'
+                ORDER BY table_name
+            """)
+            tabelas = [row[0] for row in cursor.fetchall()]
+
+            for tabela in tabelas:
+                cursor.execute("""
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_schema = DATABASE()
+                      AND table_name = %s
+                """, (tabela,))
+                colunas = [row[0].lower() for row in cursor.fetchall()]
+
+                coluna_id = next((col for col in ['id', 'codigo', 'especialidade_id'] if col in colunas), None)
+                coluna_nome = next((col for col in ['nome', 'name', 'descricao', 'descricao_especialidade', 'especialidade'] if col in colunas), None)
+
+                if coluna_id and coluna_nome:
+                    cursor.execute(f"SELECT `{coluna_id}`, `{coluna_nome}` FROM `{tabela}` ORDER BY `{coluna_nome}` ASC")
+                    return cursor.fetchall()
+
+            return []
+        except Exception:
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     @staticmethod
-    def criar_consulta(clinica_id, paciente_id, medico_id, data_hora, status='agendada', especialidade='', observacoes=''):
+    def preparar_especialidades_para_combo(especialidades):
+        """Normaliza e ordena especialidades para uso em combo."""
+        if not especialidades:
+            return []
+
+        especialidades_unicas = {}
+        for especialidade_id, nome in especialidades:
+            nome_limpo = (nome or "").strip()
+            if especialidade_id is not None and nome_limpo:
+                chave = nome_limpo.casefold()
+                especialidades_unicas.setdefault(chave, (especialidade_id, nome_limpo))
+
+        especialidades_validas = list(especialidades_unicas.values())
+        return sorted(especialidades_validas, key=lambda item: item[1].lower())
+
+    @staticmethod
+    def criar_consulta(clinica_id, paciente_id, medico_id, data_hora, status='agendada', especialidade='', observacoes='', especialidade_id=None):
         """Cria uma nova consulta"""
         try:
             conn = get_connection()
             cursor = conn.cursor()
-            
-            cursor.execute("""
-                INSERT INTO odontoPro_consulta 
-                (clinica_id, paciente_id, medico_id, data_hora, status, especialidade, observacoes)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (clinica_id, paciente_id, medico_id, data_hora, status, especialidade, observacoes))
+
+            cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'odontoPro_consulta'")
+            colunas_consulta = [row[0].lower() for row in cursor.fetchall()]
+
+            if 'especialidade_id' in colunas_consulta:
+                cursor.execute("""
+                    INSERT INTO odontoPro_consulta 
+                    (clinica_id, paciente_id, medico_id, especialidade_id, data_hora, status, observacoes)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (clinica_id, paciente_id, medico_id, especialidade_id, data_hora, status, observacoes))
+            else:
+                cursor.execute("""
+                    INSERT INTO odontoPro_consulta 
+                    (clinica_id, paciente_id, medico_id, data_hora, status, observacoes)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (clinica_id, paciente_id, medico_id, data_hora, status, observacoes))
             
             conn.commit()
             consulta_id = cursor.lastrowid
@@ -455,7 +520,7 @@ class ConsultaController:
 
     @staticmethod
     def salvar_nova_consulta(clinica_id, paciente_id, medico_id, data_hora, 
-                             especialidade, status='agendada', observacoes=''):
+                             especialidade, status='agendada', observacoes='', especialidade_id=None):
         """
         Salva uma nova consulta com transação e todas as validações.
         
@@ -478,5 +543,6 @@ class ConsultaController:
             data_hora,
             especialidade,
             status,
-            observacoes
+            observacoes,
+            especialidade_id=especialidade_id
         )
