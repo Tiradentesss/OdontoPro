@@ -1403,7 +1403,8 @@ class Agenda(BaseScreen):
                 hora_combo.configure(values=[], state='disabled')
             except Exception:
                 pass
-            info_label.configure(text="Carregando datas disponíveis...")
+            # (no visible text) indicate loading only by disabling hora
+            pass
 
             datas = ConsultaController.carregar_datas_disponiveis(
                 medico_id_selecionado['id'], self.clinica_id
@@ -1416,16 +1417,14 @@ class Agenda(BaseScreen):
                     data_combo.configure(values=[], state='disabled')
                 except Exception:
                     pass
-                info_label.configure(text="")
                 return
 
             try:
                 data_combo.configure(values=datas, state='normal')
             except Exception:
                 pass
-            info_label.configure(
-                text="Datas disponíveis: " + ", ".join(datas[:10]) + ("..." if len(datas) > 10 else "")
-            )
+            # no visible list of dates; combo holds the options
+            pass
 
         def selecionar_medico(display_text):
             medico_id_selecionado['id'] = medico_display.get(display_text)
@@ -1509,7 +1508,6 @@ class Agenda(BaseScreen):
                     hora_combo.configure(values=[], state='disabled')
                 except Exception:
                     pass
-                info_label.configure(text="")
                 horarios_disponiveis.clear()
                 hora_selecionada['value'] = None
                 return
@@ -1520,7 +1518,6 @@ class Agenda(BaseScreen):
                     hora_combo.configure(values=[], state='disabled')
                 except Exception:
                     pass
-                info_label.configure(text="")
                 horarios_disponiveis.clear()
                 hora_selecionada['value'] = None
                 return
@@ -1532,7 +1529,6 @@ class Agenda(BaseScreen):
                     hora_combo.configure(values=[], state='disabled')
                 except Exception:
                     pass
-                info_label.configure(text="")
                 horarios_disponiveis.clear()
                 hora_selecionada['value'] = None
                 return
@@ -1553,16 +1549,12 @@ class Agenda(BaseScreen):
                     hora_combo.configure(values=[], state='disabled')
                 except Exception:
                     pass
-                info_label.configure(text="")
                 return
 
             try:
                 hora_combo.configure(values=horarios, state='normal')
             except Exception:
                 pass
-            info_label.configure(
-                text="Horários disponíveis: " + ", ".join(horarios[:10]) + ("..." if len(horarios) > 10 else "")
-            )
 
         def atualizar_hora_selecionada(*args):
             selecionado = hora_var.get().strip()
