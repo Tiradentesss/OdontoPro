@@ -1270,6 +1270,32 @@ class Agenda(BaseScreen):
                     break
             else:
                 especialidade_id_selecionado['id'] = None
+
+            medico_id_selecionado['id'] = None
+            medico_display.clear()
+            medico_combo.configure(values=[], state='disabled')
+            medico_var.set("")
+
+            if especialidade_id_selecionado['id'] is not None:
+                medicos_por_especialidade = ConsultaController.carregar_medicos_por_especialidade(
+                    especialidade_id_selecionado['id'],
+                    self.clinica_id
+                )
+
+                if medicos_por_especialidade:
+                    valores_medicos = []
+                    especialidade_nome = value or ""
+                    for id_med, nome_med in medicos_por_especialidade:
+                        display_text = f"{nome_med} - {especialidade_nome}" if especialidade_nome else nome_med
+                        medico_display[display_text] = id_med
+                        valores_medicos.append(display_text)
+
+                    medico_combo.configure(values=valores_medicos, state='normal')
+                    medico_var.set("")
+                else:
+                    medico_combo.configure(values=[], state='disabled')
+                    medico_var.set("Nenhum médico disponível")
+
             especialidade_status_var.set("")
 
         def carregar_especialidades_combo():
@@ -1289,8 +1315,8 @@ class Agenda(BaseScreen):
 
                 valores = [nome for _, nome in especialidades]
                 especialidade_combo.configure(values=valores, state='normal')
-                especialidade_var.set(valores[0])
-                especialidade_id_selecionado['id'] = especialidades[0][0]
+                especialidade_var.set("")
+                especialidade_id_selecionado['id'] = None
                 especialidade_status_var.set("")
             except Exception as e:
                 import traceback
@@ -1337,22 +1363,14 @@ class Agenda(BaseScreen):
         medico_display = {}
         medico_id_selecionado = {'id': None}
         
-        try:
-            medicos = ConsultaController.listar_medicos_por_clinica(self.clinica_id)
-            medico_list = []
-            for id_med, nome in medicos:
-                especialidade = ConsultaController.obter_especialidade_medico(id_med)
-                display_text = f"{nome} - {especialidade}" if especialidade else nome
-                medico_list.append(display_text)
-                medico_display[display_text] = id_med
-        except Exception as e:
-            print(f"Erro ao carregar médicos: {e}")
-            medico_list = []
-        
-        medico_var = ctk.StringVar(value=medico_list[0] if medico_list else "")
+        medico_var = ctk.StringVar(value="")
+
+        def selecionar_medico(display_text):
+            medico_id_selecionado['id'] = medico_display.get(display_text)
+
         medico_combo = ctk.CTkComboBox(
             canvas_frame,
-            values=medico_list,
+            values=[],
             variable=medico_var,
             height=40,
             fg_color=COLORS['input_bg'],
@@ -1360,14 +1378,11 @@ class Agenda(BaseScreen):
             button_color=COLORS['primary'],
             button_hover_color=COLORS['primary_dark'],
             corner_radius=8,
-            command=lambda v: None
+            state='disabled',
+            command=selecionar_medico
         )
         medico_combo.pack(fill='x', padx=15, pady=(0, 15))
-        
-        if medico_list:
-            medico_id_selecionado['id'] = medico_display.get(medico_list[0])
-        
-        # ===================== CAMPO DATA =====================
+
         ctk.CTkLabel(
             canvas_frame,
             text="📅 Data da Consulta*",

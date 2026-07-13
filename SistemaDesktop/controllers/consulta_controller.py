@@ -427,6 +427,66 @@ class ConsultaController:
         return MedicoService.listar_por_clinica(clinica_id)
 
     @staticmethod
+    def carregar_medicos_por_especialidade(especialidade_id, clinica_id=None):
+        """
+        Carrega os médicos vinculados à especialidade selecionada.
+
+        Args:
+            especialidade_id: ID da especialidade selecionada
+            clinica_id: ID da clínica (opcional)
+
+        Returns:
+            Lista de tuplas (id_medico, nome_medico)
+        """
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                SELECT m.id, m.nome
+                FROM odontoPro_medico m
+                JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id
+                WHERE me.especialidade_id = %s
+                  AND m.ativo = 1
+            """, (especialidade_id,))
+
+            if clinica_id is not None:
+                medicos = [row for row in cursor.fetchall() if row]
+                if medicos:
+                    cursor.close()
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT m.id, m.nome
+                        FROM odontoPro_medico m
+                        JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id
+                        WHERE me.especialidade_id = %s
+                          AND m.clinica_id = %s
+                          AND m.ativo = 1
+                        ORDER BY m.nome ASC
+                    """, (especialidade_id, clinica_id))
+                    return cursor.fetchall() or []
+            
+            cursor.execute("""
+                SELECT m.id, m.nome
+                FROM odontoPro_medico m
+                JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id
+                WHERE me.especialidade_id = %s
+                  AND m.ativo = 1
+                ORDER BY m.nome ASC
+            """, (especialidade_id,))
+            return cursor.fetchall() or []
+        except Exception as e:
+            print(f"[ConsultaController] Erro em carregar_medicos_por_especialidade: {e}")
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
     def obter_medico_formatado(medico_tupla):
         """
         Formata um médico para exibição.
