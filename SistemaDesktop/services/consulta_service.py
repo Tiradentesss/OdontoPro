@@ -4,7 +4,7 @@ Validações, verificação de conflitos e transações.
 """
 
 from config.database import get_connection
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 import mysql.connector
 
 
@@ -146,6 +146,222 @@ class ConsultaService:
                 cursor.close()
             if conn:
                 conn.close()
+
+    @staticmethod
+    def _converter_dia_para_weekday(dia):
+        if dia is None:
+            return None
+
+        if isinstance(dia, int):
+            if 0 <= dia <= 6:
+                return dia
+            if 1 <= dia <= 7:
+                return dia - 1
+            return None
+
+        if isinstance(dia, str):
+            valor = dia.strip().lower()
+            mapping = {
+                'segunda': 0,
+                'terca': 1,
+                'terça': 1,
+                'quarta': 2,
+                'quinta': 3,
+                'sexta': 4,
+                'sabado': 5,
+                'sábado': 5,
+                'domingo': 6,
+            }
+
+            if valor in mapping:
+                return mapping[valor]
+
+            if valor.isdigit():
+                numero = int(valor)
+                if 0 <= numero <= 6:
+                    return numero
+                if 1 <= numero <= 7:
+                    return numero - 1
+
+        return None
+
+    @staticmethod
+    def _parse_hora(hora_valor):
+        if hora_valor is None:
+            return None
+
+        if isinstance(hora_valor, str):
+            try:
+                return datetime.strptime(hora_valor, "%H:%M").time()
+            except ValueError:
+                return None
+
+        if isinstance(hora_valor, timedelta):
+            total_seconds = int(hora_valor.total_seconds())
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            return datetime.strptime(f"{hours:02d}:{minutes:02d}", "%H:%M").time()
+
+        return None
+
+    @staticmethod
+    def _gerar_horarios_por_intervalo(inicio, fim, intervalo_minutos=30):
+        if not inicio or not fim:
+            return []
+
+        horarios = []
+        atual = inicio
+        while datetime.combine(date.today(), atual) + timedelta(minutes=intervalo_minutos) <= datetime.combine(date.today(), fim):
+            horarios.append(atual.strftime("%H:%M"))
+            atual = (datetime.combine(date.today(), atual) + timedelta(minutes=intervalo_minutos)).time()
+        return horarios
+
+    @staticmethod
+    def _listar_horarios_abertos_do_medico(medico_id):
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT dia, TIME_FORMAT(hora_inicio, '%H:%i'), TIME_FORMAT(hora_fim, '%H:%i')
+                FROM odontoPro_medicohorario
+                WHERE medico_id = %s
+            """, (medico_id,))
+
+            resultados = cursor.fetchall() or []
+            horarios = {}
+            for dia, inicio, fim in resultados:
+                weekday = ConsultaService._converter_dia_para_weekday(dia)
+                if weekday is None or not inicio or not fim:
+                    continue
+                horarios.setdefault(weekday, []).append((inicio, fim))
+            return horarios
+        except Exception as e:
+            print(f"[ConsultaService] Erro em _listar_horarios_abertos_do_medico: {e}")
+            return {}
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def _listar_horarios_abertos_por_clinica(clinica_id):
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT d.dia, TIME_FORMAT(h.hora_inicio, '%H:%i'), TIME_FORMAT(h.hora_fim, '%H:%i')
+                FROM odontoPro_horarioaberto h
+                JOIN odontoPro_diasemanadisponivel d ON d.id = h.dia_id
+                WHERE d.clinica_id = %s
+            """, (clinica_id,))
+
+            resultados = cursor.fetchall() or []
+            horarios = {}
+            for dia, inicio, fim in resultados:
+                weekday = ConsultaService._converter_dia_para_weekday(dia)
+                if weekday is None or not inicio or not fim:
+                    continue
+                horarios.setdefault(weekday, []).append((inicio, fim))
+            return horarios
+        except Exception as e:
+            print(f"[ConsultaService] Erro em _listar_horarios_abertos_por_clinica: {e}")
+            return {}
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def _obter_clinica_do_medico(medico_id):
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT clinica_id FROM odontoPro_medico WHERE id = %s", (medico_id,))
+            resultado = cursor.fetchone()
+            return resultado[0] if resultado else None
+        except Exception as e:
+            print(f"[ConsultaService] Erro em _obter_clinica_do_medico: {e}")
+            return None
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id=None):
+        if not medico_id or not data_consulta:
+            return []
+
+        if isinstance(data_consulta, datetime):
+            data_consulta = data_consulta.date()
+
+        if not isinstance(data_consulta, date):
+            return []
+
+        horarios_por_dia = ConsultaService._listar_horarios_abertos_do_medico(medico_id)
+        if not horarios_por_dia:
+            if clinica_id is None:
+                clinica_id = ConsultaService._obter_clinica_do_medico(medico_id)
+            if clinica_id is None:
+                return []
+            horarios_por_dia = ConsultaService._listar_horarios_abertos_por_clinica(clinica_id)
+
+        intervalos = horarios_por_dia.get(data_consulta.weekday(), [])
+        if not intervalos:
+            return []
+
+        horarios = []
+        for inicio, fim in intervalos:
+            inicio_obj = ConsultaService._parse_hora(inicio)
+            fim_obj = ConsultaService._parse_hora(fim)
+            horarios.extend(ConsultaService._gerar_horarios_por_intervalo(inicio_obj, fim_obj))
+
+        horarios = sorted(set(horarios))
+        horarios_ocupados = ConsultaService.listar_horarios_ocupados_no_dia(medico_id, data_consulta)
+
+        if data_consulta == date.today():
+            agora = datetime.now().time()
+            horarios = [h for h in horarios if datetime.strptime(h, "%H:%M").time() > agora]
+
+        return [h for h in horarios if h not in horarios_ocupados]
+
+    @staticmethod
+    def carregar_datas_disponiveis(medico_id, clinica_id=None, dias_ahead=30):
+        if not medico_id:
+            return []
+
+        horarios_por_dia = ConsultaService._listar_horarios_abertos_do_medico(medico_id)
+        if not horarios_por_dia:
+            if clinica_id is None:
+                clinica_id = ConsultaService._obter_clinica_do_medico(medico_id)
+            if clinica_id is None:
+                return []
+            horarios_por_dia = ConsultaService._listar_horarios_abertos_por_clinica(clinica_id)
+
+        if not horarios_por_dia:
+            return []
+
+        hoje = date.today()
+        datas_disponiveis = []
+        for offset in range(dias_ahead + 1):
+            data_candidata = hoje + timedelta(days=offset)
+            if data_candidata.weekday() not in horarios_por_dia:
+                continue
+
+            horarios = ConsultaService.carregar_horarios_disponiveis(medico_id, data_candidata, clinica_id)
+            if horarios:
+                datas_disponiveis.append(data_candidata.strftime("%d/%m/%Y"))
+
+        return datas_disponiveis
 
     @staticmethod
     def criar_consulta(clinica_id, paciente_id, medico_id, data_hora, especialidade, 

@@ -1,6 +1,6 @@
 import threading
 import os
-from datetime import date
+from datetime import datetime, date
 import time
 import queue
 
@@ -1275,6 +1275,11 @@ class Agenda(BaseScreen):
             medico_display.clear()
             medico_combo.configure(values=[], state='disabled')
             medico_var.set("")
+            # limpar dependentes Data/Hora ao trocar especialidade
+            try:
+                limpar_data_e_hora()
+            except Exception:
+                pass
 
             if especialidade_id_selecionado['id'] is not None:
                 medicos_por_especialidade = ConsultaController.carregar_medicos_por_especialidade(
@@ -1362,11 +1367,69 @@ class Agenda(BaseScreen):
         
         medico_display = {}
         medico_id_selecionado = {'id': None}
+        datas_disponiveis = []
+        horarios_disponiveis = []
+        hora_selecionada = {'value': None}
         
         medico_var = ctk.StringVar(value="")
 
+        def limpar_data_e_hora():
+            data_var.set("")
+            try:
+                data_combo.configure(values=[], state='disabled')
+            except Exception:
+                pass
+            # keep placeholder behavior consistent
+            data_var.set("")
+            hora_var.set("")
+            try:
+                hora_combo.configure(values=[], state='disabled')
+            except Exception:
+                pass
+            info_label.configure(text="")
+            datas_disponiveis.clear()
+            horarios_disponiveis.clear()
+            hora_selecionada['value'] = None
+
+        def atualizar_datas_disponiveis():
+            if not medico_id_selecionado.get('id'):
+                limpar_data_e_hora()
+                return
+
+            data_var.set("")
+            hora_var.set("")
+            hora_selecionada['value'] = None
+            try:
+                hora_combo.configure(values=[], state='disabled')
+            except Exception:
+                pass
+            info_label.configure(text="Carregando datas disponíveis...")
+
+            datas = ConsultaController.carregar_datas_disponiveis(
+                medico_id_selecionado['id'], self.clinica_id
+            )
+            datas_disponiveis.clear()
+            datas_disponiveis.extend(datas)
+
+            if not datas:
+                try:
+                    data_combo.configure(values=[], state='disabled')
+                except Exception:
+                    pass
+                info_label.configure(text="")
+                return
+
+            try:
+                data_combo.configure(values=datas, state='normal')
+            except Exception:
+                pass
+            info_label.configure(
+                text="Datas disponíveis: " + ", ".join(datas[:10]) + ("..." if len(datas) > 10 else "")
+            )
+
         def selecionar_medico(display_text):
             medico_id_selecionado['id'] = medico_display.get(display_text)
+            atualizar_datas_disponiveis()
 
         medico_combo = ctk.CTkComboBox(
             canvas_frame,
@@ -1391,16 +1454,20 @@ class Agenda(BaseScreen):
         ).pack(anchor='w', padx=15, pady=(0, 5))
         
         data_var = ctk.StringVar(value="")
-        data_entry = ctk.CTkEntry(
+        data_combo = ctk.CTkComboBox(
             canvas_frame,
-            placeholder_text="DD/MM/YYYY",
+            variable=data_var,
+            values=[],
             height=40,
             fg_color=COLORS['input_bg'],
             border_color=COLORS['border'],
+            button_color=COLORS['primary'],
+            button_hover_color=COLORS['primary_dark'],
             corner_radius=8,
-            textvariable=data_var
+            state='disabled',
+            command=lambda v=None: atualizar_horarios_disponiveis()
         )
-        data_entry.pack(fill='x', padx=15, pady=(0, 5))
+        data_combo.pack(fill='x', padx=15, pady=(0, 5))
         
         # ===================== CAMPO HORA =====================
         ctk.CTkLabel(
@@ -1411,16 +1478,20 @@ class Agenda(BaseScreen):
         ).pack(anchor='w', padx=15, pady=(0, 5))
         
         hora_var = ctk.StringVar(value="")
-        hora_entry = ctk.CTkEntry(
+        hora_combo = ctk.CTkComboBox(
             canvas_frame,
-            placeholder_text="HH:MM",
+            variable=hora_var,
+            values=[],
             height=40,
             fg_color=COLORS['input_bg'],
             border_color=COLORS['border'],
+            button_color=COLORS['primary'],
+            button_hover_color=COLORS['primary_dark'],
             corner_radius=8,
-            textvariable=hora_var
+            state='disabled',
+            command=lambda v=None: atualizar_hora_selecionada()
         )
-        hora_entry.pack(fill='x', padx=15, pady=(0, 5))
+        hora_combo.pack(fill='x', padx=15, pady=(0, 5))
         
         # Info de horários ocupados
         info_label = ctk.CTkLabel(
@@ -1432,33 +1503,76 @@ class Agenda(BaseScreen):
         )
         info_label.pack(anchor='w', padx=15, pady=(0, 10))
         
-        def carregar_horarios_ocupados(*args):
-            """Carrega horários ocupados quando data ou médico mudam"""
-            if not data_var.get() or not medico_id_selecionado.get('id'):
+        def atualizar_horarios_disponiveis(*args):
+            if not medico_id_selecionado.get('id'):
+                try:
+                    hora_combo.configure(values=[], state='disabled')
+                except Exception:
+                    pass
+                info_label.configure(text="")
+                horarios_disponiveis.clear()
+                hora_selecionada['value'] = None
+                return
+
+            raw_data = data_var.get().strip()
+            if not raw_data:
+                try:
+                    hora_combo.configure(values=[], state='disabled')
+                except Exception:
+                    pass
+                info_label.configure(text="")
+                horarios_disponiveis.clear()
+                hora_selecionada['value'] = None
+                return
+
+            try:
+                data_obj = datetime.strptime(raw_data, "%d/%m/%Y").date()
+            except ValueError:
+                try:
+                    hora_combo.configure(values=[], state='disabled')
+                except Exception:
+                    pass
+                info_label.configure(text="")
+                horarios_disponiveis.clear()
+                hora_selecionada['value'] = None
+                return
+
+            horarios = ConsultaController.carregar_horarios_disponiveis(
+                medico_id_selecionado['id'],
+                data_obj,
+                self.clinica_id
+            )
+
+            horarios_disponiveis.clear()
+            horarios_disponiveis.extend(horarios)
+            hora_var.set("")
+            hora_selecionada['value'] = None
+
+            if not horarios:
+                try:
+                    hora_combo.configure(values=[], state='disabled')
+                except Exception:
+                    pass
                 info_label.configure(text="")
                 return
-            
+
             try:
-                from datetime import datetime as dt
-                data_obj = dt.strptime(data_var.get(), "%d/%m/%Y").date()
-                horarios = ConsultaController.obter_horarios_ocupados(
-                    medico_id_selecionado['id'], 
-                    data_obj
-                )
-                
-                if horarios:
-                    info_label.configure(
-                        text=f"⚠️ Horários ocupados: {', '.join(horarios)}",
-                        text_color=COLORS["warning"] if "warning" in COLORS else "#FFA500"
-                    )
-                else:
-                    info_label.configure(text="✓ Todos os horários disponíveis")
-            except Exception as e:
-                print(f"Erro ao carregar horários: {e}")
-                info_label.configure(text="")
-        
-        data_var.trace_add('write', carregar_horarios_ocupados)
-        medico_var.trace_add('write', lambda *args: carregar_horarios_ocupados())
+                hora_combo.configure(values=horarios, state='normal')
+            except Exception:
+                pass
+            info_label.configure(
+                text="Horários disponíveis: " + ", ".join(horarios[:10]) + ("..." if len(horarios) > 10 else "")
+            )
+
+        def atualizar_hora_selecionada(*args):
+            selecionado = hora_var.get().strip()
+            if selecionado in horarios_disponiveis:
+                hora_selecionada['value'] = selecionado
+            else:
+                hora_selecionada['value'] = None
+
+        data_var.trace_add('write', atualizar_horarios_disponiveis)
+        hora_var.trace_add('write', atualizar_hora_selecionada)
         
         # ===================== CAMPO OBSERVAÇÕES =====================
         ctk.CTkLabel(

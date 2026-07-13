@@ -444,30 +444,18 @@ class ConsultaController:
             conn = get_connection()
             cursor = conn.cursor()
 
-            cursor.execute("""
-                SELECT m.id, m.nome
-                FROM odontoPro_medico m
-                JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id
-                WHERE me.especialidade_id = %s
-                  AND m.ativo = 1
-            """, (especialidade_id,))
-
             if clinica_id is not None:
-                medicos = [row for row in cursor.fetchall() if row]
-                if medicos:
-                    cursor.close()
-                    cursor = conn.cursor()
-                    cursor.execute("""
-                        SELECT m.id, m.nome
-                        FROM odontoPro_medico m
-                        JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id
-                        WHERE me.especialidade_id = %s
-                          AND m.clinica_id = %s
-                          AND m.ativo = 1
-                        ORDER BY m.nome ASC
-                    """, (especialidade_id, clinica_id))
-                    return cursor.fetchall() or []
-            
+                cursor.execute("""
+                    SELECT m.id, m.nome
+                    FROM odontoPro_medico m
+                    JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id
+                    WHERE me.especialidade_id = %s
+                      AND m.clinica_id = %s
+                      AND m.ativo = 1
+                    ORDER BY m.nome ASC
+                """, (especialidade_id, clinica_id))
+                return cursor.fetchall() or []
+
             cursor.execute("""
                 SELECT m.id, m.nome
                 FROM odontoPro_medico m
@@ -485,6 +473,14 @@ class ConsultaController:
                 cursor.close()
             if conn:
                 conn.close()
+
+    @staticmethod
+    def carregar_datas_disponiveis(medico_id, clinica_id=None):
+        return ConsultaService.carregar_datas_disponiveis(medico_id, clinica_id)
+
+    @staticmethod
+    def carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id=None):
+        return ConsultaService.carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id)
 
     @staticmethod
     def obter_medico_formatado(medico_tupla):
