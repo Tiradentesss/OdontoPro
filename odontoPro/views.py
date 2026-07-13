@@ -16,7 +16,7 @@ from django.core.files.storage import default_storage
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade, Gerenciamento, Financeiro
 from datetime import datetime, date, timedelta
-from django.db.models import Sum, Count
+from django.db.models import Q, Sum, Count
 import json
 from decimal import Decimal
 from django.utils import timezone
@@ -611,6 +611,37 @@ def painel_profissional(request):
         if esp_nome and esp_nome.strip():  # Garante que não é vazio ou whitespace
             appointments_by_specialty.append({'name': esp_nome, 'value': s['value']})
 
+    # Top doctors by scheduled and completed consultations
+    scheduled_consultas = consultas_totais.filter(status__in=['agendada', 'confirmada'])
+    top_medico_agendado = scheduled_consultas.values(
+        'medico__id', 'medico__nome'
+    ).annotate(qtd=Count('id')).order_by('-qtd').first() or {'medico__nome': 'Nenhum registro', 'qtd': 0}
+    top_medico_realizado = consultas_realizadas.values(
+        'medico__id', 'medico__nome'
+    ).annotate(qtd=Count('id')).order_by('-qtd').first() or {'medico__nome': 'Nenhum registro', 'qtd': 0}
+
+    medicos_desempenho = []
+    medicos_qs = Medico.objects.filter(clinica=clinica_obj).annotate(
+        agendados=Count('consulta', filter=Q(consulta__status__in=['agendada', 'confirmada'])),
+        realizados=Count('consulta', filter=Q(consulta__status='realizada')),
+        faltas=Count('consulta', filter=Q(consulta__status='cancelada'))
+    ).order_by('-realizados', '-agendados', 'nome')
+
+    for medico in medicos_qs:
+        especialidades = medico.especialidades.all()[:2]
+        especialidade_label = ', '.join([esp.nome for esp in especialidades]) if especialidades else 'Sem especialidade'
+        comparecimento_percent = int(round((medico.realizados / medico.agendados * 100))) if medico.agendados else 0
+        medicos_desempenho.append({
+            'id': medico.id,
+            'nome': medico.nome,
+            'especialidade': especialidade_label,
+            'foto_url': medico.foto.url if medico.foto else None,
+            'agendados': medico.agendados,
+            'realizados': medico.realizados,
+            'faltas': medico.faltas,
+            'comparecimento_percent': comparecimento_percent,
+        })
+
     # Monthly evolution (last 12 months) for receitas/despesas
     monthly_evolution = []
     def month_start_year_month(months_ago):
@@ -738,6 +769,7 @@ def painel_profissional(request):
         "total_primeira_vez": total_primeira_vez,
         "total_faltas": total_faltas,
         "eficiencia_percentual": eficiencia_percentual,
+        "medicos_desempenho": medicos_desempenho,
         "charts": charts,
         "charts_json": charts_json,
         "report_data_json": report_data_json,

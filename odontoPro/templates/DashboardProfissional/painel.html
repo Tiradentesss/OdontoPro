@@ -611,6 +611,51 @@
                                 <div class="specialty-item-legend" id="specialty-legend" style="margin-top:8px"></div>
                             </div>
                         </div>
+
+                        <div class="reports-visual-card" data-view="desempenho">
+                            <div class="reports-visual-header">
+                                <div>
+                                    <h3>Desempenho dos médicos</h3>
+                                    <p>Do maior ao menor, com perfil, agendados, realizados e taxa de comparecimento.</p>
+                                </div>
+                                <span class="reports-pill reports-pill-alt">Ranking</span>
+                            </div>
+                            <div class="performance-list">
+                                {% if medicos_desempenho %}
+                                    {% for medico in medicos_desempenho %}
+                                        <div class="doctor-card">
+                                            <div class="doctor-preview">
+                                                {% if medico.foto_url %}
+                                                    <img src="{{ medico.foto_url }}" alt="{{ medico.nome }}" class="avatar">
+                                                {% else %}
+                                                    <div class="avatar-placeholder">{{ medico.nome|slice:":1"|upper }}</div>
+                                                {% endif %}
+                                                <div class="doctor-meta">
+                                                    <strong>{{ medico.nome }}</strong>
+                                                    <span>{{ medico.especialidade }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="doctor-stats-grid">
+                                                <div class="doctor-stat">
+                                                    <span>Agendados</span>
+                                                    <strong>{{ medico.agendados }}</strong>
+                                                </div>
+                                                <div class="doctor-stat">
+                                                    <span>Realizados</span>
+                                                    <strong>{{ medico.realizados }}</strong>
+                                                </div>
+                                                <div class="doctor-stat">
+                                                    <span>Comparec.</span>
+                                                    <strong>{{ medico.comparecimento_percent }}%</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="empty-state">Nenhum médico cadastrado.</div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

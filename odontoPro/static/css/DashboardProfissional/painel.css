@@ -692,8 +692,8 @@ body {
 
 .reports-visual-grid {
     display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 18px;
+    grid-template-columns: 1.25fr 0.75fr;
+    gap: 22px;
     margin-top: 18px;
 }
 
@@ -722,6 +722,131 @@ body {
 .reports-visual-header p {
     font-size: 0.82rem;
     color: #64748b;
+}
+
+.performance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: 520px;
+    overflow-y: auto;
+    padding: 12px 8px;
+    box-sizing: border-box;
+}
+
+.doctor-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px;
+    border-radius: 16px;
+    background: #f8fbff;
+    border: 1px solid transparent;
+    min-height: 72px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.doctor-card:hover {
+    background: #eef5ff;
+    border-color: rgba(37, 99, 235, 0.14);
+}
+
+.doctor-preview {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0; /* allow truncation inside */
+}
+
+.doctor-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: center;
+    min-width: 0;
+}
+
+.doctor-meta strong {
+    font-size: 1rem;
+    color: #0f172a;
+    display: block;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+    line-height: 1.15;
+}
+
+.doctor-meta span {
+    font-size: 0.82rem;
+    color: #64748b;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.doctor-stats-grid {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.doctor-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: #fbfdfe;
+    text-align: center;
+    min-width: 72px;
+    justify-content: center;
+}
+
+.doctor-stat span {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.doctor-stat strong {
+    font-size: 1rem;
+    color: #0f172a;
+}
+
+.doctor-card img.avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.doctor-card .avatar-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    background: linear-gradient(135deg, var(--azul-primario) 0%, var(--azul-claro) 100%);
+}
+
+.performance-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.performance-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.performance-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
 }
 
 .reports-pill {
