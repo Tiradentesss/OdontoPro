@@ -257,12 +257,14 @@ class ConsultaController:
         return medicos
 
     @staticmethod
-    def listar_especialidades():
+    def listar_especialidades(conn=None):
         """Lista todas as especialidades odontológicas, adaptando-se à estrutura real da tabela."""
-        conn = None
+        internal_conn = False
         cursor = None
         try:
-            conn = get_connection()
+            if conn is None:
+                conn = get_connection()
+                internal_conn = True
             cursor = conn.cursor()
 
             try:
@@ -308,7 +310,7 @@ class ConsultaController:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if internal_conn and conn:
                 conn.close()
 
     @staticmethod
@@ -361,7 +363,7 @@ class ConsultaController:
     # ==================== NOVOS MÉTODOS COM SERVICES ====================
 
     @staticmethod
-    def buscar_pacientes_dinamico(termo_busca, limite=20, offset=0):
+    def buscar_pacientes_dinamico(termo_busca, limite=20, offset=0, conn=None):
         """
         Busca pacientes de forma dinâmica por CPF ou Nome.
         
@@ -369,6 +371,7 @@ class ConsultaController:
             termo_busca: CPF ou Nome (parcial)
             limite: Número máximo de resultados (padrão: 20)
             offset: Deslocamento para paginação
+            conn: conexão reutilizável opcional
         
         Returns:
             Lista de pacientes formatados
@@ -377,7 +380,8 @@ class ConsultaController:
             clinica_id=None,
             termo_busca=termo_busca,
             limite=limite,
-            offset=offset
+            offset=offset,
+            conn=conn
         )
 
     @staticmethod
@@ -427,21 +431,24 @@ class ConsultaController:
         return MedicoService.listar_por_clinica(clinica_id)
 
     @staticmethod
-    def carregar_medicos_por_especialidade(especialidade_id, clinica_id=None):
+    def carregar_medicos_por_especialidade(especialidade_id, clinica_id=None, conn=None):
         """
         Carrega os médicos vinculados à especialidade selecionada.
 
         Args:
             especialidade_id: ID da especialidade selecionada
             clinica_id: ID da clínica (opcional)
+            conn: conexão reutilizável opcional
 
         Returns:
             Lista de tuplas (id_medico, nome_medico)
         """
-        conn = None
+        internal_conn = False
         cursor = None
         try:
-            conn = get_connection()
+            if conn is None:
+                conn = get_connection()
+                internal_conn = True
             cursor = conn.cursor()
 
             if clinica_id is not None:
@@ -471,16 +478,20 @@ class ConsultaController:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if internal_conn and conn:
                 conn.close()
 
     @staticmethod
-    def carregar_datas_disponiveis(medico_id, clinica_id=None):
-        return ConsultaService.carregar_datas_disponiveis(medico_id, clinica_id)
+    def carregar_datas_disponiveis(medico_id, clinica_id=None, conn=None):
+        return ConsultaService.carregar_datas_disponiveis(medico_id, clinica_id, conn=conn)
 
     @staticmethod
-    def carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id=None):
-        return ConsultaService.carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id)
+    def carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id=None, conn=None):
+        return ConsultaService.carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id, conn=conn)
+
+    @staticmethod
+    def carregar_agenda_disponivel(medico_id, clinica_id=None, dias_ahead=60, conn=None):
+        return ConsultaService.carregar_agenda_disponivel(medico_id, clinica_id=clinica_id, dias_ahead=dias_ahead, conn=conn)
 
     @staticmethod
     def obter_medico_formatado(medico_tupla):
@@ -542,7 +553,7 @@ class ConsultaController:
         return ConsultaService.validar_hora(hora_str)
 
     @staticmethod
-    def verificar_disponibilidade_horario(medico_id, data_consulta, hora_consulta):
+    def verificar_disponibilidade_horario(medico_id, data_consulta, hora_consulta, conn=None):
         """
         Verifica se um horário está disponível.
         
@@ -550,6 +561,7 @@ class ConsultaController:
             medico_id: ID do médico
             data_consulta: datetime.date object
             hora_consulta: datetime.time object
+            conn: conexão reutilizável opcional
         
         Returns:
             Tupla (disponível: bool, mensagem: str)
@@ -557,7 +569,8 @@ class ConsultaController:
         return ConsultaService.verificar_horario_disponivel(
             medico_id, 
             data_consulta, 
-            hora_consulta
+            hora_consulta,
+            conn=conn
         )
 
     @staticmethod

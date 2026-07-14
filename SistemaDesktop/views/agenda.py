@@ -6,6 +6,7 @@ import queue
 
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont
+from config.database import get_connection
 
 from .base import BaseScreen
 from .theme import font, COLORS
@@ -665,10 +666,10 @@ class Agenda(BaseScreen):
             texto_label = partes[1] if len(partes) > 1 else ""
 
             cores_icones = {
-                "📅": "#FF6B6B",
-                "🩺": "#4ECDC4",
-                "📊": "#FFE66D",
-                "🦷": "#95E1D3",
+                "📅": "#06B6D4",
+                "🩺": "#06B6D4",
+                "📊": "#06B6D4",
+                "🦷": "#06B6D4",
             }
             cor_icone = cores_icones.get(icone, self.colors['text_primary'])
 
@@ -1200,6 +1201,33 @@ class Agenda(BaseScreen):
         dialogo.geometry("650x800")
         dialogo.resizable(False, False)
         dialogo.grab_set()
+
+        db_conn = None
+        db_lock = threading.Lock()
+        cache_especialidades = []
+        cache_medicos_por_especialidade = {}
+        cache_agenda = {}
+
+        def get_db_connection():
+            nonlocal db_conn
+            if db_conn is None:
+                db_conn = get_connection()
+            return db_conn
+
+        def close_db_connection():
+            nonlocal db_conn
+            if db_conn is not None:
+                try:
+                    db_conn.close()
+                except Exception:
+                    pass
+                db_conn = None
+
+        def on_dialog_close():
+            close_db_connection()
+            dialogo.destroy()
+
+        dialogo.protocol("WM_DELETE_WINDOW", on_dialog_close)
         
         # Frame principal
         main_frame = ctk.CTkFrame(dialogo, fg_color=COLORS['bg'])
@@ -1262,6 +1290,51 @@ class Agenda(BaseScreen):
         especialidade_status_var = ctk.StringVar(value="")
         especialidades_carregadas = []
 
+        def _preencher_medicos(medicos, especialidade_nome, expected_especialidade_id):
+            if especialidade_id_selecionado['id'] != expected_especialidade_id:
+                return
+
+            medico_display.clear()
+            valores_medicos = []
+            for id_med, nome_med in medicos:
+                display_text = f"{nome_med} - {especialidade_nome}" if especialidade_nome else nome_med
+                medico_display[display_text] = id_med
+                valores_medicos.append(display_text)
+
+            if valores_medicos:
+                medico_combo.configure(values=valores_medicos, state='normal')
+                medico_var.set("")
+            else:
+                medico_combo.configure(values=[], state='disabled')
+                medico_var.set("Nenhum médico disponível")
+
+        def _carregar_medicos_por_especialidade_thread(especialidade_id, especialidade_nome):
+            if not especialidade_id:
+                return
+
+            if especialidade_id in cache_medicos_por_especialidade:
+                _preencher_medicos(cache_medicos_por_especialidade[especialidade_id], especialidade_nome, especialidade_id)
+                return
+
+            medico_combo.configure(values=[], state='disabled')
+            medico_var.set("Carregando médicos...")
+
+            def _task():
+                start_ms = time.perf_counter()
+                conn = get_db_connection()
+                with db_lock:
+                    medicos_por_especialidade = ConsultaController.carregar_medicos_por_especialidade(
+                        especialidade_id,
+                        self.clinica_id,
+                        conn=conn
+                    )
+                elapsed_ms = (time.perf_counter() - start_ms) * 1000
+                print(f"[agenda] Médicos para especialidade {especialidade_id} carregados em {elapsed_ms:.0f} ms")
+                cache_medicos_por_especialidade[especialidade_id] = medicos_por_especialidade
+                dialogo.after(0, _preencher_medicos, medicos_por_especialidade, especialidade_nome, especialidade_id)
+
+            threading.Thread(target=_task, daemon=True).start()
+
         def atualizar_especialidade_selecionada(value):
             """Atualiza o ID interno com base na lista já carregada."""
             for especialidade_id, nome in especialidades_carregadas:
@@ -1275,64 +1348,45 @@ class Agenda(BaseScreen):
             medico_display.clear()
             medico_combo.configure(values=[], state='disabled')
             medico_var.set("")
-            # limpar dependentes Data/Hora ao trocar especialidade
-            try:
-                limpar_data_e_hora()
-            except Exception:
-                pass
+            limpar_data_e_hora()
 
             if especialidade_id_selecionado['id'] is not None:
-                medicos_por_especialidade = ConsultaController.carregar_medicos_por_especialidade(
+                _carregar_medicos_por_especialidade_thread(
                     especialidade_id_selecionado['id'],
-                    self.clinica_id
+                    value or ""
                 )
-
-                if medicos_por_especialidade:
-                    valores_medicos = []
-                    especialidade_nome = value or ""
-                    for id_med, nome_med in medicos_por_especialidade:
-                        display_text = f"{nome_med} - {especialidade_nome}" if especialidade_nome else nome_med
-                        medico_display[display_text] = id_med
-                        valores_medicos.append(display_text)
-
-                    medico_combo.configure(values=valores_medicos, state='normal')
-                    medico_var.set("")
-                else:
-                    medico_combo.configure(values=[], state='disabled')
-                    medico_var.set("Nenhum médico disponível")
 
             especialidade_status_var.set("")
 
-        def carregar_especialidades_combo():
-            """Carrega as especialidades cadastradas no banco uma vez ao abrir a janela."""
-            nonlocal especialidades_carregadas
-            try:
-                especialidades_db = ConsultaController.listar_especialidades()
-                especialidades = ConsultaController.preparar_especialidades_para_combo(especialidades_db)
-                especialidades_carregadas = especialidades
-
-                if not especialidades:
-                    especialidade_combo.configure(values=[], state='disabled')
-                    especialidade_var.set("")
-                    especialidade_id_selecionado['id'] = None
-                    especialidade_status_var.set("Nenhuma especialidade cadastrada.")
-                    return
-
-                valores = [nome for _, nome in especialidades]
-                especialidade_combo.configure(values=valores, state='normal')
+        def _set_especialidades(values):
+            if values:
+                especialidade_combo.configure(values=values, state='normal')
                 especialidade_var.set("")
                 especialidade_id_selecionado['id'] = None
                 especialidade_status_var.set("")
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                print(f"[agenda] Erro ao carregar especialidades: {e}")
-                especialidades_carregadas = []
+            else:
                 especialidade_combo.configure(values=[], state='disabled')
                 especialidade_var.set("")
                 especialidade_id_selecionado['id'] = None
-                especialidade_status_var.set("Não foi possível carregar as especialidades.")
-                messagebox.showerror("Erro", "Não foi possível carregar as especialidades no momento.")
+                especialidade_status_var.set("Nenhuma especialidade cadastrada.")
+
+        def _carregar_especialidades():
+            nonlocal especialidades_carregadas
+            start_ms = time.perf_counter()
+            conn = get_db_connection()
+            with db_lock:
+                especialidades_db = ConsultaController.listar_especialidades(conn=conn)
+            especialidades = ConsultaController.preparar_especialidades_para_combo(especialidades_db)
+            elapsed_ms = (time.perf_counter() - start_ms) * 1000
+            print(f"[agenda] Especialidades carregadas em {elapsed_ms:.0f} ms")
+            especialidades_carregadas = especialidades
+            valores = [nome for _, nome in especialidades]
+            dialogo.after(0, _set_especialidades, valores)
+
+        def carregar_especialidades_combo():
+            especialidade_combo.configure(values=[], state='disabled')
+            especialidade_var.set("Carregando especialidades...")
+            threading.Thread(target=_carregar_especialidades, daemon=True).start()
 
         especialidade_combo = ctk.CTkComboBox(
             canvas_frame,
@@ -1392,7 +1446,8 @@ class Agenda(BaseScreen):
             hora_selecionada['value'] = None
 
         def atualizar_datas_disponiveis():
-            if not medico_id_selecionado.get('id'):
+            medico_id = medico_id_selecionado.get('id')
+            if not medico_id:
                 limpar_data_e_hora()
                 return
 
@@ -1403,12 +1458,13 @@ class Agenda(BaseScreen):
                 hora_combo.configure(values=[], state='disabled')
             except Exception:
                 pass
-            # (no visible text) indicate loading only by disabling hora
-            pass
 
-            datas = ConsultaController.carregar_datas_disponiveis(
-                medico_id_selecionado['id'], self.clinica_id
-            )
+            agenda = cache_agenda.get(medico_id)
+            if not agenda:
+                _carregar_agenda_medico_thread(medico_id)
+                return
+
+            datas = agenda.get('datas', [])
             datas_disponiveis.clear()
             datas_disponiveis.extend(datas)
 
@@ -1423,12 +1479,40 @@ class Agenda(BaseScreen):
                 data_combo.configure(values=datas, state='normal')
             except Exception:
                 pass
-            # no visible list of dates; combo holds the options
-            pass
+
+        def _carregar_agenda_medico_thread(medico_id):
+            if not medico_id:
+                return
+
+            if medico_id in cache_agenda:
+                dialogo.after(0, atualizar_datas_disponiveis)
+                return
+
+            limpar_data_e_hora()
+            data_var.set("")
+            data_combo.configure(values=[], state='disabled')
+            hora_combo.configure(values=[], state='disabled')
+
+            def _task():
+                start_ms = time.perf_counter()
+                conn = get_db_connection()
+                with db_lock:
+                    agenda = ConsultaController.carregar_agenda_disponivel(
+                        medico_id,
+                        self.clinica_id,
+                        dias_ahead=60,
+                        conn=conn
+                    )
+                elapsed_ms = (time.perf_counter() - start_ms) * 1000
+                print(f"[agenda] Agenda do médico {medico_id} carregada em {elapsed_ms:.0f} ms")
+                cache_agenda[medico_id] = agenda
+                dialogo.after(0, atualizar_datas_disponiveis)
+
+            threading.Thread(target=_task, daemon=True).start()
 
         def selecionar_medico(display_text):
             medico_id_selecionado['id'] = medico_display.get(display_text)
-            atualizar_datas_disponiveis()
+            _carregar_agenda_medico_thread(medico_id_selecionado['id'])
 
         medico_combo = ctk.CTkComboBox(
             canvas_frame,
@@ -1503,7 +1587,8 @@ class Agenda(BaseScreen):
         info_label.pack(anchor='w', padx=15, pady=(0, 10))
         
         def atualizar_horarios_disponiveis(*args):
-            if not medico_id_selecionado.get('id'):
+            medico_id = medico_id_selecionado.get('id')
+            if not medico_id:
                 try:
                     hora_combo.configure(values=[], state='disabled')
                 except Exception:
@@ -1522,23 +1607,12 @@ class Agenda(BaseScreen):
                 hora_selecionada['value'] = None
                 return
 
-            try:
-                data_obj = datetime.strptime(raw_data, "%d/%m/%Y").date()
-            except ValueError:
-                try:
-                    hora_combo.configure(values=[], state='disabled')
-                except Exception:
-                    pass
-                horarios_disponiveis.clear()
-                hora_selecionada['value'] = None
+            agenda = cache_agenda.get(medico_id)
+            if not agenda:
+                _carregar_agenda_medico_thread(medico_id)
                 return
 
-            horarios = ConsultaController.carregar_horarios_disponiveis(
-                medico_id_selecionado['id'],
-                data_obj,
-                self.clinica_id
-            )
-
+            horarios = agenda.get('horarios_por_data', {}).get(raw_data, [])
             horarios_disponiveis.clear()
             horarios_disponiveis.extend(horarios)
             hora_var.set("")

@@ -11,7 +11,7 @@ class PacienteService:
     """Serviço centralizado para operações com pacientes"""
 
     @staticmethod
-    def buscar_por_cpf_ou_nome(clinica_id, termo_busca, limite=10, offset=0):
+    def buscar_por_cpf_ou_nome(clinica_id, termo_busca, limite=10, offset=0, conn=None):
         """
         Busca pacientes por CPF ou Nome com paginação e relevância.
         Ignora pontos e traços do CPF na busca.
@@ -21,15 +21,18 @@ class PacienteService:
             termo_busca: CPF ou Nome (parcial)
             limite: Número máximo de resultados
             offset: Deslocamento para paginação
+            conn: conexão reutilizável opcional
         
         Returns:
             Lista de tuplas (id, nome, cpf, email, telefone, data_nascimento)
             Ordenada por relevância
         """
-        conn = None
+        internal_conn = False
         cursor = None
         try:
-            conn = get_connection()
+            if conn is None:
+                conn = get_connection()
+                internal_conn = True
             cursor = conn.cursor()
 
             # Limpar termo de busca
@@ -68,11 +71,11 @@ class PacienteService:
             """
 
             cursor.execute(query, (
-                termo_nome,              # LOWER(nome) LIKE LOWER(?)
-                termo_cpf_pattern,       # REPLACE(REPLACE(cpf, '.', ''), '-', '') LIKE ?
-                termo_cpf_pattern,       # cpf LIKE ?
-                termo_busca_limpo,       # CASE WHEN nome LIKE (termo + '%')
-                termo_nome,              # CASE WHEN nome LIKE %termo%
+                termo_nome,
+                termo_cpf_pattern,
+                termo_cpf_pattern,
+                termo_busca_limpo,
+                termo_nome,
                 limite,
                 offset
             ))
@@ -86,25 +89,28 @@ class PacienteService:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if internal_conn and conn:
                 conn.close()
 
 
     @staticmethod
-    def contar_por_busca(termo_busca):
+    def contar_por_busca(termo_busca, conn=None):
         """
         Conta total de pacientes que correspondem ao termo.
         
         Args:
             termo_busca: CPF ou Nome (parcial)
+            conn: conexão reutilizável opcional
         
         Returns:
             Total de pacientes encontrados
         """
-        conn = None
+        internal_conn = False
         cursor = None
         try:
-            conn = get_connection()
+            if conn is None:
+                conn = get_connection()
+                internal_conn = True
             cursor = conn.cursor()
 
             termo = f"%{termo_busca.strip()}%"
@@ -129,7 +135,7 @@ class PacienteService:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if internal_conn and conn:
                 conn.close()
 
     @staticmethod
