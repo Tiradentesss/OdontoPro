@@ -235,7 +235,10 @@ class CalendarTimeSelector {
     const dateString = element.dataset.date;
     if (!dateString) return;
 
-    this.selectedDate = new Date(dateString);
+    // Parse date WITHOUT timezone conversion to avoid off-by-one errors
+    // dateString format: YYYY-MM-DD
+    const [year, month, day] = dateString.split('-').map(Number);
+    this.selectedDate = new Date(year, month - 1, day);
     this.pendingDate = dateString;
 
     // Update UI

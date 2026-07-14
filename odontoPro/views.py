@@ -779,14 +779,29 @@ def painel_profissional(request):
 # ---------- LOGOUT ----------
 @require_POST
 def logout_view(request):
+    # Determine if this is a professional (clinic staff) or patient
+    # by checking what ID is set (patient_id = patient, medico_id/gerente_id/clinica_id = professional)
     is_professional = bool(
-        request.session.get('clinica_id')
-        or request.session.get('medico_id')
+        request.session.get('medico_id')
         or request.session.get('gerente_id')
-    )
-    request.session.flush()
+        or request.session.get('clinica_id')
+    ) and not request.session.get('paciente_id')
+    
+    # Remove only the relevant session keys to avoid crosstalk between patient and clinic sessions
+    if is_professional:
+        # Professional logout - clear professional session keys only
+        request.session.pop('medico_id', None)
+        request.session.pop('gerente_id', None)
+        request.session.pop('clinica_id', None)
+        target = 'login_clinica'
+    else:
+        # Patient logout - clear patient session keys only
+        request.session.pop('paciente_id', None)
+        request.session.pop('cpf', None)
+        target = 'login_paciente'
+    
+    request.session.modified = True  # Mark session as modified to save changes
     logout(request)
-    target = 'login_clinica' if is_professional else 'login_paciente'
     response = redirect(target)
     response.delete_cookie("uid_signed", path="/")
     return response
