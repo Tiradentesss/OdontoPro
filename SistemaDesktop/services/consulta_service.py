@@ -395,17 +395,48 @@ class ConsultaService:
                 }
 
             conn = get_connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(dictionary=True)
 
-            # Verificar se paciente existe
-            cursor.execute("SELECT id FROM odontoPro_paciente WHERE id = %s", (paciente_id,))
-            if not cursor.fetchone():
+            # Verificar se paciente existe E OBTER SEUS DADOS (nome, email, telefone)
+            cursor.execute("SELECT id, nome, email, telefone FROM odontoPro_paciente WHERE id = %s", (paciente_id,))
+            paciente_data = cursor.fetchone()
+            if not paciente_data:
                 conn.close()
                 return {
                     'sucesso': False,
                     'mensagem': 'Paciente não encontrado.',
                     'consulta_id': None,
                     'erro': 'Paciente inválido'
+                }
+            
+            # Extrair dados do paciente
+            nome_paciente = paciente_data['nome'] or ''
+            email_paciente = paciente_data['email'] or ''
+            telefone_paciente = paciente_data['telefone'] or ''
+            
+            # ✓ VALIDAÇÃO: Garantir que os dados do paciente não estão vazios
+            if not nome_paciente:
+                return {
+                    'sucesso': False,
+                    'mensagem': 'Dados do paciente incompletos (nome ausente).',
+                    'consulta_id': None,
+                    'erro': 'Paciente sem nome'
+                }
+            
+            if not email_paciente:
+                return {
+                    'sucesso': False,
+                    'mensagem': 'Dados do paciente incompletos (email ausente).',
+                    'consulta_id': None,
+                    'erro': 'Paciente sem email'
+                }
+            
+            if not telefone_paciente:
+                return {
+                    'sucesso': False,
+                    'mensagem': 'Dados do paciente incompletos (telefone ausente).',
+                    'consulta_id': None,
+                    'erro': 'Paciente sem telefone'
                 }
 
             # Verificar se médico existe e pertence à clínica
@@ -436,7 +467,7 @@ class ConsultaService:
                         'consulta_id': None,
                         'erro': 'Especialidade inválida'
                     }
-                especialidade_nome = especialidade_db[1]
+                especialidade_nome = especialidade_db['nome']
 
             # Verificar conflito de horário
             disponivel, msg_horario = ConsultaService.verificar_horario_disponivel(
@@ -454,15 +485,22 @@ class ConsultaService:
                     'erro': 'Horário ocupado'
                 }
 
-            # Inserir consulta (com autocommit=True, é automático)
-            cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'odontoPro_consulta'")
-            colunas_consulta = [row[0].lower() for row in cursor.fetchall()]
+            # Inserir consulta com todos os campos obrigatórios
+            from datetime import datetime
+            criado_em = datetime.now()
+            
+            # Criar um novo cursor sem dictionary para verificar colunas (índices numéricos)
+            cursor_cols = conn.cursor()
+            cursor_cols.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'odontoPro_consulta'")
+            colunas_consulta = [row[0].lower() for row in cursor_cols.fetchall()]
+            cursor_cols.close()
 
             if 'especialidade_id' in colunas_consulta:
                 query = """
                     INSERT INTO odontoPro_consulta 
-                    (clinica_id, paciente_id, medico_id, especialidade_id, data_hora, status, observacoes)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    (clinica_id, paciente_id, medico_id, especialidade_id, data_hora, status, observacoes, 
+                     nome, email, telefone, criado_em)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 cursor.execute(query, (
                     clinica_id,
@@ -471,13 +509,18 @@ class ConsultaService:
                     especialidade_id,
                     data_hora,
                     status.lower(),
-                    observacoes
+                    observacoes,
+                    nome_paciente,
+                    email_paciente,
+                    telefone_paciente,
+                    criado_em
                 ))
             else:
                 query = """
                     INSERT INTO odontoPro_consulta 
-                    (clinica_id, paciente_id, medico_id, data_hora, status, observacoes)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    (clinica_id, paciente_id, medico_id, data_hora, status, observacoes, 
+                     nome, email, telefone, criado_em)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 cursor.execute(query, (
                     clinica_id,
@@ -485,7 +528,11 @@ class ConsultaService:
                     medico_id,
                     data_hora,
                     status.lower(),
-                    observacoes
+                    observacoes,
+                    nome_paciente,
+                    email_paciente,
+                    telefone_paciente,
+                    criado_em
                 ))
 
             consulta_id = cursor.lastrowid

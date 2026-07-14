@@ -18,6 +18,23 @@ class GerenciamentoController:
         senha: senha fornecida pelo usuário (se None, usa "123456" como padrão)
         permissoes: lista de IDs de permissões (ignorado na criação, sempre vazio)
         """
+        # ✓ VALIDAÇÃO: Verificar campos obrigatórios
+        if not nome or (isinstance(nome, str) and not nome.strip()):
+            return {
+                "sucesso": False,
+                "mensagem": "Nome do gerente é obrigatório e não pode ser vazio."
+            }
+        
+        if not email or (isinstance(email, str) and not email.strip()):
+            return {
+                "sucesso": False,
+                "mensagem": "Email é obrigatório e não pode ser vazio."
+            }
+        
+        # Limpar espaços em branco
+        nome = nome.strip() if isinstance(nome, str) else str(nome)
+        email = email.strip() if isinstance(email, str) else email
+        
         conn = None
         cursor = None
         try:

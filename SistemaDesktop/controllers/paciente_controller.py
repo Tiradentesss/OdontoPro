@@ -82,6 +82,30 @@ class PacienteController:
 
         Se um paciente com o mesmo CPF já existir, apenas vincula o paciente à clínica.
         """
+        # ✓ VALIDAÇÃO: Verificar campos obrigatórios
+        if not nome or (isinstance(nome, str) and not nome.strip()):
+            return {
+                "sucesso": False,
+                "mensagem": "Nome do paciente é obrigatório e não pode ser vazio."
+            }
+        
+        if not email or (isinstance(email, str) and not email.strip()):
+            return {
+                "sucesso": False,
+                "mensagem": "Email é obrigatório e não pode ser vazio."
+            }
+        
+        if not telefone or (isinstance(telefone, str) and not telefone.strip()):
+            return {
+                "sucesso": False,
+                "mensagem": "Telefone é obrigatório e não pode ser vazio."
+            }
+        
+        # Limpar espaços em branco
+        nome = nome.strip() if isinstance(nome, str) else str(nome)
+        email = email.strip() if isinstance(email, str) else email
+        telefone = telefone.strip() if isinstance(telefone, str) else telefone
+        
         conn = None
         cursor = None
         try:

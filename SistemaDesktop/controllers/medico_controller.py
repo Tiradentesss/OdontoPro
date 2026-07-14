@@ -14,6 +14,37 @@ class MedicoController:
         senha: senha fornecida pelo usuário (se None, usa "123456" como padrão)
         especialidades: lista de IDs de especialidades
         """
+        # ✓ VALIDAÇÃO: Verificar campos obrigatórios
+        if not nome or (isinstance(nome, str) and not nome.strip()):
+            return {
+                "sucesso": False,
+                "mensagem": "Nome do médico é obrigatório e não pode ser vazio."
+            }
+        
+        if not email or (isinstance(email, str) and not email.strip()):
+            return {
+                "sucesso": False,
+                "mensagem": "Email é obrigatório e não pode ser vazio."
+            }
+        
+        if not cro or (isinstance(cro, str) and not cro.strip()):
+            return {
+                "sucesso": False,
+                "mensagem": "CRO é obrigatório e não pode ser vazio."
+            }
+        
+        if not telefone or (isinstance(telefone, str) and not telefone.strip()):
+            return {
+                "sucesso": False,
+                "mensagem": "Telefone é obrigatório e não pode ser vazio."
+            }
+        
+        # Limpar espaços em branco
+        nome = nome.strip() if isinstance(nome, str) else str(nome)
+        email = email.strip() if isinstance(email, str) else email
+        cro = cro.strip() if isinstance(cro, str) else cro
+        telefone = telefone.strip() if isinstance(telefone, str) else telefone
+        
         conn = None
         cursor = None
         try:

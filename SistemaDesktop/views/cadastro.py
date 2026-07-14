@@ -1036,9 +1036,34 @@ class Cadastro(BaseScreen):
             senha = entries[11].get().strip()
             
             # Validações básicas
-            if not all([nome, email, telefone, senha]):
-                self._mostrar_mensagem("Preencha todos os campos obrigatórios (inclusive senha)", sucesso=False)
+            
+            # Verificar campos obrigatórios com mensagens específicas
+            if not nome:
+                self._mostrar_mensagem("❌ Nome completo é obrigatório!", sucesso=False)
                 return
+            
+            if not email:
+                self._mostrar_mensagem("❌ Email é obrigatório!", sucesso=False)
+                return
+            
+            if not telefone:
+                self._mostrar_mensagem("❌ Telefone é obrigatório!", sucesso=False)
+                return
+            
+            if not senha:
+                self._mostrar_mensagem("❌ Senha é obrigatória!", sucesso=False)
+                return
+            
+            # Validações extras de formato
+            if '@' not in email:
+                self._mostrar_mensagem("❌ Email inválido. Deve conter '@'", sucesso=False)
+                return
+            
+            if len(telefone) < 10:
+                self._mostrar_mensagem("❌ Telefone inválido. Deve ter pelo menos 10 dígitos", sucesso=False)
+                return
+            
+            print(f"[DEBUG] ✓ Validação passou! Prosseguindo com o salvamento...")
             
             resultado = PacienteController.criar_paciente(
                 nome=nome,
@@ -1070,9 +1095,33 @@ class Cadastro(BaseScreen):
             confirma_senha = self.confirma_senha_entry.get().strip()
             especialidade = self.especialidade_medico.get().strip()
             
-            # Validações
-            if not all([nome, email, cro, telefone, senha]):
-                self._mostrar_mensagem("Preencha todos os campos obrigatórios (inclusive senha)", sucesso=False)
+            # Validações específicas
+            if not nome:
+                self._mostrar_mensagem("❌ Nome completo é obrigatório!", sucesso=False)
+                return
+            
+            if not email:
+                self._mostrar_mensagem("❌ Email é obrigatório!", sucesso=False)
+                return
+            
+            if '@' not in email:
+                self._mostrar_mensagem("❌ Email inválido. Deve conter '@'", sucesso=False)
+                return
+            
+            if not cro:
+                self._mostrar_mensagem("❌ CRO é obrigatório!", sucesso=False)
+                return
+            
+            if not telefone:
+                self._mostrar_mensagem("❌ Telefone é obrigatório!", sucesso=False)
+                return
+            
+            if len(telefone) < 10:
+                self._mostrar_mensagem("❌ Telefone inválido. Deve ter pelo menos 10 dígitos", sucesso=False)
+                return
+            
+            if not senha:
+                self._mostrar_mensagem("❌ Senha é obrigatória!", sucesso=False)
                 return
             
             if especialidade == "Selecione uma especialidade":
@@ -1080,7 +1129,7 @@ class Cadastro(BaseScreen):
                 return
             
             if senha != confirma_senha:
-                self._mostrar_mensagem("As senhas não coincidem", sucesso=False)
+                self._mostrar_mensagem("❌ As senhas não coincidem", sucesso=False)
                 return
             
             resultado = MedicoController.criar_medico(
@@ -1115,13 +1164,25 @@ class Cadastro(BaseScreen):
             senha = self.senha_entry.get().strip()
             confirma_senha = self.confirma_senha_entry.get().strip()
             
-            # Validações
-            if not all([nome, email, senha]):
-                self._mostrar_mensagem("Preencha todos os campos obrigatórios (inclusive senha)", sucesso=False)
+            # Validações específicas
+            if not nome:
+                self._mostrar_mensagem("❌ Nome completo é obrigatório!", sucesso=False)
+                return
+            
+            if not email:
+                self._mostrar_mensagem("❌ Email é obrigatório!", sucesso=False)
+                return
+            
+            if '@' not in email:
+                self._mostrar_mensagem("❌ Email inválido. Deve conter '@'", sucesso=False)
+                return
+            
+            if not senha:
+                self._mostrar_mensagem("❌ Senha é obrigatória!", sucesso=False)
                 return
             
             if senha != confirma_senha:
-                self._mostrar_mensagem("As senhas não coincidem", sucesso=False)
+                self._mostrar_mensagem("❌ As senhas não coincidem", sucesso=False)
                 return
             
             resultado = GerenciamentoController.criar_gerente(
