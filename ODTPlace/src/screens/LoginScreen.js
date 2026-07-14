@@ -1,164 +1,242 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, ImageBackground } from 'react-native';
-import CustomInput from '../components/CustomInput';
-import CustomButton from '../components/CustomButton';
+import { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  Image,
+  TouchableOpacity,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import CustomInput from "../components/CustomInput";
+import CustomButton from "../components/CustomButton";
 
 export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
 
   const handleLogin = () => {
-    if (email === '' || senha === '') {
-      Alert.alert('Erro', 'Preencha todos os campos!');
+    if (email === "" || senha === "") {
+      Alert.alert("Erro", "Preencha todos os campos!");
       return;
     }
 
-    if (!email.includes('@') || !email.includes('.')) {
-      Alert.alert('Erro', 'Email inválido!');
+    if (!email.includes("@") || !email.includes(".")) {
+      Alert.alert("Erro", "E-mail inválido!");
       return;
     }
 
-    const userName = email.split('@')[0];
-    navigation.replace('Home', { userName });
+    const userName = email.split("@")[0];
+    navigation.replace("Home", { userName });
   };
 
   return (
-    <ImageBackground
-      source={require('../../assets/imagem background.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <View style={styles.header}>
-        <Image
-          source={require('../../assets/LogoODTPlace.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>OdontoPlace</Text>
-          <Text style={styles.headerSubtitle}>Sistema de gerenciamento</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.mainContainer}>
+          {/* Cabeçalho */}
+          <View style={styles.headerSection}>
+            {/* Logo sem contorno */}
+            <View style={styles.logoContainer}>
+              <Image
+                source={require("../../assets/logo_icon.png")}
+                style={styles.logoMain}
+                resizeMode="contain"
+              />
+            </View>
+            {/* Nome OdontoHub removido */}
+            <Text style={styles.brandSubtitle}>Entre na sua conta</Text>
+          </View>
+
+          {/* Formulário Central */}
+          <View style={styles.formSection}>
+            <View style={styles.inputGroup}>
+              <CustomInput
+                placeholder="Número do celular ou e-mail"
+                placeholderTextColor="#94A3B8"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.inputStyle}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <CustomInput
+                placeholder="Senha de acesso"
+                placeholderTextColor="#94A3B8"
+                value={senha}
+                onChangeText={setSenha}
+                secureTextEntry
+                style={styles.inputStyle}
+              />
+
+              <TouchableOpacity
+                activeOpacity={0.6}
+                style={styles.forgotPasswordContainer}
+              >
+                <Text style={styles.forgotPasswordText}>Esqueceu a senha?</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.buttonContainer}>
+              <CustomButton
+                title="Entrar na Conta"
+                onPress={handleLogin}
+                style={styles.loginButton}
+                textStyle={styles.loginButtonText}
+              />
+            </View>
+          </View>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.line} />
+            <Text style={styles.orText}>ou continue com</Text>
+            <View style={styles.line} />
+          </View>
+
+          <View style={styles.socialSection}>
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
+              <Text style={styles.socialIconGoogle}>G</Text>
+              <Text style={styles.socialButtonText}>Google</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
+              <Text style={styles.socialIconFacebook}>f</Text>
+              <Text style={styles.socialButtonText}>Facebook</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.footerSection}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate("Cadastro")}
+              style={styles.createAccountButton}
+            >
+              <Text style={styles.createAccountText}>Criar nova conta</Text>
+            </TouchableOpacity>
+
+            {/* Logo aumentada */}
+            <View style={styles.brandFooter}>
+              <Image
+                source={require("../../assets/logo_completa.png")}
+                style={styles.footerLogo}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
         </View>
-      </View>
-
-      <Text style={styles.pageTitle}>Faça login com sua conta</Text>
-      <Text style={styles.description}>Digite seu e-mail e senha para fazer login</Text>
-
-      <Text style={styles.label}>Email</Text>
-      <CustomInput
-        placeholder="Digite seu email"
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      <Text style={styles.label}>Senha</Text>
-      <CustomInput
-        placeholder="Digite sua senha"
-        value={senha}
-        onChangeText={setSenha}
-        secureTextEntry
-      />
-
-      <TouchableOpacity activeOpacity={0.7}>
-        <Text style={styles.forgot}>Esqueceu a Senha ?</Text>
-      </TouchableOpacity>
-
-      <CustomButton title="Entrar na Conta" onPress={handleLogin} />
-
-      <Text style={styles.or}>Ou</Text>
-
-      <TouchableOpacity style={styles.socialButton} onPress={handleLogin} activeOpacity={0.8}>
-        <Text style={styles.socialText}>Continuar com Google</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.socialButton} onPress={handleLogin} activeOpacity={0.8}>
-        <Text style={styles.socialText}>Continuar com Facebook</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Cadastro')}>
-        <Text style={styles.signup}>Quero me cadastrar</Text>
-      </TouchableOpacity>
-    </ImageBackground>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: { flex: 1, backgroundColor: "#FFFFFF" },
+  keyboardAvoid: { flex: 1 },
+  mainContainer: {
     flex: 1,
-    padding: 24,
-    backgroundColor: '#f5f7fa',
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 24,
+    justifyContent: "center",
   },
-  header: {
-    marginTop: 40,
-    marginBottom: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
+  headerSection: { alignItems: "center", marginBottom: 32 },
+  // LogoContainer limpo (sem border/background)
+  logoContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
   },
-  logo: {
-    width: 44,
-    height: 44,
-    resizeMode: 'contain',
-  },
-  headerText: {
-    marginLeft: 10,
-  },
-  headerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#07336d',
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: '#6b7a90',
-    marginTop: 2,
-  },
-  pageTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-    color: '#07336d',
-  },
-  description: {
-    color: '#6b7a90',
-    marginBottom: 22,
+  logoMain: { width: 80, height: 80, tintColor: "#06B6D4" },
+  brandSubtitle: { fontSize: 16, color: "#64748B", textAlign: "center" },
+  formSection: { width: "100%" },
+  inputGroup: { marginBottom: 12 },
+  inputStyle: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    color: "#0F172A",
+    borderRadius: 16,
+    height: 52,
+    paddingHorizontal: 18,
     fontSize: 15,
-    lineHeight: 22,
   },
-  label: {
-    marginTop: 10,
-    marginBottom: 6,
-    color: '#6b7a90',
-    fontSize: 13,
+  forgotPasswordContainer: { alignItems: "flex-end", paddingTop: 8 },
+  forgotPasswordText: { fontSize: 13, fontWeight: "600", color: "#06B6D4" },
+  buttonContainer: { marginTop: 16, marginBottom: 24 },
+  loginButton: {
+    backgroundColor: "#06B6D4",
+    borderRadius: 16,
+    height: 52,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  forgot: {
-    textAlign: 'right',
-    marginTop: 10,
+  loginButtonText: { fontSize: 16, fontWeight: "700", color: "#FFFFFF" },
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
-    color: '#1f4ed8',
-    fontSize: 13,
   },
-  or: {
-    textAlign: 'center',
-    marginVertical: 16,
-    color: '#888',
-    fontSize: 14,
+  line: { flex: 1, height: 1, backgroundColor: "#E2E8F0" },
+  orText: {
+    marginHorizontal: 16,
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#94A3B8",
+  },
+  socialSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 24,
   },
   socialButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 10,
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#E2E8F0",
+    borderRadius: 16,
+    height: 52,
+    marginHorizontal: 6,
   },
-  socialText: {
-    fontSize: 15,
-    color: '#24325f',
+  socialIconGoogle: {
+    fontSize: 16,
+    fontWeight: "900",
+    marginRight: 8,
+    color: "#DB4437",
   },
-  signup: {
-    textAlign: 'center',
-    marginTop: 22,
-    color: '#1f4ed8',
-    fontSize: 15,
+  socialIconFacebook: {
+    fontSize: 16,
+    fontWeight: "900",
+    marginRight: 8,
+    color: "#1877F2",
   },
+  socialButtonText: { fontSize: 14, fontWeight: "600", color: "#334155" },
+  footerSection: { width: "100%", alignItems: "center" },
+  createAccountButton: {
+    width: "100%",
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+    marginBottom: 16,
+  },
+  createAccountText: { fontSize: 15, fontWeight: "700", color: "#0F172A" },
+  brandFooter: { alignItems: "center", marginTop: 10 },
+  // Logo aumentada
+  footerLogo: { width: 120, height: 60, opacity: 0.6 },
 });

@@ -1,79 +1,139 @@
-import { useEffect, useRef  } from 'react';
-import { View, Text, Image, StyleSheet, Animated, Easing } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  Animated,
+  StatusBar,
+} from "react-native";
 
 export default function SplashScreen({ navigation }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
-  const rotateAnim = useRef(new Animated.Value(0)).current;
+  // Estados para os pontos de carregamento
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    setTimeout(() => {
-      navigation.replace('Login');
-    }, 2000);
+    // 1. Entrada da logo
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // 2. Animação Dot Overtaking
+    const createDotAnim = (anim) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+    };
+
+    Animated.stagger(150, [
+      createDotAnim(dot1),
+      createDotAnim(dot2),
+      createDotAnim(dot3),
+    ]).start();
+
+    const timer = setTimeout(() => {
+      navigation.replace("Login");
+    }, 2500);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const startAnimation = () => {
-    rotateAnim.setValue(0);
-
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 1000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
-  };
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
+  // Helper para o estilo dos pontos
+  const dotStyle = (anim) => ({
+    transform: [
+      {
+        translateY: anim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -10],
+        }),
+      },
+    ],
+    opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }),
   });
 
-
   return (
-    <LinearGradient
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0.6 }}
-      colors={['#0246A3', '#1BC4EB']}
-      style={styles.container}
-    >
-      <Image 
-        source={require('../../assets/LogoODTPlace.png')} 
-        style={{ width: 150, height: 150, marginBottom: 20 }} 
-      />
-      <Text style={styles.logo}>Odonto Place</Text>
-      <Text style={styles.textobaixo}>Sistema de Agendamento</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      <Animated.View style={[styles.loader, { transform: [{ rotate }] }]} />
+      <Animated.View
+        style={[
+          styles.content,
+          { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
+        ]}
+      >
+        <Image
+          source={require("../../assets/logo_icon.png")}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
+      </Animated.View>
 
-    </LinearGradient>
+      {/* Loader Dot Overtaking */}
+      <View style={styles.loaderContainer}>
+        <Animated.View style={[styles.dot, dotStyle(dot1)]} />
+        <Animated.View style={[styles.dot, dotStyle(dot2)]} />
+        <Animated.View style={[styles.dot, dotStyle(dot3)]} />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  logo: {
-    fontSize: 50,
-    color: '#023C8B',
-    fontWeight: 'regular',
+  content: { alignItems: "center", justifyContent: "center" },
+  logoImage: { width: 120, height: 120, marginBottom: 24 },
+  title: {
+    fontSize: 36,
+    fontWeight: "900",
+    color: "#0F172A",
+    letterSpacing: -1,
+    marginBottom: 4,
   },
-  textobaixo: {
-    fontSize: 20,
-    color: '#023C8B',
-    fontWeight: 'regular',
+  subtitle: { fontSize: 16, color: "#64748B", fontWeight: "500" },
+
+  loaderContainer: {
+    position: "absolute",
+    bottom: 80,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  loader: {
-    marginTop: 25,
-    width: 40,
-    height: 40,
-    borderWidth: 4,
-    borderColor: '#cfe3ff',
-    borderTopColor: '#07336d',
-    borderRadius: 50,
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#06B6D4",
+    marginHorizontal: 4,
   },
 });

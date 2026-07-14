@@ -1,81 +1,87 @@
-import React from 'react';
-import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
+import React from "react";
+import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
+import { BlurView } from "expo-blur";
+import { Home, CalendarDays, History, Settings } from "lucide-react-native";
 
 const tabs = [
-    { key: 'home', label: 'Home', icon: require('../../assets/IconHome.png') },
-    { key: 'schedule', label: 'Agendamentos', icon: require('../../assets/IconClipboard.png') },
-    { key: 'notifications', label: 'Notificações', icon: require('../../assets/IconNotificacao.png') },
-    { key: 'settings', label: 'Configurações', icon: require('../../assets/IconConfiguracao.png') },
+  { key: "home", label: "Home", icon: Home },
+  { key: "schedule", label: "Consultas", icon: CalendarDays },
+  { key: "history", label: "Histórico", icon: History },
+  { key: "settings", label: "Config", icon: Settings },
 ];
 
-export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {} }) {
-    return (
-        <View style={styles.bottomBar}>
-            {tabs.map((tab) => {
-                const isActive = activeTab === tab.key;
-                return (
-                    <TouchableOpacity
-                        key={tab.key}
-                        style={[styles.bottomTab, isActive && styles.bottomTabActive]}
-                        onPress={() => onTabPress(tab.key)}
-                        activeOpacity={0.8}
-                    >
-                        <Image source={tab.icon} style={[styles.bottomTabIcon, isActive && styles.activeIcon]} resizeMode="contain" />
-                        <Text style={[styles.bottomTabLabel, isActive && styles.activeLabel]}>{tab.label}</Text>
-                    </TouchableOpacity>
-                );
-            })}
-        </View>
-    );
+export default function BottomNavBar({
+  activeTab = "home",
+  onTabPress = () => {},
+}) {
+  return (
+    <BlurView intensity={90} tint="light" style={styles.container}>
+      <View style={styles.bottomBar}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+          const IconComponent = tab.icon;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.bottomTab, isActive && styles.bottomTabActive]}
+              // Certifique-se de que a chamada abaixo seja exatamente assim:
+              onPress={() => onTabPress(tab.key)} 
+              activeOpacity={0.8}
+            >
+              <IconComponent
+                size={22}
+                color={isActive ? "#ffffff" : "#64748b"}
+                strokeWidth={isActive ? 2.5 : 2}
+              />
+              {isActive && <Text style={styles.activeText}>{tab.label}</Text>}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </BlurView>
+  );
 }
 
 const styles = StyleSheet.create({
-    bottomBar: {
-        position: 'absolute',
-        left: 20,
-        right: 20,
-        bottom: 34,
-        borderRadius: 32,
-        backgroundColor: '#ffffff',
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.12,
-        shadowOffset: { width: 0, height: 10 },
-        shadowRadius: 18,
-        elevation: 18,
-    },
-    bottomTab: {
-        width: 84,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 6,
-    },
-    bottomTabActive: {
-        backgroundColor: '#e5f5ff',
-        borderRadius: 20,
-        paddingVertical: 10,
-        paddingHorizontal: 6,
-    },
-    bottomTabIcon: {
-        width: 32,
-        height: 32,
-        marginBottom: 4,
-        tintColor: '#94a3b8',
-    },
-    bottomTabLabel: {
-        fontSize: 10,
-        color: '#64748b',
-        textAlign: 'center',
-    },
-    activeIcon: {
-        tintColor: '#0ea5e9',
-    },
-    activeLabel: {
-        color: '#0b4a88',
-        fontWeight: '700',
-    },
+  container: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    bottom: 34,
+    borderRadius: 35,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.5)",
+  },
+  bottomBar: {
+    height: 70,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    backgroundColor: "rgba(255, 255, 255, 0.75)",
+  },
+  bottomTab: { 
+    padding: 8, 
+    alignItems: "center", 
+    justifyContent: "center" 
+  },
+  bottomTabActive: {
+    backgroundColor: "#0ea5e9",
+    borderRadius: 20,
+    flexDirection: "row",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  activeText: {
+    color: "#ffffff",
+    marginLeft: 6,
+    fontWeight: "700",
+    fontSize: 12,
+  },
 });
