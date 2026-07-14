@@ -231,12 +231,12 @@
                     {% if clinica.imagens.all %}
                         {% for imagem in clinica.imagens.all %}
                             <div class="banner-slide {% if forloop.first %}active{% endif %}">
-                                <img src="{{ imagem.imagem.url }}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/default-banner.jpg' %}';">
+                                <img src="{{ imagem.imagem.url }}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/sem-foto.jpg' %}';">
                             </div>
                         {% endfor %}
                     {% else %}
                         <div class="banner-slide active">
-                            <img src="{% if clinica.imagem %}{{ clinica.imagem.url }}{% elif clinica.logo %}{{ clinica.logo.url }}{% else %}{% static 'img/default-banner.jpg' %}{% endif %}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/default-banner.jpg' %}';">
+                            <img src="{% if clinica.imagem %}{{ clinica.imagem.url }}{% elif clinica.logo %}{{ clinica.logo.url }}{% else %}{% static 'img/sem-foto.jpg' %}{% endif %}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/sem-foto.jpg' %}';">
                         </div>
                     {% endif %}
 
@@ -252,7 +252,7 @@
 
                 <!-- LOGO SOBREPOSTA -->
                 <div class="logo-sobreposta">
-                    <img src="{% if clinica.logo %}{{ clinica.logo.url }}{% elif clinica.imagem %}{{ clinica.imagem.url }}{% elif clinica.imagens.all %}{{ clinica.imagens.all.0.imagem.url }}{% else %}{% static 'img/default-clinic-logo.svg' %}{% endif %}" alt="Logo da clínica" onerror="this.onerror=null;this.src='{% static 'img/default-clinic-logo.svg' %}';">
+                    <img src="{% if clinica.logo %}{{ clinica.logo.url }}{% elif clinica.imagem %}{{ clinica.imagem.url }}{% elif clinica.imagens.all %}{{ clinica.imagens.all.0.imagem.url }}{% else %}{% static 'img/sem-foto-de-perfil.jpg' %}{% endif %}" alt="Logo da clínica" onerror="this.onerror=null;this.src='{% static 'img/sem-foto-de-perfil.jpg' %}';">
                 </div>
             </div>
 
@@ -287,7 +287,7 @@
         <h1 class="titulo-sessao">Sobre a Clinica</h1>
         <div class="card-branco header-clinica-detalhe">
             <div class="clinica-info-principal">
-                <img id="detalheLogoClinica" src="{% static 'img/default-clinic-logo.svg' %}" class="logo-clinica-detalhe" onerror="this.onerror=null;this.src='{% static 'img/default-clinic-logo.svg' %}';">
+                <img id="detalheLogoClinica" src="{% static 'img/sem-foto-de-perfil.jpg' %}" class="logo-clinica-detalhe" onerror="this.onerror=null;this.src='{% static 'img/sem-foto-de-perfil.jpg' %}';">
                 <div class="clinica-textos">
                     <h2 id="detalheNomeClinica">Nome da Clínica</h2>
                     <p><i class="fa-regular fa-envelope"></i>

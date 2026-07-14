@@ -197,6 +197,7 @@ body {
     margin-left: 12px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 700;
     padding: 10px 16px;
     border-radius: 12px;
     transition: all 0.3s ease;

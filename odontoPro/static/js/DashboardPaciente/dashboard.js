@@ -593,7 +593,7 @@ function abrirModalAgendamento(clinicaId) {
             if (logoImg) {
                 logoImg.onerror = function() {
                     this.onerror = null;
-                    this.src = "/static/img/default-clinic-logo.svg";
+                    this.src = "/static/img/sem-foto-de-perfil.jpg";
                 };
 
                 if (data.logo_url) {
@@ -601,11 +601,11 @@ function abrirModalAgendamento(clinicaId) {
                 } else if (data.images && data.images.length > 0) {
                     logoImg.src = data.images[0];
                 } else {
-                    logoImg.src = "/static/img/default-clinic-logo.svg";
+                    logoImg.src = "/static/img/sem-foto-de-perfil.jpg";
                 }
             }
 
-            atualizarEnderecoCarousel(data.images || [], data.banner_url || data.logo_url || "/static/img/default-banner.jpg");
+            atualizarEnderecoCarousel(data.images || [], data.banner_url || data.logo_url || "/static/img/sem-foto.jpg");
 
             // ===== ESPECIALIDADES =====
             const selectEspecialidade = document.getElementById("selectEspecialidade");
@@ -680,7 +680,7 @@ function abrirModalAgendamento(clinicaId) {
                             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
                         `;
 
-                        const foto = med.foto_url ? med.foto_url : "/static/img/default-clinic-logo.svg";
+                        const foto = med.foto_url ? med.foto_url : "/static/img/sem-foto-de-perfil.jpg";
 
                         // Buscar nomes das especialidades
                         const especialidadesNomes = [];
@@ -701,7 +701,7 @@ function abrirModalAgendamento(clinicaId) {
 
                         card.innerHTML = `
                             <img src="${foto}" 
-                                style="width:80px;height:80px;border-radius:50%;object-fit:contain;margin-bottom:10px;" onerror="this.onerror=null;this.src='/static/img/default-clinic-logo.svg';">
+                                style="width:80px;height:80px;border-radius:50%;object-fit:contain;margin-bottom:10px;" onerror="this.onerror=null;this.src='/static/img/sem-foto-de-perfil.jpg';">
                             <h4 style="margin-bottom: 5px;">Dr(a). ${med.nome}</h4>
                             ${especialidadesHtml}
                         `;
@@ -796,7 +796,7 @@ function atualizarEnderecoCarousel(images, fallback) {
     const prev = carousel.querySelector('.carousel-control.prev');
     const next = carousel.querySelector('.carousel-control.next');
 
-    const fotos = Array.isArray(images) && images.length ? images : [fallback || '/static/img/default-banner.jpg'];
+    const fotos = Array.isArray(images) && images.length ? images : [fallback || '/static/img/sem-foto.jpg'];
 
     slidesWrapper.innerHTML = '';
     fotos.forEach((url, index) => {

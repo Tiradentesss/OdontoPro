@@ -60,7 +60,7 @@
             <div class="floating-cards-scroll">
                 {% for clinica in featured_clinics %}
                     <article class="clinic-card" data-rating="{{ clinica.avaliacao|floatformat:1 }}">
-                        <img src="{{ clinica.display_image }}" data-fallback="{% static 'img/default-banner.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="{{ clinica.nome }}" />
+                        <img src="{{ clinica.display_image }}" data-fallback="{% static 'img/sem-foto.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="{{ clinica.nome }}" />
                         <div class="clinic-info">
                             <strong>{{ clinica.nome }}</strong>
                             <span class="clinic-location">{{ clinica.location }}</span>

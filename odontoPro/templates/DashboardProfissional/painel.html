@@ -84,7 +84,7 @@
                             {% if clinica.banner_url %}
                                 <img id="previa-banner" src="{{ clinica.banner_url }}" alt="Banner da Clínica">
                             {% else %}
-                                <img id="previa-banner" src="{% static 'img/default-banner.jpg' %}" alt="Banner da Clínica">
+                                <img id="previa-banner" src="{% static 'img/sem-foto.jpg' %}" alt="Banner da Clínica">
                             {% endif %}
                             <label for="upload-banner" class="botao-upload-banner">
                                 <input type="file" id="upload-banner" name="banner" accept="image/*" hidden>

@@ -306,7 +306,7 @@ def _get_clinica_imagem_url(clinica):
         if default_storage.exists(primeira.imagem.name):
             return primeira.imagem.url
 
-    return static('img/default-banner.jpg')
+    return static('img/sem-foto.jpg')
 
 
 def _get_clinica_logo_url(clinica):
@@ -323,7 +323,7 @@ def _get_clinica_logo_url(clinica):
         if default_storage.exists(primeira.imagem.name):
             return primeira.imagem.url
 
-        return static('img/default-clinic-logo.svg')
+        return static('img/sem-foto-de-perfil.jpg')
 
 
 def dashboard_paciente(request):
@@ -1371,7 +1371,7 @@ def home(request):
         elif first_image:
             clinica.display_image = first_image.imagem.url
         else:
-            clinica.display_image = static("img/default-banner.jpg")
+            clinica.display_image = static("img/sem-foto.jpg")
 
         if clinica.endereco:
             location_parts = [part for part in [clinica.endereco.cidade, clinica.endereco.bairro] if part]
