@@ -56,17 +56,11 @@ class ConsultaController:
                     p.foto,
                     c.observacoes,
                     m.nome AS medico_nome,
-                    COALESCE((
-                        SELECT e.nome
-                        FROM odontoPro_medico_especialidades me
-                        JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
-                        WHERE me.medico_id = m.id
-                        ORDER BY e.nome
-                        LIMIT 1
-                    ), '') AS especialidade
+                    COALESCE(e.nome, '') AS especialidade
                 FROM odontoPro_consulta c
                 LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
                 LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                LEFT JOIN odontoPro_especialidade e ON e.id = c.especialidade_id
                 WHERE {where_clause}
                 ORDER BY c.data_hora DESC
                 LIMIT %s OFFSET %s
