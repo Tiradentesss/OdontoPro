@@ -1252,12 +1252,22 @@ class Agenda(BaseScreen):
         canvas_frame.pack(fill='both', expand=True, pady=(0, 15))
         
         # ===================== CAMPO PACIENTE (SEARCH COMBOBOX) =====================
+        paciente_header = ctk.CTkFrame(canvas_frame, fg_color="transparent")
+        paciente_header.pack(anchor='w', padx=15, pady=(15, 5))
+
         ctk.CTkLabel(
-            canvas_frame,
-            text="👤 Paciente*",
+            paciente_header,
+            text="👤",
+            font=font("subtitle"),
+            text_color=COLORS['primary']
+        ).pack(side='left', padx=(0, 6))
+
+        ctk.CTkLabel(
+            paciente_header,
+            text="Paciente",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
-        ).pack(anchor='w', padx=15, pady=(15, 5))
+        ).pack(side='left')
         
         paciente_id_selecionado = {'id': None}
         paciente_info_selecionado = {'data': None}
@@ -1278,12 +1288,22 @@ class Agenda(BaseScreen):
         paciente_combo.pack(fill='x', padx=15, pady=(0, 15))
         
         # ===================== CAMPO ESPECIALIDADE (SELETOR) =====================
+        especialidade_header = ctk.CTkFrame(canvas_frame, fg_color="transparent")
+        especialidade_header.pack(anchor='w', padx=15, pady=(0, 5))
+
         ctk.CTkLabel(
-            canvas_frame,
-            text="🦷 Especialidade*",
+            especialidade_header,
+            text="🦷",
+            font=font("subtitle"),
+            text_color=COLORS['primary']
+        ).pack(side='left', padx=(0, 6))
+
+        ctk.CTkLabel(
+            especialidade_header,
+            text="Especialidade",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
-        ).pack(anchor='w', padx=15, pady=(0, 5))
+        ).pack(side='left')
         
         especialidade_var = ctk.StringVar(value="")
         especialidade_id_selecionado = {'id': None}
@@ -1412,12 +1432,22 @@ class Agenda(BaseScreen):
         especialidade_status_label.pack(anchor='w', padx=15, pady=(0, 10))
         
         # ===================== CAMPO MÉDICO (VINCULADO À CLÍNICA) =====================
+        medico_header = ctk.CTkFrame(canvas_frame, fg_color="transparent")
+        medico_header.pack(anchor='w', padx=15, pady=(0, 5))
+
         ctk.CTkLabel(
-            canvas_frame,
-            text="🩺 Médico*",
+            medico_header,
+            text="🩺",
+            font=font("subtitle"),
+            text_color=COLORS['primary']
+        ).pack(side='left', padx=(0, 6))
+
+        ctk.CTkLabel(
+            medico_header,
+            text="Médico",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
-        ).pack(anchor='w', padx=15, pady=(0, 5))
+        ).pack(side='left')
         
         medico_display = {}
         medico_id_selecionado = {'id': None}
@@ -1529,12 +1559,22 @@ class Agenda(BaseScreen):
         )
         medico_combo.pack(fill='x', padx=15, pady=(0, 15))
 
+        data_header = ctk.CTkFrame(canvas_frame, fg_color="transparent")
+        data_header.pack(anchor='w', padx=15, pady=(0, 5))
+
         ctk.CTkLabel(
-            canvas_frame,
-            text="📅 Data da Consulta*",
+            data_header,
+            text="📅",
+            font=font("subtitle"),
+            text_color=COLORS['primary']
+        ).pack(side='left', padx=(0, 6))
+
+        ctk.CTkLabel(
+            data_header,
+            text="Data da Consulta",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
-        ).pack(anchor='w', padx=15, pady=(0, 5))
+        ).pack(side='left')
         
         data_var = ctk.StringVar(value="")
         data_combo = ctk.CTkComboBox(
@@ -1553,12 +1593,22 @@ class Agenda(BaseScreen):
         data_combo.pack(fill='x', padx=15, pady=(0, 5))
         
         # ===================== CAMPO HORA =====================
+        hora_header = ctk.CTkFrame(canvas_frame, fg_color="transparent")
+        hora_header.pack(anchor='w', padx=15, pady=(0, 5))
+
         ctk.CTkLabel(
-            canvas_frame,
-            text="🕐 Hora da Consulta*",
+            hora_header,
+            text="🕐",
+            font=font("subtitle"),
+            text_color=COLORS['primary']
+        ).pack(side='left', padx=(0, 6))
+
+        ctk.CTkLabel(
+            hora_header,
+            text="Hora da Consulta",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
-        ).pack(anchor='w', padx=15, pady=(0, 5))
+        ).pack(side='left')
         
         hora_var = ctk.StringVar(value="")
         hora_combo = ctk.CTkComboBox(
@@ -1641,12 +1691,22 @@ class Agenda(BaseScreen):
         hora_var.trace_add('write', atualizar_hora_selecionada)
         
         # ===================== CAMPO OBSERVAÇÕES =====================
+        obs_header = ctk.CTkFrame(canvas_frame, fg_color="transparent")
+        obs_header.pack(anchor='w', padx=15, pady=(0, 5))
+
         ctk.CTkLabel(
-            canvas_frame,
-            text="📝 Observações (opcional)",
+            obs_header,
+            text="📝",
+            font=font("subtitle"),
+            text_color=COLORS['primary']
+        ).pack(side='left', padx=(0, 6))
+
+        ctk.CTkLabel(
+            obs_header,
+            text="Observações (opcional)",
             font=font("subtitle"),
             text_color=COLORS['text_primary']
-        ).pack(anchor='w', padx=15, pady=(0, 5))
+        ).pack(side='left')
         
         obs_text = ctk.CTkTextbox(
             canvas_frame,
