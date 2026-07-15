@@ -14,7 +14,7 @@ class Login(ctk.CTk):
         super().__init__()
         self.on_success = on_success
         self.auto_login_enabled = auto_login_enabled  # Flag para permitir auto-login
-        self.title("Login - OdontoPro")
+        self.title("Login - OdontoHub")
 
         self.update_idletasks()
 

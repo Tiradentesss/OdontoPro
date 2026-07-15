@@ -15,6 +15,8 @@ class Financeiro(BaseScreen):
         self.clinica_id = clinica_id
         # Carrega transações do banco de dados
         self.transacoes = self._carregar_transacoes()
+        # Variável para o período selecionado no combo (padroniza estilo)
+        self.period_var = ctk.StringVar(value='Últimos 7 dias')
 
         self.main_container = ctk.CTkScrollableFrame(self.content_card, fg_color="transparent")
         self.main_container.pack(fill="both", expand=True, padx=20, pady=20)
@@ -178,12 +180,21 @@ class Financeiro(BaseScreen):
                      font=font("subtitle", "bold")).pack(side="left")
 
         periodos = ["Últimos 7 dias", "Últimos 30 dias", "Este Ano"]
-        combo = ctk.CTkComboBox(header,
-                                values=periodos,
-                                command=self.update_chart,
-                                width=140,
-                                font=font("small"))
-        combo.set("Últimos 7 dias")
+        combo = ctk.CTkComboBox(
+            header,
+            values=periodos,
+            command=self.update_chart,
+            width=140,
+            height=34,
+            fg_color=COLORS['input_bg'],
+            border_color=COLORS['border'],
+            button_color=COLORS['primary'],
+            button_hover_color=COLORS['primary_dark'],
+            corner_radius=8,
+            variable=self.period_var,
+            font=font("small")
+        )
+        combo.set(self.period_var.get())
         combo.pack(side="right")
 
         self.plot_area = ctk.CTkFrame(container, fg_color="transparent")

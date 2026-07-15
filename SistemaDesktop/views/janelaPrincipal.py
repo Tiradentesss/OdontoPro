@@ -12,7 +12,7 @@ class App(ctk.CTk):
     def __init__(self, usuario_nome):
         super().__init__()
 
-        self.title("OdontoPro")
+        self.title("OdontoHub")
         self.geometry("1150x750")
 
         self.container = ctk.CTkFrame(self)

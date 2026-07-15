@@ -161,7 +161,7 @@ class App(ctk.CTk):
         if tipo_usuario == "gerenciamento" and usuario_id:
             self.permissoes_usuario = self._carregar_permissoes_usuario()
 
-        self.title("OdontoPro - Sistema de Gerenciamento")
+        self.title("OdontoHub - Sistema de Gerenciamento")
         largura = self.winfo_screenwidth()
         altura = self.winfo_screenheight()
 
