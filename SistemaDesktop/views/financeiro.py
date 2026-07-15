@@ -294,9 +294,9 @@ class Financeiro(BaseScreen):
         legend = ax.legend(loc='upper left', frameon=True, fancybox=True, shadow=False,
                           fontsize=7, facecolor=COLORS["card"], edgecolor=COLORS["border"])
         
-        # CORREÇÃO: Define a cor do texto da legenda como branco
+        # Ajustar cor do texto da legenda para seguir o tema (evita legenda branca sobre fundo claro)
         for text in legend.get_texts():
-            text.set_color("white")
+            text.set_color(COLORS.get("text", "black"))
         
         # Ajustar layout
         plt.tight_layout()
