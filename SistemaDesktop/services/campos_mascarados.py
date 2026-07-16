@@ -137,7 +137,10 @@ class GerenciadorMascaras:
         return {nome: campo.obter_valor_numerico() 
                 for nome, campo in self.campos.items()}
     
-    def limpar_tudo(self):
-        """Limpa todos os campos gerenciados."""
-        for campo in self.campos.values():
-            campo.limpar()
+    def obter_valor_numerico(self):
+        """
+        Compatibilidade com chamadas existentes.
+        Retorna um dicionário com valores numéricos de todos os campos.
+        """
+        return self.obter_valores_numericos()
+

@@ -15,6 +15,7 @@ class PacienteSearchComboBox(ctk.CTkFrame):
         super().__init__(master, fg_color="transparent")
         self.command = command
         self.dropdown = None
+        self._close_after_id = None
         self.selected_index = 0
         self.pacientes_filtrados = []
         self.paciente_id_map = {}  # Mapeia índice da lista -> ID do paciente
@@ -68,6 +69,9 @@ class PacienteSearchComboBox(ctk.CTkFrame):
         self.dropdown.configure(fg_color=COLORS["card"])
         self.dropdown.bind("<Escape>", lambda event: self.fechar_lista())
         self.dropdown.bind("<FocusOut>", self._fechar_se_foco_sair)
+        if self._close_after_id:
+            self.after_cancel(self._close_after_id)
+            self._close_after_id = None
 
         # Entry de pesquisa
         self.search_entry = ctk.CTkEntry(
@@ -108,9 +112,17 @@ class PacienteSearchComboBox(ctk.CTkFrame):
     def fechar_lista(self):
         """Fecha dropdown."""
         print("[DEBUG PACIENTE] fechar_lista: fechando dropdown")
+        if self._close_after_id:
+            self.after_cancel(self._close_after_id)
+            self._close_after_id = None
         if self.dropdown and self.dropdown.winfo_exists():
             self.dropdown.destroy()
         self.dropdown = None
+        # Remover foco do Entry ao fechar o dropdown
+        try:
+            self.winfo_toplevel().focus_set()
+        except Exception:
+            pass
         # Limpar search_var para próxima abertura
         self.search_var.set("")
         print("[DEBUG PACIENTE] fechar_lista: dropdown fechado e search_var limpo")
@@ -266,4 +278,6 @@ class PacienteSearchComboBox(ctk.CTkFrame):
 
     def _fechar_se_foco_sair(self, event=None):
         """Fecha dropdown se foco sair."""
-        self.after(100, lambda: self.fechar_lista() if not self.dropdown or not self.dropdown.focus_get() else None)
+        if self._close_after_id:
+            self.after_cancel(self._close_after_id)
+        self._close_after_id = self.after(100, lambda: self.fechar_lista() if not self.dropdown or not self.dropdown.focus_get() else None)

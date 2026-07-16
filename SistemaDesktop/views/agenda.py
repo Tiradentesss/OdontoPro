@@ -2148,7 +2148,7 @@ class Agenda(BaseScreen):
             if resultado.get('sucesso'):
                 messagebox.showinfo(
                     "Sucesso",
-                    f"✓ Consulta marcada com sucesso!\n\nID: {resultado.get('consulta_id')}"
+                    "✓ Consulta marcada com sucesso!"
                 )
                 self.refresh_data()
                 dialogo.destroy()
