@@ -110,6 +110,32 @@ class Painel(BaseScreen):
             
         return card
 
+    def _navegar_para(self, nome_tela):
+        app = getattr(self.master, 'master', None)
+        if app and hasattr(app, 'show_frame'):
+            app.show_frame(nome_tela)
+
+    def _criar_botao_ir_para(self, parent, destino):
+        footer = ctk.CTkFrame(parent, fg_color="transparent")
+        footer.pack(fill="x", padx=20, pady=(0, 20))
+
+        botao = ctk.CTkButton(
+            footer,
+            text="Ir para",
+            width=90,
+            height=30,
+            fg_color=self.colors['primary'],
+            hover_color=self.colors['primary_soft'],
+            text_color="white",
+            corner_radius=12,
+            font=ctk.CTkFont(size=12, weight="bold"),
+            border_width=0,
+            cursor="hand2",
+            command=lambda: self._navegar_para(destino)
+        )
+        botao.pack(side="right")
+        return botao
+
     def _render_proximas_consultas(self, row, col):
         card = self._criar_card("Próximas Consultas", "Compromissos agendados para hoje", row, col, padx=(0, 10))
         
@@ -144,6 +170,8 @@ class Painel(BaseScreen):
             badge.pack(side="right", padx=5)
             ctk.CTkLabel(badge, text="Confirmado", text_color=self.colors['info'], font=ctk.CTkFont(size=10, weight="bold")).pack(padx=8, pady=2)
 
+        self._criar_botao_ir_para(card, 'agenda')
+
     def _render_resumo_financeiro(self, row, col):
         card = self._criar_card("Resumo Financeiro", "Receita e despesas do mês", row, col, padx=(10, 0))
         
@@ -171,6 +199,7 @@ class Painel(BaseScreen):
             font=ctk.CTkFont(size=12, slant="italic"), text_color=self.colors['text_muted']
         )
         footer.pack(pady=(15, 20))
+        self._criar_botao_ir_para(card, 'financeiro')
 
     def _render_status_consultas(self, row, col):
         card = self._criar_card("Status das Consultas", "Distribuição de consultas por status", row, col, padx=(0, 10))
@@ -200,6 +229,8 @@ class Painel(BaseScreen):
             prog = ctk.CTkProgressBar(row_f, height=8, progress_color=cor, fg_color=self.colors['bg_app'])
             prog.pack(fill="x", pady=(5, 0))
             prog.set(perc)
+
+        self._criar_botao_ir_para(card, 'agenda')
 
     def _render_resumo_cadastros(self, row, col):
         card = self._criar_card("Base de Dados", "Usuários e registros do sistema", row, col, padx=(10, 0))
@@ -245,6 +276,8 @@ class Painel(BaseScreen):
             txt_f.pack(side="left", pady=10)
             ctk.CTkLabel(txt_f, text=nome, font=ctk.CTkFont(size=15, weight="bold"), text_color=self.colors['text']).pack(anchor="w")
             ctk.CTkLabel(txt_f, text=espec, font=ctk.CTkFont(size=14), text_color=self.colors['text_muted']).pack(anchor="w")
+
+        self._criar_botao_ir_para(card, 'gerenciamento')
 
     def _render_alertas(self, row, col):
         card = self._criar_card("Notificações", "Alertas e avisos importantes", row, col, padx=(10, 0))
