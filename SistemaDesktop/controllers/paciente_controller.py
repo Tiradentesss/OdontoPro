@@ -38,7 +38,7 @@ class PacienteController:
             conn = get_connection()
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT 1 FROM paciente_clinica WHERE paciente_id = %s AND clinica_id = %s",
+                "SELECT 1 FROM paciente_clinica WHERE paciente_id = %s AND clinica_id = %s AND status = 'ativo'",
                 (paciente_id, clinica_id)
             )
             return cursor.fetchone() is not None
@@ -53,13 +53,18 @@ class PacienteController:
 
     @staticmethod
     def _criar_vinculo_clinica(paciente_id, clinica_id):
+        if paciente_id is None or clinica_id is None:
+            print(f"Erro ao criar vínculo paciente-clínica: paciente_id={paciente_id}, clinica_id={clinica_id}")
+            return False
+
         conn = None
         cursor = None
         try:
             conn = get_connection()
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT IGNORE INTO paciente_clinica (paciente_id, clinica_id, data_vinculo, status) VALUES (%s, %s, NOW(), 'ativo')",
+                "INSERT INTO paciente_clinica (paciente_id, clinica_id, data_vinculo, status) VALUES (%s, %s, NOW(), 'ativo')"
+                " ON DUPLICATE KEY UPDATE status = 'ativo', data_vinculo = NOW()",
                 (paciente_id, clinica_id)
             )
             conn.commit()
@@ -82,6 +87,12 @@ class PacienteController:
 
         Se um paciente com o mesmo CPF já existir, apenas vincula o paciente à clínica.
         """
+        if clinica_id is None:
+            return {
+                "sucesso": False,
+                "mensagem": "ID da clínica não informado."
+            }
+
         # ✓ VALIDAÇÃO: Verificar campos obrigatórios
         if not nome or (isinstance(nome, str) and not nome.strip()):
             return {
