@@ -12,6 +12,7 @@ from .base import BaseScreen
 from .theme import font, COLORS
 from controllers.consulta_controller import ConsultaController
 from .paciente_search_combo import PacienteSearchComboBox
+from .date_picker_utils import build_month_days, format_month_label, parse_br_date
 
 
 LOCAL_STATUS_COLORS = {
@@ -45,6 +46,227 @@ class CustomOptionMenu(ctk.CTkOptionMenu):
             width=1,
             tags="divider"
         )
+
+
+class MonthlyDatePickerPopup(ctk.CTkToplevel):
+    def __init__(self, master, target_widget, data_var, available_dates, on_select):
+        super().__init__(master)
+        self.withdraw()
+        self.title("")
+        self.overrideredirect(True)
+        self.configure(fg_color=COLORS['card'])
+        self.attributes('-topmost', True)
+        self.resizable(False, False)
+        self.transient(master)
+
+        self.data_var = data_var
+        self.available_dates = available_dates or []
+        self.on_select = on_select
+        self.current_year = date.today().year
+        self.current_month = date.today().month
+        self.selected_date = parse_br_date(self.data_var.get()) if self.data_var.get() else None
+        self.parent_window = master
+        self.target_widget = target_widget
+
+        self._build_ui()
+        self._position_popup()
+        self.deiconify()
+        self.lift()
+        self.focus_set()
+
+        self.bind("<Escape>", lambda _event: self.destroy())
+        self.parent_window.bind("<Configure>", self._handle_parent_configure, add='+')
+        self.target_widget.bind("<Configure>", self._handle_target_configure, add='+')
+        self.parent_window.bind("<Button-1>", self._handle_global_click, add='+')
+
+    def _handle_parent_configure(self, _event=None):
+        self.after(10, self._position_popup)
+
+    def _handle_target_configure(self, _event=None):
+        self.after(10, self._position_popup)
+
+    def _handle_global_click(self, event):
+        if not self.winfo_exists():
+            return
+        try:
+            widget = event.widget
+            if widget is self:
+                return
+            if self.winfo_containing(event.x_root, event.y_root) is self:
+                return
+            if widget is self.target_widget or self.target_widget.winfo_containing(event.x_root, event.y_root) is self.target_widget:
+                return
+            self.destroy()
+        except Exception:
+            pass
+
+    def _position_popup(self):
+        if not self.winfo_exists():
+            return
+        try:
+            self.update_idletasks()
+            popup_width = self.winfo_reqwidth()
+            popup_height = self.winfo_reqheight()
+
+            field_x = self.target_widget.winfo_rootx()
+            field_y = self.target_widget.winfo_rooty()
+            field_width = self.target_widget.winfo_width()
+            field_height = self.target_widget.winfo_height()
+
+            parent_x = self.parent_window.winfo_rootx()
+            parent_y = self.parent_window.winfo_rooty()
+            parent_width = self.parent_window.winfo_width()
+            parent_height = self.parent_window.winfo_height()
+
+            below_y = field_y + field_height + 4
+            above_y = field_y - popup_height - 4
+
+            if below_y + popup_height <= parent_y + parent_height:
+                x = field_x
+                y = below_y
+            elif above_y >= parent_y:
+                x = field_x
+                y = above_y
+            else:
+                x = field_x
+                y = max(parent_y, min(below_y, parent_y + parent_height - popup_height))
+
+            x = max(parent_x, min(x, parent_x + parent_width - popup_width))
+            y = max(parent_y, min(y, parent_y + parent_height - popup_height))
+
+            if popup_width > parent_width:
+                x = parent_x
+            if popup_height > parent_height:
+                y = parent_y
+
+            self.geometry(f"+{x}+{y}")
+        except Exception:
+            self.geometry("+0+0")
+
+    def _build_ui(self):
+        self.grid_columnconfigure((0, 1, 2, 3, 4, 5, 6), weight=1)
+
+        self.header_frame = ctk.CTkFrame(self, fg_color='transparent')
+        self.header_frame.grid(row=0, column=0, columnspan=7, sticky='ew', padx=12, pady=(10, 8))
+
+        self.prev_btn = ctk.CTkButton(
+            self.header_frame,
+            text='◀',
+            width=28,
+            height=24,
+            fg_color='transparent',
+            text_color=COLORS['text_primary'],
+            hover_color=COLORS['bg_soft'],
+            border_width=1,
+            border_color=COLORS['border'],
+            corner_radius=8,
+            command=self._go_previous_month,
+        )
+        self.prev_btn.pack(side='left')
+
+        self.month_label = ctk.CTkLabel(
+            self.header_frame,
+            text=format_month_label(self.current_year, self.current_month),
+            font=font('text', 'bold'),
+            text_color=COLORS['text_primary'],
+        )
+        self.month_label.pack(side='left', expand=True)
+
+        self.next_btn = ctk.CTkButton(
+            self.header_frame,
+            text='▶',
+            width=28,
+            height=24,
+            fg_color='transparent',
+            text_color=COLORS['text_primary'],
+            hover_color=COLORS['bg_soft'],
+            border_width=1,
+            border_color=COLORS['border'],
+            corner_radius=8,
+            command=self._go_next_month,
+        )
+        self.next_btn.pack(side='right')
+
+        weekday_names = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+        self.weekday_frame = ctk.CTkFrame(self, fg_color='transparent')
+        self.weekday_frame.grid(row=1, column=0, columnspan=7, padx=8, pady=(0, 4))
+        for idx, name in enumerate(weekday_names):
+            ctk.CTkLabel(
+                self.weekday_frame,
+                text=name,
+                font=font('small'),
+                text_color=COLORS['text_muted'],
+            ).grid(row=0, column=idx, padx=2)
+
+        self.days_grid_frame = ctk.CTkFrame(self, fg_color='transparent')
+        self.days_grid_frame.grid(row=2, column=0, columnspan=7, padx=8, pady=(0, 10))
+
+        self._render_days()
+
+    def _render_days(self):
+        self.month_label.configure(text=format_month_label(self.current_year, self.current_month))
+        for widget in self.days_grid_frame.winfo_children():
+            widget.destroy()
+
+        cells = build_month_days(
+            self.current_year,
+            self.current_month,
+            self.available_dates,
+            self.selected_date,
+        )
+
+        row = 0
+        col = 0
+        for cell in cells:
+            if cell['day'] is None:
+                ctk.CTkLabel(self.days_grid_frame, text='').grid(row=row, column=col, padx=2, pady=2)
+            else:
+                is_selected = bool(cell['selected'])
+                is_enabled = bool(cell['enabled'])
+                btn = ctk.CTkButton(
+                    self.days_grid_frame,
+                    text=str(cell['day']),
+                    width=30,
+                    height=28,
+                    corner_radius=8,
+                    fg_color=COLORS['primary'] if is_selected else 'transparent',
+                    text_color=COLORS['primary'] if is_selected else COLORS['text_primary'],
+                    hover_color=COLORS['primary_soft'],
+                    border_width=1,
+                    border_color=COLORS['border'],
+                    state='normal' if is_enabled else 'disabled',
+                    command=lambda d=cell['date']: self._select_date(d) if is_enabled else None,
+                )
+                btn.grid(row=row, column=col, padx=2, pady=2)
+            col += 1
+            if col == 7:
+                col = 0
+                row += 1
+
+    def _go_previous_month(self):
+        if self.current_month == 1:
+            self.current_year -= 1
+            self.current_month = 12
+        else:
+            self.current_month -= 1
+        self._render_days()
+
+    def _go_next_month(self):
+        if self.current_month == 12:
+            self.current_year += 1
+            self.current_month = 1
+        else:
+            self.current_month += 1
+        self._render_days()
+
+    def _select_date(self, selected_date):
+        if not selected_date:
+            return
+        formatted = selected_date.strftime('%d/%m/%Y')
+        self.data_var.set(formatted)
+        if self.on_select:
+            self.on_select(formatted)
+        self.destroy()
 
 
 class Agenda(BaseScreen):
@@ -1460,11 +1682,9 @@ class Agenda(BaseScreen):
         def limpar_data_e_hora():
             data_var.set("")
             try:
-                data_combo.configure(values=[], state='disabled')
+                data_entry.configure(state='disabled')
             except Exception:
                 pass
-            # keep placeholder behavior consistent
-            data_var.set("")
             hora_var.set("")
             try:
                 hora_combo.configure(values=[], state='disabled')
@@ -1500,13 +1720,13 @@ class Agenda(BaseScreen):
 
             if not datas:
                 try:
-                    data_combo.configure(values=[], state='disabled')
+                    data_entry.configure(state='disabled')
                 except Exception:
                     pass
                 return
 
             try:
-                data_combo.configure(values=datas, state='normal')
+                data_entry.configure(state='normal')
             except Exception:
                 pass
 
@@ -1520,7 +1740,7 @@ class Agenda(BaseScreen):
 
             limpar_data_e_hora()
             data_var.set("")
-            data_combo.configure(values=[], state='disabled')
+            data_entry.configure(state='disabled')
             hora_combo.configure(values=[], state='disabled')
 
             def _task():
@@ -1577,20 +1797,31 @@ class Agenda(BaseScreen):
         ).pack(side='left')
         
         data_var = ctk.StringVar(value="")
-        data_combo = ctk.CTkComboBox(
+
+        def abrir_calendario_data(*args):
+            if data_entry.cget('state') == 'disabled' or not datas_disponiveis:
+                return
+            popup = MonthlyDatePickerPopup(
+                dialogo,
+                target_widget=data_entry,
+                data_var=data_var,
+                available_dates=datas_disponiveis,
+                on_select=lambda value: atualizar_horarios_disponiveis(),
+            )
+
+        data_entry = ctk.CTkEntry(
             canvas_frame,
-            variable=data_var,
-            values=[],
+            textvariable=data_var,
             height=40,
             fg_color=COLORS['input_bg'],
             border_color=COLORS['border'],
-            button_color=COLORS['primary'],
-            button_hover_color=COLORS['primary_dark'],
+            text_color=COLORS['text_primary'],
             corner_radius=8,
             state='disabled',
-            command=lambda v=None: atualizar_horarios_disponiveis()
         )
-        data_combo.pack(fill='x', padx=15, pady=(0, 5))
+        data_entry.pack(fill='x', padx=15, pady=(0, 5))
+        data_entry.bind('<Button-1>', abrir_calendario_data)
+        data_entry.bind('<Return>', abrir_calendario_data)
         
         # ===================== CAMPO HORA =====================
         hora_header = ctk.CTkFrame(canvas_frame, fg_color="transparent")
