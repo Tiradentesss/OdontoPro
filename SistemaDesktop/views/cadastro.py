@@ -7,6 +7,7 @@ from controllers.gerenciamento_controller import GerenciamentoController
 from services.campos_mascarados import GerenciadorMascaras
 from services.endereco_service import EnderecoService
 from services.localidades_service import LocalidadesService
+from datetime import datetime
 import hashlib
 
 
@@ -1063,6 +1064,14 @@ class Cadastro(BaseScreen):
                 self._mostrar_mensagem("❌ Telefone inválido. Deve ter pelo menos 10 dígitos", sucesso=False)
                 return
             
+            # Converter data de nascimento para o formato ISO esperado pelo banco
+            data_nasc_iso = None
+            if data_nasc:
+                try:
+                    data_nasc_iso = datetime.strptime(data_nasc, '%d/%m/%Y').strftime('%Y-%m-%d')
+                except ValueError:
+                    data_nasc_iso = data_nasc
+            
             print(f"[DEBUG] ✓ Validação passou! Prosseguindo com o salvamento...")
             
             resultado = PacienteController.criar_paciente(
@@ -1070,7 +1079,7 @@ class Cadastro(BaseScreen):
                 cpf=cpf or None,
                 sexo=None,
                 email=email,
-                data_nascimento=data_nasc or None,
+                data_nascimento=data_nasc_iso or None,
                 telefone=telefone,
                 clinica_id=self.clinica_id,
                 senha=senha
