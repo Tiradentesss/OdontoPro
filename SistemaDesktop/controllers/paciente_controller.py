@@ -83,16 +83,10 @@ class PacienteController:
     @staticmethod
     def criar_paciente(nome, cpf, sexo, email, data_nascimento, telefone, clinica_id, senha=None):
         """
-        Cria um paciente no banco de dados e vincula à clínica.
+        Cria um paciente no banco de dados.
 
-        Se um paciente com o mesmo CPF já existir, apenas vincula o paciente à clínica.
+        Se um paciente com o mesmo CPF já existir, informa que ele já está cadastrado.
         """
-        if clinica_id is None:
-            return {
-                "sucesso": False,
-                "mensagem": "ID da clínica não informado."
-            }
-
         # ✓ VALIDAÇÃO: Verificar campos obrigatórios
         if not nome or (isinstance(nome, str) and not nome.strip()):
             return {
@@ -122,18 +116,7 @@ class PacienteController:
         try:
             paciente_existente = PacienteController._obter_paciente_por_cpf(cpf)
             if paciente_existente:
-                paciente_id = paciente_existente['id']
-                if PacienteController._vinculo_existe(paciente_id, clinica_id):
-                    return {"sucesso": False, "mensagem": "Paciente já cadastrado nesta clínica."}
-
-                if not PacienteController._criar_vinculo_clinica(paciente_id, clinica_id):
-                    return {"sucesso": False, "mensagem": "Erro ao vincular paciente à clínica."}
-
-                return {
-                    "sucesso": True,
-                    "id": paciente_id,
-                    "mensagem": "Paciente existente vinculado à clínica com sucesso."
-                }
+                return {"sucesso": False, "mensagem": "Paciente já cadastrado."}
 
             conn = get_connection()
             cursor = conn.cursor()
@@ -149,9 +132,6 @@ class PacienteController:
 
             paciente_id = cursor.lastrowid
             conn.commit()
-
-            if not PacienteController._criar_vinculo_clinica(paciente_id, clinica_id):
-                return {"sucesso": False, "mensagem": "Paciente criado, mas falha ao vincular à clínica."}
 
             return {"sucesso": True, "id": paciente_id, "mensagem": "Paciente cadastrado com sucesso."}
 
