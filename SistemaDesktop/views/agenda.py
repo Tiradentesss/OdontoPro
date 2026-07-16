@@ -269,6 +269,128 @@ class MonthlyDatePickerPopup(ctk.CTkToplevel):
         self.destroy()
 
 
+class HourSelectionPopup(ctk.CTkToplevel):
+    def __init__(self, master, target_widget, hora_var, horarios, on_select):
+        super().__init__(master)
+        self.withdraw()
+        self.title("")
+        self.overrideredirect(True)
+        self.configure(fg_color=COLORS['card'])
+        self.attributes('-topmost', True)
+        self.resizable(False, False)
+        self.transient(master)
+
+        self.master_window = master
+        self.target_widget = target_widget
+        self.hora_var = hora_var
+        self.horarios = horarios or []
+        self.on_select = on_select
+
+        self._build_ui()
+        self._position_popup()
+        self.deiconify()
+        self.lift()
+        self.focus_set()
+
+        self.bind("<Escape>", lambda _event: self.destroy())
+        self.master_window.bind("<Button-1>", self._handle_global_click, add='+')
+        self.target_widget.bind("<Configure>", self._handle_target_configure, add='+')
+
+    def _handle_target_configure(self, _event=None):
+        self.after(10, self._position_popup)
+
+    def _handle_global_click(self, event):
+        if not self.winfo_exists():
+            return
+        try:
+            widget = event.widget
+            if widget is self.target_widget or self.target_widget.winfo_containing(event.x_root, event.y_root) is self.target_widget:
+                return
+            if self.winfo_containing(event.x_root, event.y_root) is self:
+                return
+            self.destroy()
+        except Exception:
+            pass
+
+    def _position_popup(self):
+        if not self.winfo_exists():
+            return
+        try:
+            self.update_idletasks()
+            popup_width = self.winfo_reqwidth()
+            popup_height = self.winfo_reqheight()
+            field_x = self.target_widget.winfo_rootx()
+            field_y = self.target_widget.winfo_rooty()
+            field_height = self.target_widget.winfo_height()
+
+            parent_x = self.master_window.winfo_rootx()
+            parent_y = self.master_window.winfo_rooty()
+            parent_width = self.master_window.winfo_width()
+            parent_height = self.master_window.winfo_height()
+
+            below_y = field_y + field_height + 4
+            above_y = field_y - popup_height - 4
+
+            if below_y + popup_height <= parent_y + parent_height:
+                y = below_y
+            elif above_y >= parent_y:
+                y = above_y
+            else:
+                y = max(parent_y, min(below_y, parent_y + parent_height - popup_height))
+
+            x = max(parent_x, min(field_x, parent_x + parent_width - popup_width))
+            y = max(parent_y, min(y, parent_y + parent_height - popup_height))
+
+            self.geometry(f"+{x}+{y}")
+        except Exception:
+            self.geometry("+0+0")
+
+    def _build_ui(self):
+        card = ctk.CTkFrame(
+            self,
+            fg_color=COLORS['card'],
+            corner_radius=12,
+            border_width=1,
+            border_color=COLORS['border'],
+        )
+        card.pack(fill='both', expand=True, padx=8, pady=8)
+
+        if not self.horarios:
+            ctk.CTkLabel(
+                card,
+                text='Nenhum horário disponível para esta data.',
+                font=font('text'),
+                text_color=COLORS['text_muted'],
+                justify='left',
+            ).pack(anchor='w', padx=12, pady=12)
+            return
+
+        buttons_frame = ctk.CTkFrame(card, fg_color='transparent')
+        buttons_frame.pack(padx=10, pady=10)
+
+        for idx, horario in enumerate(self.horarios):
+            btn = ctk.CTkButton(
+                buttons_frame,
+                text=horario,
+                width=78,
+                height=36,
+                corner_radius=8,
+                fg_color='transparent',
+                border_width=1,
+                border_color=COLORS['border'],
+                text_color=COLORS['text_primary'],
+                hover_color=COLORS['primary_soft'],
+                command=lambda value=horario: self._select_horario(value),
+            )
+            btn.grid(row=idx // 4, column=idx % 4, padx=4, pady=4)
+
+    def _select_horario(self, horario):
+        self.hora_var.set(horario)
+        if self.on_select:
+            self.on_select(horario)
+        self.destroy()
+
+
 class Agenda(BaseScreen):
     def __init__(self, parent, clinica_id=None):
         super().__init__(parent, 'Agenda')
@@ -1687,7 +1809,12 @@ class Agenda(BaseScreen):
                 pass
             hora_var.set("")
             try:
-                hora_combo.configure(values=[], state='disabled')
+                hora_entry.configure(state='disabled')
+            except Exception:
+                pass
+            try:
+                if hora_popup is not None and hora_popup.winfo_exists():
+                    hora_popup.destroy()
             except Exception:
                 pass
             info_label.configure(text="")
@@ -1704,10 +1831,6 @@ class Agenda(BaseScreen):
             data_var.set("")
             hora_var.set("")
             hora_selecionada['value'] = None
-            try:
-                hora_combo.configure(values=[], state='disabled')
-            except Exception:
-                pass
 
             agenda = cache_agenda.get(medico_id)
             if not agenda:
@@ -1741,7 +1864,6 @@ class Agenda(BaseScreen):
             limpar_data_e_hora()
             data_var.set("")
             data_entry.configure(state='disabled')
-            hora_combo.configure(values=[], state='disabled')
 
             def _task():
                 start_ms = time.perf_counter()
@@ -1842,20 +1964,35 @@ class Agenda(BaseScreen):
         ).pack(side='left')
         
         hora_var = ctk.StringVar(value="")
-        hora_combo = ctk.CTkComboBox(
+        hora_popup = None
+
+        def abrir_popup_horas(*args):
+            nonlocal hora_popup
+            if not data_var.get().strip():
+                return
+            if hora_popup is not None and hora_popup.winfo_exists():
+                hora_popup.destroy()
+            hora_popup = HourSelectionPopup(
+                dialogo,
+                target_widget=hora_entry,
+                hora_var=hora_var,
+                horarios=horarios_disponiveis,
+                on_select=lambda value: atualizar_hora_selecionada(),
+            )
+
+        hora_entry = ctk.CTkEntry(
             canvas_frame,
-            variable=hora_var,
-            values=[],
+            textvariable=hora_var,
             height=40,
             fg_color=COLORS['input_bg'],
             border_color=COLORS['border'],
-            button_color=COLORS['primary'],
-            button_hover_color=COLORS['primary_dark'],
+            text_color=COLORS['text_primary'],
             corner_radius=8,
             state='disabled',
-            command=lambda v=None: atualizar_hora_selecionada()
         )
-        hora_combo.pack(fill='x', padx=15, pady=(0, 5))
+        hora_entry.pack(fill='x', padx=15, pady=(0, 5))
+        hora_entry.bind('<Button-1>', abrir_popup_horas)
+        hora_entry.bind('<Return>', abrir_popup_horas)
         
         # Info de horários ocupados
         info_label = ctk.CTkLabel(
@@ -1870,21 +2007,15 @@ class Agenda(BaseScreen):
         def atualizar_horarios_disponiveis(*args):
             medico_id = medico_id_selecionado.get('id')
             if not medico_id:
-                try:
-                    hora_combo.configure(values=[], state='disabled')
-                except Exception:
-                    pass
                 horarios_disponiveis.clear()
+                hora_var.set("")
                 hora_selecionada['value'] = None
                 return
 
             raw_data = data_var.get().strip()
             if not raw_data:
-                try:
-                    hora_combo.configure(values=[], state='disabled')
-                except Exception:
-                    pass
                 horarios_disponiveis.clear()
+                hora_var.set("")
                 hora_selecionada['value'] = None
                 return
 
@@ -1901,13 +2032,13 @@ class Agenda(BaseScreen):
 
             if not horarios:
                 try:
-                    hora_combo.configure(values=[], state='disabled')
+                    hora_entry.configure(state='normal')
                 except Exception:
                     pass
                 return
 
             try:
-                hora_combo.configure(values=horarios, state='normal')
+                hora_entry.configure(state='normal')
             except Exception:
                 pass
 
