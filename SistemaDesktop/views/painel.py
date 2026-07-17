@@ -107,7 +107,7 @@ class Painel(BaseScreen):
                 font=ctk.CTkFont(family="Segoe UI", size=12),
                 text_color=self.colors['text_secondary']
             ).pack(anchor="w")
-            
+
         return card
 
     def _navegar_para(self, nome_tela):
@@ -116,11 +116,8 @@ class Painel(BaseScreen):
             app.show_frame(nome_tela)
 
     def _criar_botao_ir_para(self, parent, destino):
-        footer = ctk.CTkFrame(parent, fg_color="transparent")
-        footer.pack(fill="x", padx=20, pady=(0, 20))
-
         botao = ctk.CTkButton(
-            footer,
+            parent,
             text="Ir para",
             width=90,
             height=30,
@@ -133,7 +130,7 @@ class Painel(BaseScreen):
             cursor="hand2",
             command=lambda: self._navegar_para(destino)
         )
-        botao.pack(side="right")
+        botao.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)
         return botao
 
     def _render_proximas_consultas(self, row, col):
