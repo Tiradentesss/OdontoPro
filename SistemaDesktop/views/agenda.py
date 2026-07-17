@@ -512,6 +512,11 @@ class Agenda(BaseScreen):
         print(f"[Agenda] Filtros aplicados. Chamando refresh_data()")
         self.refresh_data()
 
+    def _on_filtro_selected(self, var_name, value):
+        print(f"[Agenda] _on_filtro_selected: {var_name} = {value}")
+        getattr(self, var_name).set(value)
+        self.aplicar_filtros()
+
     def _limpar_filtros(self):
         self.data_var.set('Todos')
         self.medico_var.set('Todos')
@@ -1043,7 +1048,8 @@ class Agenda(BaseScreen):
                 button_color=COLORS['primary'],
                 button_hover_color=COLORS['primary_dark'],
                 corner_radius=8,
-                variable=getattr(self, var_name)
+                variable=getattr(self, var_name),
+                command=lambda value, var_name=var_name: self._on_filtro_selected(var_name, value)
             )
             combo.pack(fill='x', padx=10, pady=(6, 10))
 

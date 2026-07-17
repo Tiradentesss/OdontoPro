@@ -24,10 +24,7 @@ class ConsultaController:
             params.append(medico)
 
         if especialidade and especialidade not in ['Todos', 'Especialidade']:
-            where.append("EXISTS ("
-                         "SELECT 1 FROM odontoPro_medico_especialidades me "
-                         "JOIN odontoPro_especialidade e ON me.especialidade_id = e.id "
-                         "WHERE me.medico_id = c.medico_id AND LOWER(e.nome) = %s)")
+            where.append("LOWER(e.nome) = %s")
             params.append(especialidade.lower())
 
         return " AND ".join(where), params
@@ -95,6 +92,7 @@ class ConsultaController:
                 SELECT COUNT(*)
                 FROM odontoPro_consulta c
                 LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                LEFT JOIN odontoPro_especialidade e ON e.id = c.especialidade_id
                 WHERE {where_clause}
             """, tuple(params))
 
@@ -123,8 +121,7 @@ class ConsultaController:
                 SELECT DISTINCT DATE(c.data_hora), m.nome, e.nome AS especialidade
                 FROM odontoPro_consulta c
                 LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
-                LEFT JOIN odontoPro_medico_especialidades me ON me.medico_id = m.id
-                LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                LEFT JOIN odontoPro_especialidade e ON e.id = c.especialidade_id
                 WHERE c.clinica_id = %s
                 ORDER BY DATE(c.data_hora) DESC, m.nome ASC, e.nome ASC
             """, (clinica_id,))
@@ -198,6 +195,7 @@ class ConsultaController:
                 SELECT CONCAT(COUNT(*), '-', IFNULL(MAX(c.id), 0), '-', IFNULL(MIN(c.id), 0), '-', COALESCE(MAX(UNIX_TIMESTAMP(c.data_hora)), 0))
                 FROM odontoPro_consulta c
                 LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                LEFT JOIN odontoPro_especialidade e ON e.id = c.especialidade_id
                 WHERE {where_clause}
             """, tuple(params))
 
