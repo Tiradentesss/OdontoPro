@@ -646,8 +646,7 @@ class Permissoes(BaseScreen):
                 self.account_status_switch = ctk.CTkSwitch(
                     card, text="", width=40, height=22,
                     progress_color=COLORS["primary"],
-                    button_color=COLORS["card"],
-                    button_hover_color=COLORS["hover"],
+                    button_color="#F1F5F9",
                     command=self.sync_account_status
                 )
                 self.account_status_switch.grid(row=0, column=2, rowspan=2, padx=(5, 15), sticky="e")
@@ -655,8 +654,7 @@ class Permissoes(BaseScreen):
                 sw = ctk.CTkSwitch(
                     card, text="", width=40, height=22,
                     progress_color=COLORS["primary"],
-                    button_color=COLORS["card"],
-                    button_hover_color=COLORS["hover"],
+                    button_color="#F1F5F9",
                     command=lambda p=perm_name: self.sync_permission(p)
                 )
                 sw.grid(row=0, column=2, rowspan=2, padx=(5, 15), sticky="e")

@@ -4,6 +4,7 @@ import customtkinter as ctk
 from controllers.paciente_controller import PacienteController
 from controllers.medico_controller import MedicoController
 from controllers.gerenciamento_controller import GerenciamentoController
+from controllers.consulta_controller import ConsultaController
 from services.campos_mascarados import GerenciadorMascaras
 from services.endereco_service import EnderecoService
 from services.localidades_service import LocalidadesService
@@ -562,9 +563,20 @@ class Cadastro(BaseScreen):
             text_color=COLORS["text_secondary"]
         ).pack(anchor="w", pady=(0, 3))
         
+        self.especialidade_map = {self.ESPECIALIDADES_ODONTOLOGIA[0]: None}
+        especialidade_valores = self.ESPECIALIDADES_ODONTOLOGIA.copy()
+        try:
+            especialidades_db = ConsultaController.listar_especialidades()
+            if especialidades_db:
+                especialidade_valores = [self.ESPECIALIDADES_ODONTOLOGIA[0]] + [nome for _, nome in especialidades_db]
+                self.especialidade_map = {nome: especialidade_id for especialidade_id, nome in especialidades_db}
+                self.especialidade_map[self.ESPECIALIDADES_ODONTOLOGIA[0]] = None
+        except Exception:
+            pass
+        
         self.especialidade_medico = ctk.CTkOptionMenu(
             especialidade_container,
-            values=self.ESPECIALIDADES_ODONTOLOGIA,
+            values=especialidade_valores,
             height=44,
             fg_color=COLORS["input_bg"], 
             button_color=COLORS["border"], 
@@ -1097,7 +1109,7 @@ class Cadastro(BaseScreen):
         """Valida e salva médico no banco de dados"""
         try:
             nome = entries[0].get().strip()
-            email = entries[1].get().strip()
+            email = entries[2].get().strip()
             cro = self.cro_entry.get().strip()
             telefone = self.mascaras_profissional.obter_valor_numerico().get('telefone_medico', '').strip()
             senha = self.senha_entry.get().strip()
@@ -1136,6 +1148,11 @@ class Cadastro(BaseScreen):
             if especialidade == "Selecione uma especialidade":
                 self._mostrar_mensagem("Por favor, selecione uma especialidade", sucesso=False)
                 return
+
+            especialidade_id = self.especialidade_map.get(especialidade)
+            if not especialidade_id:
+                self._mostrar_mensagem("Por favor, selecione uma especialidade válida", sucesso=False)
+                return
             
             if senha != confirma_senha:
                 self._mostrar_mensagem("❌ As senhas não coincidem", sucesso=False)
@@ -1151,7 +1168,7 @@ class Cadastro(BaseScreen):
                 cro=cro,
                 clinica_id=self.clinica_id,
                 senha=senha,
-                especialidades=especialidade
+                especialidades=[especialidade_id]
             )
             
             if resultado["sucesso"]:
