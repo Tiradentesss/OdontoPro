@@ -675,6 +675,9 @@ class Permissoes(BaseScreen):
 
         self.toggle_switches_state("disabled")
 
+    def _is_self_account_selected(self):
+        return bool(self.selected_admin_id is not None and self.selected_admin_id == self.usuario_logado_id)
+
     def on_admin_click(self, frame, admin_name):
         self.selected_admin_name = admin_name
         self.selected_admin_id = self.admins_data[admin_name].get("id")
@@ -692,8 +695,19 @@ class Permissoes(BaseScreen):
         else:
             self.account_status_switch.deselect()
 
+        if self._is_self_account_selected():
+            self.account_status_switch.configure(state="disabled")
+
     def sync_account_status(self):
         if self.selected_admin_name:
+            if self._is_self_account_selected():
+                current_status = self.admins_data[self.selected_admin_name].get("status", "Ativo")
+                if current_status == "Ativo":
+                    self.account_status_switch.select()
+                else:
+                    self.account_status_switch.deselect()
+                return
+
             is_active = bool(self.account_status_switch.get())
             self.admins_data[self.selected_admin_name]["status"] = "Ativo" if is_active else "Inativo"
 
@@ -705,7 +719,11 @@ class Permissoes(BaseScreen):
     def toggle_switches_state(self, state):
         for sw in self.switch_widgets.values():
             sw.configure(state=state)
-        self.account_status_switch.configure(state=state)
+
+        if self._is_self_account_selected():
+            self.account_status_switch.configure(state="disabled")
+        else:
+            self.account_status_switch.configure(state=state)
 
     def save_to_database(self):
         if not self.selected_admin_id:
@@ -713,10 +731,10 @@ class Permissoes(BaseScreen):
             return
 
         novo_status = "Ativo" if self.account_status_switch.get() else "Inativo"
-        if self.selected_admin_id == self.usuario_logado_id and novo_status == "Inativo":
+        if self._is_self_account_selected() and novo_status == "Inativo":
             messagebox.showerror(
                 "Erro",
-                "Você não pode desativar sua própria conta. Peça para outro administrador realizar essa ação, caso seja realmente necessário."
+                "Não é permitido desativar a própria conta."
             )
             return
 

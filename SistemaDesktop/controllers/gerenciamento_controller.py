@@ -221,7 +221,7 @@ class GerenciamentoController:
         if current_user_id is not None and current_user_id == gerente_id:
             return {
                 "sucesso": False,
-                "mensagem": "Você não pode desativar sua própria conta. Peça para outro administrador realizar essa ação, caso seja realmente necessário."
+                "mensagem": "Não é permitido desativar a própria conta."
             }
 
         conn = None
