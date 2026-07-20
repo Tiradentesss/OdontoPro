@@ -4,6 +4,11 @@ from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 from .base import BaseScreen
 from .theme import COLORS
+import threading
+
+
+from controllers.medico_controller import MedicoController
+from services.medico_service import MedicoService
 
 
 class MedicosDisponibilidadeScreen(ctk.CTkFrame):
@@ -44,7 +49,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             "selected_row": COLORS["selected_row"]
         }
 
-        self.medicos = self._mock_medicos()
+        # carregar médicos reais da base de dados (lazy / async)
+        self.medicos = []
+        self._medicos_cache = None
+        self._loading_medicos = False
+        # iniciar carregamento assíncrono
+        self.load_medicos_async()
         self.slot_buttons = {}
 
         self._build_ui()
@@ -73,6 +83,51 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 "status": "Ativo"
             },
         ]
+
+    def load_medicos_async(self):
+        """Inicia thread para carregar lista mínima de médicos sem bloquear a UI."""
+        if self._loading_medicos:
+            return
+        self._loading_medicos = True
+
+        def _worker():
+            try:
+                medicos_bd = MedicoController.listar_medicos(self.clinica_id)
+                medicos = []
+                if medicos_bd:
+                    for m in medicos_bd:
+                        try:
+                            medico_id = m.get('id') if isinstance(m, dict) else m[0]
+                            nome = m.get('nome') if isinstance(m, dict) else (m[1] if len(m) > 1 else '')
+                            email = m.get('email') if isinstance(m, dict) else ''
+                            cro = m.get('crm_cro') if isinstance(m, dict) else ''
+                            status = 'Ativo' if (m.get('ativo') if isinstance(m, dict) else 1) else 'Inativo'
+                            medicos.append({
+                                'id': medico_id,
+                                'nome': nome,
+                                'email': email,
+                                'especialidade': '',  # carregada somente ao selecionar
+                                'cro': cro,
+                                'status': status
+                            })
+                        except Exception:
+                            continue
+                # atualizar cache e UI no thread principal
+                def _finish():
+                    self._medicos_cache = medicos
+                    self.medicos = medicos
+                    self._loading_medicos = False
+                    self._render_medicos()
+
+                self.after(0, _finish)
+            except Exception:
+                def _fail():
+                    self._loading_medicos = False
+                    self.medicos = []
+                    self._render_medicos()
+                self.after(0, _fail)
+
+        threading.Thread(target=_worker, daemon=True).start()
 
     def _build_ui(self):
         self.pack(fill="both", expand=True)
@@ -145,6 +200,15 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.pagination_buttons = {}
 
         self._render_medicos()
+        # Recarregar médicos sempre que o frame ficar visível
+        try:
+            self.bind('<Visibility>', lambda e: self._on_visible())
+        except Exception:
+            pass
+
+    def _on_visible(self):
+        # Quando a tela ficar visível, recarregar dados do banco
+        self.load_medicos_async()
 
     def _render_medicos(self):
         for widget in self.medicos_list.winfo_children():
@@ -178,9 +242,14 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self._update_pagination_tabs(total_paginas)
 
         if not medicos_pagina:
+            if self._loading_medicos:
+                msg = "Carregando médicos..."
+            else:
+                msg = "Nenhum médico encontrado." if filtrados else "Nenhum médico cadastrado."
+
             empty = ctk.CTkLabel(
                 self.medicos_list,
-                text="Nenhum médico encontrado." if filtrados else "Nenhum médico cadastrado.",
+                text=msg,
                 text_color=self.colors["muted"],
                 font=ctk.CTkFont(size=14)
             )
@@ -702,10 +771,34 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
     def _select_medico(self, medico):
         self.selected_medico = medico
-        self.right_subtitle.configure(
-            text=f"Configurando agenda de {medico['nome']}."
-        )
+        self.right_subtitle.configure(text=f"Carregando disponibilidade de {medico['nome']}...")
         self._render_medicos()
+        # carregar detalhes (especialidade, disponibilidade) em background
+        self.load_medico_details_async(medico)
+
+    def load_medico_details_async(self, medico):
+        """Carrega detalhes de um médico (especialidade principal + disponibilidade) sem travar a UI."""
+        def _worker():
+            try:
+                espec = MedicoService.obter_especialidade_principal(medico['id']) or ''
+
+                def _finish():
+                    try:
+                        medico['especialidade'] = espec
+                        self.selected_medico = medico
+                        self.right_subtitle.configure(text=f"Configurando agenda de {medico['nome']}.")
+                        self._render_medicos()
+                        # TODO: carregar disponibilidade, bloqueios, férias aqui (ainda não implementado)
+                    except Exception:
+                        pass
+
+                self.after(0, _finish)
+            except Exception:
+                def _fail():
+                    self.right_subtitle.configure(text=f"Erro ao carregar detalhes de {medico['nome']}")
+                self.after(0, _fail)
+
+        threading.Thread(target=_worker, daemon=True).start()
 
     def _save_disponibilidade(self):
         if not self.selected_medico:
@@ -808,5 +901,13 @@ class Gerenciamento(BaseScreen):
         if hasattr(self, 'content_card'):
             self.content_card.pack_forget()
         
-        screen = MedicosDisponibilidadeScreen(self, clinica_id=clinica_id)
-        screen.pack(fill="both", expand=True)
+        self.screen = MedicosDisponibilidadeScreen(self, clinica_id=clinica_id)
+        self.screen.pack(fill="both", expand=True)
+
+    def refresh(self):
+        """Interface pública para forçar recarregamento da lista de médicos."""
+        try:
+            if hasattr(self, 'screen') and self.screen:
+                self.screen.load_medicos_async()
+        except Exception:
+            pass

@@ -97,10 +97,13 @@ class MedicoController:
             cursor = conn.cursor(dictionary=True)
 
             cursor.execute("""
-                SELECT * FROM odontoPro_medico WHERE clinica_id = %s
+                SELECT id, nome, email, crm_cro, ativo
+                FROM odontoPro_medico
+                WHERE clinica_id = %s
+                ORDER BY nome ASC
             """, (clinica_id,))
 
-            return cursor.fetchall()
+            return cursor.fetchall() or []
 
         except Exception as e:
             print(f"Erro ao listar médicos: {e}")
@@ -111,6 +114,9 @@ class MedicoController:
                 cursor.close()
             if conn:
                 conn.close()
+
+    # Nota: manter apenas um método otimizado para listagem mínima (acima). Se necessário,
+    # outros métodos podem reutilizar `listar_medicos` ou `obter_medico_por_id`.
 
     @staticmethod
     def obter_medico_por_id(medico_id):
