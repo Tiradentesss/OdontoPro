@@ -216,26 +216,7 @@ class CidadeSearchComboBox(ctk.CTkFrame):
 
 
 class Cadastro(BaseScreen):
-    # Especialidades de Odontologia
-    ESPECIALIDADES_ODONTOLOGIA = [
-        "Selecione uma especialidade",
-        "Odontologia Geral",
-        "Ortodontia",
-        "Endodontia",
-        "Periodontia",
-        "Implantodontia",
-        "Odontopediatria",
-        "Prótese Dentária",
-        "Cirurgia Oral",
-        "Patologia Oral",
-        "Estética Dental",
-        "Radiologia Odontológica",
-        "Odontologia Forense",
-        "Saúde Coletiva",
-        "Traumatologia",
-        "Dentística",
-        "Halitose"
-    ]
+    ESPECIALIDADE_PLACEHOLDER = "Selecione uma especialidade"
 
     def __init__(self, parent, clinica_id=None):
         super().__init__(parent, "Cadastro")
@@ -563,14 +544,15 @@ class Cadastro(BaseScreen):
             text_color=COLORS["text_secondary"]
         ).pack(anchor="w", pady=(0, 3))
         
-        self.especialidade_map = {self.ESPECIALIDADES_ODONTOLOGIA[0]: None}
-        especialidade_valores = self.ESPECIALIDADES_ODONTOLOGIA.copy()
+        self.especialidade_map = {self.ESPECIALIDADE_PLACEHOLDER: None}
+        especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER]
         try:
             especialidades_db = ConsultaController.listar_especialidades()
-            if especialidades_db:
-                especialidade_valores = [self.ESPECIALIDADES_ODONTOLOGIA[0]] + [nome for _, nome in especialidades_db]
-                self.especialidade_map = {nome: especialidade_id for especialidade_id, nome in especialidades_db}
-                self.especialidade_map[self.ESPECIALIDADES_ODONTOLOGIA[0]] = None
+            especialidades = ConsultaController.preparar_especialidades_para_combo(especialidades_db)
+            if especialidades:
+                especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER] + [nome for _, nome in especialidades]
+                self.especialidade_map = {nome: especialidade_id for especialidade_id, nome in especialidades}
+                self.especialidade_map[self.ESPECIALIDADE_PLACEHOLDER] = None
         except Exception:
             pass
         
@@ -586,7 +568,7 @@ class Cadastro(BaseScreen):
             dropdown_text_color=COLORS["text"],
             dropdown_font=font("text")
         )
-        self.especialidade_medico.set(self.ESPECIALIDADES_ODONTOLOGIA[0])
+        self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
         self.especialidade_medico.pack(fill="x")
 
         self._ao_mudar_tipo_profissional("Médico")
@@ -1145,13 +1127,13 @@ class Cadastro(BaseScreen):
                 self._mostrar_mensagem("❌ Senha é obrigatória!", sucesso=False)
                 return
             
-            if especialidade == "Selecione uma especialidade":
-                self._mostrar_mensagem("Por favor, selecione uma especialidade", sucesso=False)
+            if especialidade == self.ESPECIALIDADE_PLACEHOLDER:
+                self._mostrar_mensagem("Selecione uma especialidade.", sucesso=False)
                 return
 
             especialidade_id = self.especialidade_map.get(especialidade)
-            if not especialidade_id:
-                self._mostrar_mensagem("Por favor, selecione uma especialidade válida", sucesso=False)
+            if especialidade_id is None:
+                self._mostrar_mensagem("Selecione uma especialidade.", sucesso=False)
                 return
             
             if senha != confirma_senha:
@@ -1176,7 +1158,7 @@ class Cadastro(BaseScreen):
                 self._limpar_campos([entries[0], entries[1]])
                 self._limpar_campos([self.cro_entry, self.telefone_entry])
                 self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
-                self.especialidade_medico.set(self.ESPECIALIDADES_ODONTOLOGIA[0])
+                self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:
