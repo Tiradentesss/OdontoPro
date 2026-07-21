@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import {View, Text, StyleSheet, Alert, TouchableOpacity, ImageBackground,} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, StatusBar } from 'react-native';
 import CustomInput2 from '../components/CustomInput2';
 import CustomButton from '../components/CustomButton4';
 
-export default function ({ navigation }) {
+export default function ForgotPasswordP({ navigation }) {
   const [email, setEmail] = useState('');
 
   const handleRegister = () => {
@@ -18,97 +17,114 @@ export default function ({ navigation }) {
       return;
     }
 
-    navigation.navigate('CheckEmailP', {email,});
+    navigation.navigate('CheckEmailP', { email });
   };
 
   return (
-    <LinearGradient 
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        colors={['#0a247c', '#1BC4EB']}
-        style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f9ff" />
+      <View style={styles.bgDecor}>
+        <View style={[styles.circle, styles.circleLeft]} />
+        <View style={[styles.circle, styles.circleRight]} />
+      </View>
+
+      <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backText}>‹</Text>
         </TouchableOpacity>
-
-        <View style={styles.headerText}>
-          <Text style={styles.pageTitle} numberOfLines={1}>Esqueceu a sua senha?</Text>
-          <Text style={styles.description}>
-            Por favor, insira seu e-mail para redefinir a senha
-          </Text>
-        </View>
       </View>
-      <CustomInput2
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
 
-      <CustomButton title="Redefinir Senha" onPress={handleRegister} />
-    </LinearGradient>
+      <Text style={styles.pageTitle}>Esqueceu a sua senha?</Text>
+      <Text style={styles.description}>Digite seu e-mail institucional para redefinir sua senha.</Text>
+
+      <View style={styles.form}>
+        <Text style={styles.label}>E-mail Institucional</Text>
+        <CustomInput2
+          placeholder="exemplo@clinicadental.com"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
+      </View>
+
+      <CustomButton title="Redefinir Senha" onPress={handleRegister} style={styles.primaryButton} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    backgroundColor: '#f5f7fa',
+    backgroundColor: '#f8f9ff',
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
-  header: {
-    marginTop: 40,
-    marginBottom: 24,
+  bgDecor: {
+    position: 'absolute',
+    inset: 0,
+  },
+  circle: {
+    position: 'absolute',
+    borderRadius: 999,
+    opacity: 0.28,
+  },
+  circleLeft: {
+    width: 384,
+    height: 384,
+    backgroundColor: 'rgba(27,195,234,0.12)',
+    top: -96,
+    left: -96,
+  },
+  circleRight: {
+    width: 320,
+    height: 320,
+    backgroundColor: 'rgba(27,195,234,0.12)',
+    bottom: -120,
+    right: -120,
+  },
+  headerRow: {
+    marginTop: 32,
+    marginBottom: 22,
     flexDirection: 'row',
     alignItems: 'center',
   },
   backButton: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 12,
+    backgroundColor: 'rgba(27,195,234,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: -20,
-    marginBottom: 90,
   },
   backText: {
-    fontSize: 34,
-    color: '#fff',
-    lineHeight: 26,
-    marginBottom: 4,
-  },
-  headerText: {
-    flex: 1,
+    color: '#1bc3ea',
+    fontSize: 28,
+    lineHeight: 32,
   },
   pageTitle: {
-    marginTop: 70,
     fontSize: 28,
     fontWeight: '700',
-    color: '#fff',
+    color: '#0b1c30',
+    marginTop: 24,
+    marginBottom: 8,
   },
   description: {
-    color: '#fff',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  or: {
-    textAlign: 'center',
-    marginVertical: 16,
-    color: '#888',
-    fontSize: 14,
-  },
-  socialButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  socialText: {
+    color: '#5b6b8f',
     fontSize: 15,
-    color: '#24325f',
+    lineHeight: 22,
+    marginBottom: 30,
+    maxWidth: 360,
+  },
+  form: {
+    flex: 1,
+  },
+  label: {
+    marginBottom: 10,
+    color: '#5b6b8f',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  primaryButton: {
+    marginTop: 0,
   },
 });
