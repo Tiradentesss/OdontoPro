@@ -340,6 +340,11 @@ class App(ctk.CTk):
 
         self.current_frame = self.frames[name]
         self.current_frame_name = name
+        if hasattr(self.current_frame, "refresh"):
+            try:
+                self.current_frame.refresh()
+            except Exception as e:
+                print(f"Erro ao atualizar frame {name}: {e}")
         self.current_frame.pack(expand=True, fill="both")
         self.update_active_button(name)
 

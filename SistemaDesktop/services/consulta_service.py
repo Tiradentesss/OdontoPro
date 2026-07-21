@@ -6,6 +6,7 @@ Validações, verificação de conflitos e transações.
 from config.database import get_connection
 from datetime import datetime, date, timedelta
 import mysql.connector
+from services.query_logger import timed_sql
 
 
 class ConsultaService:
@@ -86,8 +87,11 @@ class ConsultaService:
                     AND status != 'cancelada'
             """
 
-            cursor.execute(query, (medico_id, data_consulta, hora_consulta))
-            resultado = cursor.fetchone()
+            def _exec():
+                cursor.execute(query, (medico_id, data_consulta, hora_consulta))
+                return cursor.fetchone()
+
+            resultado = timed_sql("verificar_horario_disponivel", _exec, sql=query)
             total_conflitos = resultado[0] if resultado else 0
 
             if total_conflitos > 0:
@@ -136,8 +140,11 @@ class ConsultaService:
                 ORDER BY hora ASC
             """
 
-            cursor.execute(query, (medico_id, data_consulta))
-            resultados = cursor.fetchall()
+            def _exec():
+                cursor.execute(query, (medico_id, data_consulta))
+                return cursor.fetchall()
+
+            resultados = timed_sql("listar_horarios_ocupados_no_dia", _exec, sql=query) or []
             
             horarios = [r[0] for r in resultados] if resultados else []
             return horarios
@@ -230,13 +237,15 @@ class ConsultaService:
                 conn = get_connection()
                 internal_conn = True
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT dia, TIME_FORMAT(hora_inicio, '%H:%i'), TIME_FORMAT(hora_fim, '%H:%i')
-                FROM odontoPro_medicohorario
-                WHERE medico_id = %s
-            """, (medico_id,))
+            def _exec():
+                cursor.execute("""
+                    SELECT dia, TIME_FORMAT(hora_inicio, '%H:%i'), TIME_FORMAT(hora_fim, '%H:%i')
+                    FROM odontoPro_medicohorario
+                    WHERE medico_id = %s
+                """, (medico_id,))
+                return cursor.fetchall()
 
-            resultados = cursor.fetchall() or []
+            resultados = timed_sql("_listar_horarios_abertos_do_medico", _exec, sql="SELECT dia, hora_inicio, hora_fim FROM odontoPro_medicohorario WHERE medico_id = %s") or []
             horarios = {}
             for dia, inicio, fim in resultados:
                 weekday = ConsultaService._converter_dia_para_weekday(dia)
@@ -262,14 +271,16 @@ class ConsultaService:
                 conn = get_connection()
                 internal_conn = True
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT d.dia, TIME_FORMAT(h.hora_inicio, '%H:%i'), TIME_FORMAT(h.hora_fim, '%H:%i')
-                FROM odontoPro_horarioaberto h
-                JOIN odontoPro_diasemanadisponivel d ON d.id = h.dia_id
-                WHERE d.clinica_id = %s
-            """, (clinica_id,))
+            def _exec():
+                cursor.execute("""
+                    SELECT d.dia, TIME_FORMAT(h.hora_inicio, '%H:%i'), TIME_FORMAT(h.hora_fim, '%H:%i')
+                    FROM odontoPro_horarioaberto h
+                    JOIN odontoPro_diasemanadisponivel d ON d.id = h.dia_id
+                    WHERE d.clinica_id = %s
+                """, (clinica_id,))
+                return cursor.fetchall()
 
-            resultados = cursor.fetchall() or []
+            resultados = timed_sql("_listar_horarios_abertos_por_clinica", _exec, sql="SELECT d.dia, h.hora_inicio, h.hora_fim FROM odontoPro_horarioaberto JOIN odontoPro_diasemanadisponivel WHERE clinica_id = %s") or []
             horarios = {}
             for dia, inicio, fim in resultados:
                 weekday = ConsultaService._converter_dia_para_weekday(dia)
@@ -295,8 +306,11 @@ class ConsultaService:
                 conn = get_connection()
                 internal_conn = True
             cursor = conn.cursor()
-            cursor.execute("SELECT clinica_id FROM odontoPro_medico WHERE id = %s", (medico_id,))
-            resultado = cursor.fetchone()
+            def _exec():
+                cursor.execute("SELECT clinica_id FROM odontoPro_medico WHERE id = %s", (medico_id,))
+                return cursor.fetchone()
+
+            resultado = timed_sql("_obter_clinica_do_medico", _exec, sql="SELECT clinica_id FROM odontoPro_medico WHERE id = %s")
             return resultado[0] if resultado else None
         except Exception as e:
             print(f"[ConsultaService] Erro em _obter_clinica_do_medico: {e}")
@@ -402,16 +416,20 @@ class ConsultaService:
                 return {'datas': [], 'horarios_por_data': {}}
 
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT DATE(data_hora), TIME(data_hora)
-                FROM odontoPro_consulta
-                WHERE medico_id = %s
-                  AND status != 'cancelada'
-                  AND DATE(data_hora) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
-            """, (medico_id, dias_ahead))
+            def _exec():
+                cursor.execute('''
+                    SELECT DATE(data_hora), TIME(data_hora)
+                    FROM odontoPro_consulta
+                    WHERE medico_id = %s
+                      AND status != 'cancelada'
+                      AND DATE(data_hora) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
+                ''', (medico_id, dias_ahead))
+                return cursor.fetchall()
+
+            ocupados_rows = timed_sql("carregar_agenda_disponivel - buscar ocupados", _exec, sql="SELECT DATE(data_hora), TIME(data_hora) FROM odontoPro_consulta WHERE medico_id = %s AND DATE(data_hora) BETWEEN ...") or []
 
             ocupados_por_data = {}
-            for data_hora, hora in cursor.fetchall() or []:
+            for data_hora, hora in ocupados_rows or []:
                 if not data_hora or not hora:
                     continue
                 if hasattr(data_hora, 'strftime'):

@@ -1,4 +1,5 @@
 from config.database import get_connection
+from services.query_logger import timed_sql
 from models.data import LIMITE_CONSULTAS
 from services.paciente_service import PacienteService
 from services.medico_service import MedicoService
@@ -258,43 +259,40 @@ class ConsultaController:
                 conn = get_connection()
                 internal_conn = True
             cursor = conn.cursor()
-
+            # Tenta acessar tabela canônica de especialidades primeiro
             try:
-                cursor.execute("""
-                    SELECT id, nome
-                    FROM odontoPro_especialidade
-                    ORDER BY nome ASC
-                """)
-                especialidades = cursor.fetchall()
+                def _exec_main():
+                    sql = "SELECT id, nome FROM odontoPro_especialidade ORDER BY nome ASC"
+                    cursor.execute(sql)
+                    return cursor.fetchall()
+                especialidades = timed_sql("listar_especialidades - tabela direta", _exec_main, sql="SELECT id, nome FROM odontoPro_especialidade ORDER BY nome ASC")
                 if especialidades:
                     return especialidades
             except Exception:
                 pass
 
-            cursor.execute("""
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_schema = DATABASE()
-                  AND LOWER(table_name) LIKE '%especialidade%'
-                ORDER BY table_name
-            """)
-            tabelas = [row[0] for row in cursor.fetchall()]
+            # Se não existir, procurar tabelas que contenham 'especialidade' no nome
+            def _exec_tables():
+                sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND LOWER(table_name) LIKE '%especialidade%' ORDER BY table_name"
+                cursor.execute(sql)
+                return [row[0] for row in cursor.fetchall()]
+            tabelas = timed_sql("listar_especialidades - descobrir tabelas", _exec_tables, sql="information_schema.tables LIKE '%especialidade%'") or []
 
             for tabela in tabelas:
-                cursor.execute("""
-                    SELECT column_name
-                    FROM information_schema.columns
-                    WHERE table_schema = DATABASE()
-                      AND table_name = %s
-                """, (tabela,))
-                colunas = [row[0].lower() for row in cursor.fetchall()]
+                def _exec_cols():
+                    cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = %s", (tabela,))
+                    return cursor.fetchall()
+                cols = timed_sql(f"listar_especialidades - colunas {tabela}", _exec_cols, sql="information_schema.columns") or []
+                colunas = [row[0].lower() for row in cols]
 
                 coluna_id = next((col for col in ['id', 'codigo', 'especialidade_id'] if col in colunas), None)
                 coluna_nome = next((col for col in ['nome', 'name', 'descricao', 'descricao_especialidade', 'especialidade'] if col in colunas), None)
 
                 if coluna_id and coluna_nome:
-                    cursor.execute(f"SELECT `{coluna_id}`, `{coluna_nome}` FROM `{tabela}` ORDER BY `{coluna_nome}` ASC")
-                    return cursor.fetchall()
+                    def _exec_select():
+                        cursor.execute(f"SELECT `{coluna_id}`, `{coluna_nome}` FROM `{tabela}` ORDER BY `{coluna_nome}` ASC")
+                        return cursor.fetchall()
+                    return timed_sql(f"listar_especialidades - tabela {tabela}", _exec_select, sql=f"SELECT {coluna_id}, {coluna_nome} FROM {tabela}") or []
 
             return []
         except Exception:

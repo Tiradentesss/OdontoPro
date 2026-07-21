@@ -1159,16 +1159,13 @@ class Cadastro(BaseScreen):
                 self._limpar_campos([self.cro_entry, self.telefone_entry])
                 self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
                 self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
-                # Tentar atualizar a tela de Gerenciamento, se presente
-                try:
-                    root = self.winfo_toplevel()
-                    frames = getattr(root, 'frames', None)
-                    if frames and 'gerenciamento' in frames:
-                        gerenc = frames['gerenciamento']
-                        if hasattr(gerenc, 'refresh'):
-                            gerenc.refresh()
-                except Exception:
-                    pass
+
+                app = self.winfo_toplevel()
+                if hasattr(app, 'frames') and 'gerenciamento' in app.frames:
+                    try:
+                        app.frames['gerenciamento'].refresh()
+                    except Exception:
+                        pass
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:

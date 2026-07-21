@@ -2,6 +2,7 @@
 
 from config.database import get_connection
 import hashlib
+from services.query_logger import timed_sql, reset_query_count, get_query_count, inc_query_count
 
 
 class MedicoController:
@@ -92,18 +93,21 @@ class MedicoController:
         """
         conn = None
         cursor = None
+        conn = None
+        cursor = None
         try:
             conn = get_connection()
             cursor = conn.cursor(dictionary=True)
 
-            cursor.execute("""
-                SELECT id, nome, email, crm_cro, ativo
-                FROM odontoPro_medico
-                WHERE clinica_id = %s
-                ORDER BY nome ASC
-            """, (clinica_id,))
+            def _exec():
+                sql = ("SELECT id, nome, email, crm_cro, ativo"
+                       " FROM odontoPro_medico"
+                       " WHERE clinica_id = %s"
+                       " ORDER BY nome ASC")
+                cursor.execute(sql, (clinica_id,))
+                return cursor.fetchall() or []
 
-            return cursor.fetchall() or []
+            return timed_sql("Buscar médicos (listar_medicos)", _exec, sql="SELECT id, nome, email, crm_cro, ativo FROM odontoPro_medico WHERE clinica_id = %s ORDER BY nome ASC")
 
         except Exception as e:
             print(f"Erro ao listar médicos: {e}")
@@ -129,11 +133,12 @@ class MedicoController:
             conn = get_connection()
             cursor = conn.cursor(dictionary=True)
 
-            cursor.execute("""
-                SELECT * FROM odontoPro_medico WHERE id = %s
-            """, (medico_id,))
+            def _exec():
+                sql = "SELECT * FROM odontoPro_medico WHERE id = %s"
+                cursor.execute(sql, (medico_id,))
+                return cursor.fetchone()
 
-            return cursor.fetchone()
+            return timed_sql("obter_medico_por_id", _exec, sql="SELECT * FROM odontoPro_medico WHERE id = %s")
 
         except Exception as e:
             print(f"Erro ao obter médico: {e}")
@@ -156,13 +161,16 @@ class MedicoController:
             conn = get_connection()
             cursor = conn.cursor(dictionary=True)
 
-            cursor.execute("""
-                SELECT e.* FROM odontoPro_especialidade e
-                INNER JOIN odontoPro_medico_especialidades me ON e.id = me.especialidade_id
-                WHERE me.medico_id = %s
-            """, (medico_id,))
+            def _exec():
+                sql = (
+                    "SELECT e.* FROM odontoPro_especialidade e"
+                    " INNER JOIN odontoPro_medico_especialidades me ON e.id = me.especialidade_id"
+                    " WHERE me.medico_id = %s"
+                )
+                cursor.execute(sql, (medico_id,))
+                return cursor.fetchall()
 
-            return cursor.fetchall()
+            return timed_sql("obter_especialidades_medico", _exec, sql="SELECT e.* FROM odontoPro_especialidade e JOIN odontoPro_medico_especialidades me ON e.id = me.especialidade_id WHERE me.medico_id = %s")
 
         except Exception as e:
             print(f"Erro ao obter especialidades: {e}")

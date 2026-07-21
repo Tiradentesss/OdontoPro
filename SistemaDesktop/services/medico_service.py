@@ -4,6 +4,7 @@ Busca por clínica, especialidades e validações.
 """
 
 from config.database import get_connection
+from services.query_logger import timed_sql, inc_query_count
 
 
 class MedicoService:
@@ -26,24 +27,30 @@ class MedicoService:
             conn = get_connection()
             cursor = conn.cursor()
 
-            # Buscar médicos com suas especialidades
-            query = """
-                SELECT 
-                    m.id,
-                    m.nome,
-                    GROUP_CONCAT(e.nome SEPARATOR ', ') AS especialidades,
-                    GROUP_CONCAT(e.id SEPARATOR ',') AS especialidade_ids
-                FROM odontoPro_medico m
-                LEFT JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id
-                LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
-                WHERE m.clinica_id = %s AND m.ativo = 1
-                GROUP BY m.id, m.nome
-                ORDER BY m.nome ASC
-            """
+            # Buscar médicos com suas especialidades (usado por listagens mais completas)
+            def _exec():
+                query = """
+                    SELECT 
+                        m.id,
+                        m.nome,
+                        m.email,
+                        GROUP_CONCAT(e.nome SEPARATOR ', ') AS especialidades,
+                        GROUP_CONCAT(e.id SEPARATOR ',') AS especialidade_ids
+                    FROM odontoPro_medico m
+                    LEFT JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id
+                    LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                    WHERE m.clinica_id = %s AND m.ativo = 1
+                    GROUP BY m.id, m.nome, m.email
+                    ORDER BY m.nome ASC
+                """
 
-            cursor.execute(query, (clinica_id,))
-            medicos = cursor.fetchall()
-            return medicos or []
+                cursor.execute(query, (clinica_id,))
+                return cursor.fetchall()
+
+            medicos = timed_sql("Buscar médicos (listar_por_clinica)", _exec) or []
+            # marcar que possivelmente foram executadas consultas (a contagem já é feita em timed_sql)
+            inc_query_count(0)
+            return medicos
 
         except Exception as e:
             print(f"[MedicoService] Erro em listar_por_clinica: {e}")
@@ -85,8 +92,11 @@ class MedicoService:
                 GROUP BY m.id, m.nome
             """
 
-            cursor.execute(query, (medico_id,))
-            medico = cursor.fetchone()
+            def _exec():
+                cursor.execute(query, (medico_id,))
+                return cursor.fetchone()
+
+            medico = timed_sql("Buscar médico por id (MedicoService.buscar_por_id)", _exec, sql=query)
             return medico
 
         except Exception as e:
