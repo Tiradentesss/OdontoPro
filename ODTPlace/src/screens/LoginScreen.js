@@ -94,7 +94,10 @@ export default function LoginScreen({ navigation }) {
 
         <View style={styles.socialRow}>
           <TouchableOpacity style={styles.socialBtn} onPress={handleLogin} activeOpacity={0.8}>
-            <Text style={styles.socialText}>Continuar com Google</Text>
+            <View style={styles.socialBtnContent}>
+              <Image source={require('../../assets/google-logo.png')} style={styles.socialIcon} resizeMode="contain" />
+              <Text style={styles.socialText}>Continuar com Google</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -103,7 +106,7 @@ export default function LoginScreen({ navigation }) {
           activeOpacity={0.8}
           onPress={() => navigation.navigate('LoginProfissional')}
         >
-          <Text style={styles.switchButtonText}>Login de médico/profissional</Text>
+          <Text style={styles.switchButtonText}>Logar como profissional</Text>
         </TouchableOpacity>
 
         <View style={styles.signupRow}>
@@ -224,8 +227,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#d3e4fe',
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 14,
     marginBottom: 10,
     shadowColor: '#000',
@@ -233,6 +234,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
+  },
+  socialBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  socialIcon: {
+    width: 22,
+    height: 22,
   },
   socialText: {
     fontSize: 15,

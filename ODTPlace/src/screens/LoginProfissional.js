@@ -79,18 +79,12 @@ export default function LoginProfissional({ navigation }) {
           <View style={styles.dividerLine} />
         </View>
 
-        <View style={styles.socialRow}>
-          <TouchableOpacity style={styles.socialButton} onPress={handleLogin} activeOpacity={0.8}>
-            <Text style={styles.socialText}>Continuar com Google</Text>
-          </TouchableOpacity>
-        </View>
-
         <TouchableOpacity
           style={styles.switchButton}
           activeOpacity={0.8}
           onPress={() => navigation.navigate('Login')}
         >
-          <Text style={styles.switchButtonText}>Login paciente</Text>
+          <Text style={styles.switchButtonText}>Logar como paciente</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -170,6 +164,7 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
+    justifyContent: 'center',
   },
   label: {
     marginBottom: 10,
