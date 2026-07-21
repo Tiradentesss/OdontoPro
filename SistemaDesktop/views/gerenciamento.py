@@ -813,6 +813,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 class Gerenciamento(BaseScreen):
     def __init__(self, parent, clinica_id=None):
         super().__init__(parent, "Gerenciamento")
+        self.clinica_id = clinica_id
         
         if hasattr(self, 'content_card'):
             self.content_card.pack_forget()
@@ -825,5 +826,8 @@ class Gerenciamento(BaseScreen):
         if hasattr(self, 'screen') and self.screen:
             print(f"Gerenciamento.refresh: instância interna screen id(self.screen)={id(self.screen)}")
             self.screen.refresh()
-        else:
-            print("Gerenciamento.refresh: nenhuma tela interna de médicos encontrada")
+            return
+
+        print("Gerenciamento.refresh: nenhuma tela interna de médicos encontrada, recriando instância")
+        self.screen = MedicosDisponibilidadeScreen(self, clinica_id=self.clinica_id)
+        self.screen.pack(fill="both", expand=True)

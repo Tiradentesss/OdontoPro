@@ -61,6 +61,13 @@ class Painel(BaseScreen):
         self._inicializar_dados()
         self._renderizar_interface()
 
+    def refresh(self):
+        print("Painel.refresh() chamado")
+        self._inicializar_dados()
+        for widget in self.scroll.winfo_children():
+            widget.destroy()
+        self._renderizar_interface()
+
     def _inicializar_dados(self):
         """Centraliza o carregamento de dados"""
         self.dados_consultas_hoje = self._carregar_consultas_hoje()
@@ -364,39 +371,64 @@ class Painel(BaseScreen):
                 return {'pacientes': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
             
             conn = None
+            cursor = None
             try:
                 from config.database import get_connection
                 conn = get_connection()
                 cursor = conn.cursor(dictionary=True)
                 
-                # Contar pacientes
-                cursor.execute("SELECT COUNT(*) as total FROM odontoPro_paciente WHERE clinica_id = %s", (self.clinica_id,))
-                pacientes = cursor.fetchone()['total']
+                print("========== BASE DE DADOS ===========")
+                print(f"Clínica ID: {self.clinica_id}")
+
+                # Pacientes: usar a tabela de pacientes atual da clínica
+                sql_pacientes = (
+                    "SELECT COUNT(*) AS total "
+                    "FROM odontoPro_paciente "
+                    "WHERE clinica_id = %s AND ativo = 1"
+                )
+                print("Tabela consultada: odontoPro_paciente")
+                print(f"SQL executado (pacientes): {sql_pacientes}")
+                cursor.execute(sql_pacientes, (self.clinica_id,))
+                pacientes = cursor.fetchone()['total'] or 0
+                print(f"Pacientes encontrados: {pacientes}")
+
+                # Médicos: usar a mesma origem de dados do Corpo Clínico
+                print("Tabela consultada: odontoPro_medico via MedicoController.listar_medicos")
+                print("SQL executado (médicos): SELECT id, nome, email, crm_cro, ativo FROM odontoPro_medico WHERE clinica_id = %s ORDER BY nome ASC")
+                medicos_lista = MedicoController.listar_medicos(self.clinica_id)
+                medicos = len(medicos_lista)
+                print(f"Médicos encontrados: {medicos}")
+
+                # Gestão: usuários administrativos ativos da clínica
+                sql_gerentes = "SELECT COUNT(DISTINCT id) as total FROM odontoPro_gerenciamento WHERE clinica_id = %s AND ativo = 1"
+                print("Tabela consultada: odontoPro_gerenciamento")
+                print(f"SQL executado (usuários gestão): {sql_gerentes}")
+                cursor.execute(sql_gerentes, (self.clinica_id,))
+                gerentes = cursor.fetchone()['total'] or 0
+                print(f"Usuários gestão encontrados: {gerentes}")
                 
-                # Contar médicos
-                cursor.execute("SELECT COUNT(*) as total FROM odontoPro_medico WHERE clinica_id = %s", (self.clinica_id,))
-                medicos = cursor.fetchone()['total']
-                
-                # Contar gerentes
-                cursor.execute("SELECT COUNT(*) as total FROM odontoPro_gerenciamento WHERE clinica_id = %s AND ativo = 1", (self.clinica_id,))
-                gerentes = cursor.fetchone()['total']
-                
-                conn.close()
+                total_usuarios = pacientes + medicos + gerentes
+                print(f"Total calculado: {total_usuarios}")
+                print("====================================")
                 
                 return {
                     'pacientes': pacientes,
                     'medicos': medicos,
                     'gerentes': gerentes,
-                    'total_usuarios': pacientes + medicos + gerentes + 1  # +1 para a clínica
+                    'total_usuarios': total_usuarios
                 }
             except Exception as e:
                 print(f"Erro ao contar cadastros: {e}")
+                print("====================================")
                 return {'pacientes': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
             finally:
+                if cursor:
+                    cursor.close()
                 if conn:
                     conn.close()
         except Exception as e:
             print(f"Erro geral: {e}")
+            print("====================================")
             return {'pacientes': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
 
     def _carregar_medicos(self):
