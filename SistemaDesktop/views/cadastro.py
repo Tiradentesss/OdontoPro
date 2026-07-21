@@ -1160,12 +1160,31 @@ class Cadastro(BaseScreen):
                 self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
                 self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
 
+                print("========== CADASTRO ===========")
+                print("Médico salvo com sucesso")
+                print(f"ID do médico: {resultado.get('id')}")
+                print(f"Clínica: {self.clinica_id}")
+
                 app = self.winfo_toplevel()
+                target = None
                 if hasattr(app, 'frames') and 'gerenciamento' in app.frames:
+                    target = app.frames['gerenciamento']
+                else:
+                    parent = self.master
+                    while parent is not None and target is None:
+                        if hasattr(parent, 'frames') and 'gerenciamento' in parent.frames:
+                            target = parent.frames['gerenciamento']
+                        parent = getattr(parent, 'master', None)
+
+                if target is not None:
+                    print("Chamando atualização do Gerenciamento...")
+                    print(f"Instância alvo Gerenciamento id(self): {id(target)}")
                     try:
-                        app.frames['gerenciamento'].refresh()
-                    except Exception:
-                        pass
+                        target.refresh()
+                    except Exception as e:
+                        print(f"Erro ao atualizar Gerenciamento: {e}")
+                else:
+                    print("Gerenciamento não encontrado para refresh.")
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:

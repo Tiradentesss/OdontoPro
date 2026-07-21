@@ -48,15 +48,24 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.medicos = []
         self.slot_buttons = {}
 
+        print("========== GERENCIAMENTO ===========")
+        print(f"Instância da tela Gerenciamento criada id(self): {id(self)}")
         self._load_medicos()
         self._build_ui()
 
     def _load_medicos(self):
+        print("load_medicos_async() iniciado")
         self.medicos = []
+        self.total_medicos_filtrados = 0
+        self.pagina_atual = 0
+
         if not self.clinica_id:
+            print("Nenhuma clínica definida, não buscando médicos.")
             return
 
+        print(f"Buscando médicos para clinica_id={self.clinica_id}...")
         medicos_bd = ConsultaController.listar_medicos_por_clinica(self.clinica_id)
+        print(f"Quantidade encontrada: {len(medicos_bd)}")
         self.medicos = [
             {
                 "id": medico[0],
@@ -69,8 +78,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         ]
 
     def refresh(self):
-        self.pagina_atual = 0
+        print("Atualizando lista de médicos no Gerenciamento...")
         self._load_medicos()
+        print("Chamando _render_medicos()")
         self._render_medicos()
 
     def _build_ui(self):
@@ -807,5 +817,13 @@ class Gerenciamento(BaseScreen):
         if hasattr(self, 'content_card'):
             self.content_card.pack_forget()
         
-        screen = MedicosDisponibilidadeScreen(self, clinica_id=clinica_id)
-        screen.pack(fill="both", expand=True)
+        self.screen = MedicosDisponibilidadeScreen(self, clinica_id=clinica_id)
+        self.screen.pack(fill="both", expand=True)
+
+    def refresh(self):
+        print("Gerenciamento.refresh() chamado")
+        if hasattr(self, 'screen') and self.screen:
+            print(f"Gerenciamento.refresh: instância interna screen id(self.screen)={id(self.screen)}")
+            self.screen.refresh()
+        else:
+            print("Gerenciamento.refresh: nenhuma tela interna de médicos encontrada")

@@ -44,8 +44,11 @@ class MedicoService:
                     ORDER BY m.nome ASC
                 """
 
+                print("MedicoService.listar_por_clinica() - consultando banco")
                 cursor.execute(query, (clinica_id,))
-                return cursor.fetchall()
+                resultado = cursor.fetchall()
+                print(f"MedicoService.listar_por_clinica() - retornou {len(resultado)} médicos")
+                return resultado
 
             medicos = timed_sql("Buscar médicos (listar_por_clinica)", _exec) or []
             # marcar que possivelmente foram executadas consultas (a contagem já é feita em timed_sql)
