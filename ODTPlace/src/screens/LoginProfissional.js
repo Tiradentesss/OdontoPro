@@ -73,12 +73,6 @@ export default function LoginProfissional({ navigation }) {
           textStyle={styles.primaryButtonText}
         />
 
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>Ou</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
         <TouchableOpacity
           style={styles.switchButton}
           activeOpacity={0.8}
@@ -164,7 +158,6 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
-    justifyContent: 'center',
   },
   label: {
     marginBottom: 10,

@@ -94,10 +94,12 @@ export default function LoginScreen({ navigation }) {
 
         <View style={styles.socialRow}>
           <TouchableOpacity style={styles.socialBtn} onPress={handleLogin} activeOpacity={0.8}>
-            <View style={styles.socialBtnContent}>
-              <Image source={require('../../assets/google-logo.png')} style={styles.socialIcon} resizeMode="contain" />
-              <Text style={styles.socialText}>Continuar com Google</Text>
-            </View>
+            <Image
+              source={require('../../assets/google-logo.png')}
+              style={styles.socialIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.socialText}>Continuar com Google</Text>
           </TouchableOpacity>
         </View>
 
@@ -223,6 +225,9 @@ const styles = StyleSheet.create({
   socialBtn: {
     width: '100%',
     minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#ffffff',
     borderRadius: 12,
     borderWidth: 1,
@@ -235,15 +240,10 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
-  socialBtnContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-  },
   socialIcon: {
-    width: 22,
-    height: 22,
+    width: 20,
+    height: 20,
+    marginRight: 10,
   },
   socialText: {
     fontSize: 15,
