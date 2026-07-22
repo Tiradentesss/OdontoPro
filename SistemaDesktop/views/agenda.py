@@ -416,6 +416,7 @@ class Agenda(BaseScreen):
         self._loading = False
         self._current_thread_id = None
         self._timeout_id = None
+        self._refresh_pending = False
 
         self.data_var.trace_add('write', self.aplicar_filtros)
         self.medico_var.trace_add('write', self.aplicar_filtros)
@@ -426,6 +427,8 @@ class Agenda(BaseScreen):
         self.filtro_medico = None
         self.filtro_status = None
         self.filtro_especialidade = None
+        self.filtro_medico_id = None
+        self.filtro_especialidade_id = None
 
         self.pagina_atual = 0
         self.paciente_selecionado = None
@@ -479,13 +482,22 @@ class Agenda(BaseScreen):
         # self.after(self._auto_refresh_ms, self._auto_check)
 
     def _get_data_sql(self):
-        if not self.filtro_data or self.filtro_data in ['Todos', 'Data']:
+        if not self.filtro_data or self.filtro_data in ['Todos', 'Data', '']:
             return None
         try:
-            d, m, y = self.filtro_data.split('/')
-            return f'{y}-{m.zfill(2)}-{d.zfill(2)}'
+            if isinstance(self.filtro_data, datetime):
+                return self.filtro_data.date()
+            if isinstance(self.filtro_data, date):
+                return self.filtro_data
+            if isinstance(self.filtro_data, str):
+                if '-' in self.filtro_data and len(self.filtro_data) == 10:
+                    return datetime.strptime(self.filtro_data, '%Y-%m-%d').date()
+                d, m, y = self.filtro_data.split('/')
+                return date(int(y), int(m), int(d))
         except Exception:
+            print(f"[AGENDA] _get_data_sql: formato de data inválido ({self.filtro_data})")
             return None
+        return None
 
     def set_column_spacing(self, column_key, minsize=None, weight=None):
         pass
@@ -503,10 +515,33 @@ class Agenda(BaseScreen):
             return
 
         print(f"[Agenda] aplicar_filtros acionado")
-        self.filtro_data = None if self.data_var.get() == 'Todos' else self.data_var.get()
-        self.filtro_medico = None if self.medico_var.get() in ['Todos', 'Médico'] else self.medico_var.get()
-        self.filtro_status = None if self.status_var.get() in ['Todos', 'Status'] else self.status_var.get()
-        self.filtro_especialidade = None if self.especialidade_var.get() in ['Todos', 'Especialidade'] else self.especialidade_var.get()
+        data_valor = self.data_var.get() or ''
+        medico_valor = self.medico_var.get() or ''
+        status_valor = self.status_var.get() or ''
+        especialidade_valor = self.especialidade_var.get() or ''
+
+        self.filtro_data = None if data_valor in ['Todos', 'Data', ''] else data_valor
+        self.filtro_medico = None if medico_valor in ['Todos', 'Médico', ''] else medico_valor
+        self.filtro_medico_id = None
+        if self.filtro_medico:
+            for medico_id, nome in self.medico_opcoes:
+                if nome == self.filtro_medico:
+                    self.filtro_medico_id = medico_id
+                    break
+
+        self.filtro_status = None if status_valor in ['Todos', 'Status', ''] else status_valor.lower()
+        self.filtro_especialidade = None if especialidade_valor in ['Todos', 'Especialidade', ''] else especialidade_valor
+        self.filtro_especialidade_id = None
+        if self.filtro_especialidade:
+            for especialidade_id, nome in self.especialidade_opcoes:
+                if nome == self.filtro_especialidade:
+                    self.filtro_especialidade_id = especialidade_id
+                    break
+
+        print(f"[FILTRO DATA] Valor selecionado: {self.filtro_data}")
+        print(f"[FILTRO MÉDICO] Valor selecionado: {self.filtro_medico} (id={self.filtro_medico_id})")
+        print(f"[FILTRO ESPECIALIDADE] Valor selecionado: {self.filtro_especialidade} (id={self.filtro_especialidade_id})")
+        print(f"[FILTRO STATUS] Valor selecionado: {self.filtro_status}")
 
         self.pagina_atual = 0
         print(f"[Agenda] Filtros aplicados. Chamando refresh_data()")
@@ -514,8 +549,10 @@ class Agenda(BaseScreen):
 
     def _on_filtro_selected(self, var_name, value):
         print(f"[Agenda] _on_filtro_selected: {var_name} = {value}")
-        getattr(self, var_name).set(value)
-        self.aplicar_filtros()
+        # Avoid duplicate refresh calls: the StringVar trace already triggers aplicar_filtros.
+        var = getattr(self, var_name)
+        if var.get() != value:
+            var.set(value)
 
     def _limpar_filtros(self):
         self.data_var.set('Todos')
@@ -524,9 +561,12 @@ class Agenda(BaseScreen):
         self.especialidade_var.set('Todos')
         self.filtro_data = None
         self.filtro_medico = None
+        self.filtro_medico_id = None
         self.filtro_status = None
         self.filtro_especialidade = None
+        self.filtro_especialidade_id = None
         self.pagina_atual = 0
+        print("[AGENDA] Filtros limpos")
         self.refresh_data()
 
     def _auto_check(self):
@@ -538,7 +578,8 @@ class Agenda(BaseScreen):
         print(f"\n[AGENDA] ========== REFRESH_DATA INICIADO ==========")
         
         if self._loading:
-            print(f"[AGENDA] refresh_data: IGNORADO (já em carregamento)")
+            print(f"[AGENDA] refresh_data: BUSY, marcando refresh pendente")
+            self._refresh_pending = True
             return
         
         print(f"[AGENDA] refresh_data: ativando _loading")
@@ -592,12 +633,13 @@ class Agenda(BaseScreen):
             print(f"[AGENDA] render: IGNORADO (já em carregamento)")
             return
 
-        print(f"[AGENDA] render: ativando _loading")
-        self._loading = True
-        self._render_start_time = time.time()
         self._thread_count += 1
         self._current_thread_id = self._thread_count
         thread_id = self._current_thread_id
+        print(f"[AGENDA] ======= RENDER ======= thread_id={thread_id} _current_thread_id={self._current_thread_id} _loading={self._loading}")
+        print(f"[AGENDA] render: ativando _loading")
+        self._loading = True
+        self._render_start_time = time.time()
 
         print(f"[AGENDA] render: limpando widgets")
         for w in self.content_card.winfo_children():
@@ -674,6 +716,11 @@ class Agenda(BaseScreen):
             # ============================================
             # 1. listar_por_clinica
             # ============================================
+            print(f"====== CHAMADA listar_por_clinica ======")
+            print(f"data = {self.filtro_data}")
+            print(f"medico_id = {self.filtro_medico_id}")
+            print(f"status = {self.filtro_status}")
+            print(f"especialidade_id = {self.filtro_especialidade_id}")
             print(f"[AGENDA] → Chamando ConsultaController.listar_por_clinica()")
             start_call = time.time()
             
@@ -686,6 +733,8 @@ class Agenda(BaseScreen):
                     status=self.filtro_status,
                     medico=self.filtro_medico,
                     especialidade=self.filtro_especialidade,
+                    medico_id=self.filtro_medico_id,
+                    especialidade_id=self.filtro_especialidade_id,
                 )
                 
                 elapsed_call = time.time() - start_call
@@ -710,6 +759,8 @@ class Agenda(BaseScreen):
                     status=self.filtro_status,
                     medico=self.filtro_medico,
                     especialidade=self.filtro_especialidade,
+                    medico_id=self.filtro_medico_id,
+                    especialidade_id=self.filtro_especialidade_id,
                 )
                 
                 elapsed_call = time.time() - start_call
@@ -752,6 +803,8 @@ class Agenda(BaseScreen):
                     status=self.filtro_status,
                     medico=self.filtro_medico,
                     especialidade=self.filtro_especialidade,
+                    medico_id=self.filtro_medico_id,
+                    especialidade_id=self.filtro_especialidade_id,
                 )
                 
                 elapsed_call = time.time() - start_call
@@ -875,19 +928,38 @@ class Agenda(BaseScreen):
             self._timeout_id = None
 
         self._loading = False
+        refresh_pending = self._refresh_pending
+        self._refresh_pending = False
+
+        print(f"[AGENDA] _process_load_queue: thread_id={thread_id} _current_thread_id={self._current_thread_id} consultas_id={id(consultas)} len={len(consultas)} refresh_pending={refresh_pending}")
+        if consultas:
+            try:
+                print(f"[AGENDA] _process_load_queue: primeira data={consultas[0][2]}")
+            except Exception:
+                pass
 
         if error_msg:
-            print(f"[AGENDA] _process_load_queue: erro na carga, renderizando vazio")
-            self._render_after_load([], 0, [], [], [], "0-0-0-0")
+            print(f"[AGENDA] _process_load_queue: erro na carga, exibindo mensagem de erro")
+            self._render_error(error_msg)
             return
 
         self._render_after_load(consultas, total, datas, medicos, especialidades, snapshot)
+
+        if refresh_pending:
+            print(f"[AGENDA] _process_load_queue: refresh pendente detectado após render, chamando refresh_data()")
+            self.refresh_data()
 
     def _render_after_load(self, consultas, total, datas, medicos, especialidades, snapshot):
         """Renderiza tela com dados carregados - GARANTE sempre resetar _loading"""
         print(f"\n[AGENDA] ========== _RENDER_AFTER_LOAD INICIADA ==========")
         
         try:
+            print(f"[AGENDA] ======= _RENDER_AFTER_LOAD ======= consultas_id={id(consultas)} len={len(consultas)}")
+            if consultas:
+                try:
+                    print(f"[AGENDA] _render_after_load: primeira data={consultas[0][2]}")
+                except Exception:
+                    pass
             print(f"[AGENDA] _render_after_load: resetando _loading IMEDIATAMENTE")
             self._loading = False
             self.current_snapshot = snapshot
@@ -966,7 +1038,7 @@ class Agenda(BaseScreen):
                 ).pack()
             else:
                 print(f"[AGENDA] _render_after_load: renderizando {len(consultas)} linhas")
-                self._render_rows(list_area, consultas)
+            self._render_rows(list_area, consultas)
 
             print(f"[AGENDA] _render_after_load: renderizando paginação")
             self.render_pagination(left, total)
@@ -1055,10 +1127,20 @@ class Agenda(BaseScreen):
 
             return frame
 
+        self.medico_opcoes = []
+        if medicos:
+            self.medico_opcoes = list(medicos)
+        self.especialidade_opcoes = []
+        if especialidades:
+            self.especialidade_opcoes = list(especialidades)
+
+        medico_labels = ['Todos'] + [nome for _, nome in self.medico_opcoes]
+        especialidade_labels = ['Todos'] + [nome for _, nome in self.especialidade_opcoes]
+
         filtro_data = filtro("📅 Data", ['Todos'] + [d.strftime('%d/%m/%Y') for d in datas], 'data_var')
-        filtro_medico = filtro("🩺 Médico", ['Todos'] + medicos, 'medico_var')
+        filtro_medico = filtro("🩺 Médico", medico_labels, 'medico_var')
         filtro_status = filtro("📊 Status", ['Todos', 'Agendada', 'Confirmada', 'Realizada', 'Cancelada'], 'status_var')
-        filtro_especialidade = filtro("🦷 Especialidade", ['Todos'] + especialidades, 'especialidade_var')
+        filtro_especialidade = filtro("🦷 Especialidade", especialidade_labels, 'especialidade_var')
 
         filtro_data.pack(side='left', expand=True, fill='x', padx=5, pady=5)
         filtro_medico.pack(side='left', expand=True, fill='x', padx=5, pady=5)
@@ -1122,6 +1204,12 @@ class Agenda(BaseScreen):
         ).pack(anchor='w', padx=4)
 
     def _render_rows(self, container, consultas):
+        print(f"[AGENDA] _render_rows: consultas_id={id(consultas)} len={len(consultas)}")
+        if consultas:
+            try:
+                print(f"[AGENDA] _render_rows: primeira data={consultas[0][2]}")
+            except Exception:
+                pass
         self.image_cache = []
         self.row_widgets = {}
 
