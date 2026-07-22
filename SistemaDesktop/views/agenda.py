@@ -2157,6 +2157,12 @@ class Agenda(BaseScreen):
                     "✓ Consulta marcada com sucesso!"
                 )
                 self.refresh_data()
+                try:
+                    app = getattr(self.master, 'master', None)
+                    if app and hasattr(app, 'frames') and 'painel' in app.frames:
+                        app.frames['painel'].refresh()
+                except Exception as e:
+                    print(f"Erro ao atualizar Painel após salvar consulta: {e}")
                 dialogo.destroy()
             else:
                 messagebox.showerror(

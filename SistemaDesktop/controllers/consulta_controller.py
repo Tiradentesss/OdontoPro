@@ -65,8 +65,12 @@ class ConsultaController:
             """
 
             params.extend([limite, pagina * limite])
+            print(f"[ConsultaController] Clínica: {clinica_id}")
+            print(f"[ConsultaController] SQL executado:\n{query}")
+            print(f"[ConsultaController] Parâmetros: {params}")
             cursor.execute(query, tuple(params))
             dados = cursor.fetchall()
+            print(f"[ConsultaController] Total de consultas encontradas: {len(dados) if dados else 0}")
             return dados or []
         except Exception as e:
             print(f"[ConsultaController] Erro em listar_por_clinica: {e}")

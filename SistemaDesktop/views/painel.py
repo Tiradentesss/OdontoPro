@@ -209,7 +209,7 @@ class Painel(BaseScreen):
         card = self._criar_card("Status das Consultas", "Distribuição de consultas por status", row, col, padx=(0, 10))
         
         contagem = self.dados_contagem_consultas
-        total = contagem.get('total', 1)
+        total = contagem.get('total', 0)
         
         status_data = [
             ("Agendadas", contagem.get('agendada', 0), self.colors['warning']),
@@ -302,6 +302,26 @@ class Painel(BaseScreen):
                      font=ctk.CTkFont(slant="italic")).pack(pady=40)
 
     # --- Métodos de Dados (Conectados ao Banco de Dados) ---
+    @staticmethod
+    def _resumir_status_consultas(consultas):
+        """Resume os status a partir da mesma lista de consultas usada pela agenda."""
+        contagem = {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
+
+        for item in consultas or []:
+            status = None
+            if isinstance(item, dict):
+                status = item.get('status')
+            elif isinstance(item, (list, tuple)) and len(item) > 3:
+                status = item[3]
+
+            if isinstance(status, str):
+                status_normalizado = status.strip().lower()
+                if status_normalizado in contagem:
+                    contagem[status_normalizado] += 1
+
+        contagem['total'] = len(consultas or [])
+        return contagem
+
     def _carregar_consultas_hoje(self):
         """Carrega consultas agendadas para hoje"""
         try:
@@ -321,47 +341,35 @@ class Painel(BaseScreen):
             return []
 
     def _carregar_contagem_consultas(self):
-        """Carrega contagem de consultas por status"""
+        """Carrega contagem de consultas por status usando a mesma origem da agenda."""
         try:
             if not self.clinica_id:
+                print("[PAINEL] Clínica não informada; retornando zeros")
                 return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
-            
-            conn = None
-            try:
-                from config.database import get_connection
-                conn = get_connection()
-                cursor = conn.cursor(dictionary=True)
-                
-                # Buscar contagens por status
-                cursor.execute("""
-                    SELECT 
-                        SUM(CASE WHEN status = 'agendada' THEN 1 ELSE 0 END) as agendada,
-                        SUM(CASE WHEN status = 'confirmada' THEN 1 ELSE 0 END) as confirmada,
-                        SUM(CASE WHEN status = 'realizada' THEN 1 ELSE 0 END) as realizada,
-                        SUM(CASE WHEN status = 'cancelada' THEN 1 ELSE 0 END) as cancelada,
-                        COUNT(*) as total
-                    FROM odontoPro_consulta
-                    WHERE clinica_id = %s
-                """, (self.clinica_id,))
-                
-                resultado = cursor.fetchone()
-                conn.close()
-                
-                return {
-                    'agendada': resultado['agendada'] or 0,
-                    'confirmada': resultado['confirmada'] or 0,
-                    'realizada': resultado['realizada'] or 0,
-                    'cancelada': resultado['cancelada'] or 0,
-                    'total': resultado['total'] or 0
-                }
-            except Exception as e:
-                print(f"Erro ao contar consultas: {e}")
-                return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
-            finally:
-                if conn:
-                    conn.close()
+
+            print(f"[PAINEL] Clínica: {self.clinica_id}")
+            print("[PAINEL] Reutilizando ConsultaController.listar_por_clinica() para resumir status")
+            consultas = ConsultaController.listar_por_clinica(
+                self.clinica_id,
+                pagina=0,
+                limite=10000,
+                data=None,
+                status=None,
+                medico=None,
+                especialidade=None,
+            )
+
+            contagem = self._resumir_status_consultas(consultas)
+            print(f"[PAINEL] Total de consultas encontradas: {contagem.get('total', 0)}")
+            print("[PAINEL] Status encontrados:")
+            for status_key in ['agendada', 'confirmada', 'realizada', 'cancelada']:
+                print(f"[PAINEL] {status_key} = {contagem.get(status_key, 0)}")
+
+            return contagem
         except Exception as e:
-            print(f"Erro geral: {e}")
+            print(f"[PAINEL] Erro ao carregar contagem de consultas: {e}")
+            import traceback
+            traceback.print_exc()
             return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
 
     def _carregar_resumo_cadastros(self):
