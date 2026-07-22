@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect} from 'react';
-import {View, Text, StyleSheet, Alert, TouchableOpacity, ImageBackground, TextInput} from 'react-native';
+import {View, Text, StyleSheet, Alert, TouchableOpacity, Image, TextInput, StatusBar} from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton3 from '../components/CustomButton3';
 
@@ -28,7 +28,6 @@ export default function CheckEmail({ navigation, route }) {
     newCode[index] = text;
     setCode(newCode);
 
-    // vai para o próximo input
     if (text && index < 4) {
       inputs.current[index + 1].focus();
     }
@@ -51,141 +50,127 @@ export default function CheckEmail({ navigation, route }) {
   };
 
   return (
-      <ImageBackground
-      source={require('../../assets/imagem background.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={styles.backButton}
-      >
-        <Text style={styles.backText}>‹</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f9ff" />
+      <Image
+        source={require('../../assets/imagem background.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
+      <View style={styles.content}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backText}>‹</Text>
+          </TouchableOpacity>
+        </View>
 
-      <Text style={styles.title}>Verifique seu e-mail</Text>
-
-      <Text style={styles.description}>
-        Enviamos um link de redefinição para{' '}
-        {email.replace(/(.{4}).+(@.+)/, '$1****$2')}
-      </Text>
-
-      <View style={styles.codeContainer}>
-        {code.map((digit, index) => (
-          <TextInput
-            key={index}
-            ref={ref => (inputs.current[index] = ref)}
-            style={styles.codeInput}
-            keyboardType="number-pad"
-            maxLength={1}
-            value={digit}
-            onChangeText={text => handleChange(text, index)}
-          />
-        ))}
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={handleVerify}>
-        <Text style={styles.buttonText}>Verificar Código</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.timer}>⏰ 00:{timer < 10 ? `0${timer}` : timer}</Text>
-
-      <TouchableOpacity
-        disabled={timer > 0}
-        onPress={resendCode}
-      >
-        <Text
-          style={[
-            styles.resend,
-            { color: timer > 0 ? '#999' : '#07336d' },
-          ]}
-        >
-          Reenviar E-mail
+        <Text style={styles.pageTitle}>Verifique seu e-mail</Text>
+        <Text style={styles.description}>
+          Enviamos um código para {email.replace(/(.{4}).+(@.+)/, '$1****$2')}
         </Text>
-      </TouchableOpacity>
-    </ImageBackground>
+
+        <View style={styles.codeContainer}>
+          {code.map((digit, index) => (
+            <TextInput
+              key={index}
+              ref={ref => (inputs.current[index] = ref)}
+              style={styles.codeInput}
+              keyboardType="number-pad"
+              maxLength={1}
+              value={digit}
+              onChangeText={text => handleChange(text, index)}
+            />
+          ))}
+        </View>
+
+        <Text style={styles.timer}>⏰ 00:{timer < 10 ? `0${timer}` : timer}</Text>
+
+        <CustomButton3 title="Verificar Código" onPress={handleVerify} />
+
+        <TouchableOpacity disabled={timer > 0} onPress={resendCode}>
+          <Text style={[styles.resend, { color: timer > 0 ? '#999' : '#1bc3ea' }]}>
+            Reenviar Código
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 28,
-    backgroundColor: '#f4f4f4',
+    backgroundColor: '#f8f9ff',
+    padding: 24,
   },
-
+  content: {
+    flex: 1,
+  },
+  backgroundImage: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  headerRow: {
+    marginTop: 32,
+    marginBottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   backButton: {
-    marginTop: 60,
     width: 40,
     height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(27,195,234,0.12)',
+    alignItems: 'center',
     justifyContent: 'center',
   },
-
   backText: {
-    fontSize: 34,
-    color: '#07336d',
+    color: '#1bc3ea',
+    fontSize: 28,
+    lineHeight: 32,
   },
-
-  title: {
-    marginTop: 40,
-    fontSize: 34,
+  pageTitle: {
+    fontSize: 28,
     fontWeight: '700',
-    color: '#07336d',
+    color: '#0b1c30',
+    marginBottom: 8,
   },
-
   description: {
-    marginTop: 14,
+    color: '#5b6b8f',
     fontSize: 15,
-    color: '#888',
     lineHeight: 22,
+    marginBottom: 30,
+    maxWidth: 360,
   },
-
   codeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 40,
+    marginBottom: 30,
   },
-
   codeInput: {
-    width: 58,
-    height: 68,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    textAlign: 'center',
-    fontSize: 24,
-    fontWeight: '700',
+    width: 50,
+    height: 60,
+    borderRadius: 12,
+    backgroundColor: '#f0f4f8',
     borderWidth: 1,
-    borderColor: '#e5e5e5',
-  },
-
-  button: {
-    marginTop: 40,
-    backgroundColor: '#00BCEB',
-    height: 58,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  buttonText: {
-    color: '#fff',
-    fontSize: 17,
+    borderColor: '#d3e4fe',
+    textAlign: 'center',
+    fontSize: 20,
     fontWeight: '700',
+    color: '#0b1c30',
   },
-
   timer: {
-    marginTop: 28,
     textAlign: 'center',
-    fontSize: 16,
-    color: '#444',
+    fontSize: 15,
+    color: '#5b6b8f',
+    marginBottom: 20,
     fontWeight: '600',
   },
-
   resend: {
-    marginTop: 40,
+    marginTop: 20,
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#07336d',
   },
 });
