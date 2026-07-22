@@ -1,25 +1,38 @@
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
 
-// Componente de botão reutilizável
-export default function CustomButton({ title, onPress, style, textStyle }) {
+export default function CustomButton({
+  title,
+  onPress,
+  style,
+  textStyle,
+}) {
   return (
-
-    // TouchableOpacity = botão clicável com efeito de opacidade
-    <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
-
-      {/* Texto do botão */}
-      <Text style={[styles.text, textStyle]}>
-        {title}
-      </Text>
-
-    </TouchableOpacity>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.button,
+        style,
+        pressed && styles.buttonPressed,
+      ]}
+    >
+      {({ pressed }) => (
+        <Text
+          style={[
+            styles.text,
+            textStyle,
+            pressed && styles.textPressed,
+          ]}
+        >
+          {title}
+        </Text>
+      )}
+    </Pressable>
   );
 }
-// Estilos
-const styles = StyleSheet.create({
 
+const styles = StyleSheet.create({
   button: {
-    marginTop:10,
+    marginTop: 10,
     backgroundColor: '#00bceb',
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -30,6 +43,29 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     minHeight: 50,
+
+    borderWidth: 1,
+    borderColor: '#00bceb',
+  },
+
+  buttonPressed: {
+    backgroundColor: '#fff',
+    borderColor: '#00bceb',
+
+    // Efeito de "flutuação"
+    transform: [{ scale: 0.98 }],
+
+    // iOS
+    shadowColor: '#00bceb',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+
+    // Android
+    elevation: 6,
   },
 
   text: {
@@ -38,4 +74,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
+  textPressed: {
+    color: '#00bceb',
+  },
 });
