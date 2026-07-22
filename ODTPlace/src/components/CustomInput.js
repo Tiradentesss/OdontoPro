@@ -4,6 +4,7 @@ export default function CustomInput(props) {
   return (
     <TextInput
       style={styles.input}
+      placeholderTextColor="#9ca3af"
       {...props}
     />
   );
@@ -11,10 +12,12 @@ export default function CustomInput(props) {
 
 const styles = StyleSheet.create({
   input: {
-    borderWidth: 0,
+    borderWidth: 1,
+    borderColor: '#d3e4fe',
     padding: 12,
     marginBottom: 15,
-    borderRadius: 8,
-    backgroundColor : '#e6e6e6',
+    borderRadius: 12,
+    backgroundColor: '#f8fbff',
+    color: '#0f172a',
   },
 });

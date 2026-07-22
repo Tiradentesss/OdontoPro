@@ -4,7 +4,7 @@ export default function CustomInput(props) {
   return (
     <TextInput
       style={styles.input}
-      placeholderTextColor="#fff"
+      placeholderTextColor="#9ca3af"
       {...props}
     />
   );
@@ -12,18 +12,12 @@ export default function CustomInput(props) {
 
 const styles = StyleSheet.create({
   input: {
+    borderWidth: 1,
+    borderColor: '#d3e4fe',
     padding: 12,
     marginBottom: 15,
-    borderRadius: 8,
-
-    // fundo translúcido
-    backgroundColor: 'rgba(230,230,230,0.5)',
-
-    // borda branca
-    borderWidth: 1,
-    borderColor: '#fff',
-
-    // texto branco
-    color: '#fff',
+    borderRadius: 12,
+    backgroundColor: '#f8fbff',
+    color: '#0f172a',
   },
 });

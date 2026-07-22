@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import {View, Text, StyleSheet, Alert, TouchableOpacity, ImageBackground,} from 'react-native';
+import {View, Text, StyleSheet, Alert, TouchableOpacity, Image, StatusBar} from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton3 from '../components/CustomButton3';
 
@@ -34,105 +34,105 @@ export default function NewPasswordScreen({ navigation }) {
   };
 
   return (
-    <ImageBackground
-      source={require('../../assets/imagem background.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
-
-      <View style={styles.header}>
-
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Text style={styles.backText}>‹</Text>
-        </TouchableOpacity>
-
-        <View style={styles.headerText}>
-          <Text
-            style={styles.pageTitle}
-            numberOfLines={1}
-          >
-            Digite a nova Senha
-          </Text>
-
-          <Text style={styles.description}>
-            Crie uma nova senha. Certifique-se de que ela seja diferente das anteriores por motivos de segurança.
-          </Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f9ff" />
+      <Image
+        source={require('../../assets/imagem background.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
+      <View style={styles.content}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backText}>‹</Text>
+          </TouchableOpacity>
         </View>
 
+        <Text style={styles.pageTitle}>Digite a nova Senha</Text>
+        <Text style={styles.description}>
+          Crie uma nova senha. Certifique-se de que ela seja diferente das anteriores por motivos de segurança.
+        </Text>
+
+        <View style={styles.form}>
+          <Text style={styles.label}>Nova Senha</Text>
+          <CustomInput
+            placeholder="••••••••"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+
+          <Text style={styles.label}>Confirme a nova senha</Text>
+          <CustomInput
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+          />
+        </View>
+
+        <CustomButton3
+          title="Mudar Senha"
+          onPress={handleChangePassword}
+        />
       </View>
-
-      <CustomInput
-        placeholder="Nova Senha"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <CustomInput
-        placeholder="Confirme a nova senha"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-      />
-
-      <CustomButton3
-        title="Mudar Senha"
-        onPress={handleChangePassword}
-      />
-
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f8f9ff',
     padding: 24,
-    backgroundColor: '#f5f7fa',
   },
-
-  header: {
-    marginTop: 40,
+  content: {
+    flex: 1,
+  },
+  backgroundImage: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  headerRow: {
+    marginTop: 32,
     marginBottom: 24,
     flexDirection: 'row',
     alignItems: 'center',
   },
-
   backButton: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: 'rgba(27,195,234,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: -20,
-    marginBottom: 90,
   },
-
   backText: {
-    fontSize: 34,
-    color: '#07336d',
-    lineHeight: 26,
+    color: '#1bc3ea',
+    fontSize: 28,
+    lineHeight: 32,
   },
-
-  headerText: {
-    flex: 1,
-  },
-
   pageTitle: {
-    marginTop: 70,
     fontSize: 28,
     fontWeight: '700',
-    color: '#07336d',
+    color: '#0b1c30',
+    marginBottom: 8,
   },
-
   description: {
-    color: '#6b7a90',
+    color: '#5b6b8f',
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 30,
+    maxWidth: 360,
+  },
+  form: {
+    marginBottom: 30,
+  },
+  label: {
+    marginBottom: 10,
+    color: '#5b6b8f',
     fontSize: 14,
-    marginTop: 4,
-    lineHeight: 20,
+    fontWeight: '600',
   },
 });
