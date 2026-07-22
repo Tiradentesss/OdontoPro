@@ -11,7 +11,6 @@ import HomeScreen from './src/screens/HomeScreen';
 import HomeProfissional from './src/screens/HomeProfissional';
 import LoginScreen from './src/screens/LoginScreen';
 import LoginProfissional from './src/screens/LoginProfissional';
-import SplashScreen from './src/screens/SplashScreen';
 import CadastroScreen from './src/screens/CadastroScreen';
 import ClinicDetailScreen from './src/screens/ClinicDetailScreen';
 import ScheduleScreen from './src/screens/ScheduleScreen';
@@ -84,7 +83,6 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
 
-            <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="PreLogin" component={PreLogin} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="LoginProfissional" component={LoginProfissional} />
