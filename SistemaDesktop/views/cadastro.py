@@ -547,8 +547,7 @@ class Cadastro(BaseScreen):
         self.especialidade_map = {self.ESPECIALIDADE_PLACEHOLDER: None}
         especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER]
         try:
-            especialidades_db = ConsultaController.listar_especialidades()
-            especialidades = ConsultaController.preparar_especialidades_para_combo(especialidades_db)
+            especialidades = ConsultaController.listar_especialidades_para_combo()
             if especialidades:
                 especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER] + [nome for _, nome in especialidades]
                 self.especialidade_map = {nome: especialidade_id for especialidade_id, nome in especialidades}

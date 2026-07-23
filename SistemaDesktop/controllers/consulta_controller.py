@@ -159,7 +159,8 @@ class ConsultaController:
             datas = [row[0] for row in cursor.fetchall() or []]
 
             medicos = ConsultaController.listar_medicos(clinica_id)
-            especialidades = ConsultaController.listar_especialidades(conn=conn)
+            # Use the shared prepared list for combos to avoid duplicates and ensure ordering
+            especialidades = ConsultaController.listar_especialidades_para_combo(conn=conn)
 
             return datas, medicos, especialidades
         except Exception as e:
@@ -354,6 +355,18 @@ class ConsultaController:
 
         especialidades_validas = list(especialidades_unicas.values())
         return sorted(especialidades_validas, key=lambda item: item[1].lower())
+
+    @staticmethod
+    def listar_especialidades_para_combo(conn=None):
+        """Retorna a lista de especialidades pronta para uso em ComboBoxes:
+        deduplicada, com nomes limpos e ordenada alfabeticamente.
+
+        Este método reutiliza as funções existentes `listar_especialidades` e
+        `preparar_especialidades_para_combo` para garantir uma única fonte de
+        verdade para as especialidades usadas em diferentes telas.
+        """
+        especialidades_db = ConsultaController.listar_especialidades(conn=conn)
+        return ConsultaController.preparar_especialidades_para_combo(especialidades_db)
 
     @staticmethod
     def criar_consulta(clinica_id, paciente_id, medico_id, data_hora, status='agendada', especialidade='', observacoes='', especialidade_id=None):

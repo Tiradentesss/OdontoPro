@@ -1833,8 +1833,7 @@ class Agenda(BaseScreen):
             start_ms = time.perf_counter()
             conn = get_db_connection()
             with db_lock:
-                especialidades_db = ConsultaController.listar_especialidades(conn=conn)
-            especialidades = ConsultaController.preparar_especialidades_para_combo(especialidades_db)
+                especialidades = ConsultaController.listar_especialidades_para_combo(conn=conn)
             elapsed_ms = (time.perf_counter() - start_ms) * 1000
             print(f"[agenda] Especialidades carregadas em {elapsed_ms:.0f} ms")
             especialidades_carregadas = especialidades
