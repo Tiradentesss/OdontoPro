@@ -299,10 +299,19 @@ class ConsultaController:
             # Tenta acessar tabela canônica de especialidades primeiro
             try:
                 def _exec_main():
-                    sql = "SELECT id, nome FROM odontoPro_especialidade ORDER BY nome ASC"
+                    # Return canonical one-row-per-normalized-name: choose the MIN(id) for each normalized name
+                    # Join back to retrieve the canonical name from that row. This guarantees deterministic
+                    # selection of the ID (the smallest id for each normalized name) regardless of physical order.
+                    sql = (
+                        "SELECT t.id, t.nome "
+                        "FROM odontoPro_especialidade t "
+                        "JOIN (SELECT MIN(id) AS id FROM odontoPro_especialidade GROUP BY LOWER(TRIM(nome))) grp "
+                        "ON t.id = grp.id "
+                        "ORDER BY t.nome ASC"
+                    )
                     cursor.execute(sql)
                     return cursor.fetchall()
-                especialidades = timed_sql("listar_especialidades - tabela direta", _exec_main, sql="SELECT id, nome FROM odontoPro_especialidade ORDER BY nome ASC")
+                especialidades = timed_sql("listar_especialidades - tabela direta", _exec_main, sql="SELECT MIN(id) ... GROUP BY LOWER(TRIM(nome))")
                 if especialidades:
                     return especialidades
             except Exception:
@@ -346,15 +355,16 @@ class ConsultaController:
         if not especialidades:
             return []
 
-        especialidades_unicas = {}
+        # The query that provides `especialidades` already deduplicates by normalized name and
+        # returns the canonical id (MIN(id)) for each normalized name. Here we only need to
+        # normalize spacing and return an alphabetically ordered list of tuples (id, nome).
+        cleaned = []
         for especialidade_id, nome in especialidades:
             nome_limpo = (nome or "").strip()
             if especialidade_id is not None and nome_limpo:
-                chave = nome_limpo.casefold()
-                especialidades_unicas.setdefault(chave, (especialidade_id, nome_limpo))
+                cleaned.append((especialidade_id, nome_limpo))
 
-        especialidades_validas = list(especialidades_unicas.values())
-        return sorted(especialidades_validas, key=lambda item: item[1].lower())
+        return sorted(cleaned, key=lambda item: item[1].lower())
 
     @staticmethod
     def listar_especialidades_para_combo(conn=None):

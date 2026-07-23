@@ -66,11 +66,23 @@ class MedicoController:
 
             # Adicionar especialidades se fornecidas
             if especialidades:
-                for espec_id in especialidades:
-                    cursor.execute("""
-                        INSERT INTO odontoPro_medico_especialidades (medico_id, especialidade_id)
-                        VALUES (%s, %s)
-                    """, (medico_id, espec_id))
+                # especialidades pode conter ids ou nomes; normalizar para ids
+                from services.especialidade_service import EspecialidadeService
+                for espec in especialidades:
+                    if isinstance(espec, str):
+                        # obter ou criar
+                        try:
+                            espec_id = EspecialidadeService.get_or_create(espec, conn=conn)
+                        except Exception:
+                            espec_id = None
+                    else:
+                        espec_id = espec
+
+                    if espec_id:
+                        cursor.execute("""
+                            INSERT INTO odontoPro_medico_especialidades (medico_id, especialidade_id)
+                            VALUES (%s, %s)
+                        """, (medico_id, espec_id))
 
             conn.commit()
             return {"sucesso": True, "id": medico_id, "mensagem": "Médico cadastrado com sucesso"}

@@ -7,6 +7,7 @@ from config.database import get_connection
 from datetime import datetime, date, timedelta
 import mysql.connector
 from services.query_logger import timed_sql
+from services.especialidade_service import EspecialidadeService
 
 
 class ConsultaService:
@@ -573,6 +574,13 @@ class ConsultaService:
                 }
 
             especialidade_nome = especialidade
+            # If no ID provided but a name exists, ensure the especialidade record exists and get its ID
+            if especialidade_id is None and especialidade:
+                try:
+                    especialidade_id = EspecialidadeService.get_or_create(especialidade, conn=conn)
+                except Exception as e:
+                    print(f"[ConsultaService] Erro ao garantir especialidade: {e}")
+
             if especialidade_id is not None:
                 cursor.execute(
                     "SELECT id, nome FROM odontoPro_especialidade WHERE id = %s",
