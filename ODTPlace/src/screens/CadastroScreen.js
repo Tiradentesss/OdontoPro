@@ -5,11 +5,11 @@ import {
   StyleSheet,
   Alert,
   TouchableOpacity,
-  ImageBackground,
+  Image,
+  StatusBar,
 } from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton3 from '../components/CustomButton3';
-import CustomButton from '../components/CustomButton';
 import { registerPatient } from '../services/api';
 
 export default function RegisterScreen({ navigation }) {
@@ -56,130 +56,149 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <ImageBackground
-      source={require('../../assets/imagem background.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>‹</Text>
-        </TouchableOpacity>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f9ff" />
+      <Image
+        source={require('../../assets/imagem background.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
 
-        <View style={styles.headerText}>
-          <Text style={styles.pageTitle}>Registro</Text>
-          <Text style={styles.description}>
-            Crie sua conta para Continuar
-          </Text>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backText}>‹</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.pageTitle}>Crie sua conta</Text>
+        <Text style={styles.description}>Preencha seus dados para continuar</Text>
+
+        <View style={styles.form}>
+          <View style={styles.fieldRow}>
+            <View style={styles.fieldHalf}>
+              <Text style={styles.label}>Nome</Text>
+              <CustomInput
+                placeholder="Seu nome"
+                value={nome}
+                onChangeText={setNome}
+              />
+            </View>
+            <View style={styles.fieldHalf}>
+              <Text style={styles.label}>Sobrenome</Text>
+              <CustomInput
+                placeholder="Sobrenome"
+                value={sobrenome}
+                onChangeText={setSobrenome}
+              />
+            </View>
+          </View>
+
+          <Text style={styles.label}>Email</Text>
+          <CustomInput
+            placeholder="exemplo@email.com"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+          />
+
+          <View style={styles.fieldRow}>
+            <View style={styles.fieldHalf}>
+              <Text style={styles.label}>Nascimento</Text>
+              <CustomInput
+                placeholder="DD/MM/AAAA"
+                value={dataNascimento}
+                onChangeText={setDataNascimento}
+                keyboardType="numbers-and-punctuation"
+              />
+            </View>
+            <View style={styles.fieldHalf}>
+              <Text style={styles.label}>Telefone</Text>
+              <CustomInput
+                placeholder="(00) 00000-0000"
+                value={telefone}
+                onChangeText={setTelefone}
+                keyboardType="phone-pad"
+              />
+            </View>
+          </View>
+
+          <Text style={styles.label}>Senha</Text>
+          <CustomInput
+            placeholder="Crie uma senha"
+            value={senha}
+            onChangeText={setSenha}
+            secureTextEntry
+          />
+
+          <CustomButton3 title="Criar minha conta" onPress={handleRegister} />
         </View>
       </View>
-
-      <CustomInput
-        placeholder="Nome"
-        value={nome}
-        onChangeText={setNome}
-      />
-      <CustomInput
-        placeholder="Sobrenome"
-        value={sobrenome}
-        onChangeText={setSobrenome}
-      />
-      <CustomInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
-      <CustomInput
-        placeholder="Data de nascimento"
-        value={dataNascimento}
-        onChangeText={setDataNascimento}
-      />
-      <CustomInput
-        placeholder="Telefone"
-        value={telefone}
-        onChangeText={setTelefone}
-        keyboardType="phone-pad"
-      />
-      <CustomInput
-        placeholder="Senha"
-        value={senha}
-        onChangeText={setSenha}
-        secureTextEntry
-      />
-
-      <CustomButton3 title="Registrar Conta" onPress={handleRegister} />
-
-      <Text style={styles.or}>Ou</Text>
-
-      <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
-        <Text style={styles.socialText}>Continuar com Google</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
-        <Text style={styles.socialText}>Continuar com Facebook</Text>
-      </TouchableOpacity>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
     backgroundColor: '#f5f7fa',
   },
+  content: {
+    flex: 1,
+    padding: 24,
+  },
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
   header: {
-    marginTop: 40,
-    marginBottom: 24,
+    marginTop: 28,
+    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
   },
   backButton: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 12,
+    backgroundColor: 'rgba(27,195,234,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
   backText: {
-    fontSize: 34,
-    color: '#07336d',
-    lineHeight: 26,
-  },
-  headerText: {
-    flex: 1,
+    color: '#1bc3ea',
+    fontSize: 28,
+    lineHeight: 32,
   },
   pageTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#07336d',
+    color: '#0b1c30',
+    marginBottom: 6,
   },
   description: {
-    color: '#6b7a90',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  or: {
-    textAlign: 'center',
-    marginVertical: 16,
-    color: '#888',
-    fontSize: 14,
-  },
-  socialButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  socialText: {
+    color: '#5b6b8f',
     fontSize: 15,
-    fontFamily: 'Poppins-Bold',
-    fontWeight: 'bold',
-    color: '#000',
+    lineHeight: 22,
+    marginBottom: 18,
+  },
+  form: {
+    marginBottom: 8,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  fieldHalf: {
+    flex: 1,
+  },
+  label: {
+    marginBottom: 6,
+    color: '#5b6b8f',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
