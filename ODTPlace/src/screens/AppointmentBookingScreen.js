@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingBottom: 160,
+    paddingBottom: 200,
   },
   headerCard: {
     backgroundColor: '#ffffff',

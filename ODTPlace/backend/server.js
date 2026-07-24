@@ -287,3 +287,33 @@ app.listen(PORT, HOST, () => {
   console.log(`Server running on http://${HOST}:${PORT}`);
   console.log(`Development mode: ${useMockData() ? 'Using mock data' : 'Connected to database'}`);
 });
+
+// Estatísticas rápidas do médico: consultas completadas e avaliações positivas (nota >= 4)
+app.get('/api/doctors/:id/stats', (req, res) => {
+  const doctorId = req.params.id;
+  if (useMockData()) {
+    // Retornar números mockados quando em modo dev
+    return res.json({ completed_consultations: 120, positive_reviews: 95 });
+  }
+
+  // Contar consultas finalizadas/realizadas
+  const completedQuery = `SELECT COUNT(*) as completed FROM odontoPro_consulta WHERE medico_id = ? AND status IN ('realizada', 'completa', 'confirmada')`;
+  db.query(completedQuery, [doctorId], (err, completedResults) => {
+    if (err) {
+      console.error('Error fetching doctor completed count:', err.message);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    const completed = completedResults[0]?.completed ?? 0;
+
+    // Tentar calcular avaliações positivas; se a coluna não existir, retornar 0
+    const positiveQuery = `SELECT COUNT(*) as positive FROM odontoPro_consulta WHERE medico_id = ? AND status IN ('realizada', 'completa') AND (nota_avaliacao >= 4)`;
+    db.query(positiveQuery, [doctorId], (err2, positiveResults) => {
+      if (err2) {
+        console.log('Positive reviews query failed (column may not exist):', err2.message);
+        return res.json({ completed_consultations: completed, positive_reviews: 0 });
+      }
+      const positive = positiveResults[0]?.positive ?? 0;
+      return res.json({ completed_consultations: completed, positive_reviews: positive });
+    });
+  });
+});

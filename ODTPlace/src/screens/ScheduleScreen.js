@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import ScheduleHeaderNoBack from '../components/ScheduleHeaderNoBack';
 import BottomNavBar from '../components/BottomNavBar';
-import { getPatientAppointments } from '../services/api';
+import { getPatientAppointments, updateAppointment } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -331,20 +331,33 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
         if (!selectedAppointment) return;
 
         try {
-            // Aqui você pode adicionar a chamada para a API de cancelamento
-            // await cancelAppointment(selectedAppointment.id);
-            console.log('Cancelando consulta:', selectedAppointment.id);
+            const id = selectedAppointment.id;
+            // Chama a API para cancelar a consulta
+            await updateAppointment(id, { status: 'cancelada' });
 
-            // Simular alteração do status localmente
+            // Atualiza o estado local para refletir a mudança imediatamente
             setAppointmentsData(prevData =>
                 prevData.map(apt =>
-                    apt.id === selectedAppointment.id
+                    String(apt.id) === String(id)
                         ? { ...apt, status: 'cancelada' }
                         : apt
                 )
             );
 
-            // Por enquanto, apenas fecha os modais e mostra mensagem
+            // Recarregar do servidor para garantir consistência (se possível)
+            try {
+                if (user?.id) {
+                    const refreshed = await getPatientAppointments(String(user.id));
+                    setAppointmentsData(refreshed || []);
+                } else if (user?.email) {
+                    const refreshed = await getPatientAppointments(user.email);
+                    setAppointmentsData(refreshed || []);
+                }
+            } catch (reloadErr) {
+                // Falha silenciosa ao recarregar: já atualizamos localmente
+                console.log('Reload appointments failed:', reloadErr);
+            }
+
             setCancelModalVisible(false);
             setActionModalVisible(false);
             setSelectedAppointment(null);

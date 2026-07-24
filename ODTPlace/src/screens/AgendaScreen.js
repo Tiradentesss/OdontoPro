@@ -268,6 +268,7 @@ export default function AgendaScreen({ navigation }) {
 
       {/* Lista de Compromissos */}
       <FlatList
+        key="agenda-flatlist"
         data={displayedAppointments}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}

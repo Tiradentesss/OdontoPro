@@ -8,7 +8,10 @@ import {
     ImageBackground,
     ScrollView,
     TextInput,
+    Linking,
+    Alert,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getClinicSpecialties } from '../services/api';
@@ -108,9 +111,9 @@ export default function ClinicDetailScreen({ route, navigation }) {
 
                         <View style={styles.ratingRow}>
                             <View style={styles.ratingPill}>
-                                <Text style={styles.ratingValue}>{clinic.avaliacao} ★</Text>
+                                <Text style={styles.ratingValue}>{clinic.avaliacao ?? clinic.avaliacao === 0 ? clinic.avaliacao : '—'} ★</Text>
                             </View>
-                            <Text style={styles.ratingCount}>{clinic.avaliacoes} avaliações</Text>
+                            <Text style={styles.ratingCount}>{(clinic.num_avaliacoes ?? clinic.avaliacoes ?? 0)} avaliações</Text>
                         </View>
                     </View>
 
@@ -132,15 +135,9 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                     onPress={() => navigation.navigate('Professionals', { clinic, user, selectedSpecialty: service.name })}
                                 >
                                     <Text style={styles.serviceName}>{service.name}</Text>
-                                    <Text style={styles.servicePrice}>{service.price}</Text>
-                                    <Text style={styles.availabilityLabel}>Próximos horários</Text>
-                                    <View style={styles.availabilityList}>
-                                        {service.availability?.map((slot) => (
-                                            <View key={slot} style={styles.timeChip}>
-                                                <Text style={styles.timeChipText}>{slot}</Text>
-                                            </View>
-                                        ))}
-                                    </View>
+                                    <Text style={styles.servicePrice}>{typeof service.price === 'string' && service.price.trim().startsWith('R') ? service.price : `R$ ${service.price}`}</Text>
+                                    {/* Espaço para descrição da especialidade (placeholder enquanto não há dado) */}
+                                    <Text style={styles.description} numberOfLines={3}>{service.description ?? 'descrição...'}</Text>
                                 </TouchableOpacity>
                             ))}
                             {visibleServices.length === 0 && (
@@ -174,11 +171,27 @@ export default function ClinicDetailScreen({ route, navigation }) {
                         <Text style={styles.addressText}>{clinic.endereco ?? 'Edifício Síntese Plaza - Av. Sen. Lemos, 791 - sala 1006 - Umarizal, Belém - PA, 66050-000'}</Text>
                         <Text style={[styles.addressLabel, { marginTop: 14 }]}>Contate-nos</Text>
                         <View style={styles.contactRow}>
-                            <TouchableOpacity style={styles.contactButton} activeOpacity={0.85} onPress={() => {}}>
+                            <TouchableOpacity
+                                style={styles.contactButton}
+                                activeOpacity={0.85}
+                                onPress={async () => {
+                                        const phone = clinic.telefone ?? '(91) 98132-2686';
+                                        try {
+                                            await Clipboard.setStringAsync(phone);
+                                            Alert.alert('Número copiado', `Número copiado para a área de transferência: ${phone}`);
+                                        } catch (e) {
+                                            console.log('Clipboard failed:', e);
+                                            Alert.alert('Erro', 'Não foi possível copiar o número.');
+                                        }
+                                    }}
+                            >
                                 <Text style={styles.contactButtonTitle}>Telefone</Text>
                                 <Text style={styles.contactButtonText}>{clinic.telefone ?? '(91) 98132-2686'}</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.contactButton, styles.contactButtonLast]} activeOpacity={0.85} onPress={() => {}}>
+                            <TouchableOpacity style={[styles.contactButton, styles.contactButtonLast]} activeOpacity={0.85} onPress={() => {
+                                const wa = clinic.telefone ? `https://wa.me/${clinic.telefone.replace(/[^0-9]/g, '')}` : null;
+                                if (wa) Linking.openURL(wa);
+                            }}>
                                 <Text style={styles.contactButtonTitle}>WhatsApp</Text>
                                 <Text style={styles.contactButtonText}>Enviar mensagem</Text>
                             </TouchableOpacity>
@@ -381,6 +394,7 @@ const styles = StyleSheet.create({
     ratingCount: {
         color: '#64748b',
         fontSize: 13,
+        marginLeft: 8,
     },
     screenTitle: {
         fontSize: 18,

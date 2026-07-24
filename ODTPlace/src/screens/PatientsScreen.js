@@ -165,6 +165,7 @@ export default function PatientsHistoryScreen({ navigation }) {
 
       {/* Lista Principal Dinâmica */}
       <FlatList
+        key="patients-flatlist"
         data={groupedHistory}
         keyExtractor={item => item.date}
         showsVerticalScrollIndicator={false}

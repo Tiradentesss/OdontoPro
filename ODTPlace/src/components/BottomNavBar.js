@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, TouchableOpacity, Text, Image, StyleSheet, Keyboard } from 'react-native';
 
 const tabs = [
     { key: 'home', label: 'Home', icon: require('../../assets/IconHome.png') },
@@ -9,6 +9,19 @@ const tabs = [
 ];
 
 export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {} }) {
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+    useEffect(() => {
+        const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+        const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
+
+    if (keyboardVisible) return null;
+
     return (
         <View style={styles.bottomBar}>
             {tabs.map((tab) => {

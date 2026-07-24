@@ -55,6 +55,7 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
                     </View>
                 ) : (
                     <FlatList
+                        key="home-flatlist"
                         data={dadosFiltrados}
                         keyExtractor={(item) => String(item.id)}
                         showsVerticalScrollIndicator={false}
@@ -70,40 +71,15 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
 
                                     <View style={styles.infoBlock}>
                                         <Text style={styles.clinicName}>{item.nome}</Text>
-                                        <Text style={styles.clinicSpecialty}>{item.descricao ?? item.especialidade}</Text>
+                                        {item.descricao ? (
+                                            <Text style={[styles.clinicSpecialty, { marginTop: 6 }]} numberOfLines={2}>{item.descricao}</Text>
+                                        ) : null}
                                     </View>
 
                                     <View style={styles.ratingBox}>
-                                        <Text style={styles.ratingValue}>{item.avaliacao ?? '4.9'}</Text>
+                                        <Text style={styles.ratingValue}>{item.avaliacao ?? '4.9'} ★</Text>
                                         <Text style={styles.ratingCount}>{item.num_avaliacoes ?? item.avaliacoes ?? '0'} avaliações</Text>
                                     </View>
-                                </View>
-
-                                <Text style={styles.paymentText}>
-                                    Forma de pagamento: {item.modalidades ?? 'Cartão ou Dinheiro'}
-                                </Text>
-                                <Text style={styles.priceText}>Consulta: {item.preco ?? 'R$ 150,00'}</Text>
-
-                                <Text style={styles.scheduleTitle}>{item.dia ?? 'Horários disponíveis'}</Text>
-
-                                <View style={styles.hours}>
-                                    {(item.horarios || []).length > 0 ? (
-                                        item.horarios.map((hora, index) => (
-                                            <View
-                                                key={hora}
-                                                style={[
-                                                    styles.hourBadge,
-                                                    index < item.horarios.length - 1 && styles.hourMargin,
-                                                ]}
-                                            >
-                                                <Text style={styles.hourText}>{hora}</Text>
-                                            </View>
-                                        ))
-                                    ) : (
-                                        <View style={styles.hourBadge}>
-                                            <Text style={styles.hourText}>Ver horários</Text>
-                                        </View>
-                                    )}
                                 </View>
                             </TouchableOpacity>
                         )}
@@ -164,8 +140,14 @@ const styles = StyleSheet.create({
     },
     cardHeader: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 14,
+        alignItems: 'flex-start',
+    },
+    clinicLogo: {
+        width: 58,
+        height: 58,
+        borderRadius: 16,
+        backgroundColor: '#e0f2fe',
+        marginRight: 14,
     },
     clinicLogo: {
         width: 58,
@@ -184,12 +166,22 @@ const styles = StyleSheet.create({
         color: '#0f172a',
         marginBottom: 4,
     },
+    clinicName: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#0f172a',
+        marginBottom: 6,
+    },
     clinicSpecialty: {
-        fontSize: 14,
-        color: '#0ea5e9',
+        fontSize: 13,
+        color: '#64748b',
     },
     ratingBox: {
         alignItems: 'flex-end',
+    },
+    ratingBox: {
+        alignItems: 'flex-end',
+        marginLeft: 8,
     },
     ratingValue: {
         fontSize: 16,

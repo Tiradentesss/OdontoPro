@@ -93,6 +93,21 @@ export const getClinicDoctors = async (clinicId) => {
   }
 };
 
+export const getDoctorStats = async (doctorId) => {
+  try {
+    const response = await api.get(`/doctors/${doctorId}/stats`);
+    return response.data;
+  } catch (error) {
+    // If the server returns 404 for stats, fall back to zeros instead of throwing
+    if (error && error.response && error.response.status === 404) {
+      console.warn(`Doctor stats not found for id=${doctorId} (404). Returning zeros.`);
+      return { completed_consultations: 0, positive_reviews: 0 };
+    }
+    console.error('API Error (doctor stats):', error);
+    throw error;
+  }
+};
+
 export const loginPatient = async (email, senha) => {
   try {
     const response = await api.post('/login', { email, senha });

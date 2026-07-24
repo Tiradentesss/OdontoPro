@@ -185,6 +185,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                     </View>
 
                     <FlatList
+                        key="professionals-flatlist"
                         data={professionals}
                         keyExtractor={(item) => String(item.id)}
                         showsVerticalScrollIndicator={false}
@@ -204,7 +205,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                     <View style={styles.professionalInfo}>
                                         <Text style={styles.professionalName}>{name}</Text>
                                         <Text style={styles.professionalSpecialty}>{specialty}</Text>
-                                        <Text style={styles.reviewText}>{item.reviews ?? 0} avaliações</Text>
+                                        <Text style={styles.reviewText}>{(item.avaliacao ?? item.rating ?? '—')} ★ • {(item.num_avaliacoes ?? item.reviews ?? item.avaliacoes ?? 0)} avaliações</Text>
                                     </View>
                                 </TouchableOpacity>
                             );

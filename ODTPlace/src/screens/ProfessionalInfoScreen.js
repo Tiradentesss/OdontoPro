@@ -1,13 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
+import { getDoctorStats, getProfessionalAppointments } from '../services/api';
 
 export default function ProfessionalInfoScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
   const clinic = route?.params?.clinic ?? {};
   const user = route?.params?.user;
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [completedConsultations, setCompletedConsultations] = useState(null);
+  const [positiveReviews, setPositiveReviews] = useState(null);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        if (professional?.id) {
+          const stats = await getDoctorStats(professional.id);
+          const completed = stats.completed_consultations ?? 0;
+          const positive = stats.positive_reviews ?? 0;
+          setCompletedConsultations(completed);
+          setPositiveReviews(positive);
+
+          // If stats are zero (or missing), try to fetch appointments and count completed ones as fallback
+          if ((completed === 0) && professional?.id) {
+            try {
+              const appts = await getProfessionalAppointments({ medico_id: professional.id });
+              const completedCount = Array.isArray(appts)
+                ? appts.filter(a => {
+                    const st = (a.status || '').toString().toLowerCase();
+                    return ['realizada', 'completa', 'confirmada', 'confirmado'].includes(st);
+                  }).length
+                : 0;
+              if (completedCount > 0) setCompletedConsultations(completedCount);
+            } catch (err) {
+              // ignore fallback errors — keep zeros
+            }
+          }
+        }
+      } catch (err) {
+        console.log('Failed to load doctor stats:', err);
+      }
+    };
+    loadStats();
+  }, [professional?.id]);
 
   const description = professional.description ||
     'Profissional experiente com dedicação à qualidade do atendimento e ao conforto do paciente. Sempre em busca de atualizações para oferecer os melhores procedimentos e resultados.';
@@ -36,16 +72,12 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
 
           <View style={styles.metricRow}>
             <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>{professional.patients ?? 150}+</Text>
+              <Text style={styles.metricValue}>{completedConsultations ?? professional.patients ?? 0}</Text>
               <Text style={styles.metricLabel}>Pacientes</Text>
             </View>
             <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>{professional.experience ?? '3 anos'}</Text>
-              <Text style={styles.metricLabel}>Experiência</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>{professional.reviews ?? 120}</Text>
-              <Text style={styles.metricLabel}>Avaliações</Text>
+              <Text style={styles.metricValue}>{professional.avaliacao ?? professional.rating ?? '—'} ★</Text>
+              <Text style={styles.metricLabel}>{(professional.num_avaliacoes ?? professional.avaliacoes ?? professional.reviews ?? positiveReviews ?? 0)} avaliações</Text>
             </View>
           </View>
 
@@ -60,8 +92,8 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
           </View>
 
           <View style={styles.sectionBlock}>
-            <Text style={styles.sectionTitle}>Horário de Trabalho</Text>
-            <Text style={styles.sectionText}>{professional.hours ?? 'Seg - Sab (08:00 AM as 18:30 PM)'}</Text>
+            <Text style={styles.sectionTitle}>Horários de Atendimento</Text>
+            <Text style={styles.sectionText}>{(clinic.horarios && clinic.horarios.join ? clinic.horarios.join(' • ') : (clinic.horarios || clinic.horario || professional.hours || 'Seg - Sab (08:00 - 18:30)'))}</Text>
           </View>
 
           <TouchableOpacity
