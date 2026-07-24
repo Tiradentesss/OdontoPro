@@ -504,7 +504,8 @@ class Cadastro(BaseScreen):
         row_email_genero.pack(fill="x")
 
         # configurar colunas: coluna 0 (Email) mais larga, coluna 1 (Gênero) menor
-        row_email_genero.grid_columnconfigure(0, weight=4)
+        # aumentar um pouco o peso da coluna 0 para alargar o campo Email
+        row_email_genero.grid_columnconfigure(0, weight=5)
         row_email_genero.grid_columnconfigure(1, weight=1)
 
         # Labels na mesma linha (row 0)
