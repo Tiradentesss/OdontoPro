@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, StatusBar, Pressable } from 'react-native';
 import CustomInput2 from '../components/CustomInput2';
 import CustomButton from '../components/CustomButton3';
 
@@ -81,13 +81,24 @@ export default function LoginProfissional({ navigation }) {
           textStyle={styles.primaryButtonText}
         />
 
-        <TouchableOpacity
-          style={styles.switchButton}
-          activeOpacity={0.8}
+        <Pressable
           onPress={() => navigation.navigate('Login')}
+          style={({ pressed }) => [
+            styles.switchButton,
+            pressed && styles.switchButtonPressed,
+          ]}
         >
-          <Text style={styles.switchButtonText}>Logar como paciente</Text>
-        </TouchableOpacity>
+          {({ pressed }) => (
+            <Text
+              style={[
+                styles.switchButtonText,
+                pressed && styles.switchButtonTextPressed,
+              ]}
+            >
+              Logar como paciente
+            </Text>
+          )}
+        </Pressable>
       </View>
     </View>
   );
@@ -205,12 +216,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
-    marginTop: 14,
+    marginBottom: 14,
+    marginTop: 20,
+    shadowColor: '#1bc3ea',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  switchButtonPressed: {
+    backgroundColor: '#1bc3ea',
+    transform: [
+      {
+        scale: 0.97,
+      },
+    ],
+    shadowColor: '#1bc3ea',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
+    elevation: 8,
   },
   switchButtonText: {
     color: '#1bc3ea',
     fontSize: 15,
     fontWeight: '700',
+  },
+  switchButtonTextPressed: {
+    color: '#ffffff',
   },
   logo: {
     width: 180,

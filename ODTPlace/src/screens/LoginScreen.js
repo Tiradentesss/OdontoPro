@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, StatusBar, Pressable } from 'react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton3 from '../components/CustomButton3';
 import { loginPatient } from '../services/api';
@@ -103,13 +103,24 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={styles.switchButton}
-          activeOpacity={0.8}
+        <Pressable
           onPress={() => navigation.navigate('LoginProfissional')}
+          style={({ pressed }) => [
+            styles.switchButton,
+            pressed && styles.switchButtonPressed,
+          ]}
         >
-          <Text style={styles.switchButtonText}>Logar como profissional</Text>
-        </TouchableOpacity>
+          {({ pressed }) => (
+            <Text
+              style={[
+                styles.switchButtonText,
+                pressed && styles.switchButtonTextPressed,
+              ]}
+            >
+              Logar como profissional
+            </Text>
+          )}
+        </Pressable>
 
         <View style={styles.signupRow}>
           <Text style={styles.signupText}>Ainda não tem uma conta?</Text>
@@ -162,11 +173,38 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginBottom: 14,
     marginTop: 4,
+    shadowColor: '#1bc3ea',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  switchButtonPressed: {
+    backgroundColor: '#1bc3ea',
+    transform: [
+      {
+        scale: 0.97,
+      },
+    ],
+    shadowColor: '#1bc3ea',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 14,
+    elevation: 8,
   },
   switchButtonText: {
     color: '#1bc3ea',
     fontSize: 15,
     fontWeight: '700',
+  },
+  switchButtonTextPressed: {
+    color: '#ffffff',
   },
   pageTitle: {
     fontSize: 28,
