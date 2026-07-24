@@ -345,6 +345,36 @@ class Cadastro(BaseScreen):
         entries.extend([e1, e2])
         # Aplicar máscara de CPF
         self.mascaras_paciente.adicionar_campo('cpf_paciente', e2, 'cpf')
+        # Campo visual: Sexo (não persiste nem altera lógica de salvamento)
+        sexo_container = ctk.CTkFrame(frame, fg_color="transparent")
+        sexo_container.pack(fill="x", padx=self.padding_lateral, pady=5)
+
+        ctk.CTkLabel(
+            sexo_container,
+            text="Genero",
+            font=font("text"),
+            text_color=COLORS["text_secondary"],
+            anchor="w"
+        ).pack(anchor="w", pady=(0, 3))
+
+        self.sexo_paciente = ctk.CTkComboBox(
+            sexo_container,
+            values=["Masculino", "Feminino"],
+            height=44,
+            state="readonly",
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
+            border_width=1,
+            corner_radius=8,
+            text_color=COLORS["text"],
+            button_color=COLORS["border"],
+            button_hover_color=COLORS["border"],
+            dropdown_fg_color=COLORS["card"],
+            dropdown_text_color=COLORS["text"],
+            dropdown_font=font("text")
+        )
+        self.sexo_paciente.set("")
+        self.sexo_paciente.pack(fill="x")
         
         e1, e2 = self._campo_duplo(frame, "Data de nascimento", "Telefone")
         entries.extend([e1, e2])
@@ -379,11 +409,11 @@ class Cadastro(BaseScreen):
         self._secao_titulo(frame, "Dados Pessoais e Acesso ao Sistema")
         entries = []
         
-        # Linha 1: Nome | Senha
+        # Linha 1: Nome | Senha | Confirmar Senha (visual arrangement)
         container1 = ctk.CTkFrame(frame, fg_color="transparent")
         container1.pack(fill="x", padx=self.padding_lateral, pady=(0, 0))
 
-        # Frame Nome
+        # Frame Nome (esquerda, expansível)
         frame_nome = ctk.CTkFrame(container1, fg_color="transparent")
         frame_nome.pack(side="left", expand=True, fill="x", padx=(0, 5))
 
@@ -409,9 +439,9 @@ class Cadastro(BaseScreen):
         nome_entry.pack(fill="x")
         entries.append(nome_entry)
 
-        # Frame Senha
+        # Frame Senha (meio)
         frame_senha = ctk.CTkFrame(container1, fg_color="transparent")
-        frame_senha.pack(side="left", padx=(5, 0))
+        frame_senha.pack(side="left", padx=(5, 5))
 
         ctk.CTkLabel(
             frame_senha,
@@ -437,38 +467,8 @@ class Cadastro(BaseScreen):
         self.senha_entry.pack()
         entries.append(self.senha_entry)
 
-        # Linha 2: Email | Confirmar Senha
-        container2 = ctk.CTkFrame(frame, fg_color="transparent")
-        container2.pack(fill="x", padx=self.padding_lateral, pady=(0, 0))
-
-        # Frame Email
-        frame_email = ctk.CTkFrame(container2, fg_color="transparent")
-        frame_email.pack(side="left", expand=True, fill="x", padx=(0, 5))
-
-        ctk.CTkLabel(
-            frame_email,
-            text="Email",
-            font=font("text"),
-            text_color=COLORS["text_secondary"],
-            anchor="w"
-        ).pack(anchor="w", pady=(0, 3))
-
-        email_entry = ctk.CTkEntry(
-            frame_email,
-            placeholder_text="seu@email.com",
-            height=44,
-            fg_color=COLORS["input_bg"],
-            border_color=COLORS["border"],
-            border_width=1,
-            corner_radius=8,
-            text_color=COLORS["text"],
-            placeholder_text_color=COLORS["text_muted"]
-        )
-        email_entry.pack(fill="x")
-        entries.append(email_entry)
-
-        # Frame Confirmar Senha
-        frame_confirma_senha = ctk.CTkFrame(container2, fg_color="transparent")
+        # Frame Confirmar Senha (direita)
+        frame_confirma_senha = ctk.CTkFrame(container1, fg_color="transparent")
         frame_confirma_senha.pack(side="left", padx=(5, 0))
 
         ctk.CTkLabel(
@@ -493,6 +493,82 @@ class Cadastro(BaseScreen):
             placeholder_text_color=COLORS["text_muted"]
         )
         self.confirma_senha_entry.pack()
+        # NOTE: keep confirma_senha appended after email to preserve expected entries ordering
+
+        # Linha 2: Email + Gênero (mesmo container, mesma linha do grid)
+        container2 = ctk.CTkFrame(frame, fg_color="transparent")
+        container2.pack(fill="x", padx=self.padding_lateral, pady=(0, 0))
+
+        # Criar uma única linha interna que usa grid para labels (row 0) e campos (row 1)
+        row_email_genero = ctk.CTkFrame(container2, fg_color="transparent")
+        row_email_genero.pack(fill="x")
+
+        # configurar colunas: coluna 0 (Email) mais larga, coluna 1 (Gênero) menor
+        row_email_genero.grid_columnconfigure(0, weight=4)
+        row_email_genero.grid_columnconfigure(1, weight=1)
+
+        # Labels na mesma linha (row 0)
+        lbl_email = ctk.CTkLabel(
+            row_email_genero,
+            text="Email",
+            font=font("text"),
+            text_color=COLORS["text_secondary"],
+            anchor="w"
+        )
+        lbl_email.grid(row=0, column=0, sticky="w", pady=(0, 3))
+
+        lbl_genero = ctk.CTkLabel(
+            row_email_genero,
+            text="Gênero",
+            font=font("text"),
+            text_color=COLORS["text_secondary"],
+            anchor="w"
+        )
+        lbl_genero.grid(row=0, column=1, sticky="w", pady=(0, 3))
+
+        # Campos na mesma linha (row 1)
+        email_frame_inner = ctk.CTkFrame(row_email_genero, fg_color="transparent")
+        email_frame_inner.grid(row=1, column=0, sticky="ew", padx=(0, 5))
+
+        email_entry = ctk.CTkEntry(
+            email_frame_inner,
+            placeholder_text="seu@email.com",
+            height=44,
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
+            border_width=1,
+            corner_radius=8,
+            text_color=COLORS["text"],
+            placeholder_text_color=COLORS["text_muted"]
+        )
+        email_entry.pack(fill="x")
+        entries.append(email_entry)
+
+        genero_frame_inner = ctk.CTkFrame(row_email_genero, fg_color="transparent", width=200)
+        genero_frame_inner.grid(row=1, column=1, sticky="ew")
+        genero_frame_inner.grid_propagate(False)
+
+        self.sexo_profissional = ctk.CTkComboBox(
+            genero_frame_inner,
+            values=["Masculino", "Feminino"],
+            height=44,
+            width=200,
+            state="readonly",
+            fg_color=COLORS["input_bg"],
+            border_color=COLORS["border"],
+            border_width=1,
+            corner_radius=8,
+            text_color=COLORS["text"],
+            button_color=COLORS["border"],
+            button_hover_color=COLORS["border"],
+            dropdown_fg_color=COLORS["card"],
+            dropdown_text_color=COLORS["text"],
+            dropdown_font=font("text")
+        )
+        self.sexo_profissional.set("")
+        self.sexo_profissional.pack(fill="x")
+
+        # Agora append do Confirmar Senha (mantendo ordem de índices esperada pelo salvamento)
         entries.append(self.confirma_senha_entry)
 
         self._secao_titulo(frame, "Tipo de Profissional")
