@@ -606,6 +606,8 @@ class Cadastro(BaseScreen):
             self.frame_medico, "CRO", "Telefone"
         )
         entries.extend([self.cro_entry, self.telefone_entry])
+        self.cro_entry.bind("<KeyRelease>", self._validar_cro_em_tempo_real)
+        self.cro_entry.bind("<FocusOut>", self._validar_cro_em_tempo_real)
         # Aplicar máscara de Telefone para profissional
         self.mascaras_profissional.adicionar_campo('telefone_medico', self.telefone_entry, 'telefone')
 
@@ -1163,6 +1165,75 @@ class Cadastro(BaseScreen):
         except Exception as e:
             self._mostrar_mensagem(f"Erro ao salvar paciente: {str(e)}", sucesso=False)
 
+    def _validar_cro_em_tempo_real(self, event=None):
+        try:
+            texto = self.cro_entry.get() or ""
+            if not texto:
+                return
+
+            texto_limpo = texto.strip().upper()
+            if " " in texto_limpo or "-" in texto_limpo[2:3] and len(texto_limpo) > 2:
+                pass
+
+            if len(texto_limpo) > 0 and len(texto_limpo) <= 2:
+                texto_limpo = texto_limpo[:2]
+            elif len(texto_limpo) > 2 and texto_limpo[2] != '-' and texto_limpo[2:].isdigit():
+                texto_limpo = texto_limpo[:2] + '-' + texto_limpo[2:]
+            elif len(texto_limpo) > 2 and texto_limpo[2] != '-' and not texto_limpo[2:].isdigit():
+                texto_limpo = texto_limpo[:2]
+
+            if len(texto_limpo) > 2 and texto_limpo[2] == '-':
+                uf = texto_limpo[:2]
+                numero = texto_limpo[3:]
+                if len(uf) == 2 and uf.isalpha() and len(numero) <= 5:
+                    texto_limpo = f"{uf}-{numero}"
+                else:
+                    texto_limpo = uf if len(uf) == 2 and uf.isalpha() else texto_limpo[:2]
+
+            texto_limpo = texto_limpo[:2] + (f"-{texto_limpo[3:]}" if len(texto_limpo) > 2 and texto_limpo[2] == '-' else "")
+
+            texto_limpo = ''.join(ch for ch in texto_limpo if ch.isalnum() or ch == '-')
+            texto_limpo = texto_limpo.replace(' ', '')
+            texto_limpo = texto_limpo.upper()
+            if len(texto_limpo) > 2 and texto_limpo[2] != '-':
+                texto_limpo = texto_limpo[:2] + '-' + texto_limpo[2:]
+            texto_limpo = texto_limpo[:2] + (f"-{texto_limpo[3:]}" if len(texto_limpo) > 2 and texto_limpo[2] == '-' else "")
+            if len(texto_limpo) > 2 and texto_limpo[2] == '-':
+                uf = texto_limpo[:2]
+                numero = ''.join(ch for ch in texto_limpo[3:] if ch.isdigit())
+                if len(uf) == 2 and uf.isalpha():
+                    texto_limpo = f"{uf}-{numero[:5]}"
+                else:
+                    texto_limpo = uf[:2]
+
+            if texto_limpo != self.cro_entry.get().strip().upper():
+                self.cro_entry.delete(0, 'end')
+                self.cro_entry.insert(0, texto_limpo)
+        except Exception:
+            pass
+
+    def _validar_cro(self, cro):
+        if not cro:
+            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
+
+        texto = str(cro).strip().upper()
+        if len(texto) < 7 or len(texto) > 9:
+            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
+
+        if texto[2:3] != '-' or len(texto[:2]) != 2:
+            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
+
+        uf = texto[:2]
+        numero = texto[3:]
+        if not uf.isalpha() or len(uf) != 2:
+            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
+        if not numero.isdigit():
+            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
+        if len(numero) < 4 or len(numero) > 5:
+            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
+
+        return True, ""
+
     def _salvar_medico(self, entries):
         """Valida e salva médico no banco de dados"""
         try:
@@ -1189,6 +1260,11 @@ class Cadastro(BaseScreen):
             
             if not cro:
                 self._mostrar_mensagem("❌ CRO é obrigatório!", sucesso=False)
+                return
+
+            cro_valido, msg_cro = self._validar_cro(cro)
+            if not cro_valido:
+                self._mostrar_mensagem(f"❌ {msg_cro}", sucesso=False)
                 return
             
             if not telefone:

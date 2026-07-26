@@ -2,6 +2,7 @@
 
 from config.database import get_connection
 import hashlib
+import re
 from services.query_logger import timed_sql, reset_query_count, get_query_count, inc_query_count
 from services.email_uniqueness_service import EmailUniquenessService
 
@@ -33,6 +34,13 @@ class MedicoController:
             return {
                 "sucesso": False,
                 "mensagem": "CRO é obrigatório e não pode ser vazio."
+            }
+
+        cro = cro.strip() if isinstance(cro, str) else str(cro)
+        if not re.fullmatch(r"[A-Z]{2}-\d{4,5}", cro.upper()):
+            return {
+                "sucesso": False,
+                "mensagem": "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
             }
         
         if not telefone or (isinstance(telefone, str) and not telefone.strip()):
