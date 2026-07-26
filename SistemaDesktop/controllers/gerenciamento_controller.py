@@ -1,6 +1,7 @@
 from config.database import get_connection
 import hashlib
 from datetime import datetime
+from services.email_uniqueness_service import EmailUniquenessService
 
 
 class GerenciamentoController:
@@ -34,6 +35,10 @@ class GerenciamentoController:
         # Limpar espaços em branco
         nome = nome.strip() if isinstance(nome, str) else str(nome)
         email = email.strip() if isinstance(email, str) else email
+        email_normalizado = EmailUniquenessService.normalizar_email(email)
+
+        if email_normalizado and EmailUniquenessService.email_ja_existe(email_normalizado):
+            return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
         
         conn = None
         cursor = None
@@ -64,6 +69,8 @@ class GerenciamentoController:
         except Exception as e:
             if conn:
                 conn.rollback()
+            if EmailUniquenessService.tratar_erro_unique(e):
+                return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
             return {"sucesso": False, "mensagem": f"Erro ao cadastrar gerente: {str(e)}"}
 
         finally:
@@ -188,6 +195,12 @@ class GerenciamentoController:
         conn = None
         cursor = None
         try:
+            if 'email' in campos:
+                email = campos.get('email')
+                email_normalizado = EmailUniquenessService.normalizar_email(email)
+                if email_normalizado and EmailUniquenessService.email_ja_existe(email_normalizado, tipo='gerente', entidade_id=gerente_id):
+                    return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
+
             conn = get_connection()
             cursor = conn.cursor()
 
@@ -205,6 +218,8 @@ class GerenciamentoController:
         except Exception as e:
             if conn:
                 conn.rollback()
+            if EmailUniquenessService.tratar_erro_unique(e):
+                return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
             return {"sucesso": False, "mensagem": f"Erro ao atualizar gerente: {str(e)}"}
 
         finally:

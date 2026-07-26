@@ -3,6 +3,7 @@
 from config.database import get_connection
 import hashlib
 from services.query_logger import timed_sql, reset_query_count, get_query_count, inc_query_count
+from services.email_uniqueness_service import EmailUniquenessService
 
 
 class MedicoController:
@@ -45,6 +46,10 @@ class MedicoController:
         email = email.strip() if isinstance(email, str) else email
         cro = cro.strip() if isinstance(cro, str) else cro
         telefone = telefone.strip() if isinstance(telefone, str) else telefone
+        email_normalizado = EmailUniquenessService.normalizar_email(email)
+
+        if email_normalizado and EmailUniquenessService.email_ja_existe(email_normalizado):
+            return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
         
         conn = None
         cursor = None
@@ -90,6 +95,8 @@ class MedicoController:
         except Exception as e:
             if conn:
                 conn.rollback()
+            if EmailUniquenessService.tratar_erro_unique(e):
+                return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
             return {"sucesso": False, "mensagem": f"Erro ao cadastrar médico: {str(e)}"}
 
         finally:
@@ -202,6 +209,12 @@ class MedicoController:
         conn = None
         cursor = None
         try:
+            if 'email' in campos:
+                email = campos.get('email')
+                email_normalizado = EmailUniquenessService.normalizar_email(email)
+                if email_normalizado and EmailUniquenessService.email_ja_existe(email_normalizado, tipo='medico', entidade_id=medico_id):
+                    return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
+
             conn = get_connection()
             cursor = conn.cursor()
 
@@ -219,6 +232,8 @@ class MedicoController:
         except Exception as e:
             if conn:
                 conn.rollback()
+            if EmailUniquenessService.tratar_erro_unique(e):
+                return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
             return {"sucesso": False, "mensagem": f"Erro ao atualizar médico: {str(e)}"}
 
         finally:

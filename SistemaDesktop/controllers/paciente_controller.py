@@ -2,6 +2,7 @@
 
 from config.database import get_connection
 import hashlib
+from services.email_uniqueness_service import EmailUniquenessService
 
 
 class PacienteController:
@@ -110,6 +111,10 @@ class PacienteController:
         nome = nome.strip() if isinstance(nome, str) else str(nome)
         email = email.strip() if isinstance(email, str) else email
         telefone = telefone.strip() if isinstance(telefone, str) else telefone
+        email_normalizado = EmailUniquenessService.normalizar_email(email)
+        
+        if email_normalizado and EmailUniquenessService.email_ja_existe(email_normalizado):
+            return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
         
         conn = None
         cursor = None
@@ -138,6 +143,8 @@ class PacienteController:
         except Exception as e:
             if conn:
                 conn.rollback()
+            if EmailUniquenessService.tratar_erro_unique(e):
+                return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
             return {"sucesso": False, "mensagem": f"Erro ao cadastrar paciente: {str(e)}"}
 
         finally:
@@ -216,6 +223,12 @@ class PacienteController:
         conn = None
         cursor = None
         try:
+            if 'email' in campos:
+                email = campos.get('email')
+                email_normalizado = EmailUniquenessService.normalizar_email(email)
+                if email_normalizado and EmailUniquenessService.email_ja_existe(email_normalizado, tipo='paciente', entidade_id=paciente_id):
+                    return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
+
             conn = get_connection()
             cursor = conn.cursor()
 
@@ -233,6 +246,8 @@ class PacienteController:
         except Exception as e:
             if conn:
                 conn.rollback()
+            if EmailUniquenessService.tratar_erro_unique(e):
+                return {"sucesso": False, "mensagem": EmailUniquenessService.mensagem_email_duplicado()}
             return {"sucesso": False, "mensagem": f"Erro ao atualizar paciente: {str(e)}"}
 
         finally:
