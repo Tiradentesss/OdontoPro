@@ -1,5 +1,5 @@
-import hashlib
 from config.database import get_connection
+import hashlib
 
 
 def hash_senha(senha: str) -> str:

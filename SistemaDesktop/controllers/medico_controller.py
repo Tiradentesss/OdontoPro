@@ -1,7 +1,7 @@
 # controllers/medico_controller.py
 
 from config.database import get_connection
-import hashlib
+import bcrypt
 import re
 from services.query_logger import timed_sql, reset_query_count, get_query_count, inc_query_count
 from services.email_uniqueness_service import EmailUniquenessService
@@ -67,7 +67,10 @@ class MedicoController:
 
             # Usar senha fornecida ou "123456" como padrão
             senha_para_hash = senha if senha else "123456"
-            senha_hash = hashlib.sha256(senha_para_hash.encode()).hexdigest()
+            senha_hash = bcrypt.hashpw(
+                senha_para_hash.encode("utf-8"),
+                bcrypt.gensalt(rounds=10)
+            ).decode("utf-8")
 
             cursor.execute("""
                 INSERT INTO odontoPro_medico 
