@@ -83,6 +83,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         print("Chamando _render_medicos()")
         self._render_medicos()
 
+    
+
     def _build_ui(self):
         self.pack(fill="both", expand=True)
 

@@ -75,6 +75,7 @@ class Painel(BaseScreen):
         self.dados_cadastros = self._carregar_resumo_cadastros()
         self.dados_medicos = self._carregar_medicos()
         self.dados_relatorios = self._carregar_relatorios()
+        pass
 
     def _renderizar_interface(self):
         """Orquestra a renderização dos componentes"""

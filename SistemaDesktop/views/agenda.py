@@ -475,9 +475,8 @@ class Agenda(BaseScreen):
 
         self.col_widths = {conf['key']: conf['minsize'] for conf in self.col_config}
 
-        print(f"[Agenda] __init__ concluído. Iniciando render()")
+        print(f"[Agenda] __init__ concluído.")
         self._trace_enabled = True
-        self.render()
         # Desabilitar auto-refresh por enquanto - causa loops infinitos
         # self.after(self._auto_refresh_ms, self._auto_check)
 
@@ -1064,6 +1063,7 @@ class Agenda(BaseScreen):
             # CRÍTICO: SEMPRE garantir que loading seja False
             print(f"[AGENDA] _render_after_load: finally block - garantindo _loading=False")
             self._loading = False
+            pass
 
     def _render_filtros(self, parent, datas, medicos, especialidades):
         filtros_card = ctk.CTkFrame(

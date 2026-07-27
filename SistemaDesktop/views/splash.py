@@ -54,20 +54,25 @@ class SplashScreen(ctk.CTkToplevel):
         try:
             if os.path.exists(self.caminho):
                 img = Image.open(self.caminho)
+                # Manter referência PIL para evitar que a imagem seja finalizada
+                self._logo_pil = img
                 self.logo = ctk.CTkImage(
-                    light_image=img,
-                    dark_image=img,
+                    light_image=self._logo_pil,
+                    dark_image=self._logo_pil,
                     size=(120, 120)
                 )
         except Exception:
             self.logo = None
 
         if self.logo:
-            ctk.CTkLabel(
+            lbl = ctk.CTkLabel(
                 frame,
                 image=self.logo,
                 text=""
-            ).pack(pady=(45, 10))
+            )
+            # manter referência no widget também
+            lbl.image = self.logo
+            lbl.pack(pady=(45, 10))
 
         ctk.CTkLabel(
             frame,
@@ -103,28 +108,58 @@ class SplashScreen(ctk.CTkToplevel):
 
         self.progress.set(0)
 
+        # Estado de controle da inicialização
+        self._loading = True
+        self._error = None
+
+        # Impedir fechamento da janela enquanto estiver carregando
+        try:
+            self.protocol("WM_DELETE_WINDOW", self._on_close)
+        except Exception:
+            pass
+
+        # Iniciar thread de inicialização
         threading.Thread(
             target=self.load_system,
             daemon=True
         ).start()
 
     def update_progress(self, value, texto):
-        self.after(0, lambda: self.progress.set(value))
-        self.after(0, lambda: self.status.configure(text=texto))
+        # Sempre agendar atualizações na main thread e checar se o widget existe
+        def _do():
+            try:
+                if not self.winfo_exists():
+                    return
+                self.progress.set(value)
+                self.status.configure(text=texto)
+            except Exception:
+                pass
+
+        try:
+            self.after(0, _do)
+        except Exception:
+            pass
 
     def load_system(self):
         self.update_progress(0.08, "Conectando ao banco...")
         try:
             conn = get_connection()
             conn.close()
-        except Exception:
-            pass
+        except Exception as e:
+            self._error = e
+            print(f"[SPLASH ERROR] Falha ao conectar ao banco: {e}")
+            self.update_progress(0.0, "Erro ao conectar ao banco")
+            # Não continuar se houver erro crítico
+            return
 
         self.update_progress(0.18, "Carregando permissões...")
         try:
             GerenciamentoController.inicializar_permissoes_padrao()
-        except Exception:
-            pass
+        except Exception as e:
+            self._error = e
+            print(f"[SPLASH ERROR] Falha ao inicializar permissões: {e}")
+            self.update_progress(0.0, "Erro ao carregar permissões")
+            return
 
         self.update_progress(0.30, f"Carregando usuário {self.usuario_nome}...")
         try:
@@ -136,63 +171,87 @@ class SplashScreen(ctk.CTkToplevel):
         self.update_progress(0.45, "Carregando médicos...")
         try:
             ConsultaController.listar_medicos(self.clinica_id)
-        except Exception:
-            pass
+        except Exception as e:
+            # não interromper totalmente por falha em dados não-críticos, apenas logar
+            print(f"[SPLASH WARNING] Falha ao carregar médicos: {e}")
 
         self.update_progress(0.60, "Carregando especialidades...")
         try:
             ConsultaController.listar_especialidades()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[SPLASH WARNING] Falha ao carregar especialidades: {e}")
 
         self.update_progress(0.70, "Carregando Agenda...")
         try:
             ConsultaController.listar_opcoes_filtro(self.clinica_id)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[SPLASH WARNING] Falha ao carregar opções da agenda: {e}")
 
         self.update_progress(0.80, "Carregando Relatórios...")
         try:
             from controllers.relatorios_controller import RelatoriosController
             RelatoriosController.obter_resumo_relatorios(self.clinica_id)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[SPLASH WARNING] Falha ao carregar relatórios: {e}")
 
         self.update_progress(0.88, "Carregando imagens...")
         try:
             if os.path.exists(self.caminho):
                 with Image.open(self.caminho) as img:
                     img.load()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[SPLASH WARNING] Falha ao carregar imagens: {e}")
 
         self.update_progress(0.94, "Inicializando componentes...")
         try:
             self.master.update_idletasks()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[SPLASH WARNING] Falha em update_idletasks: {e}")
+        # Finalizar carregamento
+        # (A Splash realiza todas as inicializações necessárias aqui)
 
+        # Finalizar carregamento
         self.update_progress(1.0, "Preparando interface...")
-        self.after(0, self.finish)
+        self._loading = False
+
+        # Chamar finish (on_finish) na UI thread
+        try:
+            self.after(50, self.finish)
+        except Exception:
+            self.finish()
 
     def finish(self):
-        # Chamar on_finish primeiro; se ocorrer erro, fechar splash e mostrar erro sem corromper imagens do login
-        try:
-            self.on_finish()
-        except Exception as e:
+        # Se ocorreu erro durante a inicialização, não permitir fechamento da splash
+        if self._error:
             try:
-                self.destroy()
-            except Exception:
-                pass
-            try:
-                import tkinter.messagebox as mb
-                mb.showerror("Erro ao iniciar aplicação", f"Ocorreu um erro ao inicializar o aplicativo:\n{e}")
+                print(f"[SPLASH ERROR] Inicialização falhou: {self._error}")
+                self.update_progress(0.0, "Erro na inicialização. Verifique o console.")
             except Exception:
                 pass
             return
 
-        # Se on_finish ocorreu sem exceções, então podemos fechar o splash
+        # Disparar o callback de finalização (o caller é responsável por criar o App e destruir as janelas)
         try:
-            self.destroy()
+            if callable(self.on_finish):
+                self.on_finish()
+        except Exception as e:
+            try:
+                print(f"[SPLASH ERROR] Erro em on_finish: {e}")
+                self.update_progress(0.0, "Erro ao finalizar inicialização. Verifique o console.")
+            except Exception:
+                pass
+            return
+
+    def _on_close(self):
+        # Não permitir fechar enquanto estiver carregando
+        if getattr(self, '_loading', False):
+            try:
+                self.update_progress(self.progress.get(), "Inicialização em andamento — aguarde...")
+            except Exception:
+                pass
+            return
+        try:
+            if self.winfo_exists():
+                self.destroy()
         except Exception:
             pass

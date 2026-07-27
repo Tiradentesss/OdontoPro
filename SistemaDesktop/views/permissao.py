@@ -674,6 +674,8 @@ class Permissoes(BaseScreen):
 
         self.toggle_switches_state("disabled")
 
+    # initialize removed to restore original architecture
+
     def _is_self_account_selected(self):
         return bool(self.selected_admin_id is not None and self.selected_admin_id == self.usuario_logado_id)
 

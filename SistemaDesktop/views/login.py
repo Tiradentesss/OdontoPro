@@ -343,17 +343,17 @@ class Login(ctk.CTk):
 
         # Se estiver usando callback (modo com MainWindow), chamar callback
         if self.on_success:
-            # Destruir a janela de login
-            self.withdraw()  # Esconder antes de destruir
-            self.destroy()
-            
-            # Chamar callback com dados do usuário
-            self.on_success(
-                usuario["nome"],
-                usuario["id"],
-                usuario["tipo"],
-                usuario["clinica_id"]
-            )
+            # Não fechar a janela de login agora; manter aberta enquanto a Splash carrega
+            try:
+                self.on_success(
+                    usuario["nome"],
+                    usuario["id"],
+                    usuario["tipo"],
+                    usuario["clinica_id"]
+                )
+            except Exception:
+                # Se o callback falhar por algum motivo, não fechar o login aqui
+                pass
         else:
             # Modo CTk puro (compatibilidade com versão anterior)
             self.destroy()

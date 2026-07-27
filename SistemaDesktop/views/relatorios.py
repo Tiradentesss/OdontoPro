@@ -717,6 +717,17 @@ class Relatorios(BaseScreen):
         ax = fig.add_subplot(111)
         ax.set_facecolor(COLORS["card"])
 
+        # Se não houver valores (todos zero), evitar chamar ax.pie() — mostra mensagem amigável
+        if sum(values) == 0:
+            empty_label = ctk.CTkLabel(
+                self._specialty_canvas_container,
+                text="Nenhum dado disponível",
+                font=font("small"),
+                text_color=COLORS["text_secondary"]
+            )
+            empty_label.pack(padx=12, pady=12)
+            return
+
         wedges, texts, autotexts = ax.pie(
             values,
             labels=labels,
@@ -848,6 +859,7 @@ class Relatorios(BaseScreen):
             return
 
         self._apply_loaded_data(summary, chart_period, specialty_data, productivity_rows, medicos, especialidades)
+        pass
 
     def create_transactions_section(self):
         container = ctk.CTkFrame(self.main_container, fg_color=COLORS["card"],
