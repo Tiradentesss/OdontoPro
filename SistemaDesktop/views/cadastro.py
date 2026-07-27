@@ -9,7 +9,6 @@ from services.campos_mascarados import GerenciadorMascaras
 from services.endereco_service import EnderecoService
 from services.localidades_service import LocalidadesService
 from datetime import datetime
-import hashlib
 
 
 class CidadeSearchComboBox(ctk.CTkFrame):

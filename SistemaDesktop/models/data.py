@@ -1,17 +1,13 @@
 from config.database import get_connection
-from models.auth import autenticar_usuario
-import hashlib
+from models.auth import autenticar_usuario, verificar_senha
 
 
 def autenticar_usuario(email, senha):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    senha_hash = hashlib.sha256(senha.encode()).hexdigest()
-    
     print(f"[DEBUG] Email: {email}")
     print(f"[DEBUG] Senha digitada: {senha}")
-    print(f"[DEBUG] Senha hash gerada: {senha_hash}")
 
     # ================= CLÍNICA =================
     cursor.execute("""
@@ -24,7 +20,7 @@ def autenticar_usuario(email, senha):
 
     if clinica:
         print(f"[DEBUG] Clínica encontrada. Senha no BD: {clinica['senha']}")
-        if clinica['senha'] == senha_hash:
+        if verificar_senha(senha, clinica['senha']):
             print("[DEBUG] Senha da clínica corresponde!")
             conn.close()
             return {
@@ -48,7 +44,7 @@ def autenticar_usuario(email, senha):
 
     if gerenciamento:
         print(f"[DEBUG] Gerenciamento encontrado. Senha no BD: {gerenciamento['senha']}")
-        if gerenciamento['senha'] == senha_hash:
+        if verificar_senha(senha, gerenciamento['senha']):
             print("[DEBUG] Senha do gerenciamento corresponde!")
             return {
                 "tipo": "gerenciamento",

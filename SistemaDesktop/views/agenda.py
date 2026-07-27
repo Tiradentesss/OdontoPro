@@ -691,6 +691,9 @@ class Agenda(BaseScreen):
         self._timeout_id = self.winfo_toplevel().after(40000, lambda: self._timeout_loading(thread_id))
         self.winfo_toplevel().after(100, self._process_load_queue)
 
+    def refresh(self):
+        self.render()
+
     def _load_data_thread(self):
         """Carrega dados de consultas - envia resultados para o thread principal via fila"""
         print(f"[AGENDA] _load_data_thread: INICIADA")
@@ -1024,7 +1027,7 @@ class Agenda(BaseScreen):
 
                 ctk.CTkLabel(
                     empty_box,
-                    text='Nenhuma consulta encontrada.',
+                    text='Nenhuma consulta agendada.',
                     text_color=self.colors['text_secondary'],
                     font=ctk.CTkFont(size=16, weight='bold')
                 ).pack(pady=(20, 6))

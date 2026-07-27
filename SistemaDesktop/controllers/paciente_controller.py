@@ -1,7 +1,7 @@
 # controllers/paciente_controller.py
 
 from config.database import get_connection
-import bcrypt
+from models.auth import hash_senha
 from services.email_uniqueness_service import EmailUniquenessService
 
 
@@ -127,10 +127,7 @@ class PacienteController:
             cursor = conn.cursor()
 
             senha_para_hash = senha if senha else "123456"
-            senha_hash = bcrypt.hashpw(
-                senha_para_hash.encode("utf-8"),
-                bcrypt.gensalt(rounds=10)
-            ).decode("utf-8")
+            senha_hash = hash_senha(senha_para_hash)
 
             cursor.execute("""
                 INSERT INTO odontoPro_paciente 

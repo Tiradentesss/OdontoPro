@@ -1,3 +1,10 @@
+import sys
+
+print("=" * 80)
+print("PYTHON:", sys.executable)
+print("VERSÃO:", sys.version)
+print("=" * 80)
+
 import customtkinter as ctk
 import os
 from PIL import Image
@@ -345,6 +352,11 @@ class App(ctk.CTk):
                 self.current_frame.refresh()
             except Exception as e:
                 print(f"Erro ao atualizar frame {name}: {e}")
+        elif hasattr(self.current_frame, "render"):
+            try:
+                self.current_frame.render()
+            except Exception as e:
+                print(f"Erro ao renderizar frame {name}: {e}")
         self.current_frame.pack(expand=True, fill="both")
         self.update_active_button(name)
 
