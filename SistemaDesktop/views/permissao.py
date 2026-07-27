@@ -551,7 +551,7 @@ class Permissoes(BaseScreen):
                 "perms": {p: False for p in self.permissions_list}
             },
             "Carlos Mendes": {
-                "id": 4, "level": "Financeiro", "email": "carlos.mendes@email.com", "status": "Ativo",
+                "id": 4, "level": "Relatórios", "email": "carlos.mendes@email.com", "status": "Ativo",
                 "perms": {
                     "Painel": True, "Agenda": False, "Financeiro": True,
                     "Configurações": False, "Cadastro": False,
@@ -600,7 +600,7 @@ class Permissoes(BaseScreen):
         permissions_config = {
             "Painel":        {"icon": "📊", "desc": "Acesso ao dashboard",     "color": COLORS["accent"]},
             "Agenda":        {"icon": "📅", "desc": "Gerenciar eventos",        "color": COLORS["secondary"]},
-            "Financeiro":    {"icon": "💰", "desc": "Transações e relatórios",  "color": COLORS["success"]},
+            "Financeiro":    {"icon": "�", "desc": "Transações e relatórios",  "color": COLORS["success"]},
             "Configurações": {"icon": "⚙️", "desc": "Configurações do sistema", "color": COLORS["warning"]},
             "Cadastro":      {"icon": "📝", "desc": "CRUD de usuários",         "color": COLORS["danger"]},
             "Gerenciamento": {"icon": "👔", "desc": "Controle administrativo",  "color": COLORS["secondary"]},
@@ -615,6 +615,7 @@ class Permissoes(BaseScreen):
         for index, perm_name in enumerate(all_items):
             row, col = divmod(index, 2)
             config = permissions_config.get(perm_name, {"icon": "🛡️", "desc": "", "color": COLORS["muted"]})
+            display_name = "Relatórios" if perm_name == "Financeiro" else perm_name
 
             card = ctk.CTkFrame(
                 self.permissions_container, fg_color=COLORS["content_bg"],
@@ -633,7 +634,7 @@ class Permissoes(BaseScreen):
             ).place(relx=0.5, rely=0.5, anchor="center")
 
             ctk.CTkLabel(
-                card, text=perm_name,
+                card, text=display_name,
                 font=ctk.CTkFont(size=14, weight="bold"), text_color=COLORS["text"]
             ).grid(row=0, column=1, sticky="w", padx=(0, 5), pady=(10, 0))
 

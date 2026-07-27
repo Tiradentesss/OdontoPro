@@ -4,7 +4,7 @@ import customtkinter as ctk
 from SistemaDesktop.views import permissao
 from views.painel import Painel
 from views.agenda import Agenda
-from views.financeiro import Financeiro
+from views.relatorios import Relatorios
 from views.cadastro import Cadastro
 from views.configuracoes import Configuracoes
 
@@ -24,7 +24,7 @@ class App(ctk.CTk):
         self.frames = {
             "painel": Painel(self.container),
             "agenda": Agenda(self.container),
-            "financeiro": Financeiro(self.container),
+            "relatorios": Relatorios(self.container),
             "cadastro": Cadastro(self.container),
             "config": Configuracoes(self.container),
             "permissao": permissao(self.container)

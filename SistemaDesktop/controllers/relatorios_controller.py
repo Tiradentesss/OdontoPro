@@ -1,11 +1,11 @@
-# controllers/financeiro_controller.py
+# controllers/relatorios_controller.py
 
 from config.database import get_connection
 from datetime import datetime, timedelta
 from decimal import Decimal
 
 
-class FinanceiroController:
+class RelatoriosController:
     
     @staticmethod
     def criar_transacao(tipo, descricao, valor, clinica_id, data=None, categoria=None):
@@ -76,9 +76,9 @@ class FinanceiroController:
                 conn.close()
     
     @staticmethod
-    def obter_resumo_financeiro(clinica_id, data_inicio=None, data_fim=None):
+    def obter_resumo_relatorios(clinica_id, data_inicio=None, data_fim=None):
         """
-        Retorna resumo financeiro: total receita, despesa e lucro
+        Retorna resumo de relatórios: total receita, despesa e lucro
         """
         conn = None
         cursor = None

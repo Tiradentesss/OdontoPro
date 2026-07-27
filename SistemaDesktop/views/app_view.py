@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from views.painel import Painel
 from views.agenda import Agenda
-from views.financeiro import Financeiro
+from views.relatorios import Relatorios
 from views.cadastro import Cadastro
 from views.configuracoes import Configuracoes
 
@@ -21,7 +21,7 @@ class App(ctk.CTk):
         self.frames = {
             "painel": Painel(container),
             "agenda": Agenda(container),
-            "financeiro": Financeiro(container),
+            "relatorios": Relatorios(container),
             "cadastro": Cadastro(container),
             "config": Configuracoes(container),
         }
@@ -37,7 +37,7 @@ class App(ctk.CTk):
         for txt, key in [
             ("Painel", "painel"),
             ("Agenda", "agenda"),
-            ("Financeiro", "financeiro"),
+            ("Relatórios", "relatorios"),
             ("Cadastro", "cadastro"),
             ("Config", "config"),
         ]:

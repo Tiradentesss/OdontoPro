@@ -151,10 +151,10 @@ class SplashScreen(ctk.CTkToplevel):
         except Exception:
             pass
 
-        self.update_progress(0.80, "Carregando Financeiro...")
+        self.update_progress(0.80, "Carregando Relatórios...")
         try:
-            from controllers.financeiro_controller import FinanceiroController
-            FinanceiroController.obter_resumo_financeiro(self.clinica_id)
+            from controllers.relatorios_controller import RelatoriosController
+            RelatoriosController.obter_resumo_relatorios(self.clinica_id)
         except Exception:
             pass
 

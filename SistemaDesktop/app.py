@@ -4,7 +4,7 @@ from PIL import Image
 
 from views.painel import Painel
 from views.agenda import Agenda
-from views.financeiro import Financeiro
+from views.relatorios import Relatorios
 from views.cadastro import Cadastro
 from views.configuracoes import Configuracoes
 from views.gerenciamento import Gerenciamento
@@ -73,7 +73,7 @@ class App(ctk.CTk):
         self.frames = {
             "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
             "agenda": Agenda(self.container, self.clinica_id),
-            "financeiro": Financeiro(self.container, self.clinica_id),
+            "relatorios": Relatorios(self.container, self.clinica_id),
             "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),
@@ -128,7 +128,7 @@ class App(ctk.CTk):
         mapa_permissoes = {
             "painel": "Painel",
             "agenda": "Agenda",
-            "financeiro": "Financeiro",
+            "relatorios": "Financeiro",
             "config": "Configurações",
             "cadastro": "Cadastro",
             "permissao": "Permissões",
@@ -238,7 +238,7 @@ class App(ctk.CTk):
             todos_itens = [
                 ("📊  Painel", "painel"),
                 ("📅  Agenda", "agenda"),
-                ("💳  Financeiro", "financeiro"),
+                ("�  Relatórios", "relatorios"),
                 ("🏢  Gerenciamento", "gerenciamento"),
                 ("🔐  Permissões", "permissao"),
                 ("👥  Cadastro", "cadastro"),
@@ -250,7 +250,7 @@ class App(ctk.CTk):
             self.menu_items = [
                 ("📊  Painel", "painel"),
                 ("📅  Agenda", "agenda"),
-                ("💳  Financeiro", "financeiro"),
+                ("�  Relatórios", "relatorios"),
                 ("🏢  Gerenciamento", "gerenciamento"),
                 ("🔐  Permissões", "permissao"),
                 ("👥  Cadastro", "cadastro"),
@@ -292,7 +292,7 @@ class App(ctk.CTk):
         self.frames = {
             "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
             "agenda": Agenda(self.container, self.clinica_id),
-            "financeiro": Financeiro(self.container, self.clinica_id),
+            "relatorios": Relatorios(self.container, self.clinica_id),
             "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),

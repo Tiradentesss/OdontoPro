@@ -7,7 +7,7 @@ from controllers.consulta_controller import ConsultaController
 from controllers.paciente_controller import PacienteController
 from controllers.medico_controller import MedicoController
 from controllers.gerenciamento_controller import GerenciamentoController
-from controllers.financeiro_controller import FinanceiroController
+from controllers.relatorios_controller import RelatoriosController
 from controllers.clinica_controller import ClinicaController
 
 class Painel(BaseScreen):
@@ -74,12 +74,12 @@ class Painel(BaseScreen):
         self.dados_contagem_consultas = self._carregar_contagem_consultas()
         self.dados_cadastros = self._carregar_resumo_cadastros()
         self.dados_medicos = self._carregar_medicos()
-        self.dados_financeiro = self._carregar_financeiro()
+        self.dados_relatorios = self._carregar_relatorios()
 
     def _renderizar_interface(self):
         """Orquestra a renderização dos componentes"""
         self._render_proximas_consultas(row=0, col=0)
-        self._render_resumo_financeiro(row=0, col=1)
+        self._render_resumo_relatorios(row=0, col=1)
         self._render_status_consultas(row=1, col=0)
         self._render_resumo_cadastros(row=1, col=1)
         self._render_profissionais_ativos(row=2, col=0)
@@ -176,14 +176,14 @@ class Painel(BaseScreen):
 
         self._criar_botao_ir_para(card, 'agenda')
 
-    def _render_resumo_financeiro(self, row, col):
-        card = self._criar_card("Resumo Financeiro", "Receita e despesas do mês", row, col, padx=(10, 0))
+    def _render_resumo_relatorios(self, row, col):
+        card = self._criar_card("Resumo Relatórios", "Receita e despesas do mês", row, col, padx=(10, 0))
         
         container = ctk.CTkFrame(card, fg_color="transparent")
         container.pack(fill="x", padx=20, pady=10)
         container.grid_columnconfigure((0,1,2), weight=1)
 
-        f = self.dados_financeiro
+        f = self.dados_relatorios
         metrics = [
             ("Faturamento", f"R$ {f['faturamento']:,.0f}", self.colors['primary']),
             ("Despesas", f"R$ {f['despesas']:,.0f}", self.colors['danger']),
@@ -203,7 +203,7 @@ class Painel(BaseScreen):
             font=ctk.CTkFont(size=12, slant="italic"), text_color=self.colors['text_muted']
         )
         footer.pack(pady=(15, 20))
-        self._criar_botao_ir_para(card, 'financeiro')
+        self._criar_botao_ir_para(card, 'relatorios')
 
     def _render_status_consultas(self, row, col):
         card = self._criar_card("Status das Consultas", "Distribuição de consultas por status", row, col, padx=(0, 10))
@@ -451,8 +451,8 @@ class Painel(BaseScreen):
             print(f"Erro ao carregar médicos: {e}")
             return []
 
-    def _carregar_financeiro(self):
-        """Carrega resumo financeiro do mês"""
+    def _carregar_relatorios(self):
+        """Carrega resumo de relatórios do mês"""
         try:
             if not self.clinica_id:
                 return {
@@ -463,8 +463,8 @@ class Painel(BaseScreen):
                     'realizadas': 0
                 }
             
-            # Buscar dados do FinanceiroController
-            resumo = FinanceiroController.obter_resumo_financeiro(self.clinica_id)
+            # Buscar dados do RelatoriosController
+            resumo = RelatoriosController.obter_resumo_relatorios(self.clinica_id)
             return resumo if resumo else {
                 'faturamento': 0,
                 'despesas': 0,
@@ -473,7 +473,7 @@ class Painel(BaseScreen):
                 'realizadas': 0
             }
         except Exception as e:
-            print(f"Erro ao carregar dados financeiros: {e}")
+            print(f"Erro ao carregar dados de relatórios: {e}")
             return {
                 'faturamento': 0,
                 'despesas': 0,
