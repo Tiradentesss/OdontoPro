@@ -393,8 +393,15 @@ class Cadastro(BaseScreen):
         self._configurar_campos_endereco_paciente(entries[4], entries[5], entries[6], entries[7])
 
         self._secao_titulo(frame, "Acesso ao Sistema")
-        e1, e2 = self._campo_duplo(frame, "Email", "Senha", show2="*")
-        entries.extend([e1, e2])
+        e1, e2, e3 = self._campo_triplo(
+            frame,
+            "Email",
+            "Senha",
+            "Confirmar Senha",
+            show2="*",
+            show3="*"
+        )
+        entries.extend([e1, e2, e3])
 
         self.paciente_entries = entries
         self._botoes_acao(frame, "Salvar Paciente", target_entries=self.paciente_entries)
@@ -724,12 +731,14 @@ class Cadastro(BaseScreen):
 
         return entry1, entry2
 
-    def _campo_triplo(self, parent, label1, label2, label3):
+    def _campo_triplo(self, parent, label1, label2, label3, show1=None, show2=None, show3=None):
         container = ctk.CTkFrame(parent, fg_color="transparent")
         container.pack(fill="x", padx=self.padding_lateral, pady=5)
 
         entries_list = []
-        for index, label in enumerate((label1, label2, label3)):
+        labels = (label1, label2, label3)
+        shows = (show1, show2, show3)
+        for index, (label, show) in enumerate(zip(labels, shows)):
             frame_i = ctk.CTkFrame(container, fg_color="transparent")
             frame_i.pack(
                 side="left",
@@ -779,10 +788,17 @@ class Cadastro(BaseScreen):
                 )
                 entry_i.set("")
             else:
+                placeholder = f"Digite {label.lower()}"
+                if label == "Confirmar Senha":
+                    placeholder = "Confirme sua senha"
+                if label == "Email":
+                    placeholder = "seu@email.com"
+
                 entry_i = ctk.CTkEntry(
                     frame_i,
-                    placeholder_text=f"Digite {label.lower()}",
+                    placeholder_text=placeholder,
                     height=44,
+                    show=show,
                     fg_color=COLORS["input_bg"],
                     border_color=COLORS["border"],
                     border_width=1,
@@ -1107,6 +1123,7 @@ class Cadastro(BaseScreen):
             complemento = entries[9].get().strip()
             email = entries[10].get().strip()
             senha = entries[11].get().strip()
+            confirma_senha = entries[12].get().strip()
             
             # Validações básicas
             
@@ -1125,6 +1142,14 @@ class Cadastro(BaseScreen):
             
             if not senha:
                 self._mostrar_mensagem("❌ Senha é obrigatória!", sucesso=False)
+                return
+
+            if not confirma_senha:
+                self._mostrar_mensagem("❌ Confirmar senha é obrigatório!", sucesso=False)
+                return
+
+            if senha != confirma_senha:
+                self._mostrar_mensagem("❌ As senhas informadas não coincidem.", sucesso=False)
                 return
             
             # Validações extras de formato
