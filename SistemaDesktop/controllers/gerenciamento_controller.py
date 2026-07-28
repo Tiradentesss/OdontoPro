@@ -107,9 +107,9 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def obter_gerente_por_id(gerente_id):
+    def obter_gerente_por_id(gerente_id, clinica_id=None):
         """
-        Obtém um gerente específico pelo ID
+        Obtém um gerente específico pelo ID e, quando disponível, restringe à clínica.
         """
         conn = None
         cursor = None
@@ -117,9 +117,14 @@ class GerenciamentoController:
             conn = get_connection()
             cursor = conn.cursor(dictionary=True)
 
-            cursor.execute("""
-                SELECT * FROM odontoPro_gerenciamento WHERE id = %s
-            """, (gerente_id,))
+            if clinica_id is not None:
+                cursor.execute("""
+                    SELECT * FROM odontoPro_gerenciamento WHERE id = %s AND clinica_id = %s
+                """, (gerente_id, clinica_id))
+            else:
+                cursor.execute("""
+                    SELECT * FROM odontoPro_gerenciamento WHERE id = %s
+                """, (gerente_id,))
 
             return cursor.fetchone()
 
@@ -188,7 +193,7 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def atualizar_gerente(gerente_id, **campos):
+    def atualizar_gerente(gerente_id, clinica_id=None, **campos):
         """
         Atualiza dados de um gerente
         """
@@ -207,9 +212,13 @@ class GerenciamentoController:
             # Construir query dinamicamente
             set_clause = ", ".join([f"{k} = %s" for k in campos.keys()])
             valores = list(campos.values()) + [gerente_id]
+            where_clause = "id = %s"
+            if clinica_id is not None:
+                where_clause += " AND clinica_id = %s"
+                valores.append(clinica_id)
 
             cursor.execute(f"""
-                UPDATE odontoPro_gerenciamento SET {set_clause} WHERE id = %s
+                UPDATE odontoPro_gerenciamento SET {set_clause} WHERE {where_clause}
             """, valores)
 
             conn.commit()
@@ -229,7 +238,7 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def desativar_gerente(gerente_id, current_user_id=None):
+    def desativar_gerente(gerente_id, current_user_id=None, clinica_id=None):
         """
         Desativa um gerente (soft delete)
         """
@@ -245,9 +254,13 @@ class GerenciamentoController:
             conn = get_connection()
             cursor = conn.cursor()
 
-            cursor.execute("""
-                UPDATE odontoPro_gerenciamento SET ativo = 0 WHERE id = %s
-            """, (gerente_id,))
+            sql = "UPDATE odontoPro_gerenciamento SET ativo = 0 WHERE id = %s"
+            params = [gerente_id]
+            if clinica_id is not None:
+                sql += " AND clinica_id = %s"
+                params.append(clinica_id)
+
+            cursor.execute(sql, tuple(params))
 
             conn.commit()
             return {"sucesso": True, "mensagem": "Gerente desativado com sucesso"}
@@ -333,7 +346,7 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def ativar_gerente(gerente_id):
+    def ativar_gerente(gerente_id, clinica_id=None):
         """
         Ativa um gerente (após configuração de permissões)
         """
@@ -343,9 +356,13 @@ class GerenciamentoController:
             conn = get_connection()
             cursor = conn.cursor()
 
-            cursor.execute("""
-                UPDATE odontoPro_gerenciamento SET ativo = 1 WHERE id = %s
-            """, (gerente_id,))
+            sql = "UPDATE odontoPro_gerenciamento SET ativo = 1 WHERE id = %s"
+            params = [gerente_id]
+            if clinica_id is not None:
+                sql += " AND clinica_id = %s"
+                params.append(clinica_id)
+
+            cursor.execute(sql, tuple(params))
 
             conn.commit()
             return {"sucesso": True, "mensagem": "Gerente ativado com sucesso"}

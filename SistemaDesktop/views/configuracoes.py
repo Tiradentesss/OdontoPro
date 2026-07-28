@@ -1171,8 +1171,8 @@ class Configuracoes(BaseScreen):
                 cursor.execute("""
                     SELECT nome, email
                     FROM odontoPro_gerenciamento
-                    WHERE id = %s
-                """, (self.usuario_id,))
+                    WHERE id = %s AND clinica_id = %s
+                """, (self.usuario_id, self.clinica_id))
 
                 result = cursor.fetchone()
                 if result:
@@ -1442,8 +1442,8 @@ class Configuracoes(BaseScreen):
                     cursor.execute("""
                         UPDATE odontoPro_gerenciamento
                         SET nome = %s, email = %s
-                        WHERE id = %s
-                    """, (nome, email, self.usuario_id))
+                        WHERE id = %s AND clinica_id = %s
+                    """, (nome, email, self.usuario_id, self.clinica_id))
                     
                     conn.commit()
                     messagebox.showinfo("Sucesso", "✓ Dados do perfil salvos com sucesso!\n\nNota: CPF, Telefone e Data de Nascimento podem estar em outra tabela ou serão implementados em breve.")

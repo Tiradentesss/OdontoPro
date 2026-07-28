@@ -86,10 +86,13 @@ class ConsultaService:
                     AND DATE(data_hora) = %s
                     AND TIME(data_hora) = %s
                     AND status != 'cancelada'
+                    AND clinica_id = (
+                        SELECT clinica_id FROM odontoPro_medico WHERE id = %s
+                    )
             """
 
             def _exec():
-                cursor.execute(query, (medico_id, data_consulta, hora_consulta))
+                cursor.execute(query, (medico_id, data_consulta, hora_consulta, medico_id))
                 return cursor.fetchone()
 
             resultado = timed_sql("verificar_horario_disponivel", _exec, sql=query)
@@ -138,11 +141,14 @@ class ConsultaService:
                     medico_id = %s
                     AND DATE(data_hora) = %s
                     AND status != 'cancelada'
+                    AND clinica_id = (
+                        SELECT clinica_id FROM odontoPro_medico WHERE id = %s
+                    )
                 ORDER BY hora ASC
             """
 
             def _exec():
-                cursor.execute(query, (medico_id, data_consulta))
+                cursor.execute(query, (medico_id, data_consulta, medico_id))
                 return cursor.fetchall()
 
             resultados = timed_sql("listar_horarios_ocupados_no_dia", _exec, sql=query) or []
@@ -418,13 +424,24 @@ class ConsultaService:
 
             cursor = conn.cursor()
             def _exec():
-                cursor.execute('''
-                    SELECT DATE(data_hora), TIME(data_hora)
-                    FROM odontoPro_consulta
-                    WHERE medico_id = %s
-                      AND status != 'cancelada'
-                      AND DATE(data_hora) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
-                ''', (medico_id, dias_ahead))
+                # aplicar filtro de clínica quando disponível no escopo (clinica_id)
+                if clinica_id is not None:
+                    cursor.execute('''
+                        SELECT DATE(data_hora), TIME(data_hora)
+                        FROM odontoPro_consulta
+                        WHERE medico_id = %s
+                          AND clinica_id = %s
+                          AND status != 'cancelada'
+                          AND DATE(data_hora) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
+                    ''', (medico_id, clinica_id, dias_ahead))
+                else:
+                    cursor.execute('''
+                        SELECT DATE(data_hora), TIME(data_hora)
+                        FROM odontoPro_consulta
+                        WHERE medico_id = %s
+                          AND status != 'cancelada'
+                          AND DATE(data_hora) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
+                    ''', (medico_id, dias_ahead))
                 return cursor.fetchall()
 
             ocupados_rows = timed_sql("carregar_agenda_disponivel - buscar ocupados", _exec, sql="SELECT DATE(data_hora), TIME(data_hora) FROM odontoPro_consulta WHERE medico_id = %s AND DATE(data_hora) BETWEEN ...") or []
@@ -629,7 +646,7 @@ class ConsultaService:
                      nome, email, telefone, criado_em)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (
+                params = (
                     clinica_id,
                     paciente_id,
                     medico_id,
@@ -641,7 +658,7 @@ class ConsultaService:
                     email_paciente,
                     telefone_paciente,
                     criado_em
-                ))
+                )
             else:
                 query = """
                     INSERT INTO odontoPro_consulta 
@@ -649,7 +666,7 @@ class ConsultaService:
                      nome, email, telefone, criado_em)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (
+                params = (
                     clinica_id,
                     paciente_id,
                     medico_id,
@@ -660,9 +677,16 @@ class ConsultaService:
                     email_paciente,
                     telefone_paciente,
                     criado_em
-                ))
+                )
 
+            print("[ConsultaService] Executando INSERT:", query.strip().replace('\n', ' '))
+            print("[ConsultaService] Parâmetros:", params)
+            cursor.execute(query, params)
             consulta_id = cursor.lastrowid
+            rowcount = cursor.rowcount
+            print(f"[ConsultaService] cursor.lastrowid={consulta_id}, cursor.rowcount={rowcount}")
+            conn.commit()
+            print("[ConsultaService] commit executado")
 
             if consulta_id:
                 print(f"[ConsultaService] ✓ Consulta criada com sucesso. ID: {consulta_id}")
@@ -682,6 +706,12 @@ class ConsultaService:
 
         except mysql.connector.Error as e:
             print(f"[ConsultaService] Erro MySQL em criar_consulta: {e}")
+            if conn:
+                try:
+                    conn.rollback()
+                    print("[ConsultaService] rollback executado após erro MySQL")
+                except Exception as rollback_error:
+                    print(f"[ConsultaService] Erro ao dar rollback: {rollback_error}")
             return {
                 'sucesso': False,
                 'mensagem': f'Erro ao salvar no banco: {str(e)}',
@@ -693,6 +723,12 @@ class ConsultaService:
             print(f"[ConsultaService] Erro geral em criar_consulta: {e}")
             import traceback
             traceback.print_exc()
+            if conn:
+                try:
+                    conn.rollback()
+                    print("[ConsultaService] rollback executado após erro inesperado")
+                except Exception as rollback_error:
+                    print(f"[ConsultaService] Erro ao dar rollback: {rollback_error}")
             return {
                 'sucesso': False,
                 'mensagem': f'Erro inesperado: {str(e)}',
@@ -707,7 +743,7 @@ class ConsultaService:
                 conn.close()
 
     @staticmethod
-    def buscar_por_id(consulta_id):
+    def buscar_por_id(consulta_id, clinica_id=None):
         """
         Busca uma consulta específica pelo ID.
         
@@ -723,24 +759,44 @@ class ConsultaService:
             conn = get_connection()
             cursor = conn.cursor()
 
-            query = """
-                SELECT 
-                    c.id, p.nome, c.data_hora, c.status, p.telefone, p.email,
-                    p.sexo, p.data_nascimento, p.cpf, p.foto, c.observacoes,
-                    m.nome AS medico_nome, 
-                    COALESCE((
-                        SELECT GROUP_CONCAT(e.nome SEPARATOR ', ')
-                        FROM odontoPro_medico_especialidades me
-                        JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
-                        WHERE me.medico_id = m.id
-                    ), '') AS especialidade
-                FROM odontoPro_consulta c
-                LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
-                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
-                WHERE c.id = %s
-            """
+            if clinica_id is not None:
+                query = """
+                    SELECT 
+                        c.id, p.nome, c.data_hora, c.status, p.telefone, p.email,
+                        p.sexo, p.data_nascimento, p.cpf, p.foto, c.observacoes,
+                        m.nome AS medico_nome, 
+                        COALESCE((
+                            SELECT GROUP_CONCAT(e.nome SEPARATOR ', ')
+                            FROM odontoPro_medico_especialidades me
+                            JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                            WHERE me.medico_id = m.id
+                        ), '') AS especialidade
+                    FROM odontoPro_consulta c
+                    LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
+                    LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                    WHERE c.id = %s
+                      AND c.clinica_id = %s
+                """
+                cursor.execute(query, (consulta_id, clinica_id))
+            else:
+                query = """
+                    SELECT 
+                        c.id, p.nome, c.data_hora, c.status, p.telefone, p.email,
+                        p.sexo, p.data_nascimento, p.cpf, p.foto, c.observacoes,
+                        m.nome AS medico_nome, 
+                        COALESCE((
+                            SELECT GROUP_CONCAT(e.nome SEPARATOR ', ')
+                            FROM odontoPro_medico_especialidades me
+                            JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                            WHERE me.medico_id = m.id
+                        ), '') AS especialidade
+                    FROM odontoPro_consulta c
+                    LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
+                    LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                    WHERE c.id = %s
+                """
+                cursor.execute(query, (consulta_id,))
 
-            cursor.execute(query, (consulta_id,))
             consulta = cursor.fetchone()
             return consulta
 

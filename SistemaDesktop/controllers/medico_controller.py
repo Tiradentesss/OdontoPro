@@ -150,9 +150,9 @@ class MedicoController:
     # outros métodos podem reutilizar `listar_medicos` ou `obter_medico_por_id`.
 
     @staticmethod
-    def obter_medico_por_id(medico_id):
+    def obter_medico_por_id(medico_id, clinica_id=None):
         """
-        Obtém um médico específico pelo ID
+        Obtém um médico específico pelo ID e, quando disponível, restringe à clínica.
         """
         conn = None
         cursor = None
@@ -161,11 +161,16 @@ class MedicoController:
             cursor = conn.cursor(dictionary=True)
 
             def _exec():
-                sql = "SELECT * FROM odontoPro_medico WHERE id = %s"
-                cursor.execute(sql, (medico_id,))
+                if clinica_id is not None:
+                    sql = "SELECT * FROM odontoPro_medico WHERE id = %s AND clinica_id = %s"
+                    cursor.execute(sql, (medico_id, clinica_id))
+                else:
+                    sql = "SELECT * FROM odontoPro_medico WHERE id = %s"
+                    cursor.execute(sql, (medico_id,))
                 return cursor.fetchone()
 
-            return timed_sql("obter_medico_por_id", _exec, sql="SELECT * FROM odontoPro_medico WHERE id = %s")
+            sql_debug = "SELECT * FROM odontoPro_medico WHERE id = %s" if clinica_id is None else "SELECT * FROM odontoPro_medico WHERE id = %s AND clinica_id = %s"
+            return timed_sql("obter_medico_por_id", _exec, sql=sql_debug)
 
         except Exception as e:
             print(f"Erro ao obter médico: {e}")
@@ -210,7 +215,7 @@ class MedicoController:
                 conn.close()
 
     @staticmethod
-    def atualizar_medico(medico_id, **campos):
+    def atualizar_medico(medico_id, clinica_id=None, **campos):
         """
         Atualiza dados de um médico
         """
@@ -229,9 +234,13 @@ class MedicoController:
             # Construir query dinamicamente
             set_clause = ", ".join([f"{k} = %s" for k in campos.keys()])
             valores = list(campos.values()) + [medico_id]
+            where_clause = "id = %s"
+            if clinica_id is not None:
+                where_clause += " AND clinica_id = %s"
+                valores.append(clinica_id)
 
             cursor.execute(f"""
-                UPDATE odontoPro_medico SET {set_clause} WHERE id = %s
+                UPDATE odontoPro_medico SET {set_clause} WHERE {where_clause}
             """, valores)
 
             conn.commit()
@@ -251,7 +260,7 @@ class MedicoController:
                 conn.close()
 
     @staticmethod
-    def deletar_medico(medico_id):
+    def deletar_medico(medico_id, clinica_id=None):
         """
         Deleta um médico do banco
         """
@@ -261,7 +270,13 @@ class MedicoController:
             conn = get_connection()
             cursor = conn.cursor()
 
-            cursor.execute("DELETE FROM odontoPro_medico WHERE id = %s", (medico_id,))
+            sql = "DELETE FROM odontoPro_medico WHERE id = %s"
+            params = [medico_id]
+            if clinica_id is not None:
+                sql += " AND clinica_id = %s"
+                params.append(clinica_id)
+
+            cursor.execute(sql, tuple(params))
             conn.commit()
             return {"sucesso": True, "mensagem": "Médico deletado com sucesso"}
 

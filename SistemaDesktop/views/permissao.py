@@ -750,9 +750,13 @@ class Permissoes(BaseScreen):
                     if permissao_id:
                         GerenciamentoController.adicionar_permissao_gerente(gerente_id, permissao_id)
             if self.account_status_switch.get():
-                GerenciamentoController.ativar_gerente(gerente_id)
+                GerenciamentoController.ativar_gerente(gerente_id, clinica_id=self.clinica_id)
             else:
-                resultado = GerenciamentoController.desativar_gerente(gerente_id, current_user_id=self.usuario_logado_id)
+                resultado = GerenciamentoController.desativar_gerente(
+                    gerente_id,
+                    current_user_id=self.usuario_logado_id,
+                    clinica_id=self.clinica_id
+                )
                 if not resultado.get("sucesso"):
                     messagebox.showerror("Erro", resultado.get("mensagem", "Erro ao salvar permissões"))
                     return

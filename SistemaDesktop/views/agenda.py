@@ -1498,7 +1498,7 @@ class Agenda(BaseScreen):
             ).pack()
             return
 
-        consulta = ConsultaController.buscar_por_id(self.paciente_selecionado)
+        consulta = ConsultaController.buscar_por_id(self.paciente_selecionado, self.clinica_id)
         if not consulta:
             ctk.CTkLabel(
                 card,

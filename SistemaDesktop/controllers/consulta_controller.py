@@ -175,37 +175,67 @@ class ConsultaController:
                 conn.close()
 
     @staticmethod
-    def buscar_por_id(consulta_id):
+    def buscar_por_id(consulta_id, clinica_id=None):
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
-            SELECT
-                c.id,
-                p.nome,
-                c.data_hora,
-                c.status,
-                p.telefone,
-                p.email,
-                p.sexo,
-                p.data_nascimento,
-                p.cpf,
-                p.foto,
-                c.observacoes,
-                m.nome AS medico_nome,
-                COALESCE((
-                    SELECT e.nome
-                    FROM odontoPro_medico_especialidades me
-                    JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
-                    WHERE me.medico_id = m.id
-                    ORDER BY e.nome
-                    LIMIT 1
-                ), '') AS especialidade
-            FROM odontoPro_consulta c
-            LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
-            LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
-            WHERE c.id = %s
-        """, (consulta_id,))
+        if clinica_id is not None:
+            cursor.execute("""
+                SELECT
+                    c.id,
+                    p.nome,
+                    c.data_hora,
+                    c.status,
+                    p.telefone,
+                    p.email,
+                    p.sexo,
+                    p.data_nascimento,
+                    p.cpf,
+                    p.foto,
+                    c.observacoes,
+                    m.nome AS medico_nome,
+                    COALESCE((
+                        SELECT e.nome
+                        FROM odontoPro_medico_especialidades me
+                        JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                        WHERE me.medico_id = m.id
+                        ORDER BY e.nome
+                        LIMIT 1
+                    ), '') AS especialidade
+                FROM odontoPro_consulta c
+                LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
+                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                WHERE c.id = %s
+                  AND c.clinica_id = %s
+            """, (consulta_id, clinica_id,))
+        else:
+            cursor.execute("""
+                SELECT
+                    c.id,
+                    p.nome,
+                    c.data_hora,
+                    c.status,
+                    p.telefone,
+                    p.email,
+                    p.sexo,
+                    p.data_nascimento,
+                    p.cpf,
+                    p.foto,
+                    c.observacoes,
+                    m.nome AS medico_nome,
+                    COALESCE((
+                        SELECT e.nome
+                        FROM odontoPro_medico_especialidades me
+                        JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
+                        WHERE me.medico_id = m.id
+                        ORDER BY e.nome
+                        LIMIT 1
+                    ), '') AS especialidade
+                FROM odontoPro_consulta c
+                LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
+                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                WHERE c.id = %s
+            """, (consulta_id,))
 
         dado = cursor.fetchone()
         conn.close()
