@@ -3,33 +3,56 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusB
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
-import { getProfessionalAppointments } from '../services/api';
+import { getProfessionalAppointments, getDoctorStats } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [appointments, setAppointments] = useState([]);
+  const [doctorStats, setDoctorStats] = useState({ completed_consultations: 0, positive_reviews: 0 });
+  const [retentionCount, setRetentionCount] = useState(0);
+  const [period, setPeriod] = useState('all'); // 'all' | 'month' | 'week'
   
   // 2. Consome o estado do tema e a paleta de cores dinâmica
   const { isDarkMode, colors } = useTheme();
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadAppointments = async () => {
+      if (!user?.id) {
+        setAppointments([]);
+        return;
+      }
       try {
-        const data = await getProfessionalAppointments();
+        const data = await getProfessionalAppointments({ medico_id: user.id });
         setAppointments(Array.isArray(data) ? data : []);
+        try {
+          const s = await getDoctorStats(user.id);
+          setDoctorStats(s || { completed_consultations: 0, positive_reviews: 0 });
+        } catch (err) {
+          console.log('Failed to load doctor stats:', err);
+        }
       } catch (error) {
         console.log('Error loading professional appointments:', error);
       }
     };
 
     loadAppointments();
-  }, []);
+  }, [user?.id]);
 
   const nextAppointment = useMemo(() => {
+    const now = new Date();
     const next = [...appointments]
       .filter((item) => item && item.data_hora)
+      .filter((item) => {
+        const appointmentDate = new Date(item.data_hora);
+        const status = (item?.status || '').toString().toLowerCase();
+        const isCancelled = ['cancelada', 'cancelado', 'não confirmado', 'nao confirmado'].includes(status);
+        const isCompleted = ['realizada', 'realizado', 'concluida', 'concluido', 'confirmada', 'confirmado', 'completa'].includes(status);
+        return !isCancelled && !isCompleted && appointmentDate > now;
+      })
       .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora))[0];
 
     if (!next) {
@@ -49,10 +72,93 @@ export default function HomeScreen({ navigation }) {
       procedure: next.observacoes || next.especialidade_nome || 'Consulta',
       time: appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       date: appointmentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' }),
+      dateKey: `${appointmentDate.getFullYear()}-${String(appointmentDate.getMonth() + 1).padStart(2, '0')}-${String(appointmentDate.getDate()).padStart(2, '0')}`,
       avatarColor: isDarkMode ? '#1E3A8A' : '#EFF6FF',
       textColor: isDarkMode ? '#60A5FA' : '#163783'
     };
   }, [appointments, isDarkMode]);
+
+  const uniquePatientCount = useMemo(() => {
+    const cutoff = new Date();
+    if (period === 'week') cutoff.setDate(cutoff.getDate() - 7);
+    else if (period === 'month') cutoff.setDate(cutoff.getDate() - 30);
+
+    const patientIds = new Set();
+    appointments.forEach((item) => {
+      if (!item) return;
+      if (period !== 'all' && item?.data_hora) {
+        const d = new Date(item.data_hora);
+        if (d < cutoff) return;
+      }
+      if (item?.paciente_id) {
+        patientIds.add(String(item.paciente_id));
+      } else if (item?.email) {
+        patientIds.add(item.email);
+      }
+    });
+    return patientIds.size;
+  }, [appointments, period]);
+
+  useEffect(() => {
+    // compute retention: patients without appointments in last 180 days
+    const map = new Map();
+    appointments.forEach((a) => {
+      const pid = a?.paciente_id || a?.email || a?.nome;
+      if (!pid) return;
+      const prev = map.get(String(pid));
+      const dt = a?.data_hora ? new Date(a.data_hora) : null;
+      if (!prev || (dt && dt > prev)) map.set(String(pid), dt);
+    });
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 180);
+    const count = Array.from(map.values()).filter(d => !d || d < cutoff).length;
+    setRetentionCount(count);
+  }, [appointments]);
+
+  const confirmedCount = useMemo(() => {
+    const cutoff = new Date();
+    if (period === 'week') cutoff.setDate(cutoff.getDate() - 7);
+    else if (period === 'month') cutoff.setDate(cutoff.getDate() - 30);
+    return appointments.filter((item) => {
+      if (!item) return false;
+      if (period !== 'all' && item?.data_hora) {
+        const d = new Date(item.data_hora);
+        if (d < cutoff) return false;
+      }
+      const status = (item?.status || '').toString().toLowerCase();
+      return ['confirmada', 'confirmado', 'realizada', 'completa'].includes(status);
+    }).length;
+  }, [appointments, period]);
+
+  const pendingCount = useMemo(() => {
+    const cutoff = new Date();
+    if (period === 'week') cutoff.setDate(cutoff.getDate() - 7);
+    else if (period === 'month') cutoff.setDate(cutoff.getDate() - 30);
+    return appointments.filter((item) => {
+      if (!item) return false;
+      if (period !== 'all' && item?.data_hora) {
+        const d = new Date(item.data_hora);
+        if (d < cutoff) return false;
+      }
+      const status = (item?.status || '').toString().toLowerCase();
+      return ['pendente', 'agendada', 'novo agendamento', 'novo'].includes(status);
+    }).length;
+  }, [appointments, period]);
+
+  const cancelledCount = useMemo(() => {
+    const cutoff = new Date();
+    if (period === 'week') cutoff.setDate(cutoff.getDate() - 7);
+    else if (period === 'month') cutoff.setDate(cutoff.getDate() - 30);
+    return appointments.filter((item) => {
+      if (!item) return false;
+      if (period !== 'all' && item?.data_hora) {
+        const d = new Date(item.data_hora);
+        if (d < cutoff) return false;
+      }
+      const status = (item?.status || '').toString().toLowerCase();
+      return ['cancelada', 'cancelado', 'não confirmado', 'nao confirmado'].includes(status);
+    }).length;
+  }, [appointments, period]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.container }]}>
@@ -73,7 +179,7 @@ export default function HomeScreen({ navigation }) {
         {/* Cabeçalho */}
         <View style={styles.header}>
           <View style={styles.textGroup}>
-            <Text style={[styles.greeting, { color: colors.text }]}>Olá, Gabriel</Text>
+            <Text style={[styles.greeting, { color: colors.text }]}>Olá, {user?.nome ?? 'Profissional'}</Text>
             <Text style={styles.subtitle}>Veja o panorama e a agenda da sua clínica para hoje.</Text>
           </View>
           
@@ -128,7 +234,16 @@ export default function HomeScreen({ navigation }) {
         <TouchableOpacity 
           style={[styles.reminderCard, { backgroundColor: colors.card, borderColor: colors.border }]} 
           activeOpacity={0.8}
-          onPress={() => navigation?.navigate('AgendaTab')}
+          onPress={() => {
+            if (nextAppointment?.dateKey) {
+              navigation?.navigate('AgendaTab', {
+                initialDate: nextAppointment.dateKey,
+                navigationSeed: Date.now(),
+              });
+            } else {
+              navigation?.navigate('AgendaTab');
+            }
+          }}
         >
           <View style={styles.reminderHeader}>
             <View style={[styles.avatarPlaceholder, { backgroundColor: nextAppointment.avatarColor }]}>
@@ -152,7 +267,20 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
 
         {/* Destaques da Clínica */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Destaques da Clínica</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Destaques da Clínica</Text>
+          <View style={{ flexDirection: 'row' }}>
+            {['all','month','week'].map(p => {
+              const label = p === 'all' ? 'Todos' : p === 'month' ? 'Mês' : 'Semana';
+              const active = p === period;
+              return (
+                <TouchableOpacity key={p} onPress={() => setPeriod(p)} style={{ paddingHorizontal: 8, paddingVertical: 6, marginLeft: 8, borderRadius: 8, backgroundColor: active ? colors.brandBlue : colors.card }}>
+                  <Text style={{ color: active ? '#fff' : colors.text, fontWeight: '700', fontSize: 12 }}>{label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
         <View style={[styles.insightsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.insightRow}>
             <View style={[styles.insightIconWrapper, { backgroundColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
@@ -160,10 +288,10 @@ export default function HomeScreen({ navigation }) {
             </View>
             <View style={styles.insightBody}>
               <Text style={[styles.insightTitle, { color: colors.text }]}>Volume de Pacientes</Text>
-              <Text style={styles.insightMeta}>142 ativos em tratamento contínuo</Text>
+              <Text style={styles.insightMeta}>{uniquePatientCount} pacientes ativos</Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: isDarkMode ? '#064E3B' : '#F0FDF4' }]}>
-              <Text style={[styles.statusText, { color: isDarkMode ? '#34D399' : '#16A34A' }]}>Estável</Text>
+              <Text style={[styles.statusText, { color: isDarkMode ? '#34D399' : '#16A34A' }]}>{uniquePatientCount > 0 ? 'Estável' : 'Vazio'}</Text>
             </View>
           </View>
 
@@ -174,11 +302,11 @@ export default function HomeScreen({ navigation }) {
               <MaterialCommunityIcons name="currency-usd" size={20} color={isDarkMode ? '#38BDF8' : '#0369A1'} />
             </View>
             <View style={styles.insightBody}>
-              <Text style={[styles.insightTitle, { color: colors.text }]}>Balanço Estimado do Mês</Text>
-              <Text style={styles.insightMeta}>Metas de fechamento alinhadas com o esperado</Text>
+              <Text style={[styles.insightTitle, { color: colors.text }]}>Consultas concluídas</Text>
+              <Text style={styles.insightMeta}>{doctorStats.completed_consultations ?? 0} concluídas</Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: isDarkMode ? '#0C4A6E' : '#E0F2FE' }]}>
-              <Text style={[styles.statusText, { color: isDarkMode ? '#38BDF8' : '#0369A1' }]}>+14%</Text>
+              <Text style={[styles.statusText, { color: isDarkMode ? '#38BDF8' : '#0369A1' }]}>{doctorStats.completed_consultations ?? 0}</Text>
             </View>
           </View>
 
@@ -190,7 +318,7 @@ export default function HomeScreen({ navigation }) {
             </View>
             <View style={styles.insightBody}>
               <Text style={[styles.insightTitle, { color: colors.text }]}>Oportunidade de Retenção</Text>
-              <Text style={styles.insightMeta}>3 pacientes não retornam há mais de 6 meses.</Text>
+              <Text style={styles.insightMeta}>{retentionCount} pacientes sem retorno há 6+ meses</Text>
             </View>
           </View>
         </View>

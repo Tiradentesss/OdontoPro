@@ -13,6 +13,7 @@ import {
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
 import { getProfessionalAppointments } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function PatientProfileScreen({ route, navigation }) {
   const params = route.params || {};
@@ -28,6 +29,8 @@ export default function PatientProfileScreen({ route, navigation }) {
     avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=120&h=120',
   };
 
+  const { user } = useAuth();
+
   useEffect(() => {
     const loadAppointment = async () => {
       if (params?.appointment?.id) {
@@ -35,12 +38,12 @@ export default function PatientProfileScreen({ route, navigation }) {
         return;
       }
 
-      if (!params?.id) {
+      if (!params?.id || !user?.id) {
         return;
       }
 
       try {
-        const data = await getProfessionalAppointments();
+        const data = await getProfessionalAppointments({ medico_id: user.id });
         const found = Array.isArray(data)
           ? data.find((item) => String(item.id) === String(params.id))
           : null;
@@ -51,7 +54,7 @@ export default function PatientProfileScreen({ route, navigation }) {
     };
 
     loadAppointment();
-  }, [params?.appointment?.id, params?.id]);
+  }, [params?.appointment?.id, params?.id, user?.id]);
 
   const currentPatient = appointment
     ? {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -12,29 +12,59 @@ import {
   Alert 
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
+import { useTheme } from '../components/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { updateDoctorProfile } from '../services/api';
 
 export default function PersonalDataScreen({ navigation }) {
-  // Estados para gerenciar as informações do formulário
-  const [name, setName] = useState('Gabriel Gomes');
-  const [cpf, setCpf] = useState('100.000.111-90');
-  const [email, setEmail] = useState('gabrielgomes@gmail.com');
-  const [phone, setPhone] = useState('(91) 98765-4321');
+  const { user, login } = useAuth();
+  const [name, setName] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('Masculino');
-  const [address, setAddress] = useState('45 Nova Batista Campos, Belém Pará');
-
-  // Estados de Foco para feedback visual premium
+  const [address, setAddress] = useState('');
   const [focusedInput, setFocusedInput] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-  // 2. Consome o estado do tema e a paleta de cores dinâmica
   const { isDarkMode, colors } = useTheme();
 
-  const handleSave = () => {
-    Alert.alert(
-      'Informações Atualizadas', 
-      'Seus dados cadastrais foram salvos com sucesso no sistema.',
-      [{ text: 'Ok', onPress: () => navigation.goBack() }]
-    );
+  useEffect(() => {
+    setName(user?.nome || user?.name || '');
+    setEmail(user?.email || '');
+    setPhone(user?.telefone || '');
+    setCpf(user?.crm_cro || user?.cpf || '');
+    setGender(user?.sexo || 'Masculino');
+    setAddress(user?.endereco || '');
+  }, [user?.id, user?.nome, user?.email, user?.telefone, user?.crm_cro, user?.cpf, user?.sexo, user?.endereco]);
+
+  const handleSave = async () => {
+    if (!user?.id) {
+      Alert.alert('Erro', 'Faça login novamente para atualizar seus dados.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const payload = {
+        nome: name,
+        email,
+        telefone: phone,
+      };
+
+      if (cpf) {
+        payload.crm_cro = cpf;
+      }
+
+      const updated = await updateDoctorProfile(user.id, payload);
+      login({ ...user, ...updated, nome: updated?.nome || name, email: updated?.email || email, telefone: updated?.telefone || phone, crm_cro: updated?.crm_cro || cpf });
+      Alert.alert('Informações Atualizadas', 'Seus dados cadastrais foram salvos com sucesso no sistema.', [{ text: 'Ok', onPress: () => navigation.goBack() }]);
+    } catch (error) {
+      console.log('Error updating doctor profile:', error);
+      Alert.alert('Erro', 'Não foi possível atualizar seus dados no momento.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const renderGenderButton = (option) => {
@@ -233,8 +263,9 @@ export default function PersonalDataScreen({ navigation }) {
           style={[styles.saveButton, { backgroundColor: colors.brandBlue, shadowColor: colors.brandBlue }]} 
           activeOpacity={0.85}
           onPress={handleSave}
+          disabled={saving}
         >
-          <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+          <Text style={styles.saveButtonText}>{saving ? 'Salvando...' : 'Salvar Alterações'}</Text>
         </TouchableOpacity>
 
       </ScrollView>

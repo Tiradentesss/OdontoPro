@@ -12,11 +12,13 @@ import { Feather } from '@expo/vector-icons';
 import { Alert } from 'react-native';
 import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
 import { getProfessionalAppointments, updateAppointment } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function AppointmentDetailsScreen({ route, navigation }) {
   const { patientName, allowReschedule = true, appointment: routeAppointment } = route.params || { patientName: 'Victor Araújo' };
   const [appointment, setAppointment] = useState(routeAppointment || null);
   const [status, setStatus] = useState(routeAppointment?.status === 'confirmada' ? 'Confirmada' : routeAppointment?.status === 'cancelada' ? 'Cancelada' : 'Pendente');
+  const { user } = useAuth();
 
   // 2. Consome o estado do tema e a paleta de cores dinâmica
   const { isDarkMode, colors } = useTheme();
@@ -29,12 +31,12 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
         return;
       }
 
-      if (!route.params?.id) {
+      if (!route.params?.id || !user?.id) {
         return;
       }
 
       try {
-        const data = await getProfessionalAppointments();
+        const data = await getProfessionalAppointments({ medico_id: user.id });
         const found = Array.isArray(data) ? data.find((item) => String(item.id) === String(route.params.id)) : null;
         setAppointment(found || null);
         setStatus(found?.status === 'confirmada' ? 'Confirmada' : found?.status === 'cancelada' ? 'Cancelada' : 'Pendente');
@@ -44,7 +46,7 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
     };
 
     loadAppointment();
-  }, [routeAppointment?.id, route.params?.id]);
+  }, [routeAppointment?.id, route.params?.id, user?.id]);
 
   const appointmentDate = appointment?.data_hora ? new Date(appointment.data_hora) : null;
   const appointmentDateLabel = appointmentDate?.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -54,8 +56,9 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
   const handleConfirm = async () => {
     try {
       if (appointment?.id) {
-        await updateAppointment(appointment.id, { status: 'confirmada' });
-        setStatus('Confirmada');
+        await updateAppointment(appointment.id, { status: 'realizada' });
+        setAppointment((prev) => prev ? { ...prev, status: 'realizada' } : prev);
+        setStatus('Realizada');
       }
       navigation.navigate('SuccessScreen');
     } catch (error) {

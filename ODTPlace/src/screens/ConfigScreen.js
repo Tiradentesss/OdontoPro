@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext'; // Importação corrigida apontando para src/
+import { useAuth } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -22,8 +23,9 @@ const ACCENT_BLUE = "#1E40AF";
 const MUTED_TEXT = "#64748B";
 
 export default function ConfigScreen({ navigation }) {
-  // Consome o estado global do tema e a função de alternar
+  // Consome o estado global do tema, o usuário e a função de alternar
   const { isDarkMode, toggleTheme, colors } = useTheme();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
     Alert.alert(
@@ -35,20 +37,11 @@ export default function ConfigScreen({ navigation }) {
           text: "Sair", 
           style: "destructive",
           onPress: () => {
-            console.log("Usuário deslogado");
-            const parentNavigation = navigation?.getParent?.();
-
-            if (parentNavigation?.reset) {
-              parentNavigation.reset({
-                index: 0,
-                routes: [{ name: 'PreLogin' }],
-              });
-            } else {
-              navigation?.reset({
-                index: 0,
-                routes: [{ name: 'PreLogin' }],
-              });
-            }
+            logout();
+            navigation?.reset({
+              index: 0,
+              routes: [{ name: 'PreLogin' }],
+            });
           }
         }
       ]
@@ -97,8 +90,8 @@ export default function ConfigScreen({ navigation }) {
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={[styles.userName, { color: colors.text }]}>Gabriel Gomes</Text>
-            <Text style={styles.userEmail}>gabrielgomes@gmail.com</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>{user?.nome || user?.name || 'Profissional'}</Text>
+            <Text style={styles.userEmail}>{user?.email || 'email@exemplo.com'}</Text>
           </View>
         </View>
 

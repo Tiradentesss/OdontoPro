@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, StatusBar, Pressable } from 'react-native';
 import CustomInput2 from '../components/CustomInput2';
 import CustomButton from '../components/CustomButton3';
+import { loginProfessional } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginProfissional({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const { login } = useAuth();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (email === '' || senha === '') {
       Alert.alert('Erro', 'Preencha todos os campos!');
       return;
@@ -18,8 +21,19 @@ export default function LoginProfissional({ navigation }) {
       return;
     }
 
-    const userName = email.split('@')[0];
-    navigation.replace('HomeP', { userName });
+    try {
+      const user = await loginProfessional(email, senha);
+      if (user && (user.id || user.email)) {
+        login({ ...user, role: 'professional' });
+        navigation.replace('HomeP');
+      } else {
+        Alert.alert('Erro', 'Resposta inválida do servidor.');
+      }
+    } catch (error) {
+      console.log('Professional login error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Falha ao fazer login.';
+      Alert.alert('Erro', errorMessage);
+    }
   };
 
   return (

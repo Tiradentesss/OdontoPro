@@ -108,6 +108,16 @@ export const getDoctorStats = async (doctorId) => {
   }
 };
 
+export const getDoctorById = async (doctorId) => {
+  try {
+    const response = await api.get(`/doctors/${doctorId}`);
+    return response.data;
+  } catch (error) {
+    console.error('API Error (doctor profile):', error);
+    throw error;
+  }
+};
+
 export const loginPatient = async (email, senha) => {
   try {
     const response = await api.post('/login', { email, senha });
@@ -124,6 +134,25 @@ export const loginPatient = async (email, senha) => {
       throw new Error('Não foi possível conectar ao servidor.\n\nVerifique:\n1. O backend está rodando em ' + API_BASE_URL + '?\n2. Sua conexão de rede?');
     }
     // Server errors
+    if (error.response) {
+      throw error;
+    }
+    throw new Error('Erro de conexão. Tente novamente.');
+  }
+};
+
+export const loginProfessional = async (email, senha) => {
+  try {
+    const response = await api.post('/login/profissional', { email, senha });
+    return response.data;
+  } catch (error) {
+    console.error('Professional Login API Error:', error.message);
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      throw new Error('Conexão expirou. O servidor está respondendo?');
+    }
+    if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error') || !error.response) {
+      throw new Error('Não foi possível conectar ao servidor.\n\nVerifique:\n1. O backend está rodando em ' + API_BASE_URL + '?\n2. Sua conexão de rede?');
+    }
     if (error.response) {
       throw error;
     }
@@ -197,6 +226,16 @@ export const updatePatientProfile = async (patientId, profileData) => {
     return response.data;
   } catch (error) {
     console.error('API Error:', error);
+    throw error;
+  }
+};
+
+export const updateDoctorProfile = async (doctorId, profileData) => {
+  try {
+    const response = await api.put(`/doctors/${doctorId}`, profileData);
+    return response.data;
+  } catch (error) {
+    console.error('API Error (doctor profile update):', error);
     throw error;
   }
 };

@@ -115,13 +115,127 @@ app.get('/api/clinics/:clinicId/doctors', (req, res) => {
     return res.json(mockDoctors);
   }
   const clinicId = req.params.clinicId;
-  const query = `SELECT m.id, m.nome, m.crm_cro, m.telefone, m.ativo, m.avaliacao, m.num_avaliacoes, m.foto, GROUP_CONCAT(e.nome) as especialidades FROM odontoPro_medico m LEFT JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id WHERE m.clinica_id = ? AND m.ativo = 1 GROUP BY m.id`;
+  const query = `SELECT m.id, m.nome, m.crm_cro, m.telefone, m.email, m.ativo, m.avaliacao, m.num_avaliacoes, m.foto, GROUP_CONCAT(e.nome) as especialidades FROM odontoPro_medico m LEFT JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id WHERE m.clinica_id = ? AND m.ativo = 1 GROUP BY m.id`;
   db.query(query, [clinicId], (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error. Using mock data.', data: mockDoctors });
     }
     res.json(results.map((row) => ({ ...row, especialidades: row.especialidades ? row.especialidades.split(',') : [] })));
+  });
+});
+
+app.get('/api/doctors/:id', (req, res) => {
+  const doctorId = req.params.id;
+  if (useMockData()) {
+    const doctor = mockDoctors.find((item) => String(item.id) === String(doctorId));
+    return doctor ? res.json(doctor) : res.status(404).json({ error: 'Doctor not found' });
+  }
+
+  const query = `SELECT m.id, m.nome, m.crm_cro, m.telefone, m.email, m.foto, m.avaliacao, m.num_avaliacoes, GROUP_CONCAT(e.nome) as especialidades FROM odontoPro_medico m LEFT JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id WHERE m.id = ? AND m.ativo = 1 GROUP BY m.id`;
+  db.query(query, [doctorId], (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Doctor not found' });
+    }
+    const doctor = results[0];
+    res.json({ ...doctor, especialidades: doctor.especialidades ? doctor.especialidades.split(',') : [] });
+  });
+});
+
+app.put('/api/doctors/:id', (req, res) => {
+  const doctorId = req.params.id;
+  const { nome, email, telefone, crm_cro, foto } = req.body;
+
+  if (useMockData()) {
+    return res.json({ id: doctorId, nome, email, telefone, crm_cro, foto });
+  }
+
+  const updates = [];
+  const params = [];
+
+  if (nome !== undefined) {
+    updates.push('nome = ?');
+    params.push(nome);
+  }
+  if (email !== undefined) {
+    updates.push('email = ?');
+    params.push(email);
+  }
+  if (telefone !== undefined) {
+    updates.push('telefone = ?');
+    params.push(telefone);
+  }
+  if (crm_cro !== undefined) {
+    updates.push('crm_cro = ?');
+    params.push(crm_cro);
+  }
+  if (foto !== undefined) {
+    updates.push('foto = ?');
+    params.push(foto);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'No valid fields to update' });
+  }
+
+  params.push(doctorId);
+  const query = `UPDATE odontoPro_medico SET ${updates.join(', ')} WHERE id = ?`;
+
+  db.query(query, params, (err, result) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ id: doctorId, nome, email, telefone, crm_cro, foto, affectedRows: result.affectedRows });
+  });
+});
+
+app.get('/api/patients/:id', (req, res) => {
+  const patientId = req.params.id;
+  if (useMockData()) {
+    return res.json({
+      id: patientId,
+      nome: 'Paciente Mock',
+      email: 'paciente.mock@exemplo.com',
+      telefone: '(91) 99999-9999',
+      cpf: '000.000.000-00',
+      data_nascimento: '1990-01-01',
+      sexo: 'Masculino',
+      foto: null,
+    });
+  }
+
+  const query = 'SELECT id, nome, email, telefone, cpf, data_nascimento, sexo, foto FROM odontoPro_paciente WHERE id = ? AND ativo = 1';
+  db.query(query, [patientId], (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    res.json(results[0]);
+  });
+});
+
+app.put('/api/patients/:id', (req, res) => {
+  const patientId = req.params.id;
+  const { nome, email, telefone, cpf, data_nascimento, sexo } = req.body;
+  if (useMockData()) {
+    return res.json({ id: patientId, nome, email, telefone, cpf, data_nascimento, sexo, foto: null });
+  }
+
+  const query = 'UPDATE odontoPro_paciente SET nome = ?, email = ?, telefone = ?, cpf = ?, data_nascimento = ?, sexo = ? WHERE id = ?';
+  db.query(query, [nome, email, telefone, cpf, data_nascimento, sexo, patientId], (err) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ id: patientId, nome, email, telefone, cpf, data_nascimento, sexo });
   });
 });
 
@@ -249,6 +363,33 @@ app.post('/api/login', (req, res) => {
   }
   const query = 'SELECT id, nome, email, telefone, cpf, data_nascimento, sexo, foto, senha FROM odontoPro_paciente WHERE email = ? AND ativo = 1';
   db.query(query, [email], async (err, results) => {
+    if (err) {
+      console.error('Database error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+    if (results.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const user = results[0];
+    const passwordMatch = await verifyPassword(senha, user.senha);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const { senha: _, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  });
+});
+
+app.post('/api/login/profissional', (req, res) => {
+  const { email, senha } = req.body;
+  if (useMockData()) {
+    if (email && senha) {
+      return res.json({ id: 1, nome: 'Dr. Usuário Teste', email, telefone: '(91) 99999-0000', crm_cro: 'CRO-12345' });
+    }
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  const query = 'SELECT id, nome, email, telefone, crm_cro, foto, senha FROM odontoPro_medico WHERE (email = ? OR crm_cro = ?) AND ativo = 1';
+  db.query(query, [email, email], async (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: err.message });

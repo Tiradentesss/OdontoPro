@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import { useAuth } from '../context/AuthContext';
-import { getPatientProfile, updatePatientProfile } from '../services/api';
+import { updateProfessionalProfile } from '../services/api';
 
 export default function PersonalInfoScreen({ navigation }) {
     const { user, login } = useAuth();
@@ -21,19 +21,18 @@ export default function PersonalInfoScreen({ navigation }) {
     const [cpf, setCpf] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [gender, setGender] = useState('');
+    const [crmCro, setCrmCro] = useState('');
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // Use user data from AuthContext instead of fetching from API
-        // since the backend doesn't have patients endpoint yet
+        // Load professional data from AuthContext
         if (user) {
             setFullName(user.nome || user.fullName || '');
             setCpf(user.cpf || '');
             setEmail(user.email || '');
             setPhone(user.telefone || user.phone || '');
-            setGender(user.genero || user.gender || '');
+            setCrmCro(user.crm_cro || '');
             setAddress(user.endereco || user.address || '');
         }
     }, [user]);
@@ -47,10 +46,9 @@ export default function PersonalInfoScreen({ navigation }) {
                 cpf,
                 email,
                 telefone: phone,
-                genero: gender,
-                endereco: address,
+                crm_cro: crmCro,
             };
-            const updatedProfile = await updatePatientProfile(user.id, profileData);
+            const updatedProfile = await updateProfessionalProfile(user.id, profileData);
             login({ ...user, ...updatedProfile });
             Alert.alert('Sucesso', 'Informações atualizadas com sucesso.');
         } catch (error) {
@@ -58,7 +56,7 @@ export default function PersonalInfoScreen({ navigation }) {
             if (error.response?.status === 404) {
                 Alert.alert('Aviso', 'Funcionalidade de atualização ainda não implementada no backend. Os dados foram salvos localmente.');
                 // Update local context anyway
-                login({ ...user, nome: fullName, cpf, email, telefone: phone, genero: gender, endereco: address });
+                login({ ...user, nome: fullName, cpf, email, telefone: phone, crm_cro: crmCro });
             } else {
                 const errorMessage = error.response?.data?.error || error.message || 'Não foi possível salvar as informações.';
                 Alert.alert('Erro', errorMessage);
@@ -105,6 +103,16 @@ export default function PersonalInfoScreen({ navigation }) {
                         />
                     </View>
                     <View style={styles.fieldGroup}>
+                        <Text style={styles.label}>CRM/CRO</Text>
+                        <TextInput
+                            value={crmCro}
+                            onChangeText={setCrmCro}
+                            placeholder="CRM/CRO número"
+                            placeholderTextColor="#94a3b8"
+                            style={styles.input}
+                        />
+                    </View>
+                    <View style={styles.fieldGroup}>
                         <Text style={styles.label}>Email</Text>
                         <TextInput
                             value={email}
@@ -124,26 +132,6 @@ export default function PersonalInfoScreen({ navigation }) {
                             placeholder="(91) 0000 - 0000"
                             placeholderTextColor="#94a3b8"
                             keyboardType="phone-pad"
-                            style={styles.input}
-                        />
-                    </View>
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Gênero</Text>
-                        <TextInput
-                            value={gender}
-                            onChangeText={setGender}
-                            placeholder="Masculino"
-                            placeholderTextColor="#94a3b8"
-                            style={styles.input}
-                        />
-                    </View>
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Endereço</Text>
-                        <TextInput
-                            value={address}
-                            onChangeText={setAddress}
-                            placeholder="Rua, número, bairro, cidade"
-                            placeholderTextColor="#94a3b8"
                             style={styles.input}
                         />
                     </View>
