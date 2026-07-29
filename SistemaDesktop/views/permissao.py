@@ -231,6 +231,16 @@ class AdminListFrame(ctk.CTkFrame):
         self.btn_anterior.configure(state="normal" if self.current_page > 1 else "disabled")
         self.btn_proximo.configure(state="normal" if self.current_page < total_pages else "disabled")
 
+        if not admin_list:
+            self.no_results_label = ctk.CTkLabel(
+                self.scroll_list,
+                text="Nenhum gerente cadastrado.",
+                font=font("text", "bold"),
+                text_color=COLORS["muted"]
+            )
+            self.no_results_label.pack(expand=True, pady=30)
+            return
+
         for index, (nome, info) in enumerate(page_data):
             self.create_admin_row(nome, info, index)
 
@@ -508,7 +518,7 @@ class Permissoes(BaseScreen):
             gerentes_bd = GerenciamentoController.listar_todos_gerentes_por_clinica(self.clinica_id)
             if not gerentes_bd:
                 print("Nenhum gerente encontrado para esta clínica")
-                return self.get_default_data()
+                return {}
 
             permissoes_bd = GerenciamentoController.listar_permissoes_disponiveis()
             permissao_map = {p['codigo']: p['id'] for p in permissoes_bd}
@@ -529,36 +539,12 @@ class Permissoes(BaseScreen):
                     "status": status,
                     "perms": perms_dict
                 }
-            return admins if admins else self.get_default_data()
+            return admins
         except Exception as e:
             print(f"Erro ao carregar gerentes do BD: {e}")
             import traceback
             traceback.print_exc()
-            return self.get_default_data()
-
-    def get_default_data(self):
-        return {
-            "John Doe": {
-                "id": 1, "level": "Admin", "email": "john.doe@email.com", "status": "Ativo",
-                "perms": {p: True for p in self.permissions_list}
-            },
-            "Jane Smith": {
-                "id": 2, "level": "Billing", "email": "jane.smith@email.com", "status": "Ativo",
-                "perms": {p: True for p in self.permissions_list[:3]}
-            },
-            "Alice Brown": {
-                "id": 3, "level": "Reporting", "email": "alice.b@email.com", "status": "Ativo",
-                "perms": {p: False for p in self.permissions_list}
-            },
-            "Carlos Mendes": {
-                "id": 4, "level": "Relatórios", "email": "carlos.mendes@email.com", "status": "Ativo",
-                "perms": {
-                    "Painel": True, "Agenda": False, "Financeiro": True,
-                    "Configurações": False, "Cadastro": False,
-                    "Gerenciamento": False, "Permissões": False
-                }
-            },
-        }
+            return {}
 
     def setup_ui(self):
         self.admin_list_panel = AdminListFrame(
