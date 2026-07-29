@@ -14,29 +14,50 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { updateDoctorProfile } from '../services/api';
+import { getDoctorById, updateDoctorProfile } from '../services/api';
 
 export default function PersonalDataScreen({ navigation }) {
   const { user, login } = useAuth();
   const [name, setName] = useState('');
-  const [cpf, setCpf] = useState('');
+  const [cro, setCro] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [gender, setGender] = useState('Masculino');
-  const [address, setAddress] = useState('');
+  const [specialties, setSpecialties] = useState([]);
   const [focusedInput, setFocusedInput] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
-    setName(user?.nome || user?.name || '');
-    setEmail(user?.email || '');
-    setPhone(user?.telefone || '');
-    setCpf(user?.crm_cro || user?.cpf || '');
-    setGender(user?.sexo || 'Masculino');
-    setAddress(user?.endereco || '');
-  }, [user?.id, user?.nome, user?.email, user?.telefone, user?.crm_cro, user?.cpf, user?.sexo, user?.endereco]);
+    const hydrateFromUser = () => {
+      setName(user?.nome || user?.name || '');
+      setEmail(user?.email || '');
+      setPhone(user?.telefone || '');
+      setCro(user?.crm_cro || user?.cpf || '');
+      setSpecialties(Array.isArray(user?.especialidades) ? user.especialidades.filter(Boolean) : []);
+    };
+
+    hydrateFromUser();
+
+    if (!user?.id) return;
+
+    const loadDoctorProfile = async () => {
+      try {
+        const doctor = await getDoctorById(user.id);
+        if (!doctor) return;
+
+        setName(doctor.nome || user?.nome || '');
+        setEmail(doctor.email || user?.email || '');
+        setPhone(doctor.telefone || user?.telefone || '');
+        setCro(doctor.crm_cro || user?.crm_cro || '');
+        setSpecialties(Array.isArray(doctor.especialidades) ? doctor.especialidades.filter(Boolean) : []);
+      } catch (error) {
+        console.log('Error loading doctor profile:', error);
+      }
+    };
+
+    loadDoctorProfile();
+  }, [user?.id, user?.nome, user?.email, user?.telefone, user?.crm_cro, user?.cpf, user?.especialidades]);
 
   const handleSave = async () => {
     if (!user?.id) {
@@ -50,14 +71,11 @@ export default function PersonalDataScreen({ navigation }) {
         nome: name,
         email,
         telefone: phone,
+        crm_cro: cro,
       };
 
-      if (cpf) {
-        payload.crm_cro = cpf;
-      }
-
       const updated = await updateDoctorProfile(user.id, payload);
-      login({ ...user, ...updated, nome: updated?.nome || name, email: updated?.email || email, telefone: updated?.telefone || phone, crm_cro: updated?.crm_cro || cpf });
+      login({ ...user, ...updated, nome: updated?.nome || name, email: updated?.email || email, telefone: updated?.telefone || phone, crm_cro: updated?.crm_cro || cro });
       Alert.alert('Informações Atualizadas', 'Seus dados cadastrais foram salvos com sucesso no sistema.', [{ text: 'Ok', onPress: () => navigation.goBack() }]);
     } catch (error) {
       console.log('Error updating doctor profile:', error);
@@ -65,29 +83,6 @@ export default function PersonalDataScreen({ navigation }) {
     } finally {
       setSaving(false);
     }
-  };
-
-  const renderGenderButton = (option) => {
-    const isSelected = gender === option;
-    return (
-      <TouchableOpacity
-        key={option}
-        style={[
-          styles.genderButton,
-          isSelected && { backgroundColor: colors.brandBlue }
-        ]}
-        activeOpacity={0.7}
-        onPress={() => setGender(option)}
-      >
-        <Text style={[
-          styles.genderButtonText,
-          { color: isSelected ? '#FFFFFF' : colors.mutedText },
-          isSelected && { fontWeight: '600' }
-        ]}>
-          {option}
-        </Text>
-      </TouchableOpacity>
-    );
   };
 
   return (
@@ -150,9 +145,9 @@ export default function PersonalDataScreen({ navigation }) {
             />
           </View>
 
-          {/* Input: CPF */}
+          {/* Input: CRO */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: colors.mutedText }]}>CPF</Text>
+            <Text style={[styles.inputLabel, { color: colors.mutedText }]}>CRO</Text>
             <TextInput 
               style={[
                 styles.input, 
@@ -161,14 +156,13 @@ export default function PersonalDataScreen({ navigation }) {
                   borderColor: colors.border, 
                   color: colors.text 
                 },
-                focusedInput === 'cpf' && [styles.inputFocused, { borderColor: colors.brandBlue }]
+                focusedInput === 'cro' && [styles.inputFocused, { borderColor: colors.brandBlue }]
               ]} 
-              value={cpf} 
-              onChangeText={setCpf}
-              onFocus={() => setFocusedInput('cpf')}
+              value={cro} 
+              onChangeText={setCro}
+              onFocus={() => setFocusedInput('cro')}
               onBlur={() => setFocusedInput(null)}
-              keyboardType="numeric"
-              placeholder="000.000.000-00"
+              placeholder="Informe seu CRO"
               placeholderTextColor={isDarkMode ? '#64748B' : '#94A3B8'}
             />
           </View>
@@ -220,34 +214,11 @@ export default function PersonalDataScreen({ navigation }) {
             />
           </View>
 
-          {/* Seletor Inline de Gênero Premium */}
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Gênero</Text>
-            <View style={[styles.genderContainer, { backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', borderColor: colors.border }]}>
-              {['Masculino', 'Feminino', 'Outro'].map(renderGenderButton)}
-            </View>
-          </View>
-
-          {/* Input: Endereço */}
-          <View style={[styles.inputGroup, { marginBottom: 4 }]}>
-            <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Endereço Clínico / Residencial</Text>
-            <TextInput 
-              style={[
-                styles.input, 
-                { 
-                  backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', 
-                  borderColor: colors.border, 
-                  color: colors.text 
-                },
-                focusedInput === 'address' && [styles.inputFocused, { borderColor: colors.brandBlue }]
-              ]} 
-              value={address} 
-              onChangeText={setAddress}
-              onFocus={() => setFocusedInput('address')}
-              onBlur={() => setFocusedInput(null)}
-              placeholder="Rua, Número, Bairro, Cidade"
-              placeholderTextColor={isDarkMode ? '#64748B' : '#94A3B8'}
-            />
+          <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E293B' : '#F8FAFC', marginTop: 4 }]}> 
+            <Text style={[styles.infoCardLabel, { color: colors.mutedText }]}>Especialidades</Text>
+            <Text style={[styles.infoCardValue, { color: colors.text }]}>
+              {specialties.length > 0 ? specialties.join(', ') : 'Nenhuma especialidade cadastrada'}
+            </Text>
           </View>
 
           {/* Nota de Segurança de Dados Privados */}
@@ -352,22 +323,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 1.5,
   },
-  genderContainer: {
+  infoGrid: {
     flexDirection: 'row',
-    padding: 4,
-    borderRadius: 12,
-    borderWidth: 1,
+    gap: 10,
   },
-  genderButton: {
+  infoCard: {
     flex: 1,
-    height: 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 12,
+    padding: 12,
   },
-  genderButtonText: {
+  infoCardLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  infoCardValue: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
+    lineHeight: 18,
   },
   securityNotice: {
     flexDirection: 'row',

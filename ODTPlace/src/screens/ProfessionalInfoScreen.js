@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
-import { getDoctorStats, getProfessionalAppointments } from '../services/api';
+import { getDoctorById, getDoctorStats, getProfessionalAppointments } from '../services/api';
 
 export default function ProfessionalInfoScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
@@ -10,17 +10,23 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
   const user = route?.params?.user;
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [completedConsultations, setCompletedConsultations] = useState(null);
-  const [positiveReviews, setPositiveReviews] = useState(null);
+  const [doctorProfile, setDoctorProfile] = useState(null);
 
   useEffect(() => {
     const loadStats = async () => {
       try {
         if (professional?.id) {
+          try {
+            const doctorData = await getDoctorById(professional.id);
+            setDoctorProfile(doctorData || null);
+          } catch (profileErr) {
+            console.log('Failed to load doctor profile:', profileErr);
+            setDoctorProfile(null);
+          }
+
           const stats = await getDoctorStats(professional.id);
           const completed = stats.completed_consultations ?? 0;
-          const positive = stats.positive_reviews ?? 0;
           setCompletedConsultations(completed);
-          setPositiveReviews(positive);
 
           // If stats are zero (or missing), try to fetch appointments and count completed ones as fallback
           if ((completed === 0) && professional?.id) {
@@ -76,8 +82,8 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
               <Text style={styles.metricLabel}>Pacientes</Text>
             </View>
             <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>{professional.avaliacao ?? professional.rating ?? '—'} ★</Text>
-              <Text style={styles.metricLabel}>{(professional.num_avaliacoes ?? professional.avaliacoes ?? professional.reviews ?? positiveReviews ?? 0)} avaliações</Text>
+              <Text style={styles.metricValue}>{doctorProfile?.avaliacao ?? professional?.avaliacao ?? professional?.rating ?? '—'} ★</Text>
+              <Text style={styles.metricLabel}>{(doctorProfile?.num_avaliacoes ?? professional?.num_avaliacoes ?? professional?.avaliacoes ?? professional?.reviews ?? 0)} avaliações</Text>
             </View>
           </View>
 

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusB
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
-import { getProfessionalAppointments, getDoctorStats } from '../services/api';
+import { getDoctorById, getProfessionalAppointments, getDoctorStats } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const { width } = Dimensions.get('window');
@@ -12,6 +12,7 @@ export default function HomeScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [appointments, setAppointments] = useState([]);
   const [doctorStats, setDoctorStats] = useState({ completed_consultations: 0, positive_reviews: 0 });
+  const [doctorProfile, setDoctorProfile] = useState(null);
   const [retentionCount, setRetentionCount] = useState(0);
   const [period, setPeriod] = useState('all'); // 'all' | 'month' | 'week'
   
@@ -28,6 +29,15 @@ export default function HomeScreen({ navigation }) {
       try {
         const data = await getProfessionalAppointments({ medico_id: user.id });
         setAppointments(Array.isArray(data) ? data : []);
+
+        try {
+          const profile = await getDoctorById(user.id);
+          setDoctorProfile(profile || null);
+        } catch (profileErr) {
+          console.log('Failed to load doctor profile:', profileErr);
+          setDoctorProfile(null);
+        }
+
         try {
           const s = await getDoctorStats(user.id);
           setDoctorStats(s || { completed_consultations: 0, positive_reviews: 0 });
@@ -307,6 +317,20 @@ export default function HomeScreen({ navigation }) {
             </View>
             <View style={[styles.statusBadge, { backgroundColor: isDarkMode ? '#0C4A6E' : '#E0F2FE' }]}>
               <Text style={[styles.statusText, { color: isDarkMode ? '#38BDF8' : '#0369A1' }]}>{doctorStats.completed_consultations ?? 0}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.insightDivider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.insightRow}>
+            <View style={[styles.insightIconWrapper, { backgroundColor: isDarkMode ? '#4C1D95' : '#FFF7ED' }]}>
+              <MaterialCommunityIcons name="star-outline" size={20} color={isDarkMode ? '#C084FC' : '#EA580C'} />
+            </View>
+            <View style={styles.insightBody}>
+              <Text style={[styles.insightTitle, { color: colors.text }]}>Avaliação geral</Text>
+              <Text style={styles.insightMeta}>
+                {doctorProfile?.avaliacao ? Number(doctorProfile.avaliacao).toFixed(1) : '0.0'} ★ • {doctorProfile?.num_avaliacoes ?? 0} avaliações
+              </Text>
             </View>
           </View>
 

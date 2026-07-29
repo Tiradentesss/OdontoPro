@@ -10,13 +10,14 @@ import {
 } from 'react-native';
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { getDoctorStats, getProfessionalAppointments } from '../services/api';
+import { getDoctorById, getDoctorStats, getProfessionalAppointments } from '../services/api';
 
 export default function ReportsScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ completed_consultations: 0, positive_reviews: 0 });
+  const [doctorProfile, setDoctorProfile] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [period, setPeriod] = useState('all');
 
@@ -30,6 +31,15 @@ export default function ReportsScreen() {
       setLoading(true);
       const doctorStatsResult = await getDoctorStats(user.id);
       setStats(doctorStatsResult || { completed_consultations: 0, positive_reviews: 0 });
+
+      try {
+        const doctorProfileResult = await getDoctorById(user.id);
+        setDoctorProfile(doctorProfileResult || null);
+      } catch (profileErr) {
+        console.log('Reports profile load error:', profileErr);
+        setDoctorProfile(null);
+      }
+
       const appointmentsResult = await getProfessionalAppointments({ medico_id: user.id });
       setAppointments(Array.isArray(appointmentsResult) ? appointmentsResult : []);
     } catch (err) {
@@ -93,18 +103,20 @@ export default function ReportsScreen() {
           <>
             <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}> 
               <Text style={[styles.cardTitle, { color: colors.text }]}>Consultas concluídas</Text>
-              <Text style={styles.cardValue}>{completedCount}</Text>
+              <Text style={[styles.cardValue, { color: colors.text }]}>{completedCount}</Text>
             </View>
 
             <View style={styles.row}>
               <View style={[styles.smallCard, { backgroundColor: colors.card, borderColor: colors.border }]}> 
-                <Text style={[styles.smallTitle, { color: colors.text }]}>Avaliações positivas</Text>
-                <Text style={styles.smallValue}>{stats.positive_reviews ?? 0}</Text>
+                <Text style={[styles.smallTitle, { color: colors.text }]}>Avaliação geral</Text>
+                <Text style={[styles.smallValue, { color: colors.text }]}>
+                  {doctorProfile?.avaliacao || stats.positive_reviews ? Number(doctorProfile?.avaliacao ?? stats.positive_reviews).toFixed(1) : '0.0'}
+                </Text>
               </View>
 
               <View style={[styles.smallCard, styles.smallCardLast, { backgroundColor: colors.card, borderColor: colors.border }]}> 
                 <Text style={[styles.smallTitle, { color: colors.text }]}>Próximas consultas</Text>
-                <Text style={styles.smallValue}>{upcomingCount}</Text>
+                <Text style={[styles.smallValue, { color: colors.text }]}>{upcomingCount}</Text>
               </View>
             </View>
 
