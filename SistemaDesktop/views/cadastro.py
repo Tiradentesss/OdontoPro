@@ -9,6 +9,7 @@ from services.campos_mascarados import GerenciadorMascaras
 from services.endereco_service import EnderecoService
 from services.localidades_service import LocalidadesService
 from datetime import datetime
+import re
 
 
 class CidadeSearchComboBox(ctk.CTkFrame):
@@ -1190,71 +1191,50 @@ class Cadastro(BaseScreen):
             self._mostrar_mensagem(f"Erro ao salvar paciente: {str(e)}", sucesso=False)
 
     def _validar_cro_em_tempo_real(self, event=None):
+        """
+        Validação em tempo real para o campo CRO enquanto o usuário digita.
+
+        Regras aplicadas aqui (apenas comportamento de UI):
+        - Aceita apenas dígitos (0-9)
+        - Permite até 5 dígitos durante a digitação
+        - Remove quaisquer letras ou caracteres especiais imediatamente
+        """
         try:
-            texto = self.cro_entry.get() or ""
-            if not texto:
+            raw = (self.cro_entry.get() or "").strip()
+            if not raw:
                 return
 
-            texto_limpo = texto.strip().upper()
-            if " " in texto_limpo or "-" in texto_limpo[2:3] and len(texto_limpo) > 2:
-                pass
+            # Permitir apenas dígitos, letras e hífen na digitação de CRO.
+            # Aceitamos tanto formato numérico (1234/12345) quanto opcionais prefixos de UF.
+            filtered = ''.join(ch.upper() for ch in raw if ch.isalnum() or ch == '-')
+            if filtered.count('-') > 1:
+                parts = filtered.split('-')
+                filtered = parts[0] + '-' + ''.join(parts[1:])
 
-            if len(texto_limpo) > 0 and len(texto_limpo) <= 2:
-                texto_limpo = texto_limpo[:2]
-            elif len(texto_limpo) > 2 and texto_limpo[2] != '-' and texto_limpo[2:].isdigit():
-                texto_limpo = texto_limpo[:2] + '-' + texto_limpo[2:]
-            elif len(texto_limpo) > 2 and texto_limpo[2] != '-' and not texto_limpo[2:].isdigit():
-                texto_limpo = texto_limpo[:2]
+            filtered = filtered[:8]
 
-            if len(texto_limpo) > 2 and texto_limpo[2] == '-':
-                uf = texto_limpo[:2]
-                numero = texto_limpo[3:]
-                if len(uf) == 2 and uf.isalpha() and len(numero) <= 5:
-                    texto_limpo = f"{uf}-{numero}"
-                else:
-                    texto_limpo = uf if len(uf) == 2 and uf.isalpha() else texto_limpo[:2]
-
-            texto_limpo = texto_limpo[:2] + (f"-{texto_limpo[3:]}" if len(texto_limpo) > 2 and texto_limpo[2] == '-' else "")
-
-            texto_limpo = ''.join(ch for ch in texto_limpo if ch.isalnum() or ch == '-')
-            texto_limpo = texto_limpo.replace(' ', '')
-            texto_limpo = texto_limpo.upper()
-            if len(texto_limpo) > 2 and texto_limpo[2] != '-':
-                texto_limpo = texto_limpo[:2] + '-' + texto_limpo[2:]
-            texto_limpo = texto_limpo[:2] + (f"-{texto_limpo[3:]}" if len(texto_limpo) > 2 and texto_limpo[2] == '-' else "")
-            if len(texto_limpo) > 2 and texto_limpo[2] == '-':
-                uf = texto_limpo[:2]
-                numero = ''.join(ch for ch in texto_limpo[3:] if ch.isdigit())
-                if len(uf) == 2 and uf.isalpha():
-                    texto_limpo = f"{uf}-{numero[:5]}"
-                else:
-                    texto_limpo = uf[:2]
-
-            if texto_limpo != self.cro_entry.get().strip().upper():
+            if filtered != self.cro_entry.get().strip():
                 self.cro_entry.delete(0, 'end')
-                self.cro_entry.insert(0, texto_limpo)
+                self.cro_entry.insert(0, filtered)
+
         except Exception:
             pass
 
     def _validar_cro(self, cro):
+        """
+        Validação final do CRO antes de salvar.
+
+        Regras (apenas números):
+        - Somente dígitos 0-9
+        - Comprimento mínimo: 4
+        - Comprimento máximo: 5
+        """
         if not cro:
-            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
+            return False, "CRO inválido. Deve conter entre 4 e 5 dígitos numéricos."
 
         texto = str(cro).strip().upper()
-        if len(texto) < 7 or len(texto) > 9:
-            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
-
-        if texto[2:3] != '-' or len(texto[:2]) != 2:
-            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
-
-        uf = texto[:2]
-        numero = texto[3:]
-        if not uf.isalpha() or len(uf) != 2:
-            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
-        if not numero.isdigit():
-            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
-        if len(numero) < 4 or len(numero) > 5:
-            return False, "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
+        if not re.fullmatch(r"\d{4,5}|[A-Z]{2}-?\d{4,5}", texto):
+            return False, "CRO inválido. Utilize 1234, 12345, UF-1234 ou UF-12345."
 
         return True, ""
 

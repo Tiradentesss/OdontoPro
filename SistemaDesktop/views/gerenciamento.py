@@ -730,21 +730,42 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         if not self.selected_slots:
             messagebox.showwarning("Aviso", "Selecione pelo menos um horário.")
             return
-        
-        horarios = ", ".join(sorted(self.selected_slots))
-        datas_sorted = sorted(list(self.selected_dates))
-        
-        if len(datas_sorted) == 1:
-            datas_str = datas_sorted[0].strftime("%d/%m/%Y")
-        else:
-            datas_str = f"{datas_sorted[0].strftime('%d/%m/%Y')} até {datas_sorted[-1].strftime('%d/%m/%Y')} ({len(datas_sorted)} dias)"
-        
-        messagebox.showinfo(
-            "Disponibilidade salva",
-            f"Médico: {self.selected_medico['nome']}\n"
-            f"Datas: {datas_str}\n"
-            f"Horários: {horarios}"
+
+        disponibilidade_por_dia = {}
+        for data in self.selected_dates:
+            weekday = data.weekday()
+            disponibilidade_por_dia.setdefault(weekday, set()).update(self.selected_slots)
+
+        disponibilidade_por_dia = {
+            weekday: sorted(slots)
+            for weekday, slots in disponibilidade_por_dia.items()
+        }
+
+        resultado = ConsultaController.salvar_disponibilidade_medico(
+            self.selected_medico["id"],
+            disponibilidade_por_dia,
+            clinica_id=self.clinica_id
         )
+
+        if resultado.get('sucesso'):
+            horarios = ", ".join(sorted(self.selected_slots))
+            datas_sorted = sorted(list(self.selected_dates))
+            if len(datas_sorted) == 1:
+                datas_str = datas_sorted[0].strftime("%d/%m/%Y")
+            else:
+                datas_str = f"{datas_sorted[0].strftime('%d/%m/%Y')} até {datas_sorted[-1].strftime('%d/%m/%Y')} ({len(datas_sorted)} dias)"
+
+            messagebox.showinfo(
+                "Disponibilidade salva",
+                f"Médico: {self.selected_medico['nome']}\n"
+                f"Datas: {datas_str}\n"
+                f"Horários: {horarios}"
+            )
+        else:
+            messagebox.showerror(
+                "Erro ao salvar disponibilidade",
+                resultado.get('mensagem', 'Não foi possível salvar a disponibilidade.')
+            )
 
     def _prev_month(self):
         if self.current_month == 1:

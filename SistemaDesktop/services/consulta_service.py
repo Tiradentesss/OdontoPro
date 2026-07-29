@@ -18,10 +18,10 @@ class ConsultaService:
         """
         Valida se uma data está no formato correto e não é passada.
         
-        Args:
+        Parâmetros:
             data_str: Data em formato DD/MM/YYYY
         
-        Returns:
+        Retorna:
             Tupla (válido: bool, mensagem: str, data_obj: datetime ou None)
         """
         try:
@@ -43,10 +43,10 @@ class ConsultaService:
         """
         Valida se uma hora está no formato correto.
         
-        Args:
+        Parâmetros:
             hora_str: Hora em formato HH:MM
         
-        Returns:
+        Retorna:
             Tupla (válido: bool, mensagem: str, hora_obj: time ou None)
         """
         try:
@@ -61,13 +61,13 @@ class ConsultaService:
         """
         Verifica se um horário está disponível para um médico em uma data específica.
         
-        Args:
+        Parâmetros:
             medico_id: ID do médico
             data_consulta: datetime.date object
             hora_consulta: datetime.time object
             conn: conexão reutilizável opcional
         
-        Returns:
+        Retorna:
             Tupla (disponível: bool, mensagem: str)
         """
         internal_conn = False
@@ -118,12 +118,12 @@ class ConsultaService:
         """
         Lista todos os horários ocupados de um médico em um dia específico.
         
-        Args:
+        Parâmetros:
             medico_id: ID do médico
             data_consulta: datetime.date object
             conn: conexão reutilizável opcional
         
-        Returns:
+        Retorna:
             Lista de horários (HH:MM) ocupados
         """
         internal_conn = False
@@ -302,6 +302,126 @@ class ConsultaService:
             if cursor:
                 cursor.close()
             if internal_conn and conn:
+                conn.close()
+
+    @staticmethod
+    def _converter_weekday_para_dia(weekday):
+        mapping = {
+            0: 'Segunda',
+            1: 'Terça',
+            2: 'Quarta',
+            3: 'Quinta',
+            4: 'Sexta',
+            5: 'Sábado',
+            6: 'Domingo'
+        }
+        return mapping.get(weekday)
+
+    @staticmethod
+    def _agrupar_horarios_em_intervalos(horarios):
+        if not horarios:
+            return []
+
+        def to_minutes(hora_str):
+            parts = hora_str.split(':')
+            return int(parts[0]) * 60 + int(parts[1])
+
+        horas_ordenadas = sorted(set(horarios), key=to_minutes)
+        intervalos = []
+        inicio_atual = horas_ordenadas[0]
+        fim_atual = horas_ordenadas[0]
+
+        for horario in horas_ordenadas[1:]:
+            prev_minutos = to_minutes(fim_atual)
+            atual_minutos = to_minutes(horario)
+            if atual_minutos == prev_minutos + 30:
+                fim_atual = horario
+            else:
+                fim_str = (datetime.strptime(fim_atual, '%H:%M') + timedelta(minutes=30)).strftime('%H:%M')
+                intervalos.append((inicio_atual, fim_str))
+                inicio_atual = horario
+                fim_atual = horario
+
+        fim_str = (datetime.strptime(fim_atual, '%H:%M') + timedelta(minutes=30)).strftime('%H:%M')
+        intervalos.append((inicio_atual, fim_str))
+        return intervalos
+
+    @staticmethod
+    def salvar_disponibilidade_medico(medico_id, disponibilidade_por_dia, clinica_id=None):
+        if not medico_id:
+            return {'sucesso': False, 'mensagem': 'Médico não informado.'}
+
+        if not disponibilidade_por_dia:
+            return {'sucesso': False, 'mensagem': 'Nenhuma disponibilidade selecionada.'}
+
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            if clinica_id is not None:
+                cursor.execute(
+                    "SELECT id FROM odontoPro_medico WHERE id = %s AND clinica_id = %s",
+                    (medico_id, clinica_id)
+                )
+            else:
+                cursor.execute(
+                    "SELECT id FROM odontoPro_medico WHERE id = %s",
+                    (medico_id,)
+                )
+
+            if not cursor.fetchone():
+                return {
+                    'sucesso': False,
+                    'mensagem': 'Médico não encontrado ou não pertence a esta clínica.'
+                }
+
+            for weekday, horarios in disponibilidade_por_dia.items():
+                if horarios is None:
+                    continue
+
+                dia = ConsultaService._converter_weekday_para_dia(weekday)
+                if dia is None:
+                    continue
+
+                intervalos = ConsultaService._agrupar_horarios_em_intervalos(horarios)
+                if not intervalos:
+                    continue
+
+                cursor.execute(
+                    "DELETE FROM odontoPro_medicohorario WHERE medico_id = %s AND dia = %s",
+                    (medico_id, dia)
+                )
+
+                for inicio, fim in intervalos:
+                    cursor.execute(
+                        "INSERT INTO odontoPro_medicohorario (medico_id, dia, hora_inicio, hora_fim) VALUES (%s, %s, %s, %s)",
+                        (medico_id, dia, inicio, fim)
+                    )
+
+            conn.commit()
+            return {
+                'sucesso': True,
+                'mensagem': 'Disponibilidade salva com sucesso.'
+            }
+
+        except Exception as e:
+            print(f"[ConsultaService] Erro ao salvar disponibilidade do médico: {e}")
+            if conn:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+            return {
+                'sucesso': False,
+                'mensagem': f'Erro ao salvar disponibilidade: {str(e)}'
+            }
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
                 conn.close()
 
     @staticmethod
@@ -591,7 +711,7 @@ class ConsultaService:
                 }
 
             especialidade_nome = especialidade
-            # If no ID provided but a name exists, ensure the especialidade record exists and get its ID
+            # Se nenhum ID for fornecido, mas houver um nome, garante que o registro da especialidade exista e obtém o ID
             if especialidade_id is None and especialidade:
                 try:
                     especialidade_id = EspecialidadeService.get_or_create(especialidade, conn=conn)

@@ -245,7 +245,7 @@ class App(ctk.CTk):
             todos_itens = [
                 ("📊  Painel", "painel"),
                 ("📅  Agenda", "agenda"),
-                ("�  Relatórios", "relatorios"),
+                ("📊  Relatórios", "relatorios"),
                 ("🏢  Gerenciamento", "gerenciamento"),
                 ("🔐  Permissões", "permissao"),
                 ("👥  Cadastro", "cadastro"),
@@ -257,7 +257,7 @@ class App(ctk.CTk):
             self.menu_items = [
                 ("📊  Painel", "painel"),
                 ("📅  Agenda", "agenda"),
-                ("�  Relatórios", "relatorios"),
+                ("📊  Relatórios", "relatorios"),
                 ("🏢  Gerenciamento", "gerenciamento"),
                 ("🔐  Permissões", "permissao"),
                 ("👥  Cadastro", "cadastro"),

@@ -653,6 +653,25 @@ class ConsultaController:
         )
 
     @staticmethod
+    def salvar_disponibilidade_medico(medico_id, disponibilidade_por_dia, clinica_id=None):
+        """
+        Salva a disponibilidade de um médico.
+        
+        Args:
+            medico_id: ID do médico
+            disponibilidade_por_dia: dicionário {weekday_int: [horarios]}
+            clinica_id: ID da clínica (opcional)
+
+        Returns:
+            Dicionário com resultado {'sucesso': bool, 'mensagem': str}
+        """
+        return ConsultaService.salvar_disponibilidade_medico(
+            medico_id,
+            disponibilidade_por_dia,
+            clinica_id=clinica_id
+        )
+
+    @staticmethod
     def obter_horarios_ocupados(medico_id, data_consulta):
         """
         Lista horários ocupados de um médico em um dia.

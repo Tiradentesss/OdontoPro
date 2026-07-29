@@ -37,11 +37,18 @@ class MedicoController:
             }
 
         cro = cro.strip() if isinstance(cro, str) else str(cro)
-        if not re.fullmatch(r"[A-Z]{2}-\d{4,5}", cro.upper()):
+        cro_upper = cro.upper()
+        if not re.fullmatch(r"\d{4,5}|[A-Z]{2}-?\d{4,5}", cro_upper):
             return {
                 "sucesso": False,
-                "mensagem": "CRO inválido. Utilize o formato UF-1234 ou UF-12345."
+                "mensagem": "CRO inválido. Utilize 1234, 12345, UF-1234 ou UF-12345."
             }
+
+        # Normalizar formato UF1234 para UF-1234, mantendo valores numéricos como estão.
+        if re.fullmatch(r"[A-Z]{2}\d{4,5}", cro_upper):
+            cro_upper = cro_upper[:2] + "-" + cro_upper[2:]
+
+        cro = cro_upper
         
         if not telefone or (isinstance(telefone, str) and not telefone.strip()):
             return {
