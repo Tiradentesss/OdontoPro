@@ -1006,7 +1006,8 @@ def agendar_consulta(request):
     # O frontend envia uma string no formato YYYY-MM-DDTHH:MM:SS sem timezone;
     # isso deve ser tratado como horário local da clínica/usuário, não como UTC.
     if timezone.is_naive(data_hora):
-        data_hora = timezone.make_aware(data_hora, timezone=getattr(settings, 'TIME_ZONE', 'America/Belem'))
+        local_tz = timezone.get_current_timezone()
+        data_hora = timezone.make_aware(data_hora, local_tz)
     else:
         data_hora = timezone.localtime(data_hora)
 

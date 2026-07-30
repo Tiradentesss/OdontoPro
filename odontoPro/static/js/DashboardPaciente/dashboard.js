@@ -2010,6 +2010,7 @@ function confirmarAgendamento() {
     const selectProfissional = document.getElementById('selectProfissional');
     const inputData = document.getElementById('inputData');
     const selectHorario = document.getElementById('selectHorario');
+    const horaSelecionadaDisplay = document.getElementById('horaSelecionadaDisplay');
     const inputNome = document.getElementById('inputNome');
     const inputEmail = document.getElementById('inputEmail');
     const inputTelefone = document.getElementById('inputTelefone');
@@ -2022,10 +2023,21 @@ function confirmarAgendamento() {
     const especialidade = selectEspecialidade.value;
     const medico_id = selectProfissional.value;
     const data = inputData.value;
-    const horario = selectHorario.value;
+    let horario = (selectHorario.value || horaSelecionadaDisplay?.value || '').trim();
     const nome = inputNome?.value || '';
     const email = inputEmail?.value || '';
     const telefone = inputTelefone?.value || '';
+
+    if (!horario && selectHorario.options.length > 1) {
+        const fallbackValue = selectHorario.options[selectHorario.selectedIndex]?.value || selectHorario.options[1]?.value;
+        if (fallbackValue) {
+            horario = fallbackValue;
+            selectHorario.value = fallbackValue;
+            if (horaSelecionadaDisplay) {
+                horaSelecionadaDisplay.value = fallbackValue;
+            }
+        }
+    }
     
     if (!especialidade) {
         mostrarMensagem('Atenção', 'Por favor, selecione uma especialidade.', 'warning');
@@ -2050,6 +2062,13 @@ function confirmarAgendamento() {
     // Combinar data e horário em formato ISO 8601 preservando o horário selecionado.
     // Envia como horário local sem timezone explícito para o backend normalizar.
     const data_hora = `${data}T${horario}:00`;
+    
+    if (selectHorario) {
+        selectHorario.value = horario;
+    }
+    if (horaSelecionadaDisplay) {
+        horaSelecionadaDisplay.value = horario;
+    }
     
     // Preparar dados para envio
     const formData = new FormData();
