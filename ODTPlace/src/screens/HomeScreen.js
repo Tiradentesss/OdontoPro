@@ -55,17 +55,17 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
                     </View>
                 ) : (
                     <FlatList
-                        key="home-flatlist"
-                        data={dadosFiltrados}
-                        keyExtractor={(item) => String(item.id)}
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={styles.listContent}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                style={styles.card}
-                                activeOpacity={0.85}
-                                onPress={() => navigation.navigate('ClinicDetail', { clinic: item, user })}
-                            >
+                    key="home-flatlist"
+                    data={dadosFiltrados}
+                    keyExtractor={(item) => String(item.id)}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.listContent}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                        style={styles.card}
+                        activeOpacity={0.85}
+                        onPress={() => navigation.navigate('ClinicDetail', { clinic: item, user })}
+                        >
                                 <View style={styles.cardHeader}>
                                     <View style={styles.clinicLogo} />
 

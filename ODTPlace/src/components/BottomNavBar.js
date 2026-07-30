@@ -4,7 +4,6 @@ import { View, TouchableOpacity, Text, Image, StyleSheet, Keyboard } from 'react
 const tabs = [
     { key: 'home', label: 'Home', icon: require('../../assets/IconHome.png') },
     { key: 'schedule', label: 'Agendamentos', icon: require('../../assets/IconClipboard.png') },
-    { key: 'notifications', label: 'Notificações', icon: require('../../assets/IconNotificacao.png') },
     { key: 'settings', label: 'Configurações', icon: require('../../assets/IconConfiguracao.png') },
 ];
 
