@@ -428,8 +428,13 @@ function abrirReagendamento(consultaId) {
     if (card && card.dataset.hora) {
         const dt = new Date(card.dataset.hora);
         if (!isNaN(dt.getTime())) {
-            dateInput.value = dt.toISOString().slice(0,10);
-            timeInput.value = dt.toTimeString().slice(0,5);
+            const year = dt.getFullYear();
+            const month = String(dt.getMonth() + 1).padStart(2, '0');
+            const day = String(dt.getDate()).padStart(2, '0');
+            const hours = String(dt.getHours()).padStart(2, '0');
+            const minutes = String(dt.getMinutes()).padStart(2, '0');
+            dateInput.value = `${year}-${month}-${day}`;
+            timeInput.value = `${hours}:${minutes}`;
         }
     }
     modal.dataset.consultaId = consultaId;
@@ -499,7 +504,7 @@ function updateCardConsulta(consultaId, isoDataHora, status) {
         const dt = new Date(isoDataHora);
         if (!isNaN(dt.getTime())) {
             const dataStr = dt.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
-            const timeStr = dt.toTimeString().slice(0,5);
+            const timeStr = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
             const headerData = card.querySelector('.header-agendamento .data-consulta');
             if (headerData) headerData.innerHTML = `<i class="fa-regular fa-calendar"></i> ${dataStr}`;
             const horaText = card.querySelector('.hora-text');
@@ -1014,8 +1019,8 @@ function reorganizarConsultasPorData() {
             month: 'long',
             day: 'numeric'
         });
-        const dataISO = dataHora.toISOString().split('T')[0]; // YYYY-MM-DD
-        const hora = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const dataISO = `${dataHora.getFullYear()}-${String(dataHora.getMonth() + 1).padStart(2, '0')}-${String(dataHora.getDate()).padStart(2, '0')}`;
+        const hora = `${String(dataHora.getHours()).padStart(2, '0')}:${String(dataHora.getMinutes()).padStart(2, '0')}`;
 
         if (!consultasPorData[dataISO]) {
             consultasPorData[dataISO] = { dataBR, horarios: {} };
@@ -2010,7 +2015,6 @@ function confirmarAgendamento() {
     const selectProfissional = document.getElementById('selectProfissional');
     const inputData = document.getElementById('inputData');
     const selectHorario = document.getElementById('selectHorario');
-    const horaSelecionadaDisplay = document.getElementById('horaSelecionadaDisplay');
     const inputNome = document.getElementById('inputNome');
     const inputEmail = document.getElementById('inputEmail');
     const inputTelefone = document.getElementById('inputTelefone');
@@ -2023,21 +2027,10 @@ function confirmarAgendamento() {
     const especialidade = selectEspecialidade.value;
     const medico_id = selectProfissional.value;
     const data = inputData.value;
-    let horario = (selectHorario.value || horaSelecionadaDisplay?.value || '').trim();
+    const horario = selectHorario.value;
     const nome = inputNome?.value || '';
     const email = inputEmail?.value || '';
     const telefone = inputTelefone?.value || '';
-
-    if (!horario && selectHorario.options.length > 1) {
-        const fallbackValue = selectHorario.options[selectHorario.selectedIndex]?.value || selectHorario.options[1]?.value;
-        if (fallbackValue) {
-            horario = fallbackValue;
-            selectHorario.value = fallbackValue;
-            if (horaSelecionadaDisplay) {
-                horaSelecionadaDisplay.value = fallbackValue;
-            }
-        }
-    }
     
     if (!especialidade) {
         mostrarMensagem('Atenção', 'Por favor, selecione uma especialidade.', 'warning');
@@ -2059,16 +2052,8 @@ function confirmarAgendamento() {
         return;
     }
     
-    // Combinar data e horário em formato ISO 8601 preservando o horário selecionado.
-    // Envia como horário local sem timezone explícito para o backend normalizar.
+    // Combinar data e horário em formato ISO 8601
     const data_hora = `${data}T${horario}:00`;
-    
-    if (selectHorario) {
-        selectHorario.value = horario;
-    }
-    if (horaSelecionadaDisplay) {
-        horaSelecionadaDisplay.value = horario;
-    }
     
     // Preparar dados para envio
     const formData = new FormData();

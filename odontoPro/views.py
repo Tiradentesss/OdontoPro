@@ -21,6 +21,7 @@ import json
 from decimal import Decimal
 from django.utils import timezone
 from django.utils.timezone import make_aware
+from django.utils.dateparse import parse_datetime as django_parse_datetime
 from .models import DiaSemanaDisponivel, HorarioAberto
 from PIL import Image
 from django.core.exceptions import ValidationError
@@ -134,15 +135,12 @@ def reagendar_consulta(request, consulta_id):
         # Accept AJAX requests with an ISO datetime in `data_hora`
         data_hora_iso = request.POST.get("data_hora") or request.POST.get("data_hora_iso")
         if data_hora_iso:
-            dt = parse_datetime(data_hora_iso)
+            dt = _parse_local_datetime(data_hora_iso)
             if not dt:
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({"success": False, "error": "Data inválida"}, status=400)
                 messages.error(request, "Data inválida")
             else:
-                # make timezone-aware if necessary
-                if timezone.is_naive(dt):
-                    dt = timezone.make_aware(dt)
                 if consulta.status == "perdida":
                     nova_consulta = Consulta.objects.create(
                         paciente=consulta.paciente,
@@ -186,9 +184,7 @@ def reagendar_consulta(request, consulta_id):
         if not nova_data or not novo_horario:
             messages.error(request, "Informe a nova data e horário.")
         else:
-            dt = parse_datetime(f"{nova_data}T{novo_horario}:00")
-            if dt and timezone.is_naive(dt):
-                dt = timezone.make_aware(dt)
+            dt = _parse_local_datetime(f"{nova_data}T{novo_horario}:00")
             if consulta.status == "perdida":
                 Consulta.objects.create(
                     paciente=consulta.paciente,
@@ -962,6 +958,24 @@ def clinica_detalhes(request, clinica_id):
 
 
 
+def _parse_local_datetime(value):
+    if not value:
+        return None
+
+    try:
+        dt = django_parse_datetime(value)
+    except Exception:
+        return None
+
+    if not dt:
+        return None
+
+    if timezone.is_naive(dt):
+        return dt.replace(tzinfo=None)
+
+    return dt.astimezone(timezone.get_current_timezone()).replace(tzinfo=None)
+
+
 def agendar_consulta(request):
     # --- diagnóstico e restauração de sessão semelhante ao que fazemos em configuracoes_conta ---
     logger.info("[AGENDAR] método=%s cookies=%s POST-keys=%s",
@@ -998,18 +1012,9 @@ def agendar_consulta(request):
     if not all([clinica_id, medico_id, data_hora_str, especialidade_id]):
         return JsonResponse({"success": False, "error": "Dados incompletos"})
 
-    data_hora = parse_datetime(data_hora_str)
+    data_hora = _parse_local_datetime(data_hora_str)
     if not data_hora:
         return JsonResponse({"success": False, "error": "Data inválida"})
-
-    # Normalizar para o timezone local do projeto.
-    # O frontend envia uma string no formato YYYY-MM-DDTHH:MM:SS sem timezone;
-    # isso deve ser tratado como horário local da clínica/usuário, não como UTC.
-    if timezone.is_naive(data_hora):
-        local_tz = timezone.get_current_timezone()
-        data_hora = timezone.make_aware(data_hora, local_tz)
-    else:
-        data_hora = timezone.localtime(data_hora)
 
     try:
         clinica = Clinica.objects.get(id=clinica_id)

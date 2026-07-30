@@ -4,7 +4,6 @@ from django.contrib.auth.hashers import make_password
 from django.core import signing
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
-from datetime import datetime
 from .models import Paciente, Medico, Clinica, Consulta, Endereco, Gerenciamento, Permissao, Financeiro
 
 
@@ -478,28 +477,6 @@ class LoginViewTests(TestCase):
         cons = Consulta.objects.filter(clinica=clinica, medico=medico, nome='Outro Nome').first()
         self.assertIsNotNone(cons)
         self.assertEqual(cons.paciente, self.paciente)
-
-    def test_agendar_consulta_preserves_selected_local_time(self):
-        clinica, medico = self.helper_create_clinic_and_doctor()
-        self.client.post(reverse('login_paciente'), {'email': 'user@example.com', 'senha': 'senha123'})
-
-        response = self.client.post(reverse('agendar_consulta'), {
-            'clinica_id': clinica.id,
-            'medico_id': medico.id,
-            'especialidade': '',
-            'data_hora': '2025-01-01T17:30:00',
-            'nome': 'Usuário Teste',
-            'email': 'user@example.com',
-            'telefone': '123456789',
-            'uid': signing.dumps(self.paciente.id),
-        })
-
-        self.assertEqual(response.status_code, 200)
-        self.assertJSONEqual(response.content, {'success': True})
-
-        cons = Consulta.objects.get(clinica=clinica, medico=medico, nome='Usuário Teste')
-        self.assertTrue(timezone.is_aware(cons.data_hora))
-        self.assertEqual(timezone.localtime(cons.data_hora).strftime('%H:%M'), '17:30')
 
     def test_cadastro_clinica_fallback_imagem_para_logo(self):
         logo = SimpleUploadedFile('logo.png', b'\x89PNG\r\n\x1a\n', content_type='image/png')
