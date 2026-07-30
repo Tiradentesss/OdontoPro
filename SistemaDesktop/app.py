@@ -296,7 +296,7 @@ class App(ctk.CTk):
 
         # ================= Área Principal =================
         self.container = ctk.CTkFrame(self, fg_color="transparent")
-        self.container.grid(row=0, column=1, sticky="nsew", padx=30, pady=30)
+        self.container.grid(row=0, column=1, sticky="nsew", padx=16, pady=16)
 
         self.frames = {
             "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
