@@ -2047,7 +2047,8 @@ function confirmarAgendamento() {
         return;
     }
     
-    // Combinar data e horário em formato ISO 8601
+    // Combinar data e horário em formato ISO 8601 preservando o horário selecionado.
+    // Envia como horário local sem timezone explícito para o backend normalizar.
     const data_hora = `${data}T${horario}:00`;
     
     // Preparar dados para envio

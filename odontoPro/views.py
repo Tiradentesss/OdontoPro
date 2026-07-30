@@ -1002,6 +1002,14 @@ def agendar_consulta(request):
     if not data_hora:
         return JsonResponse({"success": False, "error": "Data inválida"})
 
+    # Normalizar para o timezone local do projeto.
+    # O frontend envia uma string no formato YYYY-MM-DDTHH:MM:SS sem timezone;
+    # isso deve ser tratado como horário local da clínica/usuário, não como UTC.
+    if timezone.is_naive(data_hora):
+        data_hora = timezone.make_aware(data_hora, timezone=getattr(settings, 'TIME_ZONE', 'America/Belem'))
+    else:
+        data_hora = timezone.localtime(data_hora)
+
     try:
         clinica = Clinica.objects.get(id=clinica_id)
         medico = Medico.objects.get(id=medico_id)
