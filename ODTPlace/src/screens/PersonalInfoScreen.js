@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import { useAuth } from '../context/AuthContext';
-import { updateProfessionalProfile } from '../services/api';
+import { updatePatientProfile } from '../services/api';
 
 export default function PersonalInfoScreen({ navigation }) {
     const { user, login } = useAuth();
@@ -21,18 +21,15 @@ export default function PersonalInfoScreen({ navigation }) {
     const [cpf, setCpf] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [crmCro, setCrmCro] = useState('');
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // Load professional data from AuthContext
         if (user) {
             setFullName(user.nome || user.fullName || '');
             setCpf(user.cpf || '');
             setEmail(user.email || '');
             setPhone(user.telefone || user.phone || '');
-            setCrmCro(user.crm_cro || '');
             setAddress(user.endereco || user.address || '');
         }
     }, [user]);
@@ -46,19 +43,19 @@ export default function PersonalInfoScreen({ navigation }) {
                 cpf,
                 email,
                 telefone: phone,
-                crm_cro: crmCro,
+                endereco: address,
             };
-            const updatedProfile = await updateProfessionalProfile(user.id, profileData);
+
+            const updatedProfile = await updatePatientProfile(user.id, profileData);
             login({ ...user, ...updatedProfile });
             Alert.alert('Sucesso', 'Informações atualizadas com sucesso.');
         } catch (error) {
             console.log('Profile update error:', error);
-            if (error.response?.status === 404) {
+            if (error?.response?.status === 404) {
                 Alert.alert('Aviso', 'Funcionalidade de atualização ainda não implementada no backend. Os dados foram salvos localmente.');
-                // Update local context anyway
-                login({ ...user, nome: fullName, cpf, email, telefone: phone, crm_cro: crmCro });
+                login({ ...user, nome: fullName, cpf, email, telefone: phone, endereco: address });
             } else {
-                const errorMessage = error.response?.data?.error || error.message || 'Não foi possível salvar as informações.';
+                const errorMessage = error?.response?.data?.error || error.message || 'Não foi possível salvar as informações.';
                 Alert.alert('Erro', errorMessage);
             }
         } finally {
@@ -92,6 +89,7 @@ export default function PersonalInfoScreen({ navigation }) {
                             style={styles.input}
                         />
                     </View>
+
                     <View style={styles.fieldGroup}>
                         <Text style={styles.label}>CPF</Text>
                         <TextInput
@@ -102,16 +100,7 @@ export default function PersonalInfoScreen({ navigation }) {
                             style={styles.input}
                         />
                     </View>
-                    <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>CRM/CRO</Text>
-                        <TextInput
-                            value={crmCro}
-                            onChangeText={setCrmCro}
-                            placeholder="CRM/CRO número"
-                            placeholderTextColor="#94a3b8"
-                            style={styles.input}
-                        />
-                    </View>
+
                     <View style={styles.fieldGroup}>
                         <Text style={styles.label}>Email</Text>
                         <TextInput
@@ -124,6 +113,7 @@ export default function PersonalInfoScreen({ navigation }) {
                             style={styles.input}
                         />
                     </View>
+
                     <View style={styles.fieldGroup}>
                         <Text style={styles.label}>Número de Celular</Text>
                         <TextInput
@@ -132,6 +122,17 @@ export default function PersonalInfoScreen({ navigation }) {
                             placeholder="(91) 0000 - 0000"
                             placeholderTextColor="#94a3b8"
                             keyboardType="phone-pad"
+                            style={styles.input}
+                        />
+                    </View>
+
+                    <View style={styles.fieldGroup}>
+                        <Text style={styles.label}>Endereço</Text>
+                        <TextInput
+                            value={address}
+                            onChangeText={setAddress}
+                            placeholder="Rua, número, bairro"
+                            placeholderTextColor="#94a3b8"
                             style={styles.input}
                         />
                     </View>
@@ -205,4 +206,3 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
 });
-
