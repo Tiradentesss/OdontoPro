@@ -240,14 +240,52 @@ export default function AppointmentBookingScreen({ route, navigation }) {
           {doctorSpecialties.length > 0 && (
             <View style={styles.formGroup}>
               <Text style={styles.fieldLabel}>Especialidade</Text>
-              <TouchableOpacity 
-                style={styles.slotInput} 
-                activeOpacity={0.85} 
-                onPress={() => setSpecialtyPickerVisible(true)}
-              >
-                <Text style={styles.slotText}>{selectedSpecialtyName}</Text>
-                <Text style={styles.slotArrow}>⌄</Text>
-              </TouchableOpacity>
+              <View style={styles.dropdownWrapper}>
+                <TouchableOpacity 
+                  style={[styles.slotInput, specialtyPickerVisible && styles.slotInputOpen]} 
+                  activeOpacity={0.85} 
+                  onPress={() => setSpecialtyPickerVisible((prev) => !prev)}
+                >
+                  <Text style={styles.slotText}>{selectedSpecialtyName}</Text>
+                  <Text style={styles.slotArrow}>{specialtyPickerVisible ? '⌃' : '⌄'}</Text>
+                </TouchableOpacity>
+
+                {specialtyPickerVisible && (
+                  <View style={styles.inlinePickerContainer}>
+                    <View style={styles.inlinePickerCard}>
+                      <Text style={styles.pickerTitle}>Selecione a Especialidade</Text>
+                      <ScrollView style={styles.specialtyList}>
+                        {doctorSpecialties.map((specialty) => (
+                          <TouchableOpacity
+                            key={specialty.id}
+                            style={[
+                              styles.specialtyOption,
+                              selectedSpecialtyId === specialty.id && styles.specialtyOptionActive
+                            ]}
+                            onPress={() => {
+                              setSelectedSpecialtyId(specialty.id);
+                              setSelectedSpecialtyName(specialty.nome);
+                              setSpecialtyPickerVisible(false);
+                            }}
+                            activeOpacity={0.85}
+                          >
+                            <View style={styles.specialtyOptionContent}>
+                              <Text style={[
+                                styles.specialtyOptionText,
+                                selectedSpecialtyId === specialty.id && styles.specialtyOptionTextActive
+                              ]}>{specialty.nome}</Text>
+                              {selectedSpecialtyId === specialty.id && (
+                                <Text style={styles.specialtyCheckmark}>✓</Text>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  </View>
+                )}
+              </View>
+
               {doctorSpecialties.length > 1 && (
                 <Text style={styles.slotHelp}>Toque para escolher uma especialidade.</Text>
               )}
@@ -259,50 +297,6 @@ export default function AppointmentBookingScreen({ route, navigation }) {
             <Text style={styles.priceLabel}>Valor da Consulta</Text>
             <Text style={styles.priceValue}>R$ {consultationPrice.toFixed(2).replace('.', ',')}</Text>
           </View>
-
-          <Modal visible={specialtyPickerVisible} transparent animationType="fade">
-            <View style={styles.pickerOverlay}>
-              <View style={styles.pickerCard}>
-                <View style={styles.pickerHeader}>
-                  <Text style={styles.pickerTitle}>Selecione a Especialidade</Text>
-                  <TouchableOpacity 
-                    style={styles.pickerCloseButton} 
-                    onPress={() => setSpecialtyPickerVisible(false)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.pickerCloseText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-                <ScrollView style={styles.specialtyList}>
-                  {doctorSpecialties.map((specialty) => (
-                    <TouchableOpacity
-                      key={specialty.id}
-                      style={[
-                        styles.specialtyOption,
-                        selectedSpecialtyId === specialty.id && styles.specialtyOptionActive
-                      ]}
-                      onPress={() => {
-                        setSelectedSpecialtyId(specialty.id);
-                        setSelectedSpecialtyName(specialty.nome);
-                        setSpecialtyPickerVisible(false);
-                      }}
-                      activeOpacity={0.85}
-                    >
-                      <View style={styles.specialtyOptionContent}>
-                        <Text style={[
-                          styles.specialtyOptionText,
-                          selectedSpecialtyId === specialty.id && styles.specialtyOptionTextActive
-                        ]}>{specialty.nome}</Text>
-                        {selectedSpecialtyId === specialty.id && (
-                          <Text style={styles.specialtyCheckmark}>✓</Text>
-                        )}
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            </View>
-          </Modal>
 
           <Modal visible={pickerVisible} transparent animationType="fade">
             <View style={styles.pickerOverlay}>
@@ -524,6 +518,12 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
+  slotInputOpen: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   slotText: {
     color: '#94a3b8',
     fontSize: 14,
@@ -560,6 +560,32 @@ const styles = StyleSheet.create({
   },
   specialtyList: {
     maxHeight: 300,
+  },
+
+  dropdownWrapper: {
+    position: 'relative',
+  },
+  inlinePickerContainer: {
+    position: 'absolute',
+    top: 56,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    elevation: 10,
+  },
+  inlinePickerCard: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
+    elevation: 8,
   },
   specialtyOption: {
     paddingVertical: 16,
