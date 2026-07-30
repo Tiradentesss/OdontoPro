@@ -336,19 +336,23 @@ class App(ctk.CTk):
         except Exception:
             return (255, 255, 255, alpha)
 
-    def _create_menu_icon(self, glyph, color, size=18):
+    def _create_menu_icon(self, glyph, color, size=20):
         try:
             font_path = os.path.join(os.environ.get("WINDIR", "C:\\Windows"), "Fonts", "segmdl2.ttf")
             if not os.path.exists(font_path):
                 return None
 
-            image = Image.new("RGBA", (size, size), (255, 255, 255, 0))
+            canvas_size = size + 8
+            image = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 0))
             draw = ImageDraw.Draw(image)
-            font = ImageFont.truetype(font_path, int(size * 1.15))
+            font = ImageFont.truetype(font_path, int(size * 1.3))
             bbox = draw.textbbox((0, 0), glyph, font=font)
-            x = (size - (bbox[2] - bbox[0])) / 2 - bbox[0]
-            y = (size - (bbox[3] - bbox[1])) / 2 - bbox[1]
+            glyph_w = bbox[2] - bbox[0]
+            glyph_h = bbox[3] - bbox[1]
+            x = (canvas_size - glyph_w) / 2 - bbox[0]
+            y = (canvas_size - glyph_h) / 2 - bbox[1] + 1
             draw.text((x, y), glyph, font=font, fill=self._hex_to_rgba(color))
+            image = image.resize((size, size), Image.Resampling.LANCZOS)
             return ctk.CTkImage(light_image=image, dark_image=image, size=(size, size))
         except Exception:
             return None
@@ -377,7 +381,7 @@ class App(ctk.CTk):
             corner_radius=10,
             font=font("subtitle", "bold"),
             compound="left",
-            border_spacing=8,
+            border_spacing=10,
             command=lambda: self.show_frame(name)
         )
         btn._icon_inactive = self._get_menu_icon(name, COLORS["text_secondary"])
