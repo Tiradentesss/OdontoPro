@@ -248,7 +248,7 @@ class Cadastro(BaseScreen):
         # 1. BARRA DE ABAS (TOPO)
         # =============================
         self.tab_bar = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
-        self.tab_bar.pack(fill="x", padx=15, pady=(9, 0), anchor="nw")
+        self.tab_bar.pack(fill="x", padx=20, pady=(9, 0), anchor="nw")
 
         self.btn_pacientes = ctk.CTkButton(
             self.tab_bar, text="👤   Pacientes",
@@ -274,7 +274,7 @@ class Cadastro(BaseScreen):
             fg_color="transparent",
             corner_radius=20
         )
-        self.container_outer.pack(fill="both", expand=True, padx=15, pady=15)
+        self.container_outer.pack(fill="both", expand=True, padx=0, pady=0)
 
         # Container com scroll para garantir que os botões apareçam
         self.scroll_frame = ctk.CTkScrollableFrame(
@@ -282,7 +282,7 @@ class Cadastro(BaseScreen):
             fg_color=self.cor_fundo_card,
             corner_radius=12
         )
-        self.scroll_frame.pack(fill="both", expand=True)
+        self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
         self.container_conteudo = ctk.CTkFrame(
             self.scroll_frame,

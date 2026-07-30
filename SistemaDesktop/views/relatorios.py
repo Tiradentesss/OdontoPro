@@ -30,7 +30,7 @@ class Relatorios(BaseScreen):
         self.status_var = ctk.StringVar(value="Todos")
 
         self.main_container = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        self.main_container.pack(fill="both", expand=True, padx=20, pady=20)
+        self.main_container.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.scroll_frame = ctk.CTkScrollableFrame(
             self.main_container,
@@ -39,7 +39,7 @@ class Relatorios(BaseScreen):
             border_width=1,
             border_color=COLORS["border"]
         )
-        self.scroll_frame.pack(fill="both", expand=True)
+        self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
         self._build_structure()
         self._load_data_async()

@@ -385,7 +385,7 @@ class Configuracoes(BaseScreen):
     def setup_ui(self):
         # Header com tabs e botão de tema
         header_container = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
-        header_container.pack(fill="x", padx=15, pady=(9, 0), anchor="nw")
+        header_container.pack(fill="x", padx=20, pady=(9, 0), anchor="nw")
         header_container.pack_propagate(False)
 
         # Tabs à esquerda
@@ -414,14 +414,14 @@ class Configuracoes(BaseScreen):
             fg_color="transparent",
             corner_radius=20
         )
-        self.container_outer.pack(fill="both", expand=True, padx=15, pady=15)
+        self.container_outer.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.container_conteudo = ctk.CTkFrame(
             self.container_outer,
             fg_color=self.colors["bg_card"],
             corner_radius=12
         )
-        self.container_conteudo.pack(fill="both", expand=True, padx=0, pady=0)
+        self.container_conteudo.pack(fill="both", expand=True, padx=20, pady=20)
 
         self.content_area = ctk.CTkFrame(self.container_conteudo, fg_color="transparent")
         self.content_area.pack(fill="both", expand=True, padx=0, pady=0)

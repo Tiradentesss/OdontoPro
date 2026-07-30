@@ -44,7 +44,7 @@ class Painel(BaseScreen):
 
         # Container Principal com Scroll
         self.main_container = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        self.main_container.pack(fill="both", expand=True, padx=2, pady=2)
+        self.main_container.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.scroll = ctk.CTkScrollableFrame(
             self.main_container,
@@ -52,7 +52,7 @@ class Painel(BaseScreen):
             scrollbar_button_color=self.colors['border'],
             scrollbar_button_hover_color=self.colors['text_muted']
         )
-        self.scroll.pack(fill="both", expand=True, padx=20, pady=10)
+        self.scroll.pack(fill="both", expand=True, padx=20, pady=20)
 
         # Layout de 2 colunas com pesos iguais
         self.scroll.grid_columnconfigure(0, weight=1, uniform="group1")

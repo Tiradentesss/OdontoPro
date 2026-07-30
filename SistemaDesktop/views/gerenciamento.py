@@ -92,7 +92,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
 
         main_container = ctk.CTkFrame(self, fg_color="transparent")
-        main_container.grid(row=0, column=0, sticky="nsew", padx=24, pady=(40, 24))
+        main_container.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
         main_container.grid_rowconfigure(0, weight=1)
         main_container.grid_columnconfigure(0, weight=1, minsize=500)
         main_container.grid_columnconfigure(1, weight=1, minsize=500)

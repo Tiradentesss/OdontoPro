@@ -560,7 +560,7 @@ class Permissoes(BaseScreen):
         self.right_card.grid_columnconfigure(0, weight=1)
 
         header_bg = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        header_bg.grid(row=0, column=0, sticky="ew", pady=(30, 10), padx=25)
+        header_bg.grid(row=0, column=0, sticky="ew", pady=(30, 10), padx=20)
         header_content = ctk.CTkFrame(header_bg, fg_color="transparent")
         header_content.pack(fill="x")
         title_frame = ctk.CTkFrame(header_content, fg_color="transparent")
