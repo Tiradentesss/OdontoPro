@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
 from tkinter import messagebox, filedialog
 from .base import BaseScreen
-from .theme import COLORS, font, ICON_SIZE
+from .theme import COLORS, font, ICON_SIZE, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from controllers.gerenciamento_controller import GerenciamentoController
 
 
@@ -182,7 +182,7 @@ class AdminListFrame(ctk.CTkFrame):
         self.scroll_list.grid(row=1, column=0, sticky="nsew", padx=12, pady=0)
 
         self.footer_frame = ctk.CTkFrame(
-            self, fg_color=COLORS["content_bg"], corner_radius=15, height=70
+            self, fg_color=COLORS["content_bg"], corner_radius=INNER_CARD_RADIUS, height=70, border_width=1, border_color=INNER_CARD_BORDER
         )
         self.footer_frame.grid(row=2, column=0, padx=20, pady=(10, 20), sticky="ew")
         self.footer_frame.grid_propagate(False)
@@ -550,11 +550,11 @@ class Permissoes(BaseScreen):
         self.admin_list_panel = AdminListFrame(
             self.content_card, admins_data=self.admins_data,
             on_click_callback=self.on_admin_click,
-            fg_color=COLORS["card"], corner_radius=20
+            fg_color=COLORS["card"], corner_radius=INNER_CARD_RADIUS, border_width=1, border_color=INNER_CARD_BORDER
         )
         self.admin_list_panel.grid(row=0, column=0, sticky="nsew", padx=(20, 10), pady=20)
 
-        self.right_card = ctk.CTkFrame(self.content_card, fg_color=COLORS["card"], corner_radius=20)
+        self.right_card = ctk.CTkFrame(self.content_card, fg_color=COLORS["card"], corner_radius=INNER_CARD_RADIUS, border_width=1, border_color=INNER_CARD_BORDER)
         self.right_card.grid(row=0, column=1, sticky="nsew", padx=(10, 20), pady=20)
         self.right_card.grid_rowconfigure(1, weight=1)
         self.right_card.grid_columnconfigure(0, weight=1)
@@ -605,7 +605,7 @@ class Permissoes(BaseScreen):
 
             card = ctk.CTkFrame(
                 self.permissions_container, fg_color=COLORS["content_bg"],
-                corner_radius=16, border_width=1, border_color=COLORS["border"], height=85
+                corner_radius=INNER_CARD_RADIUS, border_width=1, border_color=INNER_CARD_BORDER, height=85
             )
             card.grid(row=row, column=col, sticky="ew", padx=6, pady=8)
             card.grid_propagate(False)

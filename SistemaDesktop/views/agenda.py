@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 from config.database import get_connection
 
 from .base import BaseScreen
-from .theme import font, COLORS
+from .theme import font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from controllers.consulta_controller import ConsultaController
 from .paciente_search_combo import PacienteSearchComboBox
 from .date_picker_utils import build_month_days, format_month_label, parse_br_date
@@ -349,9 +349,9 @@ class HourSelectionPopup(ctk.CTkToplevel):
         card = ctk.CTkFrame(
             self,
             fg_color=COLORS['card'],
-            corner_radius=12,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=COLORS['border'],
+            border_color=INNER_CARD_BORDER,
         )
         card.pack(fill='both', expand=True, padx=8, pady=8)
 
@@ -1072,9 +1072,9 @@ class Agenda(BaseScreen):
         filtros_card = ctk.CTkFrame(
             parent,
             fg_color=COLORS['card'],
-            corner_radius=18,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=COLORS['border']
+            border_color=INNER_CARD_BORDER
         )
         filtros_card.grid(row=0, column=0, sticky='ew', pady=(0, 12))
         filtros_card.grid_columnconfigure(0, weight=1)
@@ -1083,7 +1083,7 @@ class Agenda(BaseScreen):
         linha.pack(fill='x', padx=12, pady=12)
 
         def filtro(texto, values, var_name):
-            frame = ctk.CTkFrame(linha, fg_color=COLORS['card'], corner_radius=12)
+            frame = ctk.CTkFrame(linha, fg_color=COLORS['card'], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
 
             partes = texto.split(' ', 1)
             icone = partes[0] if partes else ""

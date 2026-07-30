@@ -2,7 +2,7 @@ import customtkinter as ctk
 from datetime import datetime, date
 # Importações mantidas conforme original
 from .base import BaseScreen
-from .theme import font, COLORS
+from .theme import font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from controllers.consulta_controller import ConsultaController
 from controllers.paciente_controller import PacienteController
 from controllers.medico_controller import MedicoController
@@ -93,9 +93,9 @@ class Painel(BaseScreen):
         card = ctk.CTkFrame(
             self.scroll,
             fg_color=self.colors['card'],
-            corner_radius=20,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=self.colors['border']
+            border_color=INNER_CARD_BORDER
         )
         card.grid(row=row, column=col, sticky="nsew", padx=padx, pady=(0, 20))
         
@@ -192,7 +192,13 @@ class Painel(BaseScreen):
         ]
 
         for i, (lab, val, col_text) in enumerate(metrics):
-            box = ctk.CTkFrame(container, fg_color=self.colors['bg_app'], corner_radius=12)
+            box = ctk.CTkFrame(
+                container,
+                fg_color=self.colors['bg_app'],
+                corner_radius=12,
+                border_width=1,
+                border_color=INNER_CARD_BORDER
+            )
             box.grid(row=0, column=i, padx=4, sticky="nsew")
             
             ctk.CTkLabel(box, text=lab, font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(pady=(10, 0))

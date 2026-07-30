@@ -1,5 +1,5 @@
 from .base import BaseScreen, ActionButtons
-from .theme import font, ICON_SIZE, COLORS
+from .theme import font, ICON_SIZE, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
 import customtkinter as ctk
 from controllers.paciente_controller import PacienteController
 from controllers.medico_controller import MedicoController
@@ -272,7 +272,7 @@ class Cadastro(BaseScreen):
         self.container_outer = ctk.CTkFrame(
             self.content_card,
             fg_color="transparent",
-            corner_radius=20
+            corner_radius=INNER_CARD_RADIUS
         )
         self.container_outer.pack(fill="both", expand=True, padx=0, pady=0)
 
@@ -280,7 +280,9 @@ class Cadastro(BaseScreen):
         self.scroll_frame = ctk.CTkScrollableFrame(
             self.container_outer,
             fg_color=self.cor_fundo_card,
-            corner_radius=12
+            corner_radius=INNER_CARD_RADIUS,
+            border_width=1,
+            border_color=INNER_CARD_BORDER
         )
         self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)
 

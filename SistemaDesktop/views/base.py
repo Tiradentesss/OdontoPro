@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from .theme import font, COLORS
+from .theme import font, COLORS, MAIN_CONTAINER_BORDER, MAIN_CONTAINER_RADIUS
 
 class ActionButtons(ctk.CTkFrame):
     """Componente padronizado para botões de ação (Salvar/Cancelar ou Salvar/Limpar)"""
@@ -54,8 +54,8 @@ class BaseScreen(ctk.CTkFrame):
         self.content_card = ctk.CTkFrame(
             self,
             fg_color=COLORS["card"],
-            corner_radius=15,
-            border_width=1,
-            border_color=COLORS["border"]
+            corner_radius=MAIN_CONTAINER_RADIUS,
+            border_width=2,
+            border_color=MAIN_CONTAINER_BORDER
         )
         self.content_card.pack(expand=True, fill="both", padx=20, pady=20)

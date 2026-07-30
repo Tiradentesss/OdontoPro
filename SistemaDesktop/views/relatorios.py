@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from config.database import get_connection
 from .base import BaseScreen
-from .theme import font, COLORS
+from .theme import font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS, MAIN_CONTAINER_BORDER, MAIN_CONTAINER_RADIUS
 from controllers.consulta_controller import ConsultaController
 
 
@@ -35,9 +35,9 @@ class Relatorios(BaseScreen):
         self.scroll_frame = ctk.CTkScrollableFrame(
             self.main_container,
             fg_color=COLORS["card"],
-            corner_radius=15,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=COLORS["border"]
+            border_color=INNER_CARD_BORDER
         )
         self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -84,9 +84,9 @@ class Relatorios(BaseScreen):
             card = ctk.CTkFrame(
                 cards_frame,
                 fg_color=COLORS["card"],
-                corner_radius=15,
+                corner_radius=INNER_CARD_RADIUS,
                 border_width=1,
-                border_color=COLORS["border"]
+                border_color=INNER_CARD_BORDER
             )
             card.grid(row=0, column=index, sticky="nsew", padx=(0, 10) if index < len(cards) - 1 else 0)
 
@@ -116,9 +116,9 @@ class Relatorios(BaseScreen):
         filters_frame = ctk.CTkFrame(
             self.scroll_frame,
             fg_color=COLORS["card"],
-            corner_radius=15,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=COLORS["border"]
+            border_color=INNER_CARD_BORDER
         )
         filters_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
@@ -134,7 +134,7 @@ class Relatorios(BaseScreen):
         form_frame.pack(fill="x", padx=20, pady=(0, 20))
         form_frame.columnconfigure((0, 1, 2), weight=1, uniform="filter_cols")
 
-        periodo_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=COLORS["border"])
+        periodo_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         periodo_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=0)
         ctk.CTkLabel(periodo_frame, text="Período", font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16, pady=(12, 6))
         self.periodo_combo = ctk.CTkComboBox(
@@ -150,7 +150,7 @@ class Relatorios(BaseScreen):
         self.periodo_combo.set(self.periodo_var.get())
         self.periodo_combo.pack(fill="x", padx=16, pady=(0, 16))
 
-        medico_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=COLORS["border"])
+        medico_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         medico_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=0)
         ctk.CTkLabel(medico_frame, text="Médico", font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16, pady=(12, 6))
         self.medico_combo = ctk.CTkComboBox(
@@ -166,7 +166,7 @@ class Relatorios(BaseScreen):
         self.medico_combo.set(self.medico_var.get())
         self.medico_combo.pack(fill="x", padx=16, pady=(0, 16))
 
-        especialidade_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=COLORS["border"])
+        especialidade_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         especialidade_frame.grid(row=0, column=2, sticky="nsew", padx=(10, 0), pady=0)
         ctk.CTkLabel(especialidade_frame, text="Especialidade", font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16, pady=(12, 6))
         self.especialidade_combo = ctk.CTkComboBox(
@@ -182,7 +182,7 @@ class Relatorios(BaseScreen):
         self.especialidade_combo.set(self.especialidade_var.get())
         self.especialidade_combo.pack(fill="x", padx=16, pady=(0, 16))
 
-        status_frame = ctk.CTkFrame(filters_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=COLORS["border"])
+        status_frame = ctk.CTkFrame(filters_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         status_frame.pack(fill="x", padx=20, pady=(0, 20))
         status_frame.columnconfigure(0, weight=1)
         ctk.CTkLabel(status_frame, text="Status", font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16, pady=(12, 6))
@@ -226,9 +226,9 @@ class Relatorios(BaseScreen):
         self.chart_card = ctk.CTkFrame(
             self.scroll_frame,
             fg_color=COLORS["card"],
-            corner_radius=15,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=COLORS["border"]
+            border_color=INNER_CARD_BORDER
         )
         self.chart_card.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
@@ -245,9 +245,9 @@ class Relatorios(BaseScreen):
         self.specialty_card = ctk.CTkFrame(
             self.scroll_frame,
             fg_color=COLORS["card"],
-            corner_radius=15,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=COLORS["border"]
+            border_color=INNER_CARD_BORDER
         )
         self.specialty_card.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
@@ -264,9 +264,9 @@ class Relatorios(BaseScreen):
         self.productivity_card = ctk.CTkFrame(
             self.scroll_frame,
             fg_color=COLORS["card"],
-            corner_radius=15,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=COLORS["border"]
+            border_color=INNER_CARD_BORDER
         )
         self.productivity_card.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
@@ -309,9 +309,9 @@ class Relatorios(BaseScreen):
             small_card = ctk.CTkFrame(
                 stats_frame,
                 fg_color=COLORS["card"],
-                corner_radius=15,
+                corner_radius=INNER_CARD_RADIUS,
                 border_width=1,
-                border_color=COLORS["border"]
+                border_color=INNER_CARD_BORDER
             )
             small_card.grid(row=0, column=index, sticky="nsew", padx=(0, 10) if index < len(stats) - 1 else 0)
 

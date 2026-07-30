@@ -116,6 +116,12 @@ COLORS_DARK = {
 # Paleta ativa (começará com modo claro)
 COLORS = COLORS_LIGHT.copy()
 
+# Padronização visual de containers
+MAIN_CONTAINER_BORDER = "#D4DEE8"
+INNER_CARD_BORDER = "#E2E8F0"
+MAIN_CONTAINER_RADIUS = 18
+INNER_CARD_RADIUS = 14
+
 # Fonte e tamanhos padrão (centralizar aqui para padronizar todas as páginas)
 FONT_FAMILY = "Poppins"
 

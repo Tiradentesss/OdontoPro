@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from .base import BaseScreen, ActionButtons
-from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode, get_dark_mode
+from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode, get_dark_mode, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from services.endereco_service import EnderecoService
 import os
 from PIL import Image, ImageTk, ImageDraw
@@ -412,14 +412,16 @@ class Configuracoes(BaseScreen):
         self.container_outer = ctk.CTkFrame(
             self.content_card,
             fg_color="transparent",
-            corner_radius=20
+            corner_radius=INNER_CARD_RADIUS
         )
         self.container_outer.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.container_conteudo = ctk.CTkFrame(
             self.container_outer,
             fg_color=self.colors["bg_card"],
-            corner_radius=12
+            corner_radius=INNER_CARD_RADIUS,
+            border_width=1,
+            border_color=INNER_CARD_BORDER
         )
         self.container_conteudo.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -545,9 +547,9 @@ class Configuracoes(BaseScreen):
         card = ctk.CTkFrame(
             parent,
             fg_color=COLORS['card'],
-            corner_radius=16,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=self.colors["border"]
+            border_color=INNER_CARD_BORDER
         )
         card.pack(fill="x", padx=15, pady=(0, 20), anchor="w")
 
@@ -818,10 +820,10 @@ class Configuracoes(BaseScreen):
         self.clinic_photos_container = ctk.CTkFrame(
             fotos_body,
             fg_color=COLORS["input_bg"],
-            corner_radius=10,
+            corner_radius=INNER_CARD_RADIUS,
             height=360,
             border_width=1,
-            border_color=self.colors["border"]
+            border_color=INNER_CARD_BORDER
         )
         self.clinic_photos_container.pack(fill="both", expand=True, pady=(4, 0))
         self.clinic_photos_container.pack_propagate(False)

@@ -3,7 +3,7 @@ from tkinter import messagebox
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 from .base import BaseScreen
-from .theme import COLORS
+from .theme import COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from controllers.consulta_controller import ConsultaController
 
 
@@ -104,9 +104,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         left_card = ctk.CTkFrame(
             parent,
             fg_color=self.colors["card"],
-            corner_radius=24,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=self.colors["border"]
+            border_color=INNER_CARD_BORDER
         )
         left_card.grid(row=0, column=0, sticky="nsew", padx=(0, 12), pady=10)
         left_card.grid_rowconfigure(2, weight=1)
@@ -310,9 +310,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.right_card = ctk.CTkFrame(
             parent,
             fg_color=self.colors["card"],
-            corner_radius=24,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=self.colors["border"]
+            border_color=INNER_CARD_BORDER
         )
         self.right_card.grid(row=0, column=1, sticky="nsew", padx=(12, 0), pady=10)
         self.right_card.grid_rowconfigure(3, weight=1)
@@ -348,9 +348,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.calendar_card = ctk.CTkFrame(
             self.right_card,
             fg_color=self.colors["card_soft"],
-            corner_radius=16,
+            corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=self.colors["border"]
+            border_color=INNER_CARD_BORDER
         )
         self.calendar_card.grid(row=1, column=0, sticky="ew", padx=16, pady=(12, 16))
         self._build_calendar()
