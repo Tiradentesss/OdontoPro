@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from config.database import get_connection
 from .base import BaseScreen
-from .theme import font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS, MAIN_CONTAINER_BORDER, MAIN_CONTAINER_RADIUS
+from .theme import font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from controllers.consulta_controller import ConsultaController
 
 
@@ -29,8 +29,7 @@ class Relatorios(BaseScreen):
         self.especialidade_var = ctk.StringVar(value="Todos")
         self.status_var = ctk.StringVar(value="Todos")
 
-        self.main_container = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        self.main_container.pack(fill="both", expand=True, padx=0, pady=0)
+        self.main_container = self.content_card
 
         self.scroll_frame = ctk.CTkScrollableFrame(
             self.main_container,

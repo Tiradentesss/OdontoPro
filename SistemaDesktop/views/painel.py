@@ -18,11 +18,6 @@ class Painel(BaseScreen):
         self.usuario_id = usuario_id
         self.tipo_usuario = tipo_usuario
 
-        # Configuração de Responsividade do Container Pai
-        self.content_card.grid_rowconfigure(0, weight=1)
-        self.content_card.grid_columnconfigure(0, weight=1)
-
-        # Definição de Estilo Expandida (Mantendo sua Identidade)
         self.colors = {
             'primary': COLORS.get('primary', '#06B6D4'),
             'primary_soft': COLORS.get('primary_soft', '#164E63'),
@@ -42,12 +37,8 @@ class Painel(BaseScreen):
             'bg_app': COLORS.get('bg_soft', '#1E293B')
         }
 
-        # Container Principal com Scroll
-        self.main_container = ctk.CTkFrame(self.content_card, fg_color="transparent")
-        self.main_container.pack(fill="both", expand=True, padx=0, pady=0)
-
         self.scroll = ctk.CTkScrollableFrame(
-            self.main_container,
+            self.content_card,
             fg_color="transparent",
             scrollbar_button_color=self.colors['border'],
             scrollbar_button_hover_color=self.colors['text_muted']

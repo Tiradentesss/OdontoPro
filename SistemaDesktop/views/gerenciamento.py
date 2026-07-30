@@ -837,11 +837,8 @@ class Gerenciamento(BaseScreen):
     def __init__(self, parent, clinica_id=None):
         super().__init__(parent, "Gerenciamento")
         self.clinica_id = clinica_id
-        
-        if hasattr(self, 'content_card'):
-            self.content_card.pack_forget()
-        
-        self.screen = MedicosDisponibilidadeScreen(self, clinica_id=clinica_id)
+
+        self.screen = MedicosDisponibilidadeScreen(self.content_card, clinica_id=clinica_id)
         self.screen.pack(fill="both", expand=True)
 
     def refresh(self):
