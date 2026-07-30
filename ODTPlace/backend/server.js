@@ -8,6 +8,7 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const db = require('./config/database');
+const { normalizeAppointmentDateValue, normalizeAppointmentRows } = require('./utils/appointmentTime');
 
 // Support both Django PBKDF2 hashes and bcrypt hashes for backward compatibility.
 async function verifyPassword(inputPassword, storedHash) {
@@ -265,7 +266,7 @@ app.get(['/api/appointments', '/appointments'], (req, res) => {
       console.error('Appointments query failed, returning mock data:', err.message);
       return res.json(mockAppointments);
     }
-    res.json(results);
+    res.json(normalizeAppointmentRows(results));
   });
 });
 
@@ -291,7 +292,7 @@ app.get(['/api/appointments/:patientEmail', '/appointments/:patientEmail'], (req
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json(results);
+    res.json(normalizeAppointmentRows(results));
   });
 });
 
@@ -319,7 +320,7 @@ app.put(['/api/appointments/:id', '/appointments/:id'], (req, res) => {
 
   if (data_hora !== undefined) {
     updates.push('data_hora = ?');
-    params.push(data_hora);
+    params.push(normalizeAppointmentDateValue(data_hora));
   }
 
   if (observacoes !== undefined) {
@@ -344,8 +345,9 @@ app.put(['/api/appointments/:id', '/appointments/:id'], (req, res) => {
 
 app.post(['/api/appointments', '/appointments'], (req, res) => {
   const { nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, paciente_id } = req.body;
+  const normalizedDataHora = normalizeAppointmentDateValue(data_hora);
   const query = `INSERT INTO odontoPro_consulta (nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, status, paciente_id, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'agendada', ?, NOW())`;
-  db.query(query, [nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, paciente_id], (err, result) => {
+  db.query(query, [nome, email, telefone, clinica_id, medico_id, especialidade_id, normalizedDataHora, observacoes, paciente_id], (err, result) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }

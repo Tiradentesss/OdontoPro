@@ -2,7 +2,6 @@ import React from 'react';
 import { View, TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const insets = useSafeAreaInsets();
 const tabs = [
     { key: 'home', label: 'Home', icon: require('../../assets/IconHome.png') },
     { key: 'schedule', label: 'Agendamentos', icon: require('../../assets/IconClipboard.png') },
@@ -11,6 +10,8 @@ const tabs = [
 ];
 
 export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {} }) {
+    const insets = useSafeAreaInsets();
+
     return (
         <View style={[styles.bottomBar, { paddingBottom: insets.bottom || 10 }]}>
             {tabs.map((tab) => {
