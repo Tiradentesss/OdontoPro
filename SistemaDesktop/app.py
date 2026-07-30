@@ -7,7 +7,7 @@ print("=" * 80)
 
 import customtkinter as ctk
 import os
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 from views.painel import Painel
 from views.agenda import Agenda
@@ -53,19 +53,21 @@ class App(ctk.CTk):
             border_color=COLORS["danger"]
         )
         
-        # Atualizar cores dos botões do menu
+        # Atualizar cores dos botões do menu e seus ícones
         for name, btn in self.buttons.items():
             if name == self.current_frame_name:
                 btn.configure(
                     fg_color=COLORS["primary"],
                     text_color="white",
-                    hover_color=COLORS["primary_dark"]
+                    hover_color=COLORS["primary_dark"],
+                    image=getattr(btn, "_icon_active", None)
                 )
             else:
                 btn.configure(
                     fg_color="transparent",
                     text_color=COLORS["text_secondary"],
-                    hover_color=COLORS["hover"]
+                    hover_color=COLORS["hover"],
+                    image=getattr(btn, "_icon_inactive", None)
                 )
         
         # Guardar o nome do frame atual antes de destruir
@@ -243,25 +245,25 @@ class App(ctk.CTk):
         if self.tipo_usuario == "gerenciamento":
             # Para gerentes, mostrar todos os itens possíveis
             todos_itens = [
-                ("📊  Painel", "painel"),
-                ("📅  Agenda", "agenda"),
-                ("📊  Relatórios", "relatorios"),
-                ("🏢  Gerenciamento", "gerenciamento"),
-                ("🔐  Permissões", "permissao"),
-                ("👥  Cadastro", "cadastro"),
-                ("⚙️  Configurações", "config"),
+                ("Painel", "painel"),
+                ("Agenda", "agenda"),
+                ("Relatórios", "relatorios"),
+                ("Gerenciamento", "gerenciamento"),
+                ("Permissões", "permissao"),
+                ("Cadastro", "cadastro"),
+                ("Configurações", "config"),
             ]
             # Filtrar apenas os que o gerente tem permissão
             self.menu_items = [item for item in todos_itens if self.tem_permissao(item[1])]
         else:  # clinica
             self.menu_items = [
-                ("📊  Painel", "painel"),
-                ("📅  Agenda", "agenda"),
-                ("📊  Relatórios", "relatorios"),
-                ("🏢  Gerenciamento", "gerenciamento"),
-                ("🔐  Permissões", "permissao"),
-                ("👥  Cadastro", "cadastro"),
-                ("⚙️  Configurações", "config"),
+                ("Painel", "painel"),
+                ("Agenda", "agenda"),
+                ("Relatórios", "relatorios"),
+                ("Gerenciamento", "gerenciamento"),
+                ("Permissões", "permissao"),
+                ("Cadastro", "cadastro"),
+                ("Configurações", "config"),
             ]
 
         for text, name in self.menu_items:
@@ -319,6 +321,50 @@ class App(ctk.CTk):
         self.current_frame_name = None
         self.show_frame("painel")
 
+    def _hex_to_rgba(self, color, alpha=255):
+        if not color:
+            return (255, 255, 255, alpha)
+        color = color.lstrip("#")
+        if len(color) == 3:
+            color = "".join(ch * 2 for ch in color)
+        try:
+            r = int(color[0:2], 16)
+            g = int(color[2:4], 16)
+            b = int(color[4:6], 16)
+            a = int(color[6:8], 16) if len(color) >= 8 else alpha
+            return (r, g, b, a)
+        except Exception:
+            return (255, 255, 255, alpha)
+
+    def _create_menu_icon(self, glyph, color, size=18):
+        try:
+            font_path = os.path.join(os.environ.get("WINDIR", "C:\\Windows"), "Fonts", "segmdl2.ttf")
+            if not os.path.exists(font_path):
+                return None
+
+            image = Image.new("RGBA", (size, size), (255, 255, 255, 0))
+            draw = ImageDraw.Draw(image)
+            font = ImageFont.truetype(font_path, int(size * 1.15))
+            bbox = draw.textbbox((0, 0), glyph, font=font)
+            x = (size - (bbox[2] - bbox[0])) / 2 - bbox[0]
+            y = (size - (bbox[3] - bbox[1])) / 2 - bbox[1]
+            draw.text((x, y), glyph, font=font, fill=self._hex_to_rgba(color))
+            return ctk.CTkImage(light_image=image, dark_image=image, size=(size, size))
+        except Exception:
+            return None
+
+    def _get_menu_icon(self, name, color):
+        glyphs = {
+            "painel": "\uE7F4",
+            "agenda": "\uE787",
+            "relatorios": "\uE9D2",
+            "gerenciamento": "\uE716",
+            "permissao": "\uEA18",
+            "cadastro": "\uE8FA",
+            "config": "\uE713",
+        }
+        return self._create_menu_icon(glyphs.get(name, "•"), color)
+
     def create_menu_button(self, text, name):
         btn = ctk.CTkButton(
             self.sidebar,
@@ -330,8 +376,13 @@ class App(ctk.CTk):
             height=52,
             corner_radius=10,
             font=font("subtitle", "bold"),
+            compound="left",
+            border_spacing=8,
             command=lambda: self.show_frame(name)
         )
+        btn._icon_inactive = self._get_menu_icon(name, COLORS["text_secondary"])
+        btn._icon_active = self._get_menu_icon(name, "white")
+        btn.configure(image=btn._icon_inactive)
         btn.pack(fill="x", padx=12, pady=8)
         return btn
 
@@ -366,13 +417,15 @@ class App(ctk.CTk):
                 btn.configure(
                     fg_color=COLORS["primary"],
                     text_color="white",
-                    hover_color=COLORS["primary_dark"]
+                    hover_color=COLORS["primary_dark"],
+                    image=getattr(btn, "_icon_active", None)
                 )
             else:
                 btn.configure(
                     fg_color="transparent",
                     text_color=COLORS["text_secondary"],
-                    hover_color=COLORS["hover"]
+                    hover_color=COLORS["hover"],
+                    image=getattr(btn, "_icon_inactive", None)
                 )
 
     def update_logo(self):
