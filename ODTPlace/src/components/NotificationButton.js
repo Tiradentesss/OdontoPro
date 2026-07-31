@@ -1,25 +1,34 @@
 import React from 'react';
-import { TouchableOpacity, Image, StyleSheet, View } from 'react-native';
-import { useTheme } from './ThemeContext';
+import {
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  View,
+} from 'react-native';
 
-export default function NotificationButton({ onPress, style, notifications = [] }) {
-    const { isDarkMode } = useTheme();
-    const hasNotification = notifications.some((item) => !item.read);
+export default function NotificationButton({
+  onPress,
+  notifications = [],
+}) {
 
-    return (
-        <TouchableOpacity
-            style={[styles.button, { backgroundColor: isDarkMode ? '#1E293B' : '#ffffff' }, style]}
-            onPress={onPress}
-            activeOpacity={0.8}
-        >
-            <Image
-                source={require('../../assets/IconNotificacao.png')}
-                style={[styles.icon, { tintColor: isDarkMode ? '#38BDF8' : '#0EA5E9' }]}
-                resizeMode="contain"
-            />
-            {hasNotification && <View style={styles.badge} />}
-        </TouchableOpacity>
-    );
+  // Verifica se existe alguma notificação não lida
+  const hasNotification = notifications.some(item => !item.read);
+
+  return (
+    <TouchableOpacity
+      style={styles.button}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <Image
+        source={require('../../assets/IconNotificacao.png')}
+        style={styles.icon}
+        resizeMode="contain"
+      />
+
+      {hasNotification && <View style={styles.badge} />}
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({
