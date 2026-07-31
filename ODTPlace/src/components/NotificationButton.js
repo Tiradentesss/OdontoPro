@@ -1,52 +1,25 @@
 import React from 'react';
-<<<<<<< HEAD
-import { TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { TouchableOpacity, Image, StyleSheet, View } from 'react-native';
 import { useTheme } from './ThemeContext';
 
-export default function NotificationButton({ onPress, style }) {
+export default function NotificationButton({ onPress, style, notifications = [] }) {
     const { isDarkMode } = useTheme();
+    const hasNotification = notifications.some((item) => !item.read);
 
     return (
-        <TouchableOpacity style={[styles.button, { backgroundColor: isDarkMode ? '#1E293B' : '#ffffff' }, style]} onPress={onPress} activeOpacity={0.8}>
+        <TouchableOpacity
+            style={[styles.button, { backgroundColor: isDarkMode ? '#1E293B' : '#ffffff' }, style]}
+            onPress={onPress}
+            activeOpacity={0.8}
+        >
             <Image
                 source={require('../../assets/IconNotificacao.png')}
                 style={[styles.icon, { tintColor: isDarkMode ? '#38BDF8' : '#0EA5E9' }]}
                 resizeMode="contain"
             />
+            {hasNotification && <View style={styles.badge} />}
         </TouchableOpacity>
     );
-=======
-import {
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  View,
-} from 'react-native';
-
-export default function NotificationButton({
-  onPress,
-  notifications = [],
-}) {
-
-  // Verifica se existe alguma notificação não lida
-  const hasNotification = notifications.some(item => !item.read);
-
-  return (
-    <TouchableOpacity
-      style={styles.button}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <Image
-        source={require('../../assets/IconNotificacao.png')}
-        style={styles.icon}
-        resizeMode="contain"
-      />
-
-      {hasNotification && <View style={styles.badge} />}
-    </TouchableOpacity>
-  );
->>>>>>> bc929680add156067d33a13b19141625ac1c6c55
 }
 
 const styles = StyleSheet.create({
