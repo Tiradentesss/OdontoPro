@@ -9,7 +9,7 @@ from controllers.consulta_controller import ConsultaController
 
 class MedicosDisponibilidadeScreen(ctk.CTkFrame):
     def __init__(self, parent, clinica_id=None):
-        super().__init__(parent, fg_color=COLORS["bg"])
+        super().__init__(parent, fg_color="transparent")
 
         self.clinica_id = clinica_id
         self.selected_medico = None
@@ -839,7 +839,7 @@ class Gerenciamento(BaseScreen):
         self.clinica_id = clinica_id
 
         self.screen = MedicosDisponibilidadeScreen(self.content_card, clinica_id=clinica_id)
-        self.screen.pack(fill="both", expand=True)
+        self.screen.pack(fill="both", expand=True, padx=20, pady=20)
 
     def refresh(self):
         print("Gerenciamento.refresh() chamado")
@@ -849,5 +849,5 @@ class Gerenciamento(BaseScreen):
             return
 
         print("Gerenciamento.refresh: nenhuma tela interna de médicos encontrada, recriando instância")
-        self.screen = MedicosDisponibilidadeScreen(self, clinica_id=self.clinica_id)
+        self.screen = MedicosDisponibilidadeScreen(self.content_card, clinica_id=self.clinica_id)
         self.screen.pack(fill="both", expand=True)
