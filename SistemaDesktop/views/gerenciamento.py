@@ -315,7 +315,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             border_color=INNER_CARD_BORDER
         )
         self.right_card.grid(row=0, column=1, sticky="nsew", padx=(12, 0), pady=10)
-        self.right_card.grid_rowconfigure(3, weight=1)
+        self.right_card.grid_rowconfigure(1, weight=1)
+        self.right_card.grid_rowconfigure(3, weight=4)
         self.right_card.grid_columnconfigure(0, weight=1)
 
         title_frame = ctk.CTkFrame(self.right_card, fg_color="transparent")
@@ -352,7 +353,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             border_width=1,
             border_color=INNER_CARD_BORDER
         )
-        self.calendar_card.grid(row=1, column=0, sticky="ew", padx=16, pady=(12, 16))
+        self.calendar_card.grid(row=1, column=0, sticky="nsew", padx=16, pady=(12, 16))
+        self.right_card.grid_rowconfigure(1, weight=2)
         self._build_calendar()
 
         info_card = ctk.CTkFrame(
@@ -373,6 +375,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
         slots_container = ctk.CTkFrame(self.right_card, fg_color="transparent")
         slots_container.grid(row=3, column=0, sticky="nsew", padx=16, pady=(12, 20))
+        slots_container.grid_rowconfigure(0, weight=0)
         slots_container.grid_rowconfigure(1, weight=1)
         slots_container.grid_columnconfigure(0, weight=1)
         
@@ -392,6 +395,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             border_color=self.colors["border"]
         )
         self.slots_grid.grid(row=1, column=0, sticky="nsew")
+        self.slots_grid.grid_rowconfigure(0, weight=1)
+        self.slots_grid.grid_columnconfigure(0, weight=1)
         
         for i in range(4):
             self.slots_grid.grid_columnconfigure(i, weight=1)
