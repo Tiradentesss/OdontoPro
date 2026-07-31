@@ -14,9 +14,11 @@ import {
 import ScheduleHeader from '../components/ScheduleHeader';
 import { useAuth } from '../context/AuthContext';
 import { updatePatientProfile } from '../services/api';
+import { useTheme } from '../components/ThemeContext';
 
 export default function PersonalInfoScreen({ navigation }) {
     const { user, login } = useAuth();
+    const { isDarkMode, colors } = useTheme();
     const [fullName, setFullName] = useState('');
     const [cpf, setCpf] = useState('');
     const [email, setEmail] = useState('');
@@ -67,20 +69,21 @@ export default function PersonalInfoScreen({ navigation }) {
         <ImageBackground
             source={require('../../assets/imagem background.png')}
             style={styles.pageBackground}
+            imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
             resizeMode="cover"
         >
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
                 <ScheduleHeader title="Informações Pessoais" onBack={() => navigation.goBack()} />
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                    <Text style={styles.heading}>Editar Informações</Text>
+                    <Text style={[styles.heading, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Editar Informações</Text>
 
                     {loading ? (
                         <ActivityIndicator size="large" color="#0ea5e9" style={{ marginTop: 32 }} />
                     ) : null}
 
                     <View style={styles.fieldGroup}>
-                        <Text style={styles.label}>Nome Completo</Text>
+                        <Text style={[styles.label, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Nome Completo</Text>
                         <TextInput
                             value={fullName}
                             onChangeText={setFullName}

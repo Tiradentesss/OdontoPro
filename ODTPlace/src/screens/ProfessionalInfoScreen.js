@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ImageBackground
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getDoctorById, getDoctorStats, getProfessionalAppointments } from '../services/api';
+import { useTheme } from '../components/ThemeContext';
 
 export default function ProfessionalInfoScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
   const clinic = route?.params?.clinic ?? {};
   const user = route?.params?.user;
+  const { isDarkMode } = useTheme();
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [completedConsultations, setCompletedConsultations] = useState(null);
   const [doctorProfile, setDoctorProfile] = useState(null);
@@ -62,52 +64,53 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
     <ImageBackground
       source={require('../../assets/imagem background.png')}
       style={styles.pageBackground}
+      imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
       resizeMode="cover"
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
         <ScheduleHeader title="Sobre o Profissional" onBack={() => navigation.goBack()} />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.profileHeader}>
-            <View style={styles.profileImage}>
-              <Text style={styles.profileInitial}>{professional.name ? professional.name.charAt(0) : 'P'}</Text>
+            <View style={[styles.profileImage, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}> 
+              <Text style={[styles.profileInitial, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{professional.name ? professional.name.charAt(0) : 'P'}</Text>
             </View>
-            <Text style={styles.professionalName}>{professional.nome ?? professional.name ?? 'Nome do Profissional'}</Text>
-            <Text style={styles.professionalSpecialty}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
+            <Text style={[styles.professionalName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{professional.nome ?? professional.name ?? 'Nome do Profissional'}</Text>
+            <Text style={[styles.professionalSpecialty, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
           </View>
 
           <View style={styles.metricRow}>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>{completedConsultations ?? professional.patients ?? 0}</Text>
-              <Text style={styles.metricLabel}>Pacientes</Text>
+            <View style={[styles.metricCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
+              <Text style={[styles.metricValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{completedConsultations ?? professional.patients ?? 0}</Text>
+              <Text style={[styles.metricLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Pacientes</Text>
             </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricValue}>{doctorProfile?.avaliacao ?? professional?.avaliacao ?? professional?.rating ?? '—'} ★</Text>
-              <Text style={styles.metricLabel}>{(doctorProfile?.num_avaliacoes ?? professional?.num_avaliacoes ?? professional?.avaliacoes ?? professional?.reviews ?? 0)} avaliações</Text>
+            <View style={[styles.metricCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
+              <Text style={[styles.metricValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{doctorProfile?.avaliacao ?? professional?.avaliacao ?? professional?.rating ?? '—'} ★</Text>
+              <Text style={[styles.metricLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>{(doctorProfile?.num_avaliacoes ?? professional?.num_avaliacoes ?? professional?.avaliacoes ?? professional?.reviews ?? 0)} avaliações</Text>
             </View>
           </View>
 
-          <View style={styles.sectionBlock}>
-            <Text style={styles.sectionTitle}>Sobre Dentista</Text>
-            <Text style={styles.sectionText}>{displayedDescription}</Text>
+          <View style={[styles.sectionBlock, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
+            <Text style={[styles.sectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Sobre Dentista</Text>
+            <Text style={[styles.sectionText, { color: isDarkMode ? '#CBD5E1' : '#334155' }]}>{displayedDescription}</Text>
             {isLongDescription ? (
               <TouchableOpacity onPress={() => setShowFullDescription(prev => !prev)}>
-                <Text style={styles.moreText}>{showFullDescription ? 'Menos' : 'Mais'}</Text>
+                <Text style={[styles.moreText, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{showFullDescription ? 'Menos' : 'Mais'}</Text>
               </TouchableOpacity>
             ) : null}
           </View>
 
-          <View style={styles.sectionBlock}>
-            <Text style={styles.sectionTitle}>Horários de Atendimento</Text>
-            <Text style={styles.sectionText}>{(clinic.horarios && clinic.horarios.join ? clinic.horarios.join(' • ') : (clinic.horarios || clinic.horario || professional.hours || 'Seg - Sab (08:00 - 18:30)'))}</Text>
+          <View style={[styles.sectionBlock, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
+            <Text style={[styles.sectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Horários de Atendimento</Text>
+            <Text style={[styles.sectionText, { color: isDarkMode ? '#CBD5E1' : '#334155' }]}>{(clinic.horarios && clinic.horarios.join ? clinic.horarios.join(' • ') : (clinic.horarios || clinic.horario || professional.hours || 'Seg - Sab (08:00 - 18:30)'))}</Text>
           </View>
 
           <TouchableOpacity
-            style={styles.bookButton}
+            style={[styles.bookButton, isDarkMode && { backgroundColor: '#38BDF8' }]}
             activeOpacity={0.85}
             onPress={() => navigation.navigate('AppointmentBooking', { professional, clinic, user, selectedSpecialty: route?.params?.selectedSpecialty })}
           >
-            <Text style={styles.bookButtonText}>Agendar</Text>
+            <Text style={[styles.bookButtonText, { color: isDarkMode ? '#0F172A' : '#ffffff' }]}>Agendar</Text>
           </TouchableOpacity>
         </ScrollView>
 

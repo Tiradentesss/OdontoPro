@@ -15,6 +15,7 @@ import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { createAppointment } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../components/ThemeContext';
 
 const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -36,6 +37,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
   const clinic = route?.params?.clinic ?? {};
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   
   // Data atual
   const today = new Date();
@@ -179,88 +181,91 @@ export default function AppointmentBookingScreen({ route, navigation }) {
     <ImageBackground
       source={require('../../assets/imagem background.png')}
       style={styles.pageBackground}
+      imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
       resizeMode="cover"
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
         <ScheduleHeader title="Agendamento" onBack={() => navigation.goBack()} />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.headerCard}>
-            <Text style={styles.headerLabel}>Profissional</Text>
-            <Text style={styles.headerTitle}>{professional.nome ?? professional.name ?? 'Dr. Nome Sobrenome'}</Text>
-            <Text style={styles.headerSubtitle}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
+          <View style={[styles.headerCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
+            <Text style={[styles.headerLabel, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>Profissional</Text>
+            <Text style={[styles.headerTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{professional.nome ?? professional.name ?? 'Dr. Nome Sobrenome'}</Text>
+            <Text style={[styles.headerSubtitle, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.fieldLabel}>Nome Completo</Text>
+            <Text style={[styles.fieldLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Nome Completo</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', color: '#F8FAFC' }]}
               placeholder="Seu nome completo"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={isDarkMode ? '#94A3B8' : '#9ca3af'}
               value={nomeCompleto}
               onChangeText={setNomeCompleto}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.fieldLabel}>Email</Text>
+            <Text style={[styles.fieldLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Email</Text>
             <TextInput
               keyboardType="email-address"
               autoCapitalize="none"
-              style={styles.input}
+              style={[styles.input, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', color: '#F8FAFC' }]}
               placeholder="Digite seu E-mail"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={isDarkMode ? '#94A3B8' : '#9ca3af'}
               value={email}
               onChangeText={setEmail}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.fieldLabel}>Número de telefone</Text>
+            <Text style={[styles.fieldLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Número de telefone</Text>
             <TextInput
               keyboardType="phone-pad"
-              style={styles.input}
+              style={[styles.input, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', color: '#F8FAFC' }]}
               placeholder="+55 (00) 0000-0000"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={isDarkMode ? '#94A3B8' : '#9ca3af'}
               value={phone}
               onChangeText={setPhone}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.fieldLabel}>Escolha a data e Horário</Text>
-            <TouchableOpacity style={styles.slotInput} activeOpacity={0.85} onPress={handleSlotPress}>
-              <Text style={styles.slotText}>{selectedSlot}</Text>
-              <Text style={styles.slotArrow}>⌄</Text>
+            <Text style={[styles.fieldLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Escolha a data e Horário</Text>
+            <TouchableOpacity style={[styles.slotInput, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]} activeOpacity={0.85} onPress={handleSlotPress}>
+              <Text style={[styles.slotText, { color: isDarkMode ? '#E2E8F0' : '#94a3b8' }]}>{selectedSlot}</Text>
+              <Text style={[styles.slotArrow, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>⌄</Text>
             </TouchableOpacity>
-            <Text style={styles.slotHelp}>Toque para escolher o dia e o horário.</Text>
+            <Text style={[styles.slotHelp, { color: isDarkMode ? '#94A3B8' : '#94a3b8' }]}>Toque para escolher o dia e o horário.</Text>
           </View>
 
           {/* Seleção de Especialidade */}
           {doctorSpecialties.length > 0 && (
             <View style={styles.formGroup}>
-              <Text style={styles.fieldLabel}>Especialidade</Text>
+              <Text style={[styles.fieldLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Especialidade</Text>
               <View style={styles.dropdownWrapper}>
                 <TouchableOpacity 
-                  style={[styles.slotInput, specialtyPickerVisible && styles.slotInputOpen]} 
+                  style={[styles.slotInput, specialtyPickerVisible && styles.slotInputOpen, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]} 
                   activeOpacity={0.85} 
                   onPress={() => setSpecialtyPickerVisible((prev) => !prev)}
                 >
-                  <Text style={styles.slotText}>{selectedSpecialtyName}</Text>
-                  <Text style={styles.slotArrow}>{specialtyPickerVisible ? '⌃' : '⌄'}</Text>
+                  <Text style={[styles.slotText, { color: isDarkMode ? '#E2E8F0' : '#94a3b8' }]}>{selectedSpecialtyName}</Text>
+                  <Text style={[styles.slotArrow, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{specialtyPickerVisible ? '⌃' : '⌄'}</Text>
                 </TouchableOpacity>
 
                 {specialtyPickerVisible && (
                   <View style={styles.inlinePickerContainer}>
                     <View style={styles.inlinePickerCard}>
-                      <Text style={styles.pickerTitle}>Selecione a Especialidade</Text>
+                      <Text style={[styles.pickerTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Selecione a Especialidade</Text>
                       <ScrollView style={styles.specialtyList}>
                         {doctorSpecialties.map((specialty) => (
                           <TouchableOpacity
                             key={specialty.id}
                             style={[
                               styles.specialtyOption,
-                              selectedSpecialtyId === specialty.id && styles.specialtyOptionActive
+                              selectedSpecialtyId === specialty.id && styles.specialtyOptionActive,
+                              isDarkMode && { backgroundColor: '#0F172A', borderBottomColor: '#334155' },
+                              isDarkMode && selectedSpecialtyId === specialty.id && { backgroundColor: '#1E293B' }
                             ]}
                             onPress={() => {
                               setSelectedSpecialtyId(specialty.id);
@@ -272,10 +277,12 @@ export default function AppointmentBookingScreen({ route, navigation }) {
                             <View style={styles.specialtyOptionContent}>
                               <Text style={[
                                 styles.specialtyOptionText,
-                                selectedSpecialtyId === specialty.id && styles.specialtyOptionTextActive
+                                selectedSpecialtyId === specialty.id && styles.specialtyOptionTextActive,
+                                isDarkMode && { color: '#E2E8F0' },
+                                isDarkMode && selectedSpecialtyId === specialty.id && { color: '#38BDF8' }
                               ]}>{specialty.nome}</Text>
                               {selectedSpecialtyId === specialty.id && (
-                                <Text style={styles.specialtyCheckmark}>✓</Text>
+                                <Text style={[styles.specialtyCheckmark, { color: isDarkMode ? '#38BDF8' : '#0284c7' }]}>✓</Text>
                               )}
                             </View>
                           </TouchableOpacity>
@@ -287,22 +294,22 @@ export default function AppointmentBookingScreen({ route, navigation }) {
               </View>
 
               {doctorSpecialties.length > 1 && (
-                <Text style={styles.slotHelp}>Toque para escolher uma especialidade.</Text>
+                <Text style={[styles.slotHelp, { color: isDarkMode ? '#94A3B8' : '#94a3b8' }]}>Toque para escolher uma especialidade.</Text>
               )}
             </View>
           )}
 
           {/* Preço da Consulta */}
-          <View style={styles.priceCard}>
-            <Text style={styles.priceLabel}>Valor da Consulta</Text>
-            <Text style={styles.priceValue}>R$ {consultationPrice.toFixed(2).replace('.', ',')}</Text>
+          <View style={[styles.priceCard, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}> 
+            <Text style={[styles.priceLabel, { color: isDarkMode ? '#86EFAC' : '#166534' }]}>Valor da Consulta</Text>
+            <Text style={[styles.priceValue, { color: isDarkMode ? '#4ADE80' : '#16a34a' }]}>R$ {consultationPrice.toFixed(2).replace('.', ',')}</Text>
           </View>
 
           <Modal visible={pickerVisible} transparent animationType="fade">
             <View style={styles.pickerOverlay}>
-              <View style={styles.pickerCard}>
+              <View style={[styles.pickerCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
                 <View style={styles.pickerHeader}>
-                  <Text style={styles.pickerTitle}>{monthLabel}</Text>
+                  <Text style={[styles.pickerTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{monthLabel}</Text>
                   <View style={styles.pickerNavButtons}>
                     <TouchableOpacity style={styles.pickerNavButton} onPress={goPreviousMonth} activeOpacity={0.8}>
                       <Text style={styles.pickerNavText}>‹</Text>
@@ -328,28 +335,28 @@ export default function AppointmentBookingScreen({ route, navigation }) {
                     return (
                       <TouchableOpacity
                         key={day.id}
-                        style={[styles.dayCell, isSelected && styles.dayCellSelected]}
+                        style={[styles.dayCell, isSelected && styles.dayCellSelected, isDarkMode && !isSelected && { backgroundColor: '#1E293B' }, isDarkMode && isSelected && { backgroundColor: '#38BDF8' }]}
                         activeOpacity={0.85}
                         onPress={() => setSelectedDate(day.id)}
                       >
-                        <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{day.day}</Text>
+                        <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected, isDarkMode && !isSelected && { color: '#F8FAFC' }, isDarkMode && isSelected && { color: '#0F172A' }]}>{day.day}</Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
 
-                <Text style={styles.timeSectionTitle}>Horário</Text>
+                <Text style={[styles.timeSectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Horário</Text>
                 <View style={styles.timeRow}>
                   {['09:00', '09:30', '12:00', '12:30', '15:00', '16:30'].map((time) => {
                     const isActive = selectedTime === time;
                     return (
                       <TouchableOpacity
                         key={time}
-                        style={[styles.timeChip, isActive && styles.timeChipActive]}
+                        style={[styles.timeChip, isActive && styles.timeChipActive, isDarkMode && !isActive && { backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155' }, isDarkMode && isActive && { backgroundColor: '#38BDF8' }]}
                         activeOpacity={0.85}
                         onPress={() => setSelectedTime(time)}
                       >
-                        <Text style={[styles.timeChipText, isActive && styles.timeChipTextActive]}>{time}</Text>
+                        <Text style={[styles.timeChipText, isActive && styles.timeChipTextActive, isDarkMode && !isActive && { color: '#E2E8F0' }, isDarkMode && isActive && { color: '#0F172A' }]}>{time}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -395,19 +402,19 @@ export default function AppointmentBookingScreen({ route, navigation }) {
                 </View>
               </View>
 
-              <Text style={styles.confirmationTitle}>Agendamento Confirmado</Text>
-              <Text style={styles.confirmationSubtitle}>Seu agendamento foi feito com sucesso</Text>
+              <Text style={[styles.confirmationTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Agendamento Confirmado</Text>
+              <Text style={[styles.confirmationSubtitle, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Seu agendamento foi feito com sucesso</Text>
 
-              <View style={styles.confirmationProfileCard}>
+              <View style={[styles.confirmationProfileCard, isDarkMode && { backgroundColor: '#1E293B' }]}> 
                 <View style={styles.confirmationProfileImage}>
                   <Text style={styles.confirmationProfileInitial}>{(professional.nome ?? professional.name)?.charAt(0) ?? 'P'}</Text>
                 </View>
-                <Text style={styles.confirmationProfileName}>{professional.nome ?? professional.name ?? 'Dr. Nome Sobrenome'}</Text>
-                <Text style={styles.confirmationProfileSpecialty}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
+                <Text style={[styles.confirmationProfileName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{professional.nome ?? professional.name ?? 'Dr. Nome Sobrenome'}</Text>
+                <Text style={[styles.confirmationProfileSpecialty, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
               </View>
 
               <View style={styles.confirmationDetailsRow}>
-                <Text style={styles.confirmationDetailText}>{selectedSlot}</Text>
+                <Text style={[styles.confirmationDetailText, { color: isDarkMode ? '#E2E8F0' : '#334155' }]}>{selectedSlot}</Text>
               </View>
 
               <TouchableOpacity style={styles.changeLink} activeOpacity={0.85} onPress={closeConfirmation}>

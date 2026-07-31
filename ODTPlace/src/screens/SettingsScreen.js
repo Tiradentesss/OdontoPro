@@ -3,57 +3,60 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ImageBac
 import ScheduleHeaderNoBack from '../components/ScheduleHeaderNoBack';
 import BottomNavBar from '../components/BottomNavBar';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../components/ThemeContext';
 
 export default function SettingsScreen({ navigation, showBottomNav = true }) {
   const { user } = useAuth();
+  const { isDarkMode, colors } = useTheme();
 
   return (
     <ImageBackground
       source={require('../../assets/imagem background.png')}
       style={styles.pageBackground}
+      imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
       resizeMode="cover"
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
         <ScheduleHeaderNoBack title="Configurações" />
 
         <View style={styles.content}>
-          <View style={styles.topCard}>
-            <View style={styles.iconWrapper}>
-              <Text style={styles.iconInitial}>
+          <View style={[styles.topCard, { backgroundColor: isDarkMode ? '#1E293B' : 'transparent' }]}> 
+            <View style={[styles.iconWrapper, { backgroundColor: isDarkMode ? '#334155' : '#E0F2FE' }]}> 
+              <Text style={[styles.iconInitial, { color: isDarkMode ? '#38BDF8' : '#0EA5E9' }]}> 
                 {(user?.nome ?? user?.name ?? 'N').charAt(0).toUpperCase()}
               </Text>
             </View>
-            <Text style={styles.profileName}>{user?.nome ?? user?.name ?? 'Nome da Conta'}</Text>
-            <Text style={styles.profileSubtitle}>{user?.email ?? 'Email não informado'}</Text>
+            <Text style={[styles.profileName, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>{user?.nome ?? user?.name ?? 'Nome da Conta'}</Text>
+            <Text style={[styles.profileSubtitle, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>{user?.email ?? 'Email não informado'}</Text>
           </View>
 
-          <View style={styles.optionCard}>
+          <View style={[styles.optionCard, { backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', shadowColor: isDarkMode ? '#000' : '#000' }]}> 
             <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => navigation.navigate('PersonalInfo')}>
               <Image source={require('../../assets/IconHome.png')} style={styles.optionIcon} resizeMode="contain" />
               <View style={styles.optionText}>
-                <Text style={styles.optionTitle}>Informações Pessoais</Text>
-                <Text style={styles.optionSubtitle}>Atualize seus dados</Text>
+                <Text style={[styles.optionTitle, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>Informações Pessoais</Text>
+                <Text style={[styles.optionSubtitle, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>Atualize seus dados</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => navigation.navigate('System')}>
               <Image source={require('../../assets/IconClipboard.png')} style={styles.optionIcon} resizeMode="contain" />
               <View style={styles.optionText}>
-                <Text style={styles.optionTitle}>Sistema</Text>
-                <Text style={styles.optionSubtitle}>Configurações do aplicativo</Text>
+                <Text style={[styles.optionTitle, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>Sistema</Text>
+                <Text style={[styles.optionSubtitle, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>Configurações do aplicativo</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => navigation.navigate('NotificationSettings')}>
               <Image source={require('../../assets/IconNotificacao.png')} style={styles.optionIcon} resizeMode="contain" />
               <View style={styles.optionText}>
-                <Text style={styles.optionTitle}>Notificações</Text>
-                <Text style={styles.optionSubtitle}>Gerencie alertas e sons</Text>
+                <Text style={[styles.optionTitle, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>Notificações</Text>
+                <Text style={[styles.optionSubtitle, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>Gerencie alertas e sons</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.optionRow} activeOpacity={0.8} onPress={() => navigation.navigate('Login')}>
               <Image source={require('../../assets/IconConfiguracao.png')} style={styles.optionIcon} resizeMode="contain" />
               <View style={styles.optionText}>
-                <Text style={styles.optionTitle}>Sair</Text>
-                <Text style={styles.optionSubtitle}>Encerrar sessão</Text>
+                <Text style={[styles.optionTitle, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>Sair</Text>
+                <Text style={[styles.optionSubtitle, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>Encerrar sessão</Text>
               </View>
             </TouchableOpacity>
           </View>

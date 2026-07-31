@@ -15,6 +15,7 @@ import ScheduleHeaderNoBack from '../components/ScheduleHeaderNoBack';
 import BottomNavBar from '../components/BottomNavBar';
 import { getPatientAppointments, updateAppointment } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../components/ThemeContext';
 
 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const weekdays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -113,6 +114,7 @@ const getMonthDays = (year, month, appointmentDatesSet = new Set()) => {
 
 export default function ScheduleScreen({ navigation, activeTab, showBottomNav = true, route }) {
     const { user } = useAuth();
+    const { isDarkMode, colors } = useTheme();
     const [search, setSearch] = useState('');
     const [shouldResetPosition, setShouldResetPosition] = useState(true);
     const lastActiveTab = useRef(activeTab);
@@ -420,9 +422,10 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
         <ImageBackground
             source={require('../../assets/imagem background.png')}
             style={styles.pageBackground}
+            imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
             resizeMode="cover"
         >
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : '#f8fafc' }]}> 
                 <ScheduleHeaderNoBack title="Agendamentos" onNotificationPress={() => {}} />
 
                 <View
@@ -430,17 +433,17 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                     onTouchStart={(e) => setSwipeStartX(e.nativeEvent.pageX)}
                     onTouchEnd={(e) => handleSwipeEnd(e.nativeEvent.pageX)}
                 >
-                    <TouchableOpacity style={styles.monthArrow} onPress={goPreviousMonth} activeOpacity={0.8}>
-                        <Text style={styles.monthArrowText}>‹</Text>
+                    <TouchableOpacity style={[styles.monthArrow, isDarkMode && { backgroundColor: '#1E293B' }]} onPress={goPreviousMonth} activeOpacity={0.8}>
+                        <Text style={[styles.monthArrowText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>‹</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.monthSelector} onPress={() => setPickerVisible(true)} activeOpacity={0.8}>
+                    <TouchableOpacity style={[styles.monthSelector, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]} onPress={() => setPickerVisible(true)} activeOpacity={0.8}>
                         <View style={styles.monthTitleWrapper}>
-                            <Text style={styles.monthLabel}>{monthLabel}</Text>
-                            <Text style={styles.monthHelp}>Clique no mês para abrir o calendário</Text>
+                            <Text style={[styles.monthLabel, { color: isDarkMode ? '#F8FAFC' : '#0ea5e9' }]}>{monthLabel}</Text>
+                            <Text style={[styles.monthHelp, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Clique no mês para abrir o calendário</Text>
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.monthArrow} onPress={goNextMonth} activeOpacity={0.8}>
-                        <Text style={styles.monthArrowText}>›</Text>
+                    <TouchableOpacity style={[styles.monthArrow, isDarkMode && { backgroundColor: '#1E293B' }]} onPress={goNextMonth} activeOpacity={0.8}>
+                        <Text style={[styles.monthArrowText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>›</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -463,6 +466,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                                     styles.dateItem,
                                     isSelected && styles.dateItemActive,
                                     date.isPast && styles.dateItemPast,
+                                    isDarkMode && { backgroundColor: isSelected ? '#0F172A' : '#1E293B', borderColor: isSelected ? '#38BDF8' : 'transparent' }
                                 ]}
                                 activeOpacity={date.isPast ? 1 : 0.85}
                                 onPress={() => handleSelectDate(date.id)}
@@ -471,17 +475,20 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                                     styles.dateWeekday,
                                     isSelected && styles.dateWeekdayActive,
                                     date.isPast && styles.dateWeekdayPast,
+                                    isDarkMode && { color: isSelected ? '#F8FAFC' : '#94A3B8' }
                                 ]}>{date.weekday}</Text>
                                 <Text style={[
                                     styles.dateDay,
                                     isSelected && styles.dateDayActive,
                                     date.isPast && styles.dateDayPast,
+                                    isDarkMode && { color: isSelected ? '#F8FAFC' : '#E2E8F0' }
                                 ]}>{date.day}</Text>
                                 {date.hasAppointments && (
                                     <View
                                         style={[
                                             styles.appointmentDot,
                                             date.isPast && styles.appointmentDotPast,
+                                            isDarkMode && { backgroundColor: isSelected ? '#38BDF8' : '#38BDF8' }
                                         ]}
                                     />
                                 )}
@@ -491,8 +498,8 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                 </ScrollView>
 
                 <View style={styles.scheduleHeader}>
-                    <Text style={styles.scheduleColumn}>Hora</Text>
-                    <Text style={styles.scheduleTitleHeader}>Consultas do Dia</Text>
+                    <Text style={[styles.scheduleColumn, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Hora</Text>
+                    <Text style={[styles.scheduleTitleHeader, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Consultas do Dia</Text>
                 </View>
 
                 <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
@@ -501,37 +508,41 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                         return (
                             <View key={item.id} style={styles.appointmentRow}>
                                 <View style={styles.timeColumn}>
-                                    <Text style={styles.timeText}>{item.time}</Text>
-                                    <Text style={styles.timeSub}>{item.date}</Text>
+                                    <Text style={[styles.timeText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{item.time}</Text>
+                                    <Text style={[styles.timeSub, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>{item.date}</Text>
                                 </View>
                                 <TouchableOpacity
                                     style={[
                                         styles.appointmentCard,
-                                        { borderLeftColor: getStatusBorderColor(item.status) }
+                                        {
+                                            borderLeftColor: getStatusBorderColor(item.status),
+                                            backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF',
+                                            borderColor: isDarkMode ? '#334155' : '#E2E8F0',
+                                        }
                                     ]}
                                     activeOpacity={0.85}
                                     onPress={() => handleOpenAppointmentActions(item)}
                                 >
                                     <View style={styles.cardHeader}>
                                         <View style={styles.cardTitleSection}>
-                                            <Text style={styles.cardLabel}>{item.clinic}</Text>
-                                            <Text style={styles.doctorName}>Dr. {item.doctor}</Text>
+                                            <Text style={[styles.cardLabel, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>{item.clinic}</Text>
+                                            <Text style={[styles.doctorName, { color: isDarkMode ? '#38BDF8' : '#0EA5E9' }]}>Dr. {item.doctor}</Text>
                                         </View>
                                         <View style={[styles.statusPill, { backgroundColor: statusInfo.bg, borderColor: statusInfo.border }]}>
                                             <Text style={[styles.statusPillText, { color: statusInfo.color }]}>{statusInfo.label}</Text>
                                         </View>
                                     </View>
-                                    <Text style={styles.specialtyText}>{item.specialty}</Text>
+                                    <Text style={[styles.specialtyText, { color: isDarkMode ? '#CBD5E1' : '#475569' }]}>{item.specialty}</Text>
                                     <View style={styles.cardDetails}>
-                                        <Text style={styles.detailLabel}>Observações:</Text>
-                                        <Text style={styles.detailText} numberOfLines={2}>
+                                        <Text style={[styles.detailLabel, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>Observações:</Text>
+                                        <Text style={[styles.detailText, { color: isDarkMode ? '#E2E8F0' : '#374151' }]} numberOfLines={2}>
                                             {item.observations}
                                         </Text>
                                     </View>
                                     {item.patientNotes && (
                                         <View style={styles.cardDetails}>
-                                            <Text style={styles.detailLabel}>Suas notas:</Text>
-                                            <Text style={styles.detailText} numberOfLines={2}>
+                                            <Text style={[styles.detailLabel, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>Suas notas:</Text>
+                                            <Text style={[styles.detailText, { color: isDarkMode ? '#E2E8F0' : '#374151' }]} numberOfLines={2}>
                                                 {item.patientNotes}
                                             </Text>
                                         </View>
@@ -542,45 +553,45 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                     })}
                     {appointments.length === 0 && (
                         <View style={styles.emptyState}>
-                            <Text style={styles.emptyText}>Nenhuma consulta agendada para este dia.</Text>
+                            <Text style={[styles.emptyText, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Nenhuma consulta agendada para este dia.</Text>
                         </View>
                     )}
                 </ScrollView>
 
                 <Modal visible={actionModalVisible} transparent animationType="fade">
                     <View style={styles.modalOverlay}>
-                        <View style={styles.actionModalContent}>
-                            <Text style={styles.actionModalTitle}>Detalhes da Consulta</Text>
+                        <View style={[styles.actionModalContent, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
+                            <Text style={[styles.actionModalTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Detalhes da Consulta</Text>
 
-                            <View style={styles.modalInfoSection}>
-                                <Text style={styles.modalInfoLabel}>Clínica</Text>
-                                <Text style={styles.modalInfoValue}>{selectedAppointment?.clinic}</Text>
+                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
+                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Clínica</Text>
+                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.clinic}</Text>
                             </View>
 
-                            <View style={styles.modalInfoSection}>
-                                <Text style={styles.modalInfoLabel}>Especialidade</Text>
-                                <Text style={styles.modalInfoValue}>{selectedAppointment?.specialty}</Text>
+                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
+                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Especialidade</Text>
+                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.specialty}</Text>
                             </View>
 
-                            <View style={styles.modalInfoSection}>
-                                <Text style={styles.modalInfoLabel}>Médico</Text>
-                                <Text style={styles.modalInfoValue}>Dr. {selectedAppointment?.doctor}</Text>
+                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
+                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Médico</Text>
+                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Dr. {selectedAppointment?.doctor}</Text>
                             </View>
 
-                            <View style={styles.modalInfoSection}>
-                                <Text style={styles.modalInfoLabel}>Data e Hora</Text>
-                                <Text style={styles.modalInfoValue}>{selectedAppointment?.date} às {selectedAppointment?.time}</Text>
+                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
+                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Data e Hora</Text>
+                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.date} às {selectedAppointment?.time}</Text>
                             </View>
 
-                            <View style={styles.modalInfoSection}>
-                                <Text style={styles.modalInfoLabel}>Observações</Text>
-                                <Text style={styles.modalInfoValue}>{selectedAppointment?.observations}</Text>
+                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
+                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Observações</Text>
+                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.observations}</Text>
                             </View>
 
                             {selectedAppointment?.patientNotes && (
-                                <View style={styles.modalInfoSection}>
-                                    <Text style={styles.modalInfoLabel}>Suas Notas</Text>
-                                    <Text style={styles.modalInfoValue}>{selectedAppointment?.patientNotes}</Text>
+                                <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
+                                    <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Suas Notas</Text>
+                                    <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.patientNotes}</Text>
                                 </View>
                             )}
 
@@ -612,19 +623,19 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
 
                 <Modal visible={cancelModalVisible} transparent animationType="fade">
                     <View style={styles.modalOverlay}>
-                        <View style={styles.cancelModalContent}>
-                            <View style={styles.cancelModalIcon}>
+                        <View style={[styles.cancelModalContent, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
+                            <View style={[styles.cancelModalIcon, isDarkMode && { backgroundColor: '#1E293B' }]}> 
                                 <Text style={styles.cancelModalIconText}>⚠️</Text>
                             </View>
-                            <Text style={styles.cancelModalTitle}>Cancelar Consulta</Text>
-                            <Text style={styles.cancelModalMessage}>
+                            <Text style={[styles.cancelModalTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Cancelar Consulta</Text>
+                            <Text style={[styles.cancelModalMessage, { color: isDarkMode ? '#CBD5E1' : '#374151' }]}> 
                                 Tem certeza que deseja cancelar esta consulta? Esta ação não pode ser desfeita.
                             </Text>
-                            <View style={styles.cancelModalDetails}>
-                                <Text style={styles.cancelModalDetailText}>
+                            <View style={[styles.cancelModalDetails, isDarkMode && { backgroundColor: '#1E293B' }]}> 
+                                <Text style={[styles.cancelModalDetailText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}> 
                                     {selectedAppointment?.clinic} - {selectedAppointment?.specialty}
                                 </Text>
-                                <Text style={styles.cancelModalDetailText}>
+                                <Text style={[styles.cancelModalDetailText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}> 
                                     {selectedAppointment?.date} às {selectedAppointment?.time}
                                 </Text>
                             </View>
@@ -650,56 +661,60 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
 
                 <Modal visible={rescheduleModalVisible} transparent animationType="fade">
                     <View style={styles.modalOverlay}>
-                        <View style={styles.pickerCard}>
+                        <View style={[styles.pickerCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
                             <View style={styles.pickerHeader}>
-                                <Text style={styles.pickerTitle}>Reagendar Consulta</Text>
+                                <Text style={[styles.pickerTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Reagendar Consulta</Text>
                                 <TouchableOpacity
-                                    style={styles.pickerCloseButton}
+                                    style={[styles.pickerCloseButton, isDarkMode && { backgroundColor: '#1E293B' }]}
                                     onPress={closeRescheduleModal}
                                     activeOpacity={0.8}
                                 >
-                                    <Text style={styles.pickerCloseText}>✕</Text>
+                                    <Text style={[styles.pickerCloseText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>✕</Text>
                                 </TouchableOpacity>
                             </View>
 
-                            <Text style={styles.rescheduleInfo}>
+                            <Text style={[styles.rescheduleInfo, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}> 
                                 {selectedAppointment?.clinic} - {selectedAppointment?.specialty}
                             </Text>
-                            <Text style={styles.rescheduleInfo}>
+                            <Text style={[styles.rescheduleInfo, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}> 
                                 Dr. {selectedAppointment?.doctor}
                             </Text>
 
-                            <Text style={styles.timeSectionTitle}>Nova Data</Text>
+                            <Text style={[styles.timeSectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Nova Data</Text>
                             <View style={styles.dateTimeSelector}>
                                 <TouchableOpacity
-                                    style={styles.dateTimeButton}
+                                    style={[styles.dateTimeButton, isDarkMode && { backgroundColor: '#1E293B' }]}
                                     onPress={() => {
-                                        // Simples seleção de data - em produção, usar um date picker
                                         const tomorrow = new Date();
                                         tomorrow.setDate(tomorrow.getDate() + 1);
                                         setNewSelectedDate(tomorrow.toISOString().split('T')[0]);
                                     }}
                                     activeOpacity={0.8}
                                 >
-                                    <Text style={styles.dateTimeButtonText}>
+                                    <Text style={[styles.dateTimeButtonText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}> 
                                         {new Date(newSelectedDate).toLocaleDateString('pt-BR')}
                                     </Text>
                                     <Text style={styles.dateTimeButtonIcon}>📅</Text>
                                 </TouchableOpacity>
                             </View>
 
-                            <Text style={styles.timeSectionTitle}>Novo Horário</Text>
+                            <Text style={[styles.timeSectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Novo Horário</Text>
                             <View style={styles.timeRow}>
                                 {['09:00', '09:30', '12:00', '12:30', '15:00', '16:30'].map((time) => {
                                     const isActive = newSelectedTime === time;
                                     return (
                                         <TouchableOpacity
                                             key={time}
-                                            style={[styles.timeChip, isActive && styles.timeChipActive]}
+                                            style={[
+                                                styles.timeChip,
+                                                isActive && styles.timeChipActive,
+                                                isDarkMode && !isActive && { backgroundColor: '#1E293B', borderColor: '#334155' },
+                                                isDarkMode && isActive && { backgroundColor: '#38BDF8' }
+                                            ]}
                                             activeOpacity={0.85}
                                             onPress={() => setNewSelectedTime(time)}
                                         >
-                                            <Text style={[styles.timeChipText, isActive && styles.timeChipTextActive]}>{time}</Text>
+                                            <Text style={[styles.timeChipText, isActive && styles.timeChipTextActive, isDarkMode && !isActive && { color: '#E2E8F0' }, isDarkMode && isActive && { color: '#0F172A' }]}>{time}</Text>
                                         </TouchableOpacity>
                                     );
                                 })}
@@ -719,23 +734,23 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
 
                 <Modal visible={pickerVisible} transparent animationType="fade">
                     <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
+                        <View style={[styles.modalContent, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
                             <View
                                 style={styles.modalHeaderRow}
                                 onTouchStart={(e) => setSwipeStartX(e.nativeEvent.pageX)}
                                 onTouchEnd={(e) => handleSwipeEnd(e.nativeEvent.pageX)}
                             >
-                                <TouchableOpacity style={styles.modalArrowButton} onPress={goPreviousMonth} activeOpacity={0.8}>
-                                    <Text style={styles.modalArrowText}>‹</Text>
+                                <TouchableOpacity style={[styles.modalArrowButton, isDarkMode && { backgroundColor: '#1E293B' }]} onPress={goPreviousMonth} activeOpacity={0.8}>
+                                    <Text style={[styles.modalArrowText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>‹</Text>
                                 </TouchableOpacity>
-                                <Text style={styles.modalTitle}>{monthLabel}</Text>
-                                <TouchableOpacity style={styles.modalArrowButton} onPress={goNextMonth} activeOpacity={0.8}>
-                                    <Text style={styles.modalArrowText}>›</Text>
+                                <Text style={[styles.modalTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{monthLabel}</Text>
+                                <TouchableOpacity style={[styles.modalArrowButton, isDarkMode && { backgroundColor: '#1E293B' }]} onPress={goNextMonth} activeOpacity={0.8}>
+                                    <Text style={[styles.modalArrowText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>›</Text>
                                 </TouchableOpacity>
                             </View>
                             <View style={styles.weekHeader}>
                                 {weekdays.map((weekday, index) => (
-                                    <Text key={`${weekday}-${index}`} style={styles.weekdayText}>{weekday}</Text>
+                                    <Text key={`${weekday}-${index}`} style={[styles.weekdayText, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>{weekday}</Text>
                                 ))}
                             </View>
                             <View
@@ -755,6 +770,9 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                                                 styles.dayCell,
                                                 isSelected && styles.dayCellActive,
                                                 date.isPast && !isSelected && styles.dayCellPast,
+                                                isDarkMode && !isSelected && !date.isPast && { backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#334155' },
+                                                isDarkMode && isSelected && { backgroundColor: '#38BDF8', borderWidth: 1, borderColor: '#38BDF8' },
+                                                isDarkMode && date.isPast && !isSelected && { backgroundColor: '#334155', borderWidth: 1, borderColor: '#475569' },
                                             ]}
                                             activeOpacity={0.85}
                                             onPress={() => handleCalendarSelect(date.id)}
@@ -764,6 +782,9 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                                                     styles.dayNumber,
                                                     isSelected && styles.dayNumberActive,
                                                     date.isPast && !isSelected && styles.dayNumberPast,
+                                                    isDarkMode && !isSelected && { color: '#F8FAFC' },
+                                                    isDarkMode && isSelected && { color: '#0F172A' },
+                                                    isDarkMode && date.isPast && !isSelected && { color: '#CBD5E1' },
                                                 ]}
                                             >
                                                 {date.day}
@@ -774,6 +795,9 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                                                         styles.dayDot,
                                                         isSelected && styles.dayDotSelected,
                                                         date.isPast && !isSelected && styles.dayDotPast,
+                                                        isDarkMode && !isSelected && { backgroundColor: '#38BDF8' },
+                                                        isDarkMode && isSelected && { backgroundColor: '#0F172A' },
+                                                        isDarkMode && date.isPast && !isSelected && { backgroundColor: '#94A3B8' },
                                                     ]}
                                                 />
                                             )}

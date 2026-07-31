@@ -4,6 +4,7 @@ import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getClinicDoctors } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../components/ThemeContext';
 
 const sampleProfessionals = [
     { id: '1', name: 'Lucas Castro', specialty: 'Ortodontista', rating: 5, reviews: 120 },
@@ -16,6 +17,7 @@ const ratingFilters = [5, 4, 3, 2, 1];
 
 export default function ProfessionalsScreen({ route, navigation }) {
     const { user } = useAuth();
+    const { isDarkMode } = useTheme();
     const clinic = route?.params?.clinic ?? {};
     const selectedSpecialty = route?.params?.selectedSpecialty ?? null;
     const [search, setSearch] = useState('');
@@ -74,25 +76,26 @@ export default function ProfessionalsScreen({ route, navigation }) {
         <ImageBackground
             source={require('../../assets/imagem background.png')}
             style={styles.pageBackground}
+            imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
             resizeMode="cover"
         >
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
                 <ScheduleHeader title="Profissionais" onBack={() => navigation.goBack()} />
 
                 <View style={styles.searchArea}>
-                    <View style={styles.searchBox}>
+                    <View style={[styles.searchBox, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
                         <Image source={require('../../assets/IconLupa.png')} style={styles.searchIcon} />
                         <TextInput
                             value={search}
                             onChangeText={setSearch}
                             placeholder="Buscar profissional"
-                            placeholderTextColor="#94a3b8"
-                            style={styles.searchInput}
+                            placeholderTextColor={isDarkMode ? '#94A3B8' : '#94a3b8'}
+                            style={[styles.searchInput, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}
                         />
                     </View>
                     <View style={styles.filterButtonsRow}>
                         <TouchableOpacity
-                            style={[styles.openFilterButton, showSpecialtyFilters && styles.openFilterButtonActive]}
+                            style={[styles.openFilterButton, showSpecialtyFilters && styles.openFilterButtonActive, isDarkMode && !showSpecialtyFilters && { backgroundColor: '#0F172A', borderColor: '#334155' }, isDarkMode && showSpecialtyFilters && { backgroundColor: '#38BDF8' }]}
                             onPress={() => {
                                 if (showSpecialtyFilters && !showRatingFilters) {
                                     return;
@@ -102,12 +105,12 @@ export default function ProfessionalsScreen({ route, navigation }) {
                             }}
                             activeOpacity={0.85}
                         >
-                            <Text style={[styles.openFilterButtonText, showSpecialtyFilters && styles.openFilterButtonTextActive]}>
+                            <Text style={[styles.openFilterButtonText, showSpecialtyFilters && styles.openFilterButtonTextActive, isDarkMode && !showSpecialtyFilters && { color: '#F8FAFC' }, isDarkMode && showSpecialtyFilters && { color: '#0F172A' }]}> 
                                 Especialidade
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.openFilterButton, showRatingFilters && styles.openFilterButtonActive]}
+                            style={[styles.openFilterButton, showRatingFilters && styles.openFilterButtonActive, isDarkMode && !showRatingFilters && { backgroundColor: '#0F172A', borderColor: '#334155' }, isDarkMode && showRatingFilters && { backgroundColor: '#38BDF8' }]}
                             onPress={() => {
                                 if (showRatingFilters && !showSpecialtyFilters) {
                                     return;
@@ -117,7 +120,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                             }}
                             activeOpacity={0.85}
                         >
-                            <Text style={[styles.openFilterButtonText, showRatingFilters && styles.openFilterButtonTextActive]}>
+                            <Text style={[styles.openFilterButtonText, showRatingFilters && styles.openFilterButtonTextActive, isDarkMode && !showRatingFilters && { color: '#F8FAFC' }, isDarkMode && showRatingFilters && { color: '#0F172A' }]}> 
                                 Avaliação
                             </Text>
                         </TouchableOpacity>
@@ -134,6 +137,8 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                         style={[
                                             styles.filterChip,
                                             activeSpecialty === specialty && styles.filterChipActive,
+                                            isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' },
+                                            isDarkMode && activeSpecialty === specialty && { backgroundColor: '#38BDF8', borderColor: '#38BDF8' },
                                         ]}
                                         onPress={() => setActiveSpecialty(activeSpecialty === specialty ? null : specialty)}
                                         activeOpacity={0.85}
@@ -161,6 +166,8 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                         style={[
                                             styles.ratingChip,
                                             activeRating === rating && styles.ratingChipActive,
+                                            isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' },
+                                            isDarkMode && activeRating === rating && { backgroundColor: '#38BDF8', borderColor: '#38BDF8' },
                                         ]}
                                         onPress={() => setActiveRating(activeRating === rating ? null : rating)}
                                         activeOpacity={0.85}
@@ -180,8 +187,8 @@ export default function ProfessionalsScreen({ route, navigation }) {
                     )}
 
                     <View style={styles.listHeader}>
-                        <Text style={styles.listTitle}>Profissionais da Clínica</Text>
-                        <Text style={styles.listSubtitle}>{professionals.length} encontrado(s)</Text>
+                        <Text style={[styles.listTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Profissionais da Clínica</Text>
+                        <Text style={[styles.listSubtitle, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>{professionals.length} encontrado(s)</Text>
                     </View>
 
                     <FlatList
@@ -195,7 +202,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                             const specialty = item.specialty ?? item.especialidades?.[0] ?? 'Especialista';
                             return (
                                 <TouchableOpacity
-                                    style={styles.professionalCard}
+                                    style={[styles.professionalCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}
                                     activeOpacity={0.86}
                                     onPress={() => navigation.navigate('ProfessionalInfo', { professional: item, clinic, user, selectedSpecialty: activeSpecialty })}
                                 >
@@ -203,15 +210,15 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                         <Text style={styles.avatarText}>{name.charAt(0)}</Text>
                                     </View>
                                     <View style={styles.professionalInfo}>
-                                        <Text style={styles.professionalName}>{name}</Text>
-                                        <Text style={styles.professionalSpecialty}>{specialty}</Text>
-                                        <Text style={styles.reviewText}>{(item.avaliacao ?? item.rating ?? '—')} ★ • {(item.num_avaliacoes ?? item.reviews ?? item.avaliacoes ?? 0)} avaliações</Text>
+                                        <Text style={[styles.professionalName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{name}</Text>
+                                        <Text style={[styles.professionalSpecialty, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{specialty}</Text>
+                                        <Text style={[styles.reviewText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{(item.avaliacao ?? item.rating ?? '—')} ★ • {(item.num_avaliacoes ?? item.reviews ?? item.avaliacoes ?? 0)} avaliações</Text>
                                     </View>
                                 </TouchableOpacity>
                             );
                         }}
                         ListEmptyComponent={
-                            <Text style={styles.emptyText}>{doctorsError ?? 'Nenhum profissional encontrado.'}</Text>
+                            <Text style={[styles.emptyText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{doctorsError ?? 'Nenhum profissional encontrado.'}</Text>
                         }
                     />
                 </View>

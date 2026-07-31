@@ -10,9 +10,10 @@ import {
     Switch,
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
+import { useTheme } from '../components/ThemeContext';
 
 export default function SystemScreen({ navigation }) {
-    const [darkMode, setDarkMode] = useState(false);
+    const { isDarkMode, toggleTheme, colors } = useTheme();
     const [autoUpdates, setAutoUpdates] = useState(true);
     const [locationAccess, setLocationAccess] = useState(false);
 
@@ -22,27 +23,27 @@ export default function SystemScreen({ navigation }) {
             style={styles.pageBackground}
             resizeMode="cover"
         >
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
                 <ScheduleHeader title="Sistema" onBack={() => navigation.goBack()} />
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                    <Text style={styles.heading}>Configurações do Sistema</Text>
-                    <View style={styles.section}>
+                    <Text style={[styles.heading, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Configurações do Sistema</Text>
+                    <View style={[styles.section, { backgroundColor: isDarkMode ? '#1E293B' : '#ffffff' }]}> 
                         <View style={styles.optionRow}>
                             <View style={styles.optionTextBlock}>
-                                <Text style={styles.optionLabel}>Modo escuro</Text>
-                                <Text style={styles.optionSubtitle}>Ativa o tema escuro no app</Text>
+                                <Text style={[styles.optionLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Modo escuro</Text>
+                                <Text style={[styles.optionSubtitle, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Ativa o tema escuro no app</Text>
                             </View>
                             <Switch
-                                value={darkMode}
-                                onValueChange={setDarkMode}
-                                thumbColor={darkMode ? '#0ea5e9' : '#f8fafc'}
+                                value={isDarkMode}
+                                onValueChange={toggleTheme}
+                                thumbColor={isDarkMode ? '#0ea5e9' : '#f8fafc'}
                                 trackColor={{ false: '#cbd5e1', true: '#bae6fd' }}
                             />
                         </View>
                         <View style={styles.optionRow}>
                             <View style={styles.optionTextBlock}>
-                                <Text style={styles.optionLabel}>Atualizações automáticas</Text>
-                                <Text style={styles.optionSubtitle}>Receba atualizações em segundo plano</Text>
+                                <Text style={[styles.optionLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Atualizações automáticas</Text>
+                                <Text style={[styles.optionSubtitle, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Receba atualizações em segundo plano</Text>
                             </View>
                             <Switch
                                 value={autoUpdates}
@@ -53,8 +54,8 @@ export default function SystemScreen({ navigation }) {
                         </View>
                         <View style={styles.optionRow}>
                             <View style={styles.optionTextBlock}>
-                                <Text style={styles.optionLabel}>Acesso à localização</Text>
-                                <Text style={styles.optionSubtitle}>Permitir sincronização de horários e rotas</Text>
+                                <Text style={[styles.optionLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Acesso à localização</Text>
+                                <Text style={[styles.optionSubtitle, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Permitir sincronização de horários e rotas</Text>
                             </View>
                             <Switch
                                 value={locationAccess}

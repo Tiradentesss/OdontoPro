@@ -4,9 +4,11 @@ import HomeHeader from '../components/HomeHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getClinics } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../components/ThemeContext';
 
 export default function HomeScreen({ route, navigation, showBottomNav = true }) {
     const { user } = useAuth();
+    const { isDarkMode, colors } = useTheme();
     const usuario = user?.nome ?? 'Paciente';
     const [search, setSearch] = useState('');
     const [clinicas, setClinicas] = useState([]);
@@ -37,9 +39,10 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
         <ImageBackground
             source={require('../../assets/imagem background.png')}
             style={styles.pageBackground}
+            imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
             resizeMode="cover"
         >
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
                 <HomeHeader
                     usuario={usuario}
                     search={search}
@@ -50,8 +53,8 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
 
                 {loading ? (
                     <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#0ea5e9" />
-                        <Text style={styles.loadingText}>Carregando clínicas...</Text>
+                        <ActivityIndicator size="large" color={isDarkMode ? '#38BDF8' : '#0EA5E9'} />
+                        <Text style={[styles.loadingText, { color: isDarkMode ? '#E2E8F0' : '#0F172A' }]}>Carregando clínicas...</Text>
                     </View>
                 ) : (
                     <FlatList
@@ -62,7 +65,7 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
                     contentContainerStyle={styles.listContent}
                     renderItem={({ item }) => (
                         <TouchableOpacity
-                        style={styles.card}
+                        style={[styles.card, { backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF', borderColor: isDarkMode ? '#334155' : '#E2E8F0' }]}
                         activeOpacity={0.85}
                         onPress={() => navigation.navigate('ClinicDetail', { clinic: item, user })}
                         >
@@ -70,21 +73,21 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
                                     <View style={styles.clinicLogo} />
 
                                     <View style={styles.infoBlock}>
-                                        <Text style={styles.clinicName}>{item.nome}</Text>
+                                        <Text style={[styles.clinicName, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>{item.nome}</Text>
                                         {item.descricao ? (
-                                            <Text style={[styles.clinicSpecialty, { marginTop: 6 }]} numberOfLines={2}>{item.descricao}</Text>
+                                            <Text style={[styles.clinicSpecialty, { marginTop: 6, color: isDarkMode ? '#94A3B8' : '#64748B' }]} numberOfLines={2}>{item.descricao}</Text>
                                         ) : null}
                                     </View>
 
                                     <View style={styles.ratingBox}>
-                                        <Text style={styles.ratingValue}>{item.avaliacao ?? '4.9'} ★</Text>
-                                        <Text style={styles.ratingCount}>{item.num_avaliacoes ?? item.avaliacoes ?? '0'} avaliações</Text>
+                                        <Text style={[styles.ratingValue, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>{item.avaliacao ?? '4.9'} ★</Text>
+                                        <Text style={[styles.ratingCount, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>{item.num_avaliacoes ?? item.avaliacoes ?? '0'} avaliações</Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>
                         )}
                         ListEmptyComponent={
-                            <Text style={styles.emptyText}>{error ?? 'Nenhuma clínica encontrada.'}</Text>
+                            <Text style={[styles.emptyText, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>{error ?? 'Nenhuma clínica encontrada.'}</Text>
                         }
                     />
                 )}

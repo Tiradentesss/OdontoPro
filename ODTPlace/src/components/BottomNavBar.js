@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Text, Image, StyleSheet, Keyboard } from 'react-native';
+import { useTheme } from './ThemeContext';
 
 const tabs = [
     { key: 'home', label: 'Home', icon: require('../../assets/IconHome.png') },
@@ -9,6 +10,7 @@ const tabs = [
 
 export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {} }) {
     const [keyboardVisible, setKeyboardVisible] = useState(false);
+    const { isDarkMode, colors } = useTheme();
 
     useEffect(() => {
         const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
@@ -22,18 +24,18 @@ export default function BottomNavBar({ activeTab = 'home', onTabPress = () => {}
     if (keyboardVisible) return null;
 
     return (
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { backgroundColor: isDarkMode ? '#0F172A' : '#FFFFFF', shadowColor: isDarkMode ? '#000000' : '#000000' }]}> 
             {tabs.map((tab) => {
                 const isActive = activeTab === tab.key;
                 return (
                     <TouchableOpacity
                         key={tab.key}
-                        style={[styles.bottomTab, isActive && styles.bottomTabActive]}
+                        style={[styles.bottomTab, isActive && [styles.bottomTabActive, { backgroundColor: isDarkMode ? '#1E3A8A' : '#E5F5FF' }] ]}
                         onPress={() => onTabPress(tab.key)}
                         activeOpacity={0.8}
                     >
-                        <Image source={tab.icon} style={[styles.bottomTabIcon, isActive && styles.activeIcon]} resizeMode="contain" />
-                        <Text style={[styles.bottomTabLabel, isActive && styles.activeLabel]}>{tab.label}</Text>
+                        <Image source={tab.icon} style={[styles.bottomTabIcon, isActive && [styles.activeIcon, { tintColor: isDarkMode ? '#38BDF8' : '#0EA5E9' }]]} resizeMode="contain" />
+                        <Text style={[styles.bottomTabLabel, isActive && [styles.activeLabel, { color: isDarkMode ? '#F8FAFC' : '#0B4A88' }]]}>{tab.label}</Text>
                     </TouchableOpacity>
                 );
             })}

@@ -4,6 +4,7 @@ import ScheduleHeaderNoBack from '../components/ScheduleHeaderNoBack';
 import BottomNavBar from '../components/BottomNavBar';
 import { getPatientAppointments } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../components/ThemeContext';
 
 const NOTIFICATION_TYPES = {
   UPCOMING: 'upcoming',       // 1 dia antes
@@ -13,6 +14,7 @@ const NOTIFICATION_TYPES = {
 
 export default function NotificationsScreen({ navigation, showBottomNav = true }) {
   const { user } = useAuth();
+  const { isDarkMode, colors } = useTheme();
   const [appointmentsData, setAppointmentsData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -152,19 +154,20 @@ export default function NotificationsScreen({ navigation, showBottomNav = true }
     <ImageBackground
       source={require('../../assets/imagem background.png')}
       style={styles.pageBackground}
+      imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
       resizeMode="cover"
     >
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
         <ScheduleHeaderNoBack title="Notificações" />
         <View style={styles.content}>
           {loading ? (
             <View style={styles.messageCard}>
-              <Text style={styles.title}>Carregando...</Text>
+              <Text style={[styles.title, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Carregando...</Text>
             </View>
           ) : notifications.length === 0 ? (
             <View style={styles.messageCard}>
-              <Text style={styles.title}>Ainda não há notificações</Text>
-              <Text style={styles.subtitle}>Assim que houver novidades, você verá aqui.</Text>
+              <Text style={[styles.title, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Ainda não há notificações</Text>
+              <Text style={[styles.subtitle, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Assim que houver novidades, você verá aqui.</Text>
             </View>
           ) : (
             <FlatList

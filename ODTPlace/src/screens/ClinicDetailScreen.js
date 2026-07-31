@@ -15,10 +15,12 @@ import * as Clipboard from 'expo-clipboard';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getClinicSpecialties } from '../services/api';
+import { useTheme } from '../components/ThemeContext';
 
 export default function ClinicDetailScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
     const user = route?.params?.user;
+    const { isDarkMode } = useTheme();
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showAllSpecialties, setShowAllSpecialties] = useState(false);
@@ -71,28 +73,29 @@ export default function ClinicDetailScreen({ route, navigation }) {
         <ImageBackground
             source={require('../../assets/imagem background.png')}
             style={styles.pageBackground}
+            imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
             resizeMode="cover"
         >
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
                 <ScheduleHeader title="Perfil da Clínica" onBack={() => navigation.goBack()} />
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                    <View style={styles.clinicCard}>
+                    <View style={[styles.clinicCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
                         <View style={styles.clinicHeader}>
-                            <View style={styles.clinicImagePlaceholder}>
-                                <Text style={styles.imageLabel}>Foto</Text>
+                            <View style={[styles.clinicImagePlaceholder, isDarkMode && { backgroundColor: '#1E293B' }]}> 
+                                <Text style={[styles.imageLabel, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>Foto</Text>
                             </View>
                             <View style={styles.clinicHeaderInfo}>
-                                <Text style={styles.clinicTitle} numberOfLines={2}>{clinic.nome}</Text>
+                                <Text style={[styles.clinicTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]} numberOfLines={2}>{clinic.nome}</Text>
                                 {clinic.especialidade ? (
-                                    <Text style={styles.clinicSubtitle} numberOfLines={1}>{clinic.especialidade}</Text>
+                                    <Text style={[styles.clinicSubtitle, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]} numberOfLines={1}>{clinic.especialidade}</Text>
                                 ) : null}
-                                <Text style={styles.clinicInfoText}>Atendimento: {clinic.modalidades}</Text>
+                                <Text style={[styles.clinicInfoText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Atendimento: {clinic.modalidades}</Text>
                             </View>
                         </View>
                         {clinic.descricao ? (
                             <View style={styles.clinicDescriptionContainer}>
-                                <Text style={styles.description}>
+                                <Text style={[styles.description, { color: isDarkMode ? '#E2E8F0' : '#0f172a' }]}> 
                                     {showFullDescription || clinic.descricao.length <= 120
                                         ? clinic.descricao
                                         : `${clinic.descricao.slice(0, 120).trim()}...`}
@@ -101,7 +104,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                     <TouchableOpacity
                                         onPress={() => setShowFullDescription(prev => !prev)}
                                     >
-                                        <Text style={styles.descriptionToggle}>
+                                        <Text style={[styles.descriptionToggle, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}> 
                                             {showFullDescription ? 'Ver menos' : 'Ver mais'}
                                         </Text>
                                     </TouchableOpacity>
@@ -110,17 +113,17 @@ export default function ClinicDetailScreen({ route, navigation }) {
                         ) : null}
 
                         <View style={styles.ratingRow}>
-                            <View style={styles.ratingPill}>
-                                <Text style={styles.ratingValue}>{clinic.avaliacao ?? clinic.avaliacao === 0 ? clinic.avaliacao : '—'} ★</Text>
+                            <View style={[styles.ratingPill, isDarkMode && { backgroundColor: '#1E293B' }]}> 
+                                <Text style={[styles.ratingValue, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{clinic.avaliacao ?? clinic.avaliacao === 0 ? clinic.avaliacao : '—'} ★</Text>
                             </View>
-                            <Text style={styles.ratingCount}>{(clinic.num_avaliacoes ?? clinic.avaliacoes ?? 0)} avaliações</Text>
+                            <Text style={[styles.ratingCount, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{(clinic.num_avaliacoes ?? clinic.avaliacoes ?? 0)} avaliações</Text>
                         </View>
                     </View>
 
                     <View style={styles.serviceSection}>
-                        <Text style={styles.sectionTitle}>Especialidades</Text>
+                        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Especialidades</Text>
                         <TextInput
-                            style={styles.searchInput}
+                            style={[styles.searchInput, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', color: '#F8FAFC' }]}
                             placeholder="Pesquisar especialidades"
                             placeholderTextColor="#94a3b8"
                             value={searchQuery}
@@ -130,18 +133,17 @@ export default function ClinicDetailScreen({ route, navigation }) {
                             {visibleServices.map((service) => (
                                 <TouchableOpacity
                                     key={service.name}
-                                    style={styles.serviceCard}
+                                    style={[styles.serviceCard, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
                                     activeOpacity={0.85}
                                     onPress={() => navigation.navigate('Professionals', { clinic, user, selectedSpecialty: service.name })}
                                 >
-                                    <Text style={styles.serviceName}>{service.name}</Text>
-                                    <Text style={styles.servicePrice}>{typeof service.price === 'string' && service.price.trim().startsWith('R') ? service.price : `R$ ${service.price}`}</Text>
-                                    {/* Espaço para descrição da especialidade (placeholder enquanto não há dado) */}
-                                    <Text style={styles.description} numberOfLines={3}>{service.description ?? 'descrição...'}</Text>
+                                    <Text style={[styles.serviceName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{service.name}</Text>
+                                    <Text style={[styles.servicePrice, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{typeof service.price === 'string' && service.price.trim().startsWith('R') ? service.price : `R$ ${service.price}`}</Text>
+                                    <Text style={[styles.description, { color: isDarkMode ? '#CBD5E1' : '#0f172a' }]} numberOfLines={3}>{service.description ?? 'descrição...'}</Text>
                                 </TouchableOpacity>
                             ))}
                             {visibleServices.length === 0 && (
-                                <Text style={styles.noResultsText}>Nenhuma especialidade encontrada.</Text>
+                                <Text style={[styles.noResultsText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Nenhuma especialidade encontrada.</Text>
                             )}
                         </View>
                         {hasMoreSpecialties && (
@@ -156,7 +158,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
                     </View>
 
                     <TouchableOpacity
-                        style={styles.chooseButton}
+                        style={[styles.chooseButton, isDarkMode && { backgroundColor: '#38BDF8' }]}
                         activeOpacity={0.85}
                         onPress={() => navigation.navigate('Professionals', { clinic, user })}
                     >
@@ -164,15 +166,15 @@ export default function ClinicDetailScreen({ route, navigation }) {
                     </TouchableOpacity>
 
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Informações da Clínica</Text>
+                        <Text style={[styles.sectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Informações da Clínica</Text>
                     </View>
-                    <View style={styles.addressCard}>
-                        <Text style={styles.addressLabel}>Endereço</Text>
-                        <Text style={styles.addressText}>{clinic.endereco ?? 'Edifício Síntese Plaza - Av. Sen. Lemos, 791 - sala 1006 - Umarizal, Belém - PA, 66050-000'}</Text>
-                        <Text style={[styles.addressLabel, { marginTop: 14 }]}>Contate-nos</Text>
+                    <View style={[styles.addressCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
+                        <Text style={[styles.addressLabel, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>Endereço</Text>
+                        <Text style={[styles.addressText, { color: isDarkMode ? '#E2E8F0' : '#0f172a' }]}>{clinic.endereco ?? 'Edifício Síntese Plaza - Av. Sen. Lemos, 791 - sala 1006 - Umarizal, Belém - PA, 66050-000'}</Text>
+                        <Text style={[styles.addressLabel, { marginTop: 14, color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>Contate-nos</Text>
                         <View style={styles.contactRow}>
                             <TouchableOpacity
-                                style={styles.contactButton}
+                                style={[styles.contactButton, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
                                 activeOpacity={0.85}
                                 onPress={async () => {
                                         const phone = clinic.telefone ?? '(91) 98132-2686';
@@ -185,21 +187,21 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                         }
                                     }}
                             >
-                                <Text style={styles.contactButtonTitle}>Telefone</Text>
-                                <Text style={styles.contactButtonText}>{clinic.telefone ?? '(91) 98132-2686'}</Text>
+                                <Text style={[styles.contactButtonTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Telefone</Text>
+                                <Text style={[styles.contactButtonText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{clinic.telefone ?? '(91) 98132-2686'}</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.contactButton, styles.contactButtonLast]} activeOpacity={0.85} onPress={() => {
+                            <TouchableOpacity style={[styles.contactButton, styles.contactButtonLast, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]} activeOpacity={0.85} onPress={() => {
                                 const wa = clinic.telefone ? `https://wa.me/${clinic.telefone.replace(/[^0-9]/g, '')}` : null;
                                 if (wa) Linking.openURL(wa);
                             }}>
-                                <Text style={styles.contactButtonTitle}>WhatsApp</Text>
-                                <Text style={styles.contactButtonText}>Enviar mensagem</Text>
+                                <Text style={[styles.contactButtonTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>WhatsApp</Text>
+                                <Text style={[styles.contactButtonText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Enviar mensagem</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
 
-                    <View style={styles.mapPlaceholder}>
-                        <Text style={styles.mapPlaceholderText}>Mapa da Clínica</Text>
+                    <View style={[styles.mapPlaceholder, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}> 
+                        <Text style={[styles.mapPlaceholderText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Mapa da Clínica</Text>
                     </View>
                 </ScrollView>
                 <BottomNavBar

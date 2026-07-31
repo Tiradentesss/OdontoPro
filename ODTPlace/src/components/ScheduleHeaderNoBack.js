@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform, StatusBar } from 'react-native';
+import { useTheme } from './ThemeContext';
 
 const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
 export default function ScheduleHeaderNoBack({ title }) {
+    const { isDarkMode } = useTheme();
+
     return (
-        <View style={styles.headerWrapper}>
+        <View style={[styles.headerWrapper, { backgroundColor: isDarkMode ? '#020617' : '#00bceb' }]}> 
             <View style={styles.headerContainer}>
-                <Text style={styles.title}>{title}</Text>
+                <Text style={[styles.title, { color: isDarkMode ? '#F8FAFC' : '#ffffff' }]}>{title}</Text>
             </View>
         </View>
     );

@@ -9,8 +9,10 @@ import {
     Switch,
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
+import { useTheme } from '../components/ThemeContext';
 
 export default function NotificationSettingsScreen({ navigation }) {
+    const { isDarkMode, colors } = useTheme();
     const [notificationGeneral, setNotificationGeneral] = useState(true);
     const [soundsEnabled, setSoundsEnabled] = useState(true);
     const [vibrationsEnabled, setVibrationsEnabled] = useState(true);
@@ -22,13 +24,13 @@ export default function NotificationSettingsScreen({ navigation }) {
             style={styles.pageBackground}
             resizeMode="cover"
         >
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
                 <ScheduleHeader title="Configurações de Notificações" onBack={() => navigation.goBack()} />
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                    <Text style={styles.heading}>Notificações</Text>
-                    <View style={styles.section}>
+                    <Text style={[styles.heading, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Notificações</Text>
+                    <View style={[styles.section, { backgroundColor: isDarkMode ? '#1E293B' : '#ffffff' }]}> 
                         <View style={styles.optionRow}>
-                            <Text style={styles.optionLabel}>Notificação Geral</Text>
+                            <Text style={[styles.optionLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Notificação Geral</Text>
                             <Switch
                                 value={notificationGeneral}
                                 onValueChange={setNotificationGeneral}

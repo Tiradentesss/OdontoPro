@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import NotificationButton from './NotificationButton';
+import { useTheme } from './ThemeContext';
 
 const statusBarHeight =
     Platform.OS === 'android'
@@ -24,8 +25,10 @@ export default function HomeHeader({
     onBellPress,
     onFilterPress,
 }) {
+    const { isDarkMode } = useTheme();
+
     return (
-        <View style={styles.topCard}>
+        <View style={[styles.topCard, { backgroundColor: isDarkMode ? '#0F172A' : '#00BCEB' }]}> 
             <View style={styles.topCardContent}>
 
                 {/* Logo + Notificação */}
@@ -41,16 +44,16 @@ export default function HomeHeader({
                 </View>
 
                 {/* Boas-vindas */}
-                <Text style={styles.welcomeText}>
+                <Text style={[styles.welcomeText, { color: isDarkMode ? '#E2E8F0' : '#E8F8FD' }]}> 
                     Bem-vindo,
                 </Text>
 
-                <Text style={styles.userName}>
+                <Text style={[styles.userName, { color: isDarkMode ? '#F8FAFC' : '#FFF' }]}> 
                     {usuario}
                 </Text>
 
                 {/* Pesquisa */}
-                <View style={styles.searchBox}>
+                <View style={[styles.searchBox, { backgroundColor: isDarkMode ? '#1E293B' : '#FFF' }]}> 
 
                     <Image
                         source={require('../../assets/IconLupa.png')}
@@ -61,8 +64,8 @@ export default function HomeHeader({
                         value={search}
                         onChangeText={setSearch}
                         placeholder="Pesquise por clínicas..."
-                        placeholderTextColor="#94a3b8"
-                        style={styles.searchInput}
+                        placeholderTextColor={isDarkMode ? '#94A3B8' : '#94a3b8'}
+                        style={[styles.searchInput, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}
                     />
                 </View>
 

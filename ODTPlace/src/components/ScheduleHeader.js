@@ -1,16 +1,19 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
+import { useTheme } from './ThemeContext';
 
 const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
 export default function ScheduleHeader({ title, onBack }) {
+    const { isDarkMode, colors } = useTheme();
+
     return (
-        <View style={styles.headerWrapper}>
+        <View style={[styles.headerWrapper, { backgroundColor: isDarkMode ? '#020617' : '#00bceb' }]}> 
             <View style={styles.headerContainer}>
-                <TouchableOpacity style={styles.backButton} onPress={onBack} activeOpacity={0.8}>
-                    <Text style={styles.backText}>‹</Text>
+                <TouchableOpacity style={[styles.backButton, { backgroundColor: isDarkMode ? '#1E293B' : '#ffffff' }]} onPress={onBack} activeOpacity={0.8}>
+                    <Text style={[styles.backText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>‹</Text>
                 </TouchableOpacity>
-                <Text style={styles.title}>{title}</Text>
+                <Text style={[styles.title, { color: isDarkMode ? '#F8FAFC' : '#ffffff' }]}>{title}</Text>
                 <View style={styles.rightPlaceholder} />
             </View>
         </View>
