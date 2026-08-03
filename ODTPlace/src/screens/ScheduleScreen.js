@@ -19,6 +19,7 @@ import { useTheme } from '../components/ThemeContext';
 
 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const weekdays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+const FILTER_OPTIONS = ['Todos', 'Pendente', 'Realizada', 'Cancelada'];
 
 // Dados mockados como fallback
 const appointmentDays = [];
@@ -235,6 +236,16 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
     };
 
     const appointments = getAppointmentsForDate(selectedDate);
+    const [statusFilter, setStatusFilter] = useState('Todos');
+
+    const filteredAppointments = appointments.filter((item) => {
+        const normalized = item?.status?.toLowerCase();
+        if (statusFilter === 'Todos') return true;
+        if (statusFilter === 'Realizada') return ['realizada', 'completa'].includes(normalized);
+        if (statusFilter === 'Pendente') return ['agendada', 'confirmada', 'pendente'].includes(normalized);
+        if (statusFilter === 'Cancelada') return normalized === 'cancelada';
+        return true;
+    });
 
     const monthLabel = `${monthNames[currentMonth.month - 1]}, ${currentMonth.year}`;
 
@@ -497,13 +508,38 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                     })}
                 </ScrollView>
 
+                <View style={styles.filterRow}>
+                    {FILTER_OPTIONS.map((option) => {
+                        const isActive = statusFilter === option;
+                        return (
+                            <TouchableOpacity
+                                key={option}
+                                style={[
+                                    styles.filterChip,
+                                    isActive && styles.filterChipActive,
+                                    isDarkMode && { borderColor: isActive ? '#38BDF8' : '#334155', backgroundColor: isActive ? '#0F172A' : '#1E293B' }
+                                ]}
+                                activeOpacity={0.85}
+                                onPress={() => setStatusFilter(option)}
+                            >
+                                <Text style={[
+                                    styles.filterChipText,
+                                    isActive && styles.filterChipTextActive,
+                                    isDarkMode && !isActive && { color: '#CBD5E1' },
+                                    isDarkMode && isActive && { color: '#F8FAFC' }
+                                ]}>{option}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+
                 <View style={styles.scheduleHeader}>
                     <Text style={[styles.scheduleColumn, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Hora</Text>
                     <Text style={[styles.scheduleTitleHeader, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Consultas do Dia</Text>
                 </View>
 
                 <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-                    {appointments.map((item) => {
+                    {filteredAppointments.map((item) => {
                         const statusInfo = getStatusInfo(item.status);
                         return (
                             <View key={item.id} style={styles.appointmentRow}>
@@ -551,7 +587,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                             </View>
                         );
                     })}
-                    {appointments.length === 0 && (
+                    {filteredAppointments.length === 0 && (
                         <View style={styles.emptyState}>
                             <Text style={[styles.emptyText, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Nenhuma consulta agendada para este dia.</Text>
                         </View>
@@ -1029,6 +1065,34 @@ const styles = StyleSheet.create({
     },
     appointmentDotPast: {
         backgroundColor: '#0b4a88',
+    },
+    filterRow: {
+        marginTop: 14,
+        marginHorizontal: 20,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+    },
+    filterChip: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 999,
+        backgroundColor: '#ffffff',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        marginRight: 8,
+        marginBottom: 8,
+    },
+    filterChipActive: {
+        backgroundColor: '#0EA5E9',
+        borderColor: '#0EA5E9',
+    },
+    filterChipText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#475569',
+    },
+    filterChipTextActive: {
+        color: '#FFFFFF',
     },
     scheduleHeader: {
         marginTop: 8,

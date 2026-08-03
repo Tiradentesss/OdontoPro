@@ -25,17 +25,11 @@ const getStatusConfig = (isDarkMode) => ({
     textColor: isDarkMode ? "#60A5FA" : "#2563EB",
     badgeText: "Novo",
   },
-  Reagendado: {
-    borderColor: "#F59E0B",
-    backgroundColor: isDarkMode ? "#78350F" : "#FFFBEB",
-    textColor: isDarkMode ? "#FBBF24" : "#D97706",
-    badgeText: "Reagendado",
-  },
-  Confirmado: {
+  Realizado: {
     borderColor: "#10B981",
     backgroundColor: isDarkMode ? "#064E3B" : "#ECFDF5",
     textColor: isDarkMode ? "#34D399" : "#059669",
-    badgeText: "Confirmado",
+    badgeText: "Realizado",
   },
   "Não Confirmado": {
     borderColor: "#94A3B8",
@@ -43,9 +37,15 @@ const getStatusConfig = (isDarkMode) => ({
     textColor: isDarkMode ? "#94A3B8" : "#475569",
     badgeText: "Pendente",
   },
+  Cancelado: {
+    borderColor: "#EF4444",
+    backgroundColor: isDarkMode ? "#7F1D1D" : "#FEF2F2",
+    textColor: isDarkMode ? "#F87171" : "#DC2626",
+    badgeText: "Cancelado",
+  },
 });
 
-const FILTER_OPTIONS = ["Todos", "Confirmado", "Pendente", "Reagendado"];
+const FILTER_OPTIONS = ["Todos", "Realizado", "Pendente", "Cancelado"];
 const weekdays = ["D", "S", "T", "Q", "Q", "S", "S"];
 
 const formatDateKey = (date) => {
@@ -62,9 +62,8 @@ const parseDateKey = (dateKey) => {
 
 const getDisplayStatus = (status) => {
   const normalized = (status || '').toString().toLowerCase();
-  if (['confirmada', 'confirmado', 'realizada', 'completa'].includes(normalized)) return 'Confirmado';
-  if (normalized === 'reagendada') return 'Reagendado';
-  if (normalized === 'cancelada') return 'Pendente';
+  if (['realizada', 'completa'].includes(normalized)) return 'Realizado';
+  if (normalized === 'cancelada') return 'Cancelado';
   return 'Pendente';
 };
 
@@ -186,9 +185,9 @@ export default function AgendaScreen({ navigation, route }) {
     })
     .filter((item) => {
       if (filter === 'Todos') return true;
-      if (filter === 'Confirmado') return item.status === 'Confirmado';
+      if (filter === 'Realizado') return item.status === 'Realizado';
       if (filter === 'Pendente') return item.status === 'Pendente';
-      if (filter === 'Reagendado') return item.status === 'Reagendado';
+      if (filter === 'Cancelado') return item.status === 'Cancelado';
       return true;
     });
 
