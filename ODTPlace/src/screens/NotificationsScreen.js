@@ -158,7 +158,7 @@ export default function NotificationsScreen({ navigation, showBottomNav = true }
       resizeMode="cover"
     >
       <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
-        <ScheduleHeaderNoBack title="Notificações" />
+        <ScheduleHeaderNoBack title="Notificações" iconName="bell" />
         <View style={styles.content}>
           {loading ? (
             <View style={styles.messageCard}>

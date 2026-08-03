@@ -69,9 +69,10 @@ const getDisplayStatus = (status) => {
 };
 
 const buildDayStrip = (centerDate) => {
-  const start = new Date(centerDate);
-  start.setDate(centerDate.getDate() - 10);
-  return Array.from({ length: 21 }, (_, index) => {
+  const start = new Date(centerDate.getFullYear(), centerDate.getMonth(), 1);
+  const end = new Date(centerDate.getFullYear(), centerDate.getMonth() + 1, 0);
+
+  return Array.from({ length: end.getDate() }, (_, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);
     return {

@@ -68,7 +68,7 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
       resizeMode="cover"
     >
       <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
-        <ScheduleHeader title="Sobre o Profissional" onBack={() => navigation.goBack()} />
+        <ScheduleHeader title="Sobre o Profissional" onBack={() => navigation.goBack()} iconName="user-check" />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.profileHeader}>

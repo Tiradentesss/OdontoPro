@@ -77,7 +77,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
             resizeMode="cover"
         >
             <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
-                <ScheduleHeader title="Perfil da Clínica" onBack={() => navigation.goBack()} />
+                <ScheduleHeader title="Perfil da Clínica" onBack={() => navigation.goBack()} iconName="heart" />
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <View style={[styles.clinicCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 

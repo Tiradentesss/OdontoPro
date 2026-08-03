@@ -25,7 +25,7 @@ export default function NotificationSettingsScreen({ navigation }) {
             resizeMode="cover"
         >
             <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
-                <ScheduleHeader title="Configurações de Notificações" onBack={() => navigation.goBack()} />
+                <ScheduleHeader title="Configurações de Notificações" onBack={() => navigation.goBack()} iconName="bell" />
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <Text style={[styles.heading, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Notificações</Text>
                     <View style={[styles.section, { backgroundColor: isDarkMode ? '#1E293B' : '#ffffff' }]}> 

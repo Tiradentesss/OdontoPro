@@ -73,7 +73,7 @@ export default function PersonalInfoScreen({ navigation }) {
             resizeMode="cover"
         >
             <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
-                <ScheduleHeader title="Informações Pessoais" onBack={() => navigation.goBack()} />
+                <ScheduleHeader title="Informações Pessoais" onBack={() => navigation.goBack()} iconName="user" />
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <Text style={[styles.heading, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Editar Informações</Text>

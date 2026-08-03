@@ -185,7 +185,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
       resizeMode="cover"
     >
       <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
-        <ScheduleHeader title="Agendamento" onBack={() => navigation.goBack()} />
+        <ScheduleHeader title="Agendamento" onBack={() => navigation.goBack()} iconName="calendar" />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={[styles.headerCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 

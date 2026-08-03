@@ -17,7 +17,7 @@ export default function SettingsScreen({ navigation, showBottomNav = true }) {
       resizeMode="cover"
     >
       <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
-        <ScheduleHeaderNoBack title="Configurações" />
+        <ScheduleHeaderNoBack title="Configurações" iconName="settings" />
 
         <View style={styles.content}>
           <View style={[styles.topCard, { backgroundColor: isDarkMode ? '#1E293B' : 'transparent' }]}> 

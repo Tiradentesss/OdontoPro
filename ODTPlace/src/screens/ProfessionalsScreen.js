@@ -80,7 +80,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
             resizeMode="cover"
         >
             <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
-                <ScheduleHeader title="Profissionais" onBack={() => navigation.goBack()} />
+                <ScheduleHeader title="Profissionais" onBack={() => navigation.goBack()} iconName="users" />
 
                 <View style={styles.searchArea}>
                     <View style={[styles.searchBox, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 

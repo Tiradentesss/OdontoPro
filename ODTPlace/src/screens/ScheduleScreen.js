@@ -426,7 +426,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
             resizeMode="cover"
         >
             <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : '#f8fafc' }]}> 
-                <ScheduleHeaderNoBack title="Agendamentos" onNotificationPress={() => {}} />
+                <ScheduleHeaderNoBack title="Agendamentos" iconName="calendar" />
 
                 <View
                     style={styles.monthRow}

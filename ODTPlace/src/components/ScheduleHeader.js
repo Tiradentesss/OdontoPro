@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
 
 const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
-export default function ScheduleHeader({ title, onBack }) {
-    const { isDarkMode, colors } = useTheme();
+export default function ScheduleHeader({ title, onBack, iconName }) {
+    const { isDarkMode } = useTheme();
 
     return (
         <View style={[styles.headerWrapper, { backgroundColor: isDarkMode ? '#020617' : '#00bceb' }]}> 
@@ -13,7 +14,12 @@ export default function ScheduleHeader({ title, onBack }) {
                 <TouchableOpacity style={[styles.backButton, { backgroundColor: isDarkMode ? '#1E293B' : '#ffffff' }]} onPress={onBack} activeOpacity={0.8}>
                     <Text style={[styles.backText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>‹</Text>
                 </TouchableOpacity>
-                <Text style={[styles.title, { color: isDarkMode ? '#F8FAFC' : '#ffffff' }]}>{title}</Text>
+                <View style={styles.titleContainer}>
+                    {iconName ? (
+                        <Feather name={iconName} size={16} color={isDarkMode ? '#F8FAFC' : '#ffffff'} style={styles.titleIcon} />
+                    ) : null}
+                    <Text style={[styles.title, { color: isDarkMode ? '#F8FAFC' : '#ffffff' }]}>{title}</Text>
+                </View>
                 <View style={styles.rightPlaceholder} />
             </View>
         </View>
@@ -56,13 +62,21 @@ const styles = StyleSheet.create({
         lineHeight: 28,
         color: '#0f172a',
     },
-    title: {
+    titleContainer: {
         flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    title: {
         textAlign: 'center',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '800',
         color: '#ffffff',
         flexShrink: 1,
+    },
+    titleIcon: {
+        marginRight: 6,
     },
     rightPlaceholder: {
         width: 48,

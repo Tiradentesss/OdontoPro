@@ -24,7 +24,7 @@ export default function SystemScreen({ navigation }) {
             resizeMode="cover"
         >
             <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
-                <ScheduleHeader title="Sistema" onBack={() => navigation.goBack()} />
+                <ScheduleHeader title="Sistema" onBack={() => navigation.goBack()} iconName="shield" />
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <Text style={[styles.heading, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Configurações do Sistema</Text>
                     <View style={[styles.section, { backgroundColor: isDarkMode ? '#1E293B' : '#ffffff' }]}> 
