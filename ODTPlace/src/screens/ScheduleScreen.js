@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'transparent',
-        paddingTop: 120,
+        paddingTop: 104,
     },
     headerRow: {
         marginTop: 24,
@@ -884,11 +884,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     monthRow: {
-        marginTop: 24,
+        marginTop: 16,
         marginHorizontal: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 10,
     },
     monthLabel: {
         color: '#0ea5e9',
@@ -1001,8 +1002,8 @@ const styles = StyleSheet.create({
     },
     dateCarousel: {
         paddingHorizontal: 18,
-        paddingTop: 6,
-        paddingBottom: 12,
+        paddingTop: 2,
+        paddingBottom: 16,
     },
     dateItem: {
         width: 58,
@@ -1067,8 +1068,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#0b4a88',
     },
     filterRow: {
-        marginTop: 14,
+        marginTop: 8,
         marginHorizontal: 20,
+        marginBottom: 16,
         flexDirection: 'row',
         flexWrap: 'wrap',
     },
@@ -1100,7 +1102,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 10,
     },
     scheduleColumn: {
         fontSize: 12,

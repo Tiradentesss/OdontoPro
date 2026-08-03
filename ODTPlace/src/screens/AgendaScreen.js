@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 10,
   },
   backButton: {
     padding: 8,
@@ -396,7 +396,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 24,
-    marginVertical: 16,
+    marginTop: 10,
+    marginBottom: 14,
   },
   monthText: { 
     fontSize: 24, 
@@ -405,8 +406,8 @@ const styles = StyleSheet.create({
   calendarStrip: {
     flexDirection: "row",
     paddingHorizontal: 16,
-    paddingVertical: 4,
-    marginBottom: 8,
+    paddingVertical: 2,
+    marginBottom: 6,
   },
   dayCard: {
     width: 44,
@@ -434,7 +435,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 24,
-    marginBottom: 8,
+    marginTop: 8,
+    marginBottom: 14,
   },
   sectionTextHora: { 
     fontSize: 14, 
@@ -476,10 +478,12 @@ const styles = StyleSheet.create({
   },
   appointmentCard: {
     flex: 1,
-    borderRadius: 18,
-    padding: 14,
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     marginLeft: 12,
     borderWidth: 1.5,
+    minHeight: 128,
   },
   cardHeaderRow: {
     flexDirection: "row",
