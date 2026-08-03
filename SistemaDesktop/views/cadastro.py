@@ -1,5 +1,5 @@
 from .base import BaseScreen, ActionButtons
-from .theme import font, ICON_SIZE, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
+from .theme import font, ICON_SIZE, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS, OUTER_CARD_BORDER, OUTER_CARD_RADIUS
 import customtkinter as ctk
 from controllers.paciente_controller import PacienteController
 from controllers.medico_controller import MedicoController
@@ -269,19 +269,22 @@ class Cadastro(BaseScreen):
         # =============================
         # 2. ÁREA DE CONTEÚDO (COM SCROLL)
         # =============================
-        self.container_outer = ctk.CTkFrame(
+        # outer wrapper (transparent) — border is now drawn by the cadastro_card wrapper
+        self.cadastro_card = ctk.CTkFrame(
             self.content_card,
-            fg_color="transparent",
+            fg_color=COLORS["card"],
+            border_width=1,
+            border_color=OUTER_CARD_BORDER,
             corner_radius=INNER_CARD_RADIUS
         )
-        self.container_outer.pack(fill="both", expand=True, padx=0, pady=0)
+        self.cadastro_card.pack(fill="both", expand=True, padx=0, pady=0)
 
         # Container com scroll para garantir que os botões apareçam
         self.scroll_frame = ctk.CTkScrollableFrame(
-            self.container_outer,
-            fg_color=self.cor_fundo_card,
+            self.cadastro_card,
+            fg_color=COLORS["card"],
             corner_radius=INNER_CARD_RADIUS,
-            border_width=1,
+            border_width=0,
             border_color=INNER_CARD_BORDER
         )
         self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)

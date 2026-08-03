@@ -125,10 +125,13 @@ class AdminListFrame(ctk.CTkFrame):
             widget.grid_columnconfigure(col_idx, weight=conf["weight"], minsize=conf["minsize"])
 
     def setup_ui(self):
-        header_content = ctk.CTkFrame(self, fg_color="transparent")
-        header_content.grid(row=0, column=0, padx=20, pady=(20, 10), sticky="ew")
+        self.header_bg = ctk.CTkFrame(self, fg_color="transparent")
+        self.header_bg.grid(row=0, column=0, padx=20, pady=(20, 10), sticky="ew")
 
-        title_frame = ctk.CTkFrame(header_content, fg_color="transparent")
+        self.header_content = ctk.CTkFrame(self.header_bg, fg_color="transparent")
+        self.header_content.pack(fill="x")
+
+        title_frame = ctk.CTkFrame(self.header_content, fg_color="transparent")
         title_frame.pack(side="left")
         ctk.CTkLabel(title_frame, text="👥", font=font(ICON_SIZE)).pack(side="left", padx=(0, 10))
         self.lbl_title = ctk.CTkLabel(
@@ -136,75 +139,71 @@ class AdminListFrame(ctk.CTkFrame):
             font=font("subtitle", "bold"), text_color=COLORS["text"]
         )
         self.lbl_title.pack(side="left")
+
         self.lbl_count = ctk.CTkLabel(
-            header_content, text=f"{len(self.admins_data)} ativos",
+            self.header_content, text=f"{len(self.admins_data)} ativos",
             text_color=COLORS["muted"], font=font("small")
         )
         self.lbl_count.pack(side="left", padx=15)
+
         self.btn_refresh = ctk.CTkButton(
-            header_content, text="↻", width=36, height=36, font=font("text"),
+            self.header_content, text="↻", width=36, height=36, font=font("text"),
             fg_color="transparent", text_color=COLORS["muted"],
             hover_color=COLORS["hover"], corner_radius=8, command=self.refresh_list
         )
         self.btn_refresh.pack(side="right")
 
-        table_container = ctk.CTkFrame(self, fg_color="transparent")
-        table_container.grid(row=1, column=0, padx=0, pady=0, sticky="nsew")
-        table_container.grid_rowconfigure(1, weight=1)
-        table_container.grid_columnconfigure(0, weight=1)
+        self.content_container = ctk.CTkFrame(self, fg_color="transparent")
+        self.content_container.grid(row=1, column=0, padx=20, pady=10, sticky="nsew")
+        self.content_container.grid_rowconfigure(1, weight=1)
+        self.content_container.grid_columnconfigure(0, weight=1)
 
-        self.header_bg = ctk.CTkFrame(
-            table_container, fg_color=COLORS["content_bg"], height=44, corner_radius=10
+        self.table_header = ctk.CTkFrame(
+            self.content_container, fg_color=COLORS["content_bg"], height=44, corner_radius=10
         )
-        self.header_bg.grid(row=0, column=0, sticky="ew", padx=12, pady=(0, 6))
-        self.header_bg.grid_propagate(False)
-        self._apply_col_config(self.header_bg)
+        self.table_header.grid(row=0, column=0, sticky="ew", padx=12, pady=(0, 6))
+        self.table_header.grid_propagate(False)
+        self._apply_col_config(self.table_header)
 
-        # Cabeçalhos com padding horizontal uniforme
         headers = ["", "Nome", "Email", "Status"]
-        anchors = ["center", "w", "w", "center"]  # Email alinhado à esquerda para acompanhar os itens
-        stickys = ["nsew", "w", "w", "w"]  # Avatar expande, Email e Status alinhados à esquerda
+        anchors = ["center", "w", "w", "center"]
+        stickys = ["nsew", "w", "w", "w"]
         padx_map = {
-            0: (12, 8),   # avatar: espaço à esquerda
-            1: (8, 8),    # Nome: espaço equilibrado
-            2: (8, 8),    # Email: espaço equilibrado
-            3: (20, 8),   # Status: deslocado mais para a direita para centralizar visualmente
+            0: (12, 8),
+            1: (8, 8),
+            2: (8, 8),
+            3: (20, 8),
         }
         for i, text in enumerate(headers):
             ctk.CTkLabel(
-                self.header_bg, text=text,
+                self.table_header, text=text,
                 font=font("small", "bold"),
                 text_color=COLORS["text_secondary"],
                 anchor=anchors[i]
             ).grid(row=0, column=i, sticky=stickys[i], padx=padx_map[i], pady=10)
 
-        self.scroll_list = ctk.CTkFrame(table_container, fg_color="transparent")
+        self.scroll_list = ctk.CTkFrame(self.content_container, fg_color="transparent")
         self.scroll_list.grid(row=1, column=0, sticky="nsew", padx=12, pady=0)
 
-        self.footer_frame = ctk.CTkFrame(
-            self, fg_color=COLORS["content_bg"], corner_radius=INNER_CARD_RADIUS, height=70, border_width=1, border_color=INNER_CARD_BORDER
-        )
-        self.footer_frame.grid(row=2, column=0, padx=20, pady=(10, 20), sticky="ew")
-        self.footer_frame.grid_propagate(False)
-        footer_content = ctk.CTkFrame(self.footer_frame, fg_color="transparent")
-        footer_content.pack(fill="both", expand=True, padx=20)
+        self.footer_container = ctk.CTkFrame(self, fg_color="transparent")
+        self.footer_container.grid(row=2, column=0, pady=(0, 25), padx=20, sticky="e")
 
         self.lbl_pagination = ctk.CTkLabel(
-            footer_content, text="", font=font("small"), text_color=COLORS["text_secondary"]
+            self.footer_container, text="", font=font("small"), text_color=COLORS["text_secondary"]
         )
         self.lbl_pagination.pack(side="left", pady=17)
 
-        buttons_frame = ctk.CTkFrame(footer_content, fg_color="transparent")
-        buttons_frame.pack(side="right", pady=17)
+        self.buttons_frame = ctk.CTkFrame(self.footer_container, fg_color="transparent")
+        self.buttons_frame.pack(side="right", pady=17)
         self.btn_anterior = ctk.CTkButton(
-            buttons_frame, text="← Anterior", width=100, height=36, font=font("small"),
+            self.buttons_frame, text="← Anterior", width=100, height=36, font=font("small"),
             fg_color=COLORS["card"], border_width=1, border_color=COLORS["border"],
             text_color=COLORS["text"], hover_color=COLORS["hover"],
             corner_radius=8, command=self.previous_page
         )
         self.btn_anterior.pack(side="left", padx=5)
         self.btn_proximo = ctk.CTkButton(
-            buttons_frame, text="Próximo →", width=100, height=36, font=font("small"),
+            self.buttons_frame, text="Próximo →", width=100, height=36, font=font("small"),
             fg_color=COLORS["card"], border_width=1, border_color=COLORS["border"],
             text_color=COLORS["text"], hover_color=COLORS["hover"],
             corner_radius=8, command=self.next_page
@@ -579,7 +578,7 @@ class Permissoes(BaseScreen):
         self.selected_admin_label.pack(side="left", padx=15)
 
         self.permissions_container = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        self.permissions_container.grid(row=1, column=0, sticky="nsew", padx=0, pady=10)
+        self.permissions_container.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
         self.permissions_container.grid_columnconfigure(0, weight=1, minsize=210)
         self.permissions_container.grid_columnconfigure(1, weight=1, minsize=210)
 
