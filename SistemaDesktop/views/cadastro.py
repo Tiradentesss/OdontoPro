@@ -247,7 +247,28 @@ class Cadastro(BaseScreen):
         # =============================
         # 1. BARRA DE ABAS (TOPO)
         # =============================
-        self.tab_bar = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
+        self.cadastro_card = self.content_card
+
+        self.scroll_frame = ctk.CTkScrollableFrame(
+            self.cadastro_card,
+            fg_color=COLORS["card"],
+            corner_radius=INNER_CARD_RADIUS,
+            border_width=1,
+            border_color=INNER_CARD_BORDER
+        )
+        self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        self.container_conteudo = ctk.CTkFrame(
+            self.scroll_frame,
+            fg_color="transparent"
+        )
+        self.container_conteudo.pack(fill="both", expand=True, padx=0, pady=0)
+
+        self.tab_bar = ctk.CTkFrame(
+            self.container_conteudo,
+            fg_color="transparent",
+            height=44
+        )
         self.tab_bar.pack(fill="x", padx=20, pady=(9, 0), anchor="nw")
 
         self.btn_pacientes = ctk.CTkButton(
@@ -265,35 +286,6 @@ class Cadastro(BaseScreen):
             command=lambda: self._trocar_aba("Profissionais")
         )
         self.btn_profissionais.pack(side="left")
-
-        # =============================
-        # 2. ÁREA DE CONTEÚDO (COM SCROLL)
-        # =============================
-        # outer wrapper (transparent) — border is now drawn by the cadastro_card wrapper
-        self.cadastro_card = ctk.CTkFrame(
-            self.content_card,
-            fg_color=COLORS["card"],
-            border_width=1,
-            border_color=OUTER_CARD_BORDER,
-            corner_radius=INNER_CARD_RADIUS
-        )
-        self.cadastro_card.pack(fill="both", expand=True, padx=0, pady=0)
-
-        # Container com scroll para garantir que os botões apareçam
-        self.scroll_frame = ctk.CTkScrollableFrame(
-            self.cadastro_card,
-            fg_color=COLORS["card"],
-            corner_radius=INNER_CARD_RADIUS,
-            border_width=0,
-            border_color=INNER_CARD_BORDER
-        )
-        self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)
-
-        self.container_conteudo = ctk.CTkFrame(
-            self.scroll_frame,
-            fg_color="transparent"
-        )
-        self.container_conteudo.pack(fill="both", expand=True, padx=0, pady=0)
 
         self.frame_pacientes = self._criar_tela_pacientes()
         self.frame_profissionais = self._criar_tela_profissionais()
