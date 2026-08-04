@@ -178,6 +178,9 @@ export default function AgendaScreen({ navigation, route }) {
         status,
         patientName: item.nome || 'Paciente',
         motivo: item.observacoes || 'Consulta',
+        specialty: item.especialidade_nome || 'Especialidade',
+        clinic: item.clinica_nome || 'Clínica',
+        patientPhone: item.telefone || item.contato || '',
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.nome || 'Paciente')}&background=0D8ABC&color=fff&size=120`,
         appointment: item,
         config,
@@ -224,7 +227,25 @@ export default function AgendaScreen({ navigation, route }) {
             <View style={styles.patientTextColumn}>
               <Text style={[styles.patientName, { color: colors.text }]}>{item.patientName}</Text>
               <Text style={styles.patientMotivo}>{item.motivo}</Text>
+              {item.specialty ? (
+                <Text style={[styles.patientMeta, { color: colors.mutedText }]}>{item.specialty}</Text>
+              ) : null}
             </View>
+          </View>
+
+          <View style={styles.cardFooterRow}>
+            {item.clinic ? (
+              <View style={styles.footerChip}>
+                <Feather name="home" size={12} color={colors.brandBlue} />
+                <Text style={[styles.footerChipText, { color: colors.text }]}>{item.clinic}</Text>
+              </View>
+            ) : null}
+            {item.patientPhone ? (
+              <View style={styles.footerChip}>
+                <Feather name="phone" size={12} color={colors.brandBlue} />
+                <Text style={[styles.footerChipText, { color: colors.text }]}>{item.patientPhone}</Text>
+              </View>
+            ) : null}
           </View>
         </TouchableOpacity>
       </View>
@@ -478,12 +499,12 @@ const styles = StyleSheet.create({
   },
   appointmentCard: {
     flex: 1,
-    borderRadius: 20,
+    borderRadius: 22,
     paddingVertical: 16,
     paddingHorizontal: 16,
     marginLeft: 12,
     borderWidth: 1.5,
-    minHeight: 128,
+    minHeight: 150,
   },
   cardHeaderRow: {
     flexDirection: "row",
@@ -501,6 +522,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", 
     alignItems: "center", 
     flex: 1,
+    marginTop: 8,
   },
   avatar: { 
     width: 38, 
@@ -518,6 +540,30 @@ const styles = StyleSheet.create({
   patientMotivo: { 
     fontSize: 12, 
     color: "#6B7280",
+    marginTop: 2,
+  },
+  patientMeta: {
+    fontSize: 11,
+    marginTop: 4,
+  },
+  cardFooterRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 10,
+    gap: 8,
+  },
+  footerChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "rgba(14, 165, 233, 0.10)",
+    gap: 4,
+  },
+  footerChipText: {
+    fontSize: 10,
+    fontWeight: "700",
   },
   statusBadge: { 
     paddingHorizontal: 8, 
