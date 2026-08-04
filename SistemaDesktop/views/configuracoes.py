@@ -383,9 +383,18 @@ class Configuracoes(BaseScreen):
         self.setup_ui()
 
     def setup_ui(self):
+        self.container_conteudo = ctk.CTkFrame(
+            self.content_card,
+            fg_color=self.colors["bg_card"],
+            corner_radius=INNER_CARD_RADIUS,
+            border_width=0,
+            border_color=self.colors["border"]
+        )
+        self.container_conteudo.pack(fill="both", expand=True)
+
         # Header com tabs e botão de tema
-        header_container = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
-        header_container.pack(fill="x", padx=20, pady=(9, 0), anchor="nw")
+        header_container = ctk.CTkFrame(self.container_conteudo, fg_color="transparent", height=44)
+        header_container.pack(fill="x", padx=20, pady=(20, 0))
         header_container.pack_propagate(False)
 
         # Tabs à esquerda
@@ -409,24 +418,8 @@ class Configuracoes(BaseScreen):
 
         self._build_tabs()
 
-        self.container_outer = ctk.CTkFrame(
-            self.content_card,
-            fg_color="transparent",
-            corner_radius=INNER_CARD_RADIUS
-        )
-        self.container_outer.pack(fill="both", expand=True, padx=0, pady=0)
-
-        self.container_conteudo = ctk.CTkFrame(
-            self.container_outer,
-            fg_color=self.colors["bg_card"],
-            corner_radius=INNER_CARD_RADIUS,
-            border_width=1,
-            border_color=INNER_CARD_BORDER
-        )
-        self.container_conteudo.pack(fill="both", expand=True, padx=20, pady=20)
-
         self.content_area = ctk.CTkFrame(self.container_conteudo, fg_color="transparent")
-        self.content_area.pack(fill="both", expand=True, padx=0, pady=0)
+        self.content_area.pack(fill="both", expand=True, padx=20, pady=(0, 0))
 
         self._build_footer(self.container_conteudo)
         self.switch_tab(self.current_tab)
@@ -549,9 +542,9 @@ class Configuracoes(BaseScreen):
             fg_color=COLORS['card'],
             corner_radius=INNER_CARD_RADIUS,
             border_width=1,
-            border_color=INNER_CARD_BORDER
+            border_color=self.colors["border"]
         )
-        card.pack(fill="x", padx=15, pady=(0, 20), anchor="w")
+        card.pack(fill="x", padx=0, pady=(0, 20), anchor="w")
 
         header = ctk.CTkFrame(card, fg_color="transparent")
         header.pack(fill="x", padx=24, pady=(20, 10))
@@ -595,7 +588,7 @@ class Configuracoes(BaseScreen):
             scrollbar_button_color=COLORS["border"],
             scrollbar_button_hover_color=COLORS["text_muted"]
         )
-        scroll.pack(fill="both", expand=True, padx=15)
+        scroll.pack(fill="both", expand=True, padx=0, pady=0)
 
         _, form_body = self._create_card_section(
             scroll,
@@ -670,7 +663,7 @@ class Configuracoes(BaseScreen):
         self.sub_tab_buttons = {}
 
         tab_frame = ctk.CTkFrame(parent, fg_color="transparent")
-        tab_frame.pack(fill="x", padx=15, pady=(17, 10), anchor="w")
+        tab_frame.pack(fill="x", padx=0, pady=(17, 10), anchor="w")
 
         for tab in sub_tabs:
             btn = ctk.CTkButton(
@@ -687,10 +680,10 @@ class Configuracoes(BaseScreen):
             self.sub_tab_buttons[tab.lower()] = btn
 
         divider = ctk.CTkFrame(parent, height=1, fg_color=self.colors["border"])
-        divider.pack(fill="x", padx=15, pady=(0, 15))
+        divider.pack(fill="x", padx=0, pady=(0, 15))
 
         self.sub_tab_content = ctk.CTkFrame(parent, fg_color="transparent")
-        self.sub_tab_content.pack(fill="both", expand=True, anchor="w")
+        self.sub_tab_content.pack(fill="both", expand=True)
 
         self._switch_sub_tab(parent, "geral")
 
@@ -715,7 +708,7 @@ class Configuracoes(BaseScreen):
             scrollbar_button_color=COLORS["border"],
             scrollbar_button_hover_color=COLORS["text_muted"]
         )
-        scroll.pack(fill="both", expand=True, anchor="w")
+        scroll.pack(fill="both", expand=True, padx=0, pady=0)
 
         clinica_data = None
         endereco_data = None
@@ -823,7 +816,7 @@ class Configuracoes(BaseScreen):
             corner_radius=INNER_CARD_RADIUS,
             height=360,
             border_width=1,
-            border_color=INNER_CARD_BORDER
+            border_color=self.colors["border"]
         )
         self.clinic_photos_container.pack(fill="both", expand=True, pady=(4, 0))
         self.clinic_photos_container.pack_propagate(False)
@@ -953,9 +946,9 @@ class Configuracoes(BaseScreen):
 
     def _render_preferences_services(self, parent):
         scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
-        scroll.pack(fill="both", expand=True, anchor="w")
+        scroll.pack(fill="both", expand=True, padx=0, pady=0)
 
-        self._secao_titulo(scroll, "Serviços Oferecidos", padx=15)
+        self._secao_titulo(scroll, "Serviços Oferecidos", padx=0)
 
         self.services_text = ctk.CTkTextbox(
             scroll,
@@ -967,14 +960,14 @@ class Configuracoes(BaseScreen):
             font=font("text"),
             text_color=self.colors["text_primary"]
         )
-        self.services_text.pack(fill="both", expand=True, anchor="w", padx=15, pady=(10, 0))
+        self.services_text.pack(fill="both", expand=True, anchor="w", padx=0, pady=(10, 0))
         self.services_text.insert("1.0", "• Limpeza profissional\n• Clareamento dental\n• Implantes\n• Aparelhos ortodônticos")
 
     def _render_preferences_description(self, parent):
         scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
-        scroll.pack(fill="both", expand=True, anchor="w")
+        scroll.pack(fill="both", expand=True, padx=0, pady=0)
 
-        self._secao_titulo(scroll, "Sobre a Clínica", padx=15)
+        self._secao_titulo(scroll, "Sobre a Clínica", padx=0)
 
         self.description_text = ctk.CTkTextbox(
             scroll,
@@ -986,7 +979,7 @@ class Configuracoes(BaseScreen):
             font=font("text"),
             text_color=self.colors["text_primary"]
         )
-        self.description_text.pack(fill="both", expand=True, anchor="w", padx=15, pady=(10, 0))
+        self.description_text.pack(fill="both", expand=True, anchor="w", padx=0, pady=(10, 0))
         self.description_text.insert("1.0", "Bem-vindo à nossa clínica! Somos uma equipe dedicada a proporcionar o melhor cuidado para seu sorriso...")
 
     # ==================== PERFIL ====================
@@ -999,7 +992,7 @@ class Configuracoes(BaseScreen):
             scrollbar_button_color=COLORS["border"],
             scrollbar_button_hover_color=COLORS["text_muted"]
         )
-        scroll.pack(fill="both", expand=True, padx=15)
+        scroll.pack(fill="both", expand=True, padx=0, pady=0)
 
         _, form_body = self._create_card_section(
             scroll,
@@ -1044,7 +1037,7 @@ class Configuracoes(BaseScreen):
     # ==================== FOOTER ====================
     def _build_footer(self, parent):
         footer = ctk.CTkFrame(parent, fg_color="transparent")
-        footer.pack(fill="x", side="bottom", padx=15, pady=14)
+        footer.pack(fill="x", side="bottom", padx=20, pady=(0, 20))
 
         ActionButtons(
             footer,
@@ -1240,7 +1233,7 @@ class Configuracoes(BaseScreen):
             border_color=self.colors["border"]
         )
         # MUDANÇA: grid() em vez de pack() para usar sistema de grid do main_wrap
-        preview_frame.grid(row=0, column=0, sticky="nsew", pady=(0, 14))
+        preview_frame.grid(row=0, column=0, sticky="nsew", pady=0)
 
         self.clinic_photo_canvas = tk.Canvas(
             preview_frame,
@@ -1253,7 +1246,7 @@ class Configuracoes(BaseScreen):
 
         # Footer com altura fixa de 52px
         footer = ctk.CTkFrame(main_wrap, fg_color="transparent", height=52)
-        footer.grid(row=1, column=0, sticky="ew", pady=(20, 0))
+        footer.grid(row=1, column=0, sticky="ew", pady=0)
         footer.pack_propagate(False)
 
         nav_frame = ctk.CTkFrame(footer, fg_color="transparent", height=44)
