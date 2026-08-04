@@ -249,6 +249,13 @@ class Cadastro(BaseScreen):
         # =============================
         self.cadastro_card = self.content_card
 
+        self.tab_bar = ctk.CTkFrame(
+            self.cadastro_card,
+            fg_color="transparent",
+            height=44
+        )
+        self.tab_bar.pack(fill="x", padx=20, pady=(9, 0), anchor="nw")
+
         self.scroll_frame = ctk.CTkScrollableFrame(
             self.cadastro_card,
             fg_color=COLORS["card"],
@@ -256,20 +263,13 @@ class Cadastro(BaseScreen):
             border_width=1,
             border_color=INNER_CARD_BORDER
         )
-        self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
         self.container_conteudo = ctk.CTkFrame(
             self.scroll_frame,
             fg_color="transparent"
         )
         self.container_conteudo.pack(fill="both", expand=True, padx=0, pady=0)
-
-        self.tab_bar = ctk.CTkFrame(
-            self.container_conteudo,
-            fg_color="transparent",
-            height=44
-        )
-        self.tab_bar.pack(fill="x", padx=20, pady=(9, 0), anchor="nw")
 
         self.btn_pacientes = ctk.CTkButton(
             self.tab_bar, text="👤   Pacientes",
