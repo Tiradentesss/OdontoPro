@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from config.database import get_connection
 from .base import BaseScreen
-from .theme import font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
+from .theme import FONT_FAMILY, font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from controllers.consulta_controller import ConsultaController
 
 
@@ -135,7 +135,7 @@ class Relatorios(BaseScreen):
 
         periodo_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         periodo_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=0)
-        ctk.CTkLabel(periodo_frame, text="Período", font=font("small", "bold"), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 6))
+        ctk.CTkLabel(periodo_frame, text="Período", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
         self.periodo_combo = ctk.CTkComboBox(
             periodo_frame,
             values=["Hoje", "Semana", "Mês", "Ano", "Personalizado"],
@@ -154,7 +154,7 @@ class Relatorios(BaseScreen):
 
         medico_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         medico_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=0)
-        ctk.CTkLabel(medico_frame, text="Médico", font=font("small", "bold"), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 6))
+        ctk.CTkLabel(medico_frame, text="Médico", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
         self.medico_combo = ctk.CTkComboBox(
             medico_frame,
             values=["Todos"],
@@ -173,7 +173,7 @@ class Relatorios(BaseScreen):
 
         especialidade_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         especialidade_frame.grid(row=0, column=2, sticky="nsew", padx=(10, 0), pady=0)
-        ctk.CTkLabel(especialidade_frame, text="Especialidade", font=font("small", "bold"), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 6))
+        ctk.CTkLabel(especialidade_frame, text="Especialidade", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
         self.especialidade_combo = ctk.CTkComboBox(
             especialidade_frame,
             values=["Todos"],
@@ -193,7 +193,7 @@ class Relatorios(BaseScreen):
         status_frame = ctk.CTkFrame(filters_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         status_frame.pack(fill="x", padx=20, pady=(0, 20))
         status_frame.columnconfigure(0, weight=1)
-        ctk.CTkLabel(status_frame, text="Status", font=font("small", "bold"), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 6))
+        ctk.CTkLabel(status_frame, text="Status", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
         self.status_combo = ctk.CTkComboBox(
             status_frame,
             values=["Todos", "Agendada", "Realizada", "Cancelada"],
