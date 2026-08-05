@@ -513,7 +513,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 text_color=self._get_date_text_color(is_selected, is_sunday),
                 border_width=1,
                 border_color=self.colors["primary"] if is_selected else self.colors["border"],
-                hover_color=self.colors["hover"] if not is_sunday else self.colors["card_soft"],
+                hover_color=self.colors["primary_dark"] if not is_sunday else self.colors["card_soft"],
                 font=ctk.CTkFont(size=13),
                 state="disabled" if is_sunday else "normal"
             )
@@ -591,7 +591,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 text_color="white" if is_selected else self.colors["text"],
                 border_width=1,
                 border_color=self.colors["primary"] if is_selected else self.colors["border"],
-                hover_color=self.colors["hover"],
+                hover_color=self.colors["primary_dark"],
                 font=ctk.CTkFont(size=13)
             )
             btn.grid(row=row, column=col, padx=6, pady=6, sticky="ew")
