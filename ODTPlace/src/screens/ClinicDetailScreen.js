@@ -20,7 +20,7 @@ import { useTheme } from '../components/ThemeContext';
 export default function ClinicDetailScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
     const user = route?.params?.user;
-    const { isDarkMode } = useTheme();
+    const { isDarkMode, colors } = useTheme();
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showAllSpecialties, setShowAllSpecialties] = useState(false);
@@ -76,7 +76,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
             imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
             resizeMode="cover"
         >
-            <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
+            <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
                 <ScheduleHeader title="Perfil da Clínica" onBack={() => navigation.goBack()} iconName="heart" />
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

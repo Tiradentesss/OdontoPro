@@ -41,7 +41,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
   const clinic = route?.params?.clinic ?? {};
   const { user } = useAuth();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, colors } = useTheme();
   
   // Data atual
   const today = new Date();
@@ -189,7 +189,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
       imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
       resizeMode="cover"
     >
-      <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
+      <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
         <ScheduleHeader title="Agendamento" onBack={() => navigation.goBack()} iconName="calendar" />
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

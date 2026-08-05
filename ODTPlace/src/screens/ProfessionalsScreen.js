@@ -17,7 +17,7 @@ const ratingFilters = [5, 4, 3, 2, 1];
 
 export default function ProfessionalsScreen({ route, navigation }) {
     const { user } = useAuth();
-    const { isDarkMode } = useTheme();
+    const { isDarkMode, colors } = useTheme();
     const clinic = route?.params?.clinic ?? {};
     const selectedSpecialty = route?.params?.selectedSpecialty ?? null;
     const [search, setSearch] = useState('');
@@ -79,11 +79,11 @@ export default function ProfessionalsScreen({ route, navigation }) {
             imageStyle={!isDarkMode ? { transform: [{ scale: 1.2 }] } : undefined}
             resizeMode="cover"
         >
-            <SafeAreaView style={[styles.container, isDarkMode && { backgroundColor: '#020617' }]}> 
+            <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
                 <ScheduleHeader title="Profissionais" onBack={() => navigation.goBack()} iconName="users" />
 
                 <View style={styles.searchArea}>
-                    <View style={[styles.searchBox, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
+                    <View style={[styles.searchBox, isDarkMode && { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}> 
                         <Image source={require('../../assets/IconLupa.png')} style={styles.searchIcon} />
                         <TextInput
                             value={search}
@@ -95,7 +95,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                     </View>
                     <View style={styles.filterButtonsRow}>
                         <TouchableOpacity
-                            style={[styles.openFilterButton, showSpecialtyFilters && styles.openFilterButtonActive, isDarkMode && !showSpecialtyFilters && { backgroundColor: '#0F172A', borderColor: '#334155' }, isDarkMode && showSpecialtyFilters && { backgroundColor: '#38BDF8' }]}
+                            style={[styles.openFilterButton, showSpecialtyFilters && styles.openFilterButtonActive, isDarkMode && !showSpecialtyFilters && { backgroundColor: colors.card, borderColor: colors.border }, isDarkMode && showSpecialtyFilters && { backgroundColor: '#38BDF8' }]}
                             onPress={() => {
                                 if (showSpecialtyFilters && !showRatingFilters) {
                                     return;
@@ -110,7 +110,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.openFilterButton, showRatingFilters && styles.openFilterButtonActive, isDarkMode && !showRatingFilters && { backgroundColor: '#0F172A', borderColor: '#334155' }, isDarkMode && showRatingFilters && { backgroundColor: '#38BDF8' }]}
+                            style={[styles.openFilterButton, showRatingFilters && styles.openFilterButtonActive, isDarkMode && !showRatingFilters && { backgroundColor: colors.card, borderColor: colors.border }, isDarkMode && showRatingFilters && { backgroundColor: '#38BDF8' }]}
                             onPress={() => {
                                 if (showRatingFilters && !showSpecialtyFilters) {
                                     return;
@@ -137,7 +137,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                         style={[
                                             styles.filterChip,
                                             activeSpecialty === specialty && styles.filterChipActive,
-                                            isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' },
+                                            isDarkMode && { backgroundColor: colors.card, borderColor: colors.border },
                                             isDarkMode && activeSpecialty === specialty && { backgroundColor: '#38BDF8', borderColor: '#38BDF8' },
                                         ]}
                                         onPress={() => setActiveSpecialty(activeSpecialty === specialty ? null : specialty)}
@@ -166,7 +166,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                         style={[
                                             styles.ratingChip,
                                             activeRating === rating && styles.ratingChipActive,
-                                            isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' },
+                                            isDarkMode && { backgroundColor: colors.card, borderColor: colors.border },
                                             isDarkMode && activeRating === rating && { backgroundColor: '#38BDF8', borderColor: '#38BDF8' },
                                         ]}
                                         onPress={() => setActiveRating(activeRating === rating ? null : rating)}
@@ -202,7 +202,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                             const specialty = item.specialty ?? item.especialidades?.[0] ?? 'Especialista';
                             return (
                                 <TouchableOpacity
-                                    style={[styles.professionalCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}
+                                    style={[styles.professionalCard, isDarkMode && { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
                                     activeOpacity={0.86}
                                     onPress={() => navigation.navigate('ProfessionalInfo', { professional: item, clinic, user, selectedSpecialty: activeSpecialty })}
                                 >

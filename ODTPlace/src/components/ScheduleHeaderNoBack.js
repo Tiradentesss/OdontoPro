@@ -6,16 +6,19 @@ import { useTheme } from './ThemeContext';
 const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
 export default function ScheduleHeaderNoBack({ title, iconName }) {
-    const { isDarkMode } = useTheme();
+    const { isDarkMode, colors } = useTheme();
+    const headerBg = isDarkMode ? colors.container : '#00bceb';
+    const headerTextColor = isDarkMode ? colors.text : '#FFFFFF';
+    const headerIconColor = isDarkMode ? colors.text : '#FFFFFF';
 
     return (
-        <View style={[styles.headerWrapper, { backgroundColor: isDarkMode ? '#020617' : '#00bceb' }]}> 
+        <View style={[styles.headerWrapper, { backgroundColor: headerBg }]}> 
             <View style={styles.headerContainer}>
                 <View style={styles.titleContainer}>
                     {iconName ? (
-                        <Feather name={iconName} size={16} color={isDarkMode ? '#F8FAFC' : '#ffffff'} style={styles.titleIcon} />
+                        <Feather name={iconName} size={16} color={headerIconColor} style={styles.titleIcon} />
                     ) : null}
-                    <Text style={[styles.title, { color: isDarkMode ? '#F8FAFC' : '#ffffff' }]}>{title}</Text>
+                    <Text style={[styles.title, { color: headerTextColor }]}>{title}</Text>
                 </View>
             </View>
         </View>
