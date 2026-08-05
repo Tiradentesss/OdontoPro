@@ -78,6 +78,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   const [selectedTime, setSelectedTime] = useState('09:00');
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(doctorSpecialties[0]?.id || '1');
   const [selectedSpecialtyName, setSelectedSpecialtyName] = useState(doctorSpecialties[0]?.nome || 'Consulta');
+  const [isReasonFocused, setIsReasonFocused] = useState(false);
   
   const selectedRouteSpecialty = route?.params?.selectedSpecialty ?? null;
   const selectedRouteSpecialtyId = route?.params?.selectedSpecialtyId ?? null;
@@ -379,16 +380,25 @@ export default function AppointmentBookingScreen({ route, navigation }) {
           </Modal>
 
           <View style={styles.formGroup}>
-            <Text style={styles.fieldLabel}>Motivo da consulta (Opcional)</Text>
+            <Text style={[styles.fieldLabel, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Motivo da consulta (Opcional)</Text>
             <TextInput
-              style={[styles.input, styles.reasonInput]}
+              style={[
+                styles.input,
+                styles.reasonInput,
+                isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155', color: '#F8FAFC' },
+                isReasonFocused && isDarkMode && styles.reasonInputFocusedDark
+              ]}
               placeholder="O que você está sentindo ou precisa? Por exemplo: 'Estou muito ansioso e com dificuldade para dormir'."
-              placeholderTextColor="#cbd5e1"
+              placeholderTextColor={isDarkMode ? '#E2E8F0' : '#64748B'}
               value={reason}
               onChangeText={setReason}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
+              selectionColor={isDarkMode ? '#38BDF8' : '#0EA5E9'}
+              cursorColor={isDarkMode ? '#38BDF8' : '#0EA5E9'}
+              onFocus={() => setIsReasonFocused(true)}
+              onBlur={() => setIsReasonFocused(false)}
             />
           </View>
 
@@ -637,6 +647,14 @@ const styles = StyleSheet.create({
   reasonInput: {
     minHeight: 120,
     paddingTop: 18,
+  },
+  reasonInputFocusedDark: {
+    borderColor: '#38BDF8',
+    shadowColor: '#38BDF8',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+    elevation: 4,
   },
   submitButton: {
     marginTop: 14,

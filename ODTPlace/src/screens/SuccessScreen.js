@@ -88,7 +88,7 @@ export default function SuccessScreen({ route, navigation }) {
           activeOpacity={0.8}
           onPress={handleGoBackToAgenda}
         >
-          <Text style={styles.actionButtonText}>Voltar para Agenda</Text>
+          <Text style={styles.actionButtonText}>Voltar para início</Text>
           <Feather name="arrow-right" size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
         </TouchableOpacity>
         <Text style={[styles.autoRedirectText, { color: colors.mutedText }]}>

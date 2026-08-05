@@ -241,10 +241,10 @@ export default function RescheduleScreen({ route, navigation }) {
         <TextInput
           style={[styles.timeInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
           value={selectedTime}
+          editable={false}
           keyboardType="numeric"
           placeholder="HH:MM"
           placeholderTextColor={isDarkMode ? '#94A3B8' : '#94A3B8'}
-          onChangeText={handleTimeChange}
           maxLength={5}
         />
 

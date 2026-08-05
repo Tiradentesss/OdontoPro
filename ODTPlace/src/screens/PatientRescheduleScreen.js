@@ -37,6 +37,12 @@ const getMonthDays = (year, month) => {
 export default function PatientRescheduleScreen({ route, navigation }) {
   const { patientName, appointment } = route.params || {};
   const today = new Date();
+  const { isDarkMode, colors } = useTheme();
+  const patientBlue = isDarkMode ? '#38BDF8' : '#0EA5E9';
+  const headerBg = isDarkMode ? colors.container : patientBlue;
+  const headerTextColor = isDarkMode ? colors.text : '#FFFFFF';
+  const headerIconColor = isDarkMode ? colors.text : patientBlue;
+  const headerButtonBg = isDarkMode ? colors.card : colors.backButtonBg;
   const parseDateString = (value) => {
     if (!value) return null;
     const text = typeof value === 'string' ? value.replace(' ', 'T') : value;
@@ -56,7 +62,6 @@ export default function PatientRescheduleScreen({ route, navigation }) {
   const [currentMonth, setCurrentMonth] = useState({ year: today.getFullYear(), month: today.getMonth() + 1 });
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const { isDarkMode, colors } = useTheme();
 
   useEffect(() => {
     const appointmentDate = parseDateString(appointment?.data_hora || appointment?.date);
@@ -138,15 +143,15 @@ export default function PatientRescheduleScreen({ route, navigation }) {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.container }]}> 
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.container}
+        backgroundColor={headerBg}
         translucent={false}
       />
 
-      <View style={[styles.header, { backgroundColor: colors.container, borderColor: colors.border }]}> 
-        <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.backButtonBg }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={22} color={colors.brandBlue} />
+      <View style={[styles.header, { backgroundColor: headerBg, borderColor: colors.border }]}> 
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: headerButtonBg }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <Feather name="arrow-left" size={22} color={headerIconColor} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Reagendar Consulta</Text>
+        <Text style={[styles.headerTitle, { color: headerTextColor }]}>Reagendar Consulta</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -163,22 +168,24 @@ export default function PatientRescheduleScreen({ route, navigation }) {
           onPress={() => setCalendarVisible((prev) => !prev)}
         >
           <View style={[styles.iconBox, { backgroundColor: isDarkMode ? '#1E293B' : '#EFF6FF' }]}>
-            <Feather name="calendar" size={18} color={colors.brandBlue} />
+            <Feather name="calendar" size={18} color={patientBlue} />
           </View>
           <Text style={[styles.pickerText, { color: colors.text }]}>{selectedDateLabel}</Text>
           <Feather name="chevron-down" size={18} color={colors.mutedText} />
         </TouchableOpacity>
+
+        <Text style={[styles.selectedDateText, { color: colors.text }]}>Data selecionada: {selectedDateLabel}</Text>
 
         <Modal visible={calendarVisible} transparent animationType="fade" onRequestClose={() => setCalendarVisible(false)}>
           <Pressable style={[styles.modalOverlay, { backgroundColor: isDarkMode ? 'rgba(0,0,0,0.6)' : 'rgba(15,23,42,0.3)' }]} onPress={() => setCalendarVisible(false)}>
             <Pressable style={[styles.calendarModal, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
               <View style={styles.calendarHeader}>
                 <TouchableOpacity onPress={goPreviousMonth} style={[styles.calendarNavButton, { backgroundColor: colors.backButtonBg }]} activeOpacity={0.7}>
-                  <Feather name="chevron-left" size={18} color={colors.brandBlue} />
+                  <Feather name="chevron-left" size={18} color={patientBlue} />
                 </TouchableOpacity>
                 <Text style={[styles.calendarLabel, { color: colors.text }]}>{monthNames[currentMonth.month - 1]} {currentMonth.year}</Text>
                 <TouchableOpacity onPress={goNextMonth} style={[styles.calendarNavButton, { backgroundColor: colors.backButtonBg }]} activeOpacity={0.7}>
-                  <Feather name="chevron-right" size={18} color={colors.brandBlue} />
+                  <Feather name="chevron-right" size={18} color={patientBlue} />
                 </TouchableOpacity>
               </View>
               <View style={styles.weekdaysRow}>
@@ -195,7 +202,7 @@ export default function PatientRescheduleScreen({ route, navigation }) {
                   return (
                     <TouchableOpacity
                       key={date.id}
-                      style={[styles.dateCell, { backgroundColor: isSelectedDate ? colors.brandBlue : 'transparent', borderColor: colors.border }]}
+                      style={[styles.dateCell, { backgroundColor: isSelectedDate ? patientBlue : 'transparent', borderColor: colors.border }]}
                       onPress={() => handleSelectDate(date.id)}
                       activeOpacity={0.7}
                     >
@@ -211,24 +218,46 @@ export default function PatientRescheduleScreen({ route, navigation }) {
         <Text style={[styles.sectionTitle, { color: colors.mutedText }]}>Horário</Text>
         <TextInput
           value={selectedTime}
-          onChangeText={handleTimeChange}
+          editable={false}
           keyboardType="numeric"
           placeholder="HH:MM"
           placeholderTextColor={colors.mutedText}
           style={[styles.timeInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
         />
 
-        <View style={styles.confirmationCard}>
-          <Text style={[styles.confirmationLabel, { color: colors.mutedText }]}>Resumo da Reagendamento</Text>
-          <Text style={[styles.confirmationValue, { color: colors.text }]}>Paciente: {patientName || appointment?.nome || 'Paciente'}</Text>
-          <Text style={[styles.confirmationValue, { color: colors.text }]}>Consulta: {appointment?.observacoes || appointment?.observations || 'Consulta'}</Text>
-          <Text style={[styles.confirmationValue, { color: colors.text }]}>Nova data: {selectedDateLabel}</Text>
-          <Text style={[styles.confirmationValue, { color: colors.text }]}>Novo horário: {selectedTime}</Text>
+        <Text style={[styles.sectionTitle, { color: colors.mutedText, marginTop: 20 }]}>Sugestões de Horário</Text>
+        <View style={styles.timeGrid}>
+          {['08:00', '09:00', '10:30', '11:30', '14:00', '15:30'].map((time) => {
+            const isSelected = time === selectedTime;
+            return (
+              <TouchableOpacity
+                key={time}
+                style={[
+                  styles.timeSlot,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                  isSelected && { backgroundColor: patientBlue, borderColor: patientBlue }
+                ]}
+                onPress={() => setSelectedTime(time)}
+                activeOpacity={0.7}
+              >
+                <Text style={[
+                  styles.timeSlotText,
+                  { color: colors.text },
+                  isSelected && styles.timeSlotTextActive
+                ]}>
+                  {time}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
+        <View style={styles.spacer} />
+
         <View style={styles.actionsRow}>
-          <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.brandBlue }]} activeOpacity={0.85} onPress={handleOpenConfirmation}>
-            <Text style={[styles.saveButtonText, { color: '#FFFFFF' }]}>Reagendar</Text>
+          <TouchableOpacity style={[styles.saveButton, { backgroundColor: patientBlue }]} activeOpacity={0.85} onPress={handleOpenConfirmation}>
+            <Feather name="calendar" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={[styles.saveButtonText, { color: '#FFFFFF' }]}>Reagendar Consulta</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -242,7 +271,7 @@ export default function PatientRescheduleScreen({ route, navigation }) {
               <TouchableOpacity style={[styles.modalButton, { backgroundColor: colors.backButtonBg }]} activeOpacity={0.8} onPress={() => setIsModalVisible(false)}>
                 <Text style={[styles.modalButtonText, { color: colors.text }]}>Voltar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalButton, { backgroundColor: colors.brandBlue }]} activeOpacity={0.8} onPress={handleConfirmReschedule}>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: patientBlue }]} activeOpacity={0.8} onPress={handleConfirmReschedule}>
                 <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]}>Confirmar</Text>
               </TouchableOpacity>
             </View>
@@ -308,7 +337,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     marginBottom: 18,
   },
@@ -333,22 +362,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
   },
-  confirmationCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    marginBottom: 24,
-  },
-  confirmationLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    marginBottom: 10,
-  },
-  confirmationValue: {
+  selectedDateText: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
+    fontWeight: '600',
+    marginBottom: 18,
+  },
+  timeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  timeSlot: {
+    width: '48%',
+    height: 52,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  timeSlotText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  timeSlotTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  spacer: {
+    flex: 1,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -356,10 +398,15 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    height: 54,
-    borderRadius: 14,
+    height: 56,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 3,
   },
   saveButtonText: {
     fontSize: 15,

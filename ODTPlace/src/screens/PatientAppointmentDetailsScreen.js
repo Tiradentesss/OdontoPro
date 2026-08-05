@@ -55,6 +55,11 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
   const [appointment, setAppointment] = useState(routeAppointment || null);
   const [status, setStatus] = useState(routeAppointment?.status || 'pendente');
   const { isDarkMode, colors } = useTheme();
+  const patientBlue = isDarkMode ? '#38BDF8' : '#0EA5E9';
+  const headerBg = isDarkMode ? colors.container : patientBlue;
+  const headerTextColor = isDarkMode ? colors.text : '#FFFFFF';
+  const headerIconColor = isDarkMode ? colors.text : patientBlue;
+  const headerButtonBg = isDarkMode ? colors.card : colors.backButtonBg;
 
   const parseDateString = (value) => {
     if (!value) return null;
@@ -96,15 +101,15 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.container }]}> 
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.card}
+        backgroundColor={headerBg}
         translucent={false}
       />
 
-      <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}> 
-        <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.backButtonBg }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={22} color={colors.text} />
+      <View style={[styles.header, { backgroundColor: headerBg, borderColor: colors.border }]}> 
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: headerButtonBg }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <Feather name="arrow-left" size={22} color={headerIconColor} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Detalhes da Consulta</Text>
+        <Text style={[styles.headerTitle, { color: headerTextColor }]}>Detalhes da Consulta</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -172,7 +177,7 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
         </View>
 
         <Text style={[styles.sectionTitle, { color: colors.mutedText }]}>Motivo da Consulta</Text>
-        <View style={[styles.reasonCard, { backgroundColor: colors.card, borderColor: colors.border, borderLeftColor: colors.brandBlue || '#0EA5E9' }]}>
+        <View style={[styles.reasonCard, { backgroundColor: colors.card, borderColor: colors.border, borderLeftColor: patientBlue }]}>
           <Text style={[styles.reasonText, { color: colors.text }]}>{appointmentReason}</Text>
         </View>
 
@@ -180,9 +185,9 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
 
         <View style={styles.footerActions}>
           {allowReschedule && canReschedule && (
-            <TouchableOpacity style={[styles.rescheduleButton, { borderColor: colors.border }]} activeOpacity={0.8} onPress={handleReschedule}>
-              <Feather name="calendar" size={16} color={colors.text} style={{ marginRight: 8 }} />
-              <Text style={[styles.rescheduleButtonText, { color: colors.text }]}>Reagendar Consulta</Text>
+            <TouchableOpacity style={[styles.rescheduleButton, { backgroundColor: patientBlue }]} activeOpacity={0.85} onPress={handleReschedule}>
+              <Feather name="calendar" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={[styles.rescheduleButtonText, { color: '#FFFFFF' }]}>Reagendar Consulta</Text>
             </TouchableOpacity>
           )}
 
@@ -249,10 +254,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   appointmentCard: {
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     borderWidth: 1,
     marginBottom: 24,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
   infoRow: {
     flexDirection: 'row',
@@ -314,23 +324,32 @@ const styles = StyleSheet.create({
   rescheduleButton: {
     flexDirection: 'row',
     borderRadius: 14,
-    height: 50,
+    height: 54,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
     marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3,
   },
   rescheduleButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
   },
   cancelButton: {
     flexDirection: 'row',
     backgroundColor: '#DC2626',
     borderRadius: 14,
-    height: 50,
+    height: 54,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cancelButtonText: {
     fontSize: 14,
