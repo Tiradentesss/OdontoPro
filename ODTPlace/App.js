@@ -34,6 +34,8 @@ import PatientsScreen from './src/screens/PatientsScreen';
 import PersonalDataScreen from './src/screens/PersonalDataScreen';
 import ReportsScreen from './src/screens/ReportsScreen';
 import RescheduleScreen from './src/screens/RescheduleScreen';
+import PatientAppointmentDetailsScreen from './src/screens/PatientAppointmentDetailsScreen';
+import PatientRescheduleScreen from './src/screens/PatientRescheduleScreen';
 import SuccessScreen from './src/screens/SuccessScreen';
 import ProfessionalInfoScreen from './src/screens/ProfessionalInfoScreen';
 import AppointmentBookingScreen from './src/screens/AppointmentBookingScreen';
@@ -146,6 +148,14 @@ export default function App() {
             <Stack.Screen
               name="RescheduleScreen"
               component={RescheduleScreen}
+            />
+            <Stack.Screen
+              name="PatientAppointmentDetailsScreen"
+              component={PatientAppointmentDetailsScreen}
+            />
+            <Stack.Screen
+              name="PatientRescheduleScreen"
+              component={PatientRescheduleScreen}
             />
             <Stack.Screen
               name="SuccessScreen"

@@ -1,0 +1,340 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Platform,
+  StatusBar,
+  Alert,
+} from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useTheme } from '../components/ThemeContext';
+import { updateAppointment } from '../services/api';
+
+const getStatusInfo = (statusValue, isDarkMode) => {
+  const normalized = (statusValue || '').toString().toLowerCase();
+  if (normalized === 'cancelada') {
+    return {
+      label: 'CANCELADA',
+      bg: isDarkMode ? '#581c1c' : '#fee2e2',
+      text: isDarkMode ? '#fca5a5' : '#b91c1c',
+    };
+  }
+  if (normalized === 'realizada' || normalized === 'completa') {
+    return {
+      label: 'REALIZADA',
+      bg: isDarkMode ? '#064e3b' : '#dcfce7',
+      text: isDarkMode ? '#86efac' : '#047857',
+    };
+  }
+  if (normalized === 'perdida') {
+    return {
+      label: 'PERDIDA',
+      bg: isDarkMode ? '#111827' : '#e5e7eb',
+      text: isDarkMode ? '#f8fafc' : '#111827',
+    };
+  }
+  if (normalized === 'confirmada') {
+    return {
+      label: 'CONFIRMADA',
+      bg: isDarkMode ? '#78350f' : '#fef3c7',
+      text: isDarkMode ? '#fde68a' : '#b45309',
+    };
+  }
+  return {
+    label: 'AGENDADA',
+    bg: isDarkMode ? '#78350f' : '#fef3c7',
+    text: isDarkMode ? '#fde68a' : '#b45309',
+  };
+};
+
+export default function PatientAppointmentDetailsScreen({ route, navigation }) {
+  const { patientName, allowReschedule = true, appointment: routeAppointment } = route.params || {};
+  const [appointment, setAppointment] = useState(routeAppointment || null);
+  const [status, setStatus] = useState(routeAppointment?.status || 'pendente');
+  const { isDarkMode, colors } = useTheme();
+
+  const parseDateString = (value) => {
+    if (!value) return null;
+    const text = typeof value === 'string' ? value.replace(' ', 'T') : value;
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const appointmentClinic = appointment?.clinica_nome || appointment?.clinic || appointment?.clinicName || 'Clínica';
+  const appointmentSpecialty = appointment?.especialidade_nome || appointment?.specialty || 'Especialidade';
+  const appointmentDoctor = appointment?.medico_nome || appointment?.doctor || 'Dr. Médico';
+  const appointmentReason = appointment?.observacoes || appointment?.observations || route.params?.motivo || 'Consulta';
+  const appointmentDate = parseDateString(appointment?.data_hora) || parseDateString(appointment?.date);
+  const appointmentDateLabel = appointmentDate ? appointmentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Data a definir';
+  const appointmentTimeLabel = appointmentDate ? appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Horário a definir';
+
+  const normalizedStatus = (status || '').toString().toLowerCase();
+  const statusInfo = getStatusInfo(status, isDarkMode);
+  const canReschedule = normalizedStatus === 'agendada';
+  const canCancel = !['realizada', 'completa', 'cancelada', 'perdida'].includes(normalizedStatus);
+
+  const handleReschedule = () => {
+    navigation.navigate('PatientRescheduleScreen', { patientName: patientName || 'Paciente', appointment });
+  };
+
+  const handleCancelAppointment = async () => {
+    try {
+      if (appointment?.id) {
+        await updateAppointment(appointment.id, { status: 'cancelada' });
+      }
+      setStatus('cancelada');
+      Alert.alert('Sucesso', 'A consulta foi cancelada.');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível cancelar a consulta.');
+    }
+  };
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.container }]}> 
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.card}
+        translucent={false}
+      />
+
+      <View style={[styles.header, { backgroundColor: colors.card, borderColor: colors.border }]}> 
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: colors.backButtonBg }]} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+          <Feather name="arrow-left" size={22} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Detalhes da Consulta</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <View style={styles.content}>
+        <View style={styles.patientMetaContainer}>
+          <Text style={[styles.patientLabel, { color: colors.mutedText }]}>Paciente</Text>
+          <Text style={[styles.patientName, { color: colors.text }]}>{patientName || appointment?.nome || 'Paciente'}</Text>
+        </View>
+
+        <Text style={[styles.sectionTitle, { color: colors.mutedText }]}>Informações da Consulta</Text>
+        <View style={[styles.appointmentCard, { backgroundColor: colors.card, borderColor: colors.border }]}> 
+          <View style={styles.infoRow}>
+            <View style={[styles.iconBox, { backgroundColor: isDarkMode ? '#1E3A8A' : '#EFF6FF' }]}>
+              <Feather name="map-pin" size={18} color={isDarkMode ? '#60A5FA' : '#163783'} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Clínica</Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>{appointmentClinic}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.infoRow}>
+            <View style={[styles.iconBox, { backgroundColor: isDarkMode ? '#334155' : '#F1F5F9' }]}>
+              <Feather name="user" size={18} color={isDarkMode ? '#94A3B8' : '#475569'} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Especialidade</Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>{appointmentSpecialty}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.infoRow}>
+            <View style={[styles.iconBox, { backgroundColor: isDarkMode ? '#047857' : '#DCFCE7' }]}>
+              <Feather name="user-check" size={18} color={isDarkMode ? '#A7F3D0' : '#166534'} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Profissional</Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>{appointmentDoctor}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.infoRow}>
+            <View style={[styles.iconBox, { backgroundColor: statusInfo.bg }]}>
+              <Feather name="clock" size={18} color={statusInfo.text} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Data e Hora</Text>
+              <Text style={[styles.infoValue, { color: colors.text }]}>{`${appointmentDateLabel} • ${appointmentTimeLabel}`}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.infoRow}>
+            <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}> 
+              <Text style={[styles.statusBadgeText, { color: statusInfo.text }]}>{statusInfo.label}</Text>
+            </View>
+          </View>
+        </View>
+
+        <Text style={[styles.sectionTitle, { color: colors.mutedText }]}>Motivo da Consulta</Text>
+        <View style={[styles.reasonCard, { backgroundColor: colors.card, borderColor: colors.border, borderLeftColor: colors.brandBlue || '#0EA5E9' }]}>
+          <Text style={[styles.reasonText, { color: colors.text }]}>{appointmentReason}</Text>
+        </View>
+
+        <View style={styles.spacer} />
+
+        <View style={styles.footerActions}>
+          {allowReschedule && canReschedule && (
+            <TouchableOpacity style={[styles.rescheduleButton, { borderColor: colors.border }]} activeOpacity={0.8} onPress={handleReschedule}>
+              <Feather name="calendar" size={16} color={colors.text} style={{ marginRight: 8 }} />
+              <Text style={[styles.rescheduleButtonText, { color: colors.text }]}>Reagendar Consulta</Text>
+            </TouchableOpacity>
+          )}
+
+          {canCancel && (
+            <TouchableOpacity style={styles.cancelButton} activeOpacity={0.8} onPress={handleCancelAppointment}>
+              <Feather name="x-circle" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.cancelButtonText}>Cancelar Consulta</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 12 : 12,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 12,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  headerSpacer: {
+    width: 38,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+  },
+  patientMetaContainer: {
+    marginBottom: 24,
+  },
+  patientLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  patientName: {
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 12,
+  },
+  appointmentCard: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 24,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  infoTextContainer: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  divider: {
+    height: 1,
+    marginVertical: 12,
+  },
+  statusBadge: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+  },
+  statusBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  reasonCard: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderLeftWidth: 4,
+  },
+  reasonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 22,
+  },
+  spacer: {
+    flex: 1,
+  },
+  footerActions: {
+    paddingBottom: Platform.OS === 'ios' ? 20 : 30,
+    marginTop: 20,
+  },
+  rescheduleButton: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  rescheduleButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  cancelButton: {
+    flexDirection: 'row',
+    backgroundColor: '#DC2626',
+    borderRadius: 14,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+});

@@ -15,9 +15,9 @@ import { getProfessionalAppointments, updateAppointment } from '../services/api'
 import { useAuth } from '../context/AuthContext';
 
 export default function AppointmentDetailsScreen({ route, navigation }) {
-  const { patientName, allowReschedule = true, appointment: routeAppointment } = route.params || { patientName: 'Victor Araújo' };
+  const { patientName, allowReschedule = true, appointment: routeAppointment, isPatientView = false } = route.params || { patientName: 'Victor Araújo' };
   const [appointment, setAppointment] = useState(routeAppointment || null);
-  const [status, setStatus] = useState(routeAppointment?.status === 'confirmada' ? 'Confirmada' : routeAppointment?.status === 'cancelada' ? 'Cancelada' : 'Pendente');
+  const [status, setStatus] = useState(routeAppointment?.status || 'pendente');
   const { user } = useAuth();
 
   // 2. Consome o estado do tema e a paleta de cores dinâmica
@@ -27,7 +27,10 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
     const loadAppointment = async () => {
       if (routeAppointment?.id) {
         setAppointment(routeAppointment);
-        setStatus(routeAppointment.status === 'confirmada' ? 'Confirmada' : routeAppointment.status === 'cancelada' ? 'Cancelada' : 'Pendente');
+        setStatus(routeAppointment.status || 'pendente');
+      }
+
+      if (isPatientView) {
         return;
       }
 
@@ -39,14 +42,67 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
         const data = await getProfessionalAppointments({ medico_id: user.id });
         const found = Array.isArray(data) ? data.find((item) => String(item.id) === String(route.params.id)) : null;
         setAppointment(found || null);
-        setStatus(found?.status === 'confirmada' ? 'Confirmada' : found?.status === 'cancelada' ? 'Cancelada' : 'Pendente');
+        setStatus(found?.status || 'pendente');
       } catch (error) {
         console.log('Error loading appointment details:', error);
       }
     };
 
     loadAppointment();
-  }, [routeAppointment?.id, route.params?.id, user?.id]);
+  }, [routeAppointment?.id, route.params?.id, user?.id, isPatientView]);
+
+  const getStatusInfo = (statusValue) => {
+    const normalized = (statusValue || '').toString().toLowerCase();
+    if (normalized === 'cancelada') {
+      return {
+        label: 'CANCELADA',
+        bg: isDarkMode ? '#581c1c' : '#fee2e2',
+        text: isDarkMode ? '#fca5a5' : '#b91c1c',
+        icon: 'x-circle',
+        iconColor: isDarkMode ? '#fecaca' : '#b91c1c',
+      };
+    }
+    if (normalized === 'realizada' || normalized === 'completa') {
+      return {
+        label: 'REALIZADA',
+        bg: isDarkMode ? '#064e3b' : '#dcfce7',
+        text: isDarkMode ? '#86efac' : '#047857',
+        icon: 'check-circle',
+        iconColor: isDarkMode ? '#86efac' : '#047857',
+      };
+    }
+    if (normalized === 'perdida') {
+      return {
+        label: 'PERDIDA',
+        bg: isDarkMode ? '#111827' : '#e5e7eb',
+        text: isDarkMode ? '#f8fafc' : '#111827',
+        icon: 'x-circle',
+        iconColor: isDarkMode ? '#f8fafc' : '#111827',
+      };
+    }
+    if (normalized === 'confirmada') {
+      return {
+        label: 'CONFIRMADA',
+        bg: isDarkMode ? '#78350f' : '#fef3c7',
+        text: isDarkMode ? '#fde68a' : '#b45309',
+        icon: 'check-circle',
+        iconColor: isDarkMode ? '#fde68a' : '#b45309',
+      };
+    }
+    return {
+      label: 'AGENDADA',
+      bg: isDarkMode ? '#78350f' : '#fef3c7',
+      text: isDarkMode ? '#fde68a' : '#b45309',
+      icon: 'alert-circle',
+      iconColor: isDarkMode ? '#fde68a' : '#b45309',
+    };
+  };
+
+  const normalizedStatus = (status || '').toString().toLowerCase();
+  const statusInfo = getStatusInfo(status);
+  const canReschedule = normalizedStatus === 'agendada';
+  const canConfirm = !['realizada', 'completa', 'cancelada', 'perdida'].includes(normalizedStatus);
+  const canCancel = !['realizada', 'completa', 'cancelada', 'perdida'].includes(normalizedStatus);
 
   const appointmentDate = appointment?.data_hora ? new Date(appointment.data_hora) : null;
   const appointmentDateLabel = appointmentDate?.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -140,27 +196,18 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
 
           <View style={styles.infoRow}>
             <View style={[
-              styles.iconBox, 
-              { 
-                backgroundColor: status === 'Pendente' 
-                  ? (isDarkMode ? '#78350F' : '#FEF3C7') 
-                  : (isDarkMode ? '#064E3B' : '#D1FAE5') 
-              }
+              styles.iconBox,
+              { backgroundColor: statusInfo.bg }
             ]}>
-              <Feather 
-                name={status === 'Pendente' ? "alert-circle" : "check-circle"} 
-                size={18} 
-                color={status === 'Pendente' ? (isDarkMode ? '#FBBF24' : '#D97706') : (isDarkMode ? '#34D399' : '#059669')} 
+              <Feather
+                name={statusInfo.icon}
+                size={18}
+                color={statusInfo.iconColor}
               />
             </View>
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Status da Confirmação</Text>
-              <Text style={[
-                styles.infoValue, 
-                { color: status === 'Pendente' ? (isDarkMode ? '#FBBF24' : '#D97706') : (isDarkMode ? '#34D399' : '#059669') }
-              ]}>
-                {status}
-              </Text>
+              <Text style={[styles.infoValue, { color: statusInfo.text }]}> {statusInfo.label}</Text>
             </View>
           </View>
         </View>
@@ -178,7 +225,7 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
 
         {/* Botões de Ação Inferiores Premium */}
         <View style={styles.footerActions}>
-          {status !== 'Confirmada' && status !== 'Cancelada' && (
+          {canConfirm && !isPatientView && (
             <TouchableOpacity 
               style={[styles.confirmButton, isDarkMode && { shadowColor: '#000000', backgroundColor: '#059669' }]} 
               activeOpacity={0.8}
@@ -189,29 +236,29 @@ export default function AppointmentDetailsScreen({ route, navigation }) {
             </TouchableOpacity>
           )}
 
-          {allowReschedule && (
-            <>
-              <TouchableOpacity 
-                style={[
-                  styles.rescheduleButton, 
-                  { backgroundColor: colors.card, borderColor: colors.border }
-                ]} 
-                activeOpacity={0.7}
-                onPress={handleReschedule}
-              >
-                <Feather name="calendar" size={16} color={colors.mutedText} style={{ marginRight: 8 }} />
-                <Text style={[styles.rescheduleButtonText, { color: colors.text }]}>Reagendar Consulta</Text>
-              </TouchableOpacity>
+          {allowReschedule && canReschedule && (
+            <TouchableOpacity 
+              style={[
+                styles.rescheduleButton, 
+                { backgroundColor: colors.card, borderColor: colors.border }
+              ]} 
+              activeOpacity={0.7}
+              onPress={handleReschedule}
+            >
+              <Feather name="calendar" size={16} color={colors.mutedText} style={{ marginRight: 8 }} />
+              <Text style={[styles.rescheduleButtonText, { color: colors.text }]}>Reagendar Consulta</Text>
+            </TouchableOpacity>
+          )}
 
-              <TouchableOpacity 
-                style={styles.cancelButton} 
-                activeOpacity={0.8}
-                onPress={handleCancelAppointment}
-              >
-                <Feather name="x-circle" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
-                <Text style={styles.cancelButtonText}>Cancelar Consulta</Text>
-              </TouchableOpacity>
-            </>
+          {canCancel && (
+            <TouchableOpacity 
+              style={styles.cancelButton} 
+              activeOpacity={0.8}
+              onPress={handleCancelAppointment}
+            >
+              <Feather name="x-circle" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.cancelButtonText}>Cancelar Consulta</Text>
+            </TouchableOpacity>
           )}
         </View>
 

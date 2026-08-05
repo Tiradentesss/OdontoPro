@@ -75,7 +75,7 @@ export default function PatientProfileScreen({ route, navigation }) {
   const appointmentStatus = appointment?.status === 'confirmada' ? 'Confirmada' : appointment?.status === 'cancelada' ? 'Cancelada' : 'Pendente';
 
   const handleNavigateToDetails = () => {
-    navigation?.navigate('AppointmentDetails', {
+    navigation?.navigate('PatientAppointmentDetailsScreen', {
       patientName: currentPatient?.name,
       motivo: appointmentMotivo,
       allowReschedule: !fromPatientsHistory,

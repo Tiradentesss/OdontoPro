@@ -12,7 +12,8 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext'; // Importação do tema global
 
-export default function SuccessScreen({ navigation }) {
+export default function SuccessScreen({ route, navigation }) {
+  const { returnRoute = 'HomeP' } = route.params || {};
   // Consome as propriedades globais do tema
   const { isDarkMode, colors } = useTheme();
 
@@ -20,11 +21,10 @@ export default function SuccessScreen({ navigation }) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   
-  // Redireciona o profissional de volta para a agenda usando uma rota válida no stack atual
   const handleGoBackToAgenda = () => {
     navigation?.reset({
       index: 0,
-      routes: [{ name: 'HomeP' }],
+      routes: [{ name: returnRoute }],
     });
   };
 

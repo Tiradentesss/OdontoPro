@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,8 +12,8 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Feather } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getProfessionalAppointments } from '../services/api';
@@ -98,28 +98,36 @@ export default function AgendaScreen({ navigation, route }) {
   const STATUS_CONFIG = getStatusConfig(isDarkMode);
   const dayStrip = buildDayStrip(parseDateKey(selectedDate));
 
-  useEffect(() => {
-    const loadAppointments = async () => {
-      if (!user?.id) {
-        setAppointments([]);
-        setLoading(false);
-        return;
-      }
+  const loadAppointments = useCallback(async () => {
+    if (!user?.id) {
+      setAppointments([]);
+      setLoading(false);
+      return;
+    }
 
-      try {
-        setLoading(true);
-        const data = await getProfessionalAppointments({ medico_id: user.id });
-        setAppointments(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.log('Error loading professional agenda:', error);
-        setAppointments([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAppointments();
+    try {
+      setLoading(true);
+      const data = await getProfessionalAppointments({ medico_id: user.id });
+      setAppointments(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.log('Error loading professional agenda:', error);
+      setAppointments([]);
+    } finally {
+      setLoading(false);
+    }
   }, [user?.id]);
+
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadAppointments();
+    });
+
+    return unsubscribe;
+  }, [navigation, loadAppointments]);
 
   useEffect(() => {
     const nextDate = route?.params?.initialDate;

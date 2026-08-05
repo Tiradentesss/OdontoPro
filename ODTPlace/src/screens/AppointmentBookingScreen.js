@@ -10,12 +10,16 @@ import {
   Modal,
   ImageBackground,
   Alert,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { createAppointment } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../components/ThemeContext';
+
+const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
 const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -454,7 +458,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-    paddingTop: 120,
+    paddingTop: statusBarHeight + 120,
   },
   content: {
     paddingHorizontal: 20,

@@ -78,6 +78,14 @@ const toDateOnly = (dateId) => {
 const today = new Date();
 const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
+const formatDateTime = (dateString, timeString) => {
+    if (!dateString || !timeString) return null;
+    const [year, month, day] = dateString.split('-').map(Number);
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const date = new Date(year, month - 1, day, hours, minutes);
+    return date.toISOString();
+};
+
 const getUpcomingAppointmentDate = (appointmentsData = []) => {
     // Se tiver dados reais, usa eles
     if (appointmentsData.length > 0) {
@@ -126,12 +134,6 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
     });
     const [selectedDate, setSelectedDate] = useState(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
     const [pickerVisible, setPickerVisible] = useState(false);
-    const [actionModalVisible, setActionModalVisible] = useState(false);
-    const [selectedAppointment, setSelectedAppointment] = useState(null);
-    const [cancelModalVisible, setCancelModalVisible] = useState(false);
-    const [rescheduleModalVisible, setRescheduleModalVisible] = useState(false);
-    const [newSelectedDate, setNewSelectedDate] = useState(selectedDate);
-    const [newSelectedTime, setNewSelectedTime] = useState('09:00');
     const [swipeStartX, setSwipeStartX] = useState(null);
     const [carouselWidth, setCarouselWidth] = useState(0);
     const [appointmentsData, setAppointmentsData] = useState([]);
@@ -189,6 +191,8 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                 })
                 .map(apt => ({
                     id: String(apt.id),
+                    data_hora: apt.data_hora,
+                    nome: usuario,
                     time: new Date(apt.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                     endTime: new Date(apt.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
                     date: new Date(apt.data_hora).toLocaleDateString('pt-BR'),
@@ -197,7 +201,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                     doctor: apt.medico_nome || 'Dr. Médico',
                     status: apt.status || 'agendada',
                     confirmed: apt.status === 'confirmada' || apt.status === 'agendada',
-                    observations: apt.observacoes || 'Nenhuma observação',
+                    observacoes: apt.observacoes || apt.observations || 'Nenhuma observação',
                     patientNotes: apt.notas_paciente || '',
                 }));
         }
@@ -227,12 +231,15 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
             return { label: 'CANCELADA', color: '#B91C1C', bg: '#FEE2E2', border: '#FECACA' };
         }
         if (normalized === 'realizada' || normalized === 'completa') {
-            return { label: 'COMPLETA', color: '#047857', bg: '#DCFCE7', border: '#BBF7D0' };
+            return { label: 'REALIZADA', color: '#047857', bg: '#DCFCE7', border: '#BBF7D0' };
         }
         if (normalized === 'perdida') {
             return { label: 'PERDIDA', color: '#111827', bg: '#E5E7EB', border: '#D1D5DB' };
         }
-        return { label: 'PENDENTE', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A' };
+        if (normalized === 'confirmada') {
+            return { label: 'CONFIRMADA', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A' };
+        }
+        return { label: 'AGENDADA', color: '#B45309', bg: '#FEF3C7', border: '#FDE68A' };
     };
 
     const appointments = getAppointmentsForDate(selectedDate);
@@ -326,108 +333,6 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
         setShouldResetPosition(false);
     }, [selectedDate, monthDays, carouselWidth, shouldResetPosition]);
 
-    const handleOpenAppointmentActions = (item) => {
-        setSelectedAppointment(item);
-        setActionModalVisible(true);
-    };
-
-    const closeActionModal = () => {
-        setActionModalVisible(false);
-        setSelectedAppointment(null);
-    };
-
-    const handleCancelAppointment = () => {
-        setCancelModalVisible(true);
-    };
-
-    const confirmCancelAppointment = async () => {
-        if (!selectedAppointment) return;
-
-        try {
-            const id = selectedAppointment.id;
-            // Chama a API para cancelar a consulta
-            await updateAppointment(id, { status: 'cancelada' });
-
-            // Atualiza o estado local para refletir a mudança imediatamente
-            setAppointmentsData(prevData =>
-                prevData.map(apt =>
-                    String(apt.id) === String(id)
-                        ? { ...apt, status: 'cancelada' }
-                        : apt
-                )
-            );
-
-            // Recarregar do servidor para garantir consistência (se possível)
-            try {
-                if (user?.id) {
-                    const refreshed = await getPatientAppointments(String(user.id));
-                    setAppointmentsData(refreshed || []);
-                } else if (user?.email) {
-                    const refreshed = await getPatientAppointments(user.email);
-                    setAppointmentsData(refreshed || []);
-                }
-            } catch (reloadErr) {
-                // Falha silenciosa ao recarregar: já atualizamos localmente
-                console.log('Reload appointments failed:', reloadErr);
-            }
-
-            setCancelModalVisible(false);
-            setActionModalVisible(false);
-            setSelectedAppointment(null);
-
-            Alert.alert('Sucesso', 'Consulta cancelada com sucesso.');
-        } catch (error) {
-            console.log('Error canceling appointment:', error);
-            Alert.alert('Erro', 'Não foi possível cancelar a consulta.');
-        }
-    };
-
-    const closeCancelModal = () => {
-        setCancelModalVisible(false);
-    };
-
-    const handleRescheduleAppointment = () => {
-        // Inicializar com a data e hora atuais da consulta
-        setNewSelectedDate(selectedAppointment?.date ? selectedAppointment.date.split('/').reverse().join('-') : selectedDate);
-        setNewSelectedTime(selectedAppointment?.time || '09:00');
-        setRescheduleModalVisible(true);
-    };
-
-    const confirmRescheduleAppointment = async () => {
-        if (!selectedAppointment) return;
-
-        try {
-            const newDataHora = formatDateTime(newSelectedDate, newSelectedTime);
-            console.log('Reagendando consulta:', selectedAppointment.id, 'para:', newDataHora);
-
-            // Simular alteração da data/hora localmente
-            setAppointmentsData(prevData =>
-                prevData.map(apt =>
-                    apt.id === selectedAppointment.id
-                        ? {
-                            ...apt,
-                            data_hora: newDataHora,
-                            time: new Date(newDataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                            date: new Date(newDataHora).toLocaleDateString('pt-BR')
-                        }
-                        : apt
-                )
-            );
-
-            setRescheduleModalVisible(false);
-            setActionModalVisible(false);
-            setSelectedAppointment(null);
-
-            Alert.alert('Sucesso', 'Consulta reagendada com sucesso.');
-        } catch (error) {
-            console.log('Error rescheduling appointment:', error);
-            Alert.alert('Erro', 'Não foi possível reagendar a consulta.');
-        }
-    };
-
-    const closeRescheduleModal = () => {
-        setRescheduleModalVisible(false);
-    };
 
     return (
         <ImageBackground
@@ -557,7 +462,11 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                                         }
                                     ]}
                                     activeOpacity={0.85}
-                                    onPress={() => handleOpenAppointmentActions(item)}
+                                    onPress={() => navigation.navigate('PatientAppointmentDetailsScreen', {
+                                        patientName: usuario,
+                                        appointment: item,
+                                        allowReschedule: item.status?.toLowerCase() === 'agendada',
+                                    })}
                                 >
                                     <View style={styles.cardHeader}>
                                         <View style={styles.cardTitleSection}>
@@ -593,181 +502,6 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                         </View>
                     )}
                 </ScrollView>
-
-                <Modal visible={actionModalVisible} transparent animationType="fade">
-                    <View style={styles.modalOverlay}>
-                        <View style={[styles.actionModalContent, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
-                            <Text style={[styles.actionModalTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Detalhes da Consulta</Text>
-
-                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
-                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Clínica</Text>
-                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.clinic}</Text>
-                            </View>
-
-                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
-                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Especialidade</Text>
-                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.specialty}</Text>
-                            </View>
-
-                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
-                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Médico</Text>
-                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Dr. {selectedAppointment?.doctor}</Text>
-                            </View>
-
-                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
-                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Data e Hora</Text>
-                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.date} às {selectedAppointment?.time}</Text>
-                            </View>
-
-                            <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
-                                <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Observações</Text>
-                                <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.observations}</Text>
-                            </View>
-
-                            {selectedAppointment?.patientNotes && (
-                                <View style={[styles.modalInfoSection, isDarkMode && { borderBottomColor: '#334155' }]}> 
-                                    <Text style={[styles.modalInfoLabel, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Suas Notas</Text>
-                                    <Text style={[styles.modalInfoValue, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{selectedAppointment?.patientNotes}</Text>
-                                </View>
-                            )}
-
-                            {selectedAppointment?.status?.toLowerCase() !== 'realizada' && selectedAppointment?.status?.toLowerCase() !== 'cancelada' && (
-                                <View style={styles.actionButtonsRow}>
-                                    <TouchableOpacity
-                                        style={styles.cancelAppointmentButton}
-                                        activeOpacity={0.8}
-                                        onPress={handleCancelAppointment}
-                                    >
-                                        <Text style={styles.cancelAppointmentButtonText}>Cancelar Consulta</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.rescheduleButton}
-                                        activeOpacity={0.8}
-                                        onPress={handleRescheduleAppointment}
-                                    >
-                                        <Text style={styles.rescheduleButtonText}>Reagendar</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-
-                            <TouchableOpacity style={styles.closeButton} activeOpacity={0.8} onPress={closeActionModal}>
-                                <Text style={styles.closeButtonText}>Fechar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
-
-                <Modal visible={cancelModalVisible} transparent animationType="fade">
-                    <View style={styles.modalOverlay}>
-                        <View style={[styles.cancelModalContent, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
-                            <View style={[styles.cancelModalIcon, isDarkMode && { backgroundColor: '#1E293B' }]}> 
-                                <Text style={styles.cancelModalIconText}>⚠️</Text>
-                            </View>
-                            <Text style={[styles.cancelModalTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Cancelar Consulta</Text>
-                            <Text style={[styles.cancelModalMessage, { color: isDarkMode ? '#CBD5E1' : '#374151' }]}> 
-                                Tem certeza que deseja cancelar esta consulta? Esta ação não pode ser desfeita.
-                            </Text>
-                            <View style={[styles.cancelModalDetails, isDarkMode && { backgroundColor: '#1E293B' }]}> 
-                                <Text style={[styles.cancelModalDetailText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}> 
-                                    {selectedAppointment?.clinic} - {selectedAppointment?.specialty}
-                                </Text>
-                                <Text style={[styles.cancelModalDetailText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}> 
-                                    {selectedAppointment?.date} às {selectedAppointment?.time}
-                                </Text>
-                            </View>
-                            <View style={styles.cancelModalButtonsRow}>
-                                <TouchableOpacity
-                                    style={styles.cancelModalCancelButton}
-                                    activeOpacity={0.8}
-                                    onPress={closeCancelModal}
-                                >
-                                    <Text style={styles.cancelModalCancelText}>Manter Consulta</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.cancelModalConfirmButton}
-                                    activeOpacity={0.8}
-                                    onPress={confirmCancelAppointment}
-                                >
-                                    <Text style={styles.cancelModalConfirmText}>Cancelar Consulta</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-
-                <Modal visible={rescheduleModalVisible} transparent animationType="fade">
-                    <View style={styles.modalOverlay}>
-                        <View style={[styles.pickerCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
-                            <View style={styles.pickerHeader}>
-                                <Text style={[styles.pickerTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Reagendar Consulta</Text>
-                                <TouchableOpacity
-                                    style={[styles.pickerCloseButton, isDarkMode && { backgroundColor: '#1E293B' }]}
-                                    onPress={closeRescheduleModal}
-                                    activeOpacity={0.8}
-                                >
-                                    <Text style={[styles.pickerCloseText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>✕</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <Text style={[styles.rescheduleInfo, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}> 
-                                {selectedAppointment?.clinic} - {selectedAppointment?.specialty}
-                            </Text>
-                            <Text style={[styles.rescheduleInfo, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}> 
-                                Dr. {selectedAppointment?.doctor}
-                            </Text>
-
-                            <Text style={[styles.timeSectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Nova Data</Text>
-                            <View style={styles.dateTimeSelector}>
-                                <TouchableOpacity
-                                    style={[styles.dateTimeButton, isDarkMode && { backgroundColor: '#1E293B' }]}
-                                    onPress={() => {
-                                        const tomorrow = new Date();
-                                        tomorrow.setDate(tomorrow.getDate() + 1);
-                                        setNewSelectedDate(tomorrow.toISOString().split('T')[0]);
-                                    }}
-                                    activeOpacity={0.8}
-                                >
-                                    <Text style={[styles.dateTimeButtonText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}> 
-                                        {new Date(newSelectedDate).toLocaleDateString('pt-BR')}
-                                    </Text>
-                                    <Text style={styles.dateTimeButtonIcon}>📅</Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <Text style={[styles.timeSectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Novo Horário</Text>
-                            <View style={styles.timeRow}>
-                                {['09:00', '09:30', '12:00', '12:30', '15:00', '16:30'].map((time) => {
-                                    const isActive = newSelectedTime === time;
-                                    return (
-                                        <TouchableOpacity
-                                            key={time}
-                                            style={[
-                                                styles.timeChip,
-                                                isActive && styles.timeChipActive,
-                                                isDarkMode && !isActive && { backgroundColor: '#1E293B', borderColor: '#334155' },
-                                                isDarkMode && isActive && { backgroundColor: '#38BDF8' }
-                                            ]}
-                                            activeOpacity={0.85}
-                                            onPress={() => setNewSelectedTime(time)}
-                                        >
-                                            <Text style={[styles.timeChipText, isActive && styles.timeChipTextActive, isDarkMode && !isActive && { color: '#E2E8F0' }, isDarkMode && isActive && { color: '#0F172A' }]}>{time}</Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-
-                            <View style={styles.pickerActionsRow}>
-                                <TouchableOpacity style={styles.pickerCancelButton} onPress={closeRescheduleModal} activeOpacity={0.85}>
-                                    <Text style={styles.pickerCancelText}>Cancelar</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.pickerConfirmButton} onPress={confirmRescheduleAppointment} activeOpacity={0.85}>
-                                    <Text style={styles.pickerConfirmText}>Confirmar Reagendamento</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-
                 <Modal visible={pickerVisible} transparent animationType="fade">
                     <View style={styles.modalOverlay}>
                         <View style={[styles.modalContent, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 

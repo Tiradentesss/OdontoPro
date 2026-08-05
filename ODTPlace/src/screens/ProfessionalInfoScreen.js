@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ImageBackground, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ImageBackground, ScrollView, Platform, StatusBar } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getDoctorById, getDoctorStats, getProfessionalAppointments } from '../services/api';
 import { useTheme } from '../components/ThemeContext';
+
+const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
 export default function ProfessionalInfoScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-    paddingTop: 120,
+    paddingTop: statusBarHeight + 120,
   },
   content: {
     paddingHorizontal: 20,
