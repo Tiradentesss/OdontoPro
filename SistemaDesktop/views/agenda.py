@@ -1161,7 +1161,7 @@ class Agenda(BaseScreen):
             width=button_width,
             height=30,
             fg_color=COLORS["danger"],
-            hover_color=COLORS["danger"],
+            hover_color=COLORS["danger_dark"],
             text_color='white',
             corner_radius=10,
             font=ctk.CTkFont(size=11, weight='bold'),
@@ -1188,7 +1188,7 @@ class Agenda(BaseScreen):
             width=button_width,
             height=32,
             fg_color=COLORS["success"],
-            hover_color=COLORS["success"],
+            hover_color=COLORS["success_dark"],
             corner_radius=10,
             font=ctk.CTkFont(size=11, weight='bold'),
             command=self.abrir_dialogo_marcar_consulta

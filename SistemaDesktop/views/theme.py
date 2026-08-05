@@ -37,10 +37,12 @@ COLORS_LIGHT = {
     "selected_row": "#DBEAFE",
     "success": "#10B981",
     "success_light": "#D1FAE5",
+    "success_dark": "#059669",
     "warning": "#F59E0B",
     "warning_light": "#FEF3C7",
     "danger": "#EF4444",
     "danger_light": "#FEE2E2",
+    "danger_dark": "#DC2626",
     "accent": "#06B6D4",
     "accent_hover": "#0891B2",
     "accent_light": "#E0F2FE",
@@ -104,10 +106,12 @@ COLORS_DARK = {
     # Status
     "success": "#10B981",
     "success_light": "#083B2A",
+    "success_dark": "#047857",
     "warning": "#F59E0B",
     "warning_light": "#78350F",
     "danger": "#EF4444",
     "danger_light": "#7F1D1D",
+    "danger_dark": "#B91C1C",
     
     # Efeitos
     "focus": "#0E7490"
