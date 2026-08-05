@@ -383,17 +383,8 @@ class Configuracoes(BaseScreen):
         self.setup_ui()
 
     def setup_ui(self):
-        self.container_conteudo = ctk.CTkFrame(
-            self.content_card,
-            fg_color=self.colors["bg_card"],
-            corner_radius=INNER_CARD_RADIUS,
-            border_width=0,
-            border_color=self.colors["border"]
-        )
-        self.container_conteudo.pack(fill="both", expand=True)
-
         # Header com tabs e botão de tema
-        header_container = ctk.CTkFrame(self.container_conteudo, fg_color="transparent", height=44)
+        header_container = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
         header_container.pack(fill="x", padx=20, pady=(20, 0))
         header_container.pack_propagate(False)
 
@@ -418,10 +409,19 @@ class Configuracoes(BaseScreen):
 
         self._build_tabs()
 
-        self.content_area = ctk.CTkFrame(self.container_conteudo, fg_color="transparent")
-        self.content_area.pack(fill="both", expand=True, padx=20, pady=(0, 0))
+        self.scroll_frame = ctk.CTkScrollableFrame(
+            self.content_card,
+            fg_color=COLORS["card"],
+            corner_radius=INNER_CARD_RADIUS,
+            border_width=1,
+            border_color=INNER_CARD_BORDER
+        )
+        self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
-        self._build_footer(self.container_conteudo)
+        self.container_conteudo = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
+        self.container_conteudo.pack(fill="both", expand=True, padx=0, pady=0)
+
+        self._build_footer(self.content_card)
         self.switch_tab(self.current_tab)
 
     def _build_tabs(self):
@@ -502,7 +502,7 @@ class Configuracoes(BaseScreen):
         for name, btn in self.tab_buttons.items():
             btn.configure(**(estilo_ativo if name == tab_name else estilo_inativo))
 
-        for widget in self.content_area.winfo_children():
+        for widget in self.container_conteudo.winfo_children():
             widget.destroy()
 
         render_methods = {
@@ -512,7 +512,7 @@ class Configuracoes(BaseScreen):
         }
 
         if tab_name in render_methods:
-            render_methods[tab_name](self.content_area)
+            render_methods[tab_name](self.container_conteudo)
 
     def _titulo(self, parent, texto, padx=15):
         ctk.CTkLabel(
@@ -582,13 +582,7 @@ class Configuracoes(BaseScreen):
     def _render_security(self, parent):
         self._titulo(parent, "Segurança da Conta")
 
-        scroll = ctk.CTkScrollableFrame(
-            parent,
-            fg_color="transparent",
-            scrollbar_button_color=COLORS["border"],
-            scrollbar_button_hover_color=COLORS["text_muted"]
-        )
-        scroll.pack(fill="both", expand=True, padx=0, pady=0)
+        scroll = parent
 
         _, form_body = self._create_card_section(
             scroll,
@@ -702,13 +696,7 @@ class Configuracoes(BaseScreen):
             self._render_preferences_description(self.sub_tab_content)
 
     def _render_preferences_geral(self, parent):
-        scroll = ctk.CTkScrollableFrame(
-            parent,
-            fg_color="transparent",
-            scrollbar_button_color=COLORS["border"],
-            scrollbar_button_hover_color=COLORS["text_muted"]
-        )
-        scroll.pack(fill="both", expand=True, padx=0, pady=0)
+        scroll = parent
 
         clinica_data = None
         endereco_data = None
@@ -945,8 +933,7 @@ class Configuracoes(BaseScreen):
                 self.address_entries[campo].set("")
 
     def _render_preferences_services(self, parent):
-        scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
-        scroll.pack(fill="both", expand=True, padx=0, pady=0)
+        scroll = parent
 
         self._secao_titulo(scroll, "Serviços Oferecidos", padx=0)
 
@@ -964,8 +951,7 @@ class Configuracoes(BaseScreen):
         self.services_text.insert("1.0", "• Limpeza profissional\n• Clareamento dental\n• Implantes\n• Aparelhos ortodônticos")
 
     def _render_preferences_description(self, parent):
-        scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent")
-        scroll.pack(fill="both", expand=True, padx=0, pady=0)
+        scroll = parent
 
         self._secao_titulo(scroll, "Sobre a Clínica", padx=0)
 
@@ -986,13 +972,7 @@ class Configuracoes(BaseScreen):
     def _render_profile(self, parent):
         self._titulo(parent, "Meu Perfil")
 
-        scroll = ctk.CTkScrollableFrame(
-            parent,
-            fg_color="transparent",
-            scrollbar_button_color=COLORS["border"],
-            scrollbar_button_hover_color=COLORS["text_muted"]
-        )
-        scroll.pack(fill="both", expand=True, padx=0, pady=0)
+        scroll = parent
 
         _, form_body = self._create_card_section(
             scroll,
