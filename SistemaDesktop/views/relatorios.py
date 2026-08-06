@@ -32,6 +32,8 @@ class Relatorios(BaseScreen):
         self._current_report_data = None
         self.export_button = None
         self._export_menu = None
+        self._chart_hover_connection_id = None
+        self._chart_bar_tooltip = None
 
         self.periodo_var = ctk.StringVar(value="Hoje")
         self.medico_var = ctk.StringVar(value="Todos")
@@ -842,20 +844,45 @@ class Relatorios(BaseScreen):
         params = filtro_params + [inicio, fim]
         cursor.execute(f"""
             SELECT {group_expr} AS periodo,
+                   LOWER(TRIM(c.status)) AS status,
                    COUNT(*) AS total
             FROM odontoPro_consulta c
             LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
             LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id
             WHERE {filtro_base}
               AND c.data_hora BETWEEN %s AND %s
-            GROUP BY periodo
+            GROUP BY periodo, LOWER(TRIM(c.status))
             ORDER BY periodo
         """, tuple(params))
 
         rows = cursor.fetchall() or []
-        counts = {row[0]: int(row[1] or 0) for row in rows}
-        values = [counts.get(key, 0) for key in label_keys]
-        return {"labels": labels, "values": values}
+        details = {}
+        for row in rows:
+            periodo_value, status_value, total = row
+            total = int(total or 0)
+            if periodo_value not in details:
+                details[periodo_value] = {
+                    "total": 0,
+                    "realizadas": 0,
+                    "canceladas": 0,
+                }
+            details[periodo_value]["total"] += total
+            if status_value == "realizada":
+                details[periodo_value]["realizadas"] = total
+            elif status_value == "cancelada":
+                details[periodo_value]["canceladas"] = total
+
+        values = [details.get(key, {}).get("total", 0) for key in label_keys]
+        detail_rows = [
+            {
+                "label": label,
+                "total": details.get(key, {}).get("total", 0),
+                "realizadas": details.get(key, {}).get("realizadas", 0),
+                "canceladas": details.get(key, {}).get("canceladas", 0),
+            }
+            for key, label in zip(label_keys, labels)
+        ]
+        return {"labels": labels, "values": values, "details": detail_rows}
 
     def _clear_chart_container(self, container):
         for child in container.winfo_children():
@@ -931,9 +958,21 @@ class Relatorios(BaseScreen):
         ax.xaxis.grid(False)
         ax.set_ylabel("Consultas", color=text_color, fontsize=10, labelpad=12)
 
-        for x, value in zip(positions, values):
+        bar_patches = []
+        for index, (x, value) in enumerate(zip(positions, values)):
             if value <= 0:
                 continue
+            patch = FancyBboxPatch(
+                (x - bar_width / 2, 0),
+                bar_width,
+                value,
+                boxstyle="round,pad=0.02,rounding_size=6",
+                linewidth=0,
+                facecolor=bar_color,
+                edgecolor="none",
+            )
+            ax.add_patch(patch)
+            bar_patches.append((patch, chart_period["details"][index]))
             ax.annotate(
                 f"{int(value)}",
                 xy=(x, value),
@@ -951,6 +990,51 @@ class Relatorios(BaseScreen):
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
         self._chart_canvas = canvas
+
+        if self._chart_hover_connection_id is not None:
+            try:
+                self._chart_canvas.mpl_disconnect(self._chart_hover_connection_id)
+            except Exception:
+                pass
+
+        self._chart_bar_tooltip = ax.annotate(
+            "",
+            xy=(0, 0),
+            xytext=(10, 10),
+            textcoords="offset points",
+            bbox={"boxstyle": "round,pad=0.4", "fc": "white", "ec": border_color, "alpha": 0.95},
+            fontsize=9,
+            color=text_color,
+            visible=False,
+        )
+
+        def _on_chart_hover(event):
+            if event.inaxes != ax:
+                if self._chart_bar_tooltip is not None:
+                    self._chart_bar_tooltip.set_visible(False)
+                    self._chart_canvas.draw_idle()
+                return
+
+            for patch, details in bar_patches:
+                contains, _ = patch.contains(event)
+                if contains:
+                    tooltip_text = (
+                        f"{details['label']}\n"
+                        f"{details['total']} consultas\n"
+                        f"{details['canceladas']} canceladas\n"
+                        f"{details['realizadas']} concluídas"
+                    )
+                    self._chart_bar_tooltip.set_text(tooltip_text)
+                    self._chart_bar_tooltip.xy = (event.xdata, event.ydata)
+                    self._chart_bar_tooltip.set_visible(True)
+                    self._chart_canvas.draw_idle()
+                    break
+            else:
+                if self._chart_bar_tooltip is not None and self._chart_bar_tooltip.get_visible():
+                    self._chart_bar_tooltip.set_visible(False)
+                    self._chart_canvas.draw_idle()
+
+        self._chart_hover_connection_id = self._chart_canvas.mpl_connect("motion_notify_event", _on_chart_hover)
 
     def _render_pie_chart(self, specialty_data):
         self._clear_chart_container(self._specialty_canvas_container)
