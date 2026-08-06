@@ -26,6 +26,8 @@ class Relatorios(BaseScreen):
         self._load_queue = queue.Queue()
         self._current_thread_id = 0
         self._timeout_id = None
+        self._loading_animation_id = None
+        self._loading_dot_count = 0
         self._cache = {}
         self._medicos_map = {"Todos": None}
         self._especialidades_map = {"Todos": None}
@@ -250,6 +252,43 @@ class Relatorios(BaseScreen):
         )
         self._loading_label.pack(anchor="w", padx=20, pady=(0, 10))
         self._loading_label.pack_forget()
+
+        self.kpi_frame = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
+        self.kpi_frame.pack(fill="x", padx=20, pady=(0, 20))
+        for idx in range(4):
+            self.kpi_frame.grid_columnconfigure(idx, weight=1, uniform="kpi_cards")
+
+        self._kpi_card_labels = {}
+        kpi_cards = [
+            ("📅", "Total de Consultas", "total_consultas", "No período selecionado"),
+            ("✅", "Taxa de Comparecimento", "taxa_comparecimento", "Consultas realizadas"),
+            ("❌", "Taxa de Cancelamento", "taxa_cancelamento", "Consultas canceladas"),
+            ("🏆", "Médico Mais Produtivo", "medico_mais_produtivo", ""),
+        ]
+
+        for index, (icon, title, key, description) in enumerate(kpi_cards):
+            card = ctk.CTkFrame(
+                self.kpi_frame,
+                fg_color=COLORS["card"],
+                corner_radius=INNER_CARD_RADIUS,
+                border_width=1,
+                border_color=INNER_CARD_BORDER
+            )
+            card.grid(row=0, column=index, sticky="nsew", padx=(0, 10) if index < len(kpi_cards) - 1 else 0)
+
+            ctk.CTkLabel(card, text=icon, font=font("subtitle", "bold"), text_color=COLORS["primary"]).pack(anchor="w", padx=16, pady=(16, 4))
+            ctk.CTkLabel(card, text=title, font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16)
+
+            value_label = ctk.CTkLabel(card, text="--", font=font("title", "bold"), text_color=COLORS["text"])
+            value_label.pack(anchor="w", padx=16, pady=(8, 2))
+
+            desc_label = ctk.CTkLabel(card, text=description, font=font("small"), text_color=COLORS["text_secondary"])
+            desc_label.pack(anchor="w", padx=16, pady=(0, 16))
+
+            self._kpi_card_labels[key] = {
+                "value": value_label,
+                "description": desc_label,
+            }
 
         self.chart_card = ctk.CTkFrame(
             self.scroll_frame,
@@ -550,6 +589,7 @@ class Relatorios(BaseScreen):
         self.update_button.configure(state="disabled")
         self._loading_label.configure(text="Carregando relatório...")
         self._loading_label.pack(anchor="w", padx=20, pady=(0, 10))
+        self._start_loading_animation()
 
         snapshot = self._capture_filter_snapshot()
         medico_id = self._medicos_map.get(snapshot["medico_name"])
@@ -594,7 +634,34 @@ class Relatorios(BaseScreen):
         self._loading = False
         self._timeout_id = None
         self.update_button.configure(state="normal")
+        self._stop_loading_animation()
         self._loading_label.configure(text="Tempo de carregamento esgotado. Tente novamente.")
+
+    def _start_loading_animation(self):
+        if self._loading_animation_id is not None:
+            return
+
+        self._loading_dot_count = 0
+
+        def update_text():
+            if not self._loading:
+                self._stop_loading_animation()
+                return
+
+            self._loading_dot_count = (self._loading_dot_count + 1) % 4
+            dots = "." * self._loading_dot_count
+            self._loading_label.configure(text=f"Carregando relatório{dots}")
+            self._loading_animation_id = self.after(300, update_text)
+
+        update_text()
+
+    def _stop_loading_animation(self):
+        if self._loading_animation_id is not None:
+            try:
+                self.after_cancel(self._loading_animation_id)
+            except Exception:
+                pass
+            self._loading_animation_id = None
 
     def _capture_filter_snapshot(self):
         return {
@@ -1053,11 +1120,10 @@ class Relatorios(BaseScreen):
             COLORS.get("gray", "#6B7280"),
         ]
 
-        fig = Figure(figsize=(6, 3.5), dpi=100, facecolor=COLORS["card"])
+        fig = Figure(figsize=(7, 3.3), dpi=100, facecolor=COLORS["card"])
         ax = fig.add_subplot(111)
         ax.set_facecolor(COLORS["card"])
 
-        # Se não houver valores (todos zero), evitar chamar ax.pie() — mostra mensagem amigável
         if sum(values) == 0:
             empty_label = ctk.CTkLabel(
                 self._specialty_canvas_container,
@@ -1068,23 +1134,37 @@ class Relatorios(BaseScreen):
             empty_label.pack(padx=12, pady=12)
             return
 
-        wedges, texts, autotexts = ax.pie(
+        total = sum(values)
+        wedges, _, autotexts = ax.pie(
             values,
-            labels=labels,
+            labels=None,
             colors=pie_colors[: len(values)],
-            autopct="%1.0f%%",
+            startangle=90,
+            autopct=lambda pct: f"{pct:.0f}%",
+            pctdistance=0.82,
             textprops={"color": COLORS["text"], "fontsize": 9},
-            wedgeprops={"edgecolor": COLORS["card"], "linewidth": 1}
+            wedgeprops={"width": 0.58, "edgecolor": COLORS["card"], "linewidth": 1.2}
         )
 
-        for text in texts:
-            text.set_color(COLORS["text"])
         for autotext in autotexts:
             autotext.set_color(COLORS["text"])
             autotext.set_fontsize(8)
+            autotext.set_fontweight("bold")
 
+        legend_labels = [f"{label}: {int(round((value / total) * 100))}%" for label, value in zip(labels, values)]
+        ax.legend(
+            wedges,
+            legend_labels,
+            loc="center left",
+            bbox_to_anchor=(1.0, 0.5),
+            frameon=False,
+            fontsize=9,
+            labelcolor=COLORS["text"],
+        )
+
+        ax.set_title("Consultas por Especialidade", color=COLORS["text"], fontsize=10, pad=8)
         ax.axis("equal")
-        fig.tight_layout()
+        fig.subplots_adjust(left=0.02, right=0.76, top=0.9, bottom=0.08)
 
         canvas = FigureCanvasTkAgg(fig, master=self._specialty_canvas_container)
         canvas.draw()
@@ -1155,6 +1235,8 @@ class Relatorios(BaseScreen):
         if self.export_button is not None:
             self.export_button.configure(state="normal")
 
+        self._update_kpi_cards(summary, productivity_rows)
+
         if medicos is not None or especialidades is not None:
             self._update_filter_options(medicos or [], especialidades or [])
 
@@ -1164,6 +1246,35 @@ class Relatorios(BaseScreen):
             self._render_pie_chart(specialty_data)
         if productivity_rows is not None:
             self._render_productivity(productivity_rows)
+
+    def _update_kpi_cards(self, summary, productivity_rows):
+        total_consultas = summary.get("total_consultas", 0)
+        cancelamentos = summary.get("cancelamentos", 0)
+        comparecimento_pct = summary.get("comparecimento", 0)
+
+        if self._kpi_card_labels.get("total_consultas"):
+            self._kpi_card_labels["total_consultas"]["value"].configure(text=str(total_consultas))
+
+        if self._kpi_card_labels.get("taxa_comparecimento"):
+            comparecimento_text = f"{int(comparecimento_pct)}%" if total_consultas else "--"
+            self._kpi_card_labels["taxa_comparecimento"]["value"].configure(text=comparecimento_text)
+
+        if self._kpi_card_labels.get("taxa_cancelamento"):
+            if total_consultas:
+                taxa_cancelamento = round((cancelamentos / total_consultas) * 100)
+                self._kpi_card_labels["taxa_cancelamento"]["value"].configure(text=f"{taxa_cancelamento}%")
+            else:
+                self._kpi_card_labels["taxa_cancelamento"]["value"].configure(text="--")
+
+        if self._kpi_card_labels.get("medico_mais_produtivo"):
+            if productivity_rows:
+                best_medico = productivity_rows[0][0] or "Nenhum"
+                consultas = productivity_rows[0][2] or 0
+                self._kpi_card_labels["medico_mais_produtivo"]["value"].configure(text=best_medico)
+                self._kpi_card_labels["medico_mais_produtivo"]["description"].configure(text=f"{consultas} consultas")
+            else:
+                self._kpi_card_labels["medico_mais_produtivo"]["value"].configure(text="Nenhum")
+                self._kpi_card_labels["medico_mais_produtivo"]["description"].configure(text="")
 
     def _process_load_queue(self):
         processed_item = None
@@ -1194,6 +1305,7 @@ class Relatorios(BaseScreen):
             self._timeout_id = None
 
         self._loading = False
+        self._stop_loading_animation()
         self.update_button.configure(state="normal")
         if self.export_button is not None:
             self.export_button.configure(state="disabled")
@@ -1205,7 +1317,6 @@ class Relatorios(BaseScreen):
             return
 
         self._apply_loaded_data(summary, chart_period, specialty_data, productivity_rows, medicos, especialidades)
-        pass
 
     def create_transactions_section(self):
         container = ctk.CTkFrame(self.main_container, fg_color=COLORS["card"],
