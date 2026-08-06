@@ -263,7 +263,7 @@ class Relatorios(BaseScreen):
             ("📅", "Total de Consultas", "total_consultas", "No período selecionado"),
             ("✅", "Taxa de Comparecimento", "taxa_comparecimento", "Consultas realizadas"),
             ("❌", "Taxa de Cancelamento", "taxa_cancelamento", "Consultas canceladas"),
-            ("🏆", "Médico Mais Produtivo", "medico_mais_produtivo", ""),
+            ("🏆", "Médico em Destaque", "medico_mais_produtivo", "Nenhuma consulta encontrada"),
         ]
 
         for index, (icon, title, key, description) in enumerate(kpi_cards):
@@ -339,7 +339,7 @@ class Relatorios(BaseScreen):
 
         ctk.CTkLabel(
             self.productivity_card,
-            text="Médicos Mais Produtivos",
+            text="Médicos em Destaque",
             font=font("subtitle", "bold"),
             text_color=COLORS["text"]
         ).pack(anchor="w", padx=20, pady=(20, 10))
@@ -1185,18 +1185,42 @@ class Relatorios(BaseScreen):
             empty_label.pack(anchor="w", pady=12)
             return
 
+        max_value = max(int(row[2] or 0) for row in productivity_rows) if productivity_rows else 1
+
         for index, row_data in enumerate(productivity_rows):
             medico, especialidade, consultas = row_data
+            consultas_value = int(consultas or 0)
             row_bg = COLORS["bg_soft"] if index % 2 == 0 else COLORS["card"]
             row = ctk.CTkFrame(self._productivity_rows_frame, fg_color=row_bg, corner_radius=12)
-            row.pack(fill="x", padx=0, pady=2)
-            row.columnconfigure((0, 1, 2, 3), weight=1, uniform="prod_cols")
+            row.pack(fill="x", padx=0, pady=4)
+            row.columnconfigure(0, weight=0)
+            row.columnconfigure(1, weight=1)
+            row.columnconfigure(2, weight=0)
+            row.columnconfigure(3, weight=0)
 
-            pos_label = "" if index >= 3 else ["🥇", "🥈", "🥉"][index]
-            ctk.CTkLabel(row, text=pos_label, font=font("text"), text_color=COLORS["text"], anchor="w").grid(row=0, column=0, sticky="w", padx=12, pady=14)
-            ctk.CTkLabel(row, text=medico or "-", font=font("text"), text_color=COLORS["text"], anchor="w").grid(row=0, column=1, sticky="w", padx=12, pady=14)
-            ctk.CTkLabel(row, text=especialidade or "-", font=font("text"), text_color=COLORS["text_secondary"], anchor="w").grid(row=0, column=2, sticky="w", padx=12, pady=14)
-            ctk.CTkLabel(row, text=str(int(consultas or 0)), font=font("text", "bold"), text_color=COLORS["text"], anchor="e").grid(row=0, column=3, sticky="e", padx=12, pady=14)
+            medal = ["🥇", "🥈", "🥉"][index] if index < 3 else f"#{index + 1}"
+            ctk.CTkLabel(row, text=medal, font=font("text", "bold"), text_color=COLORS["text"], anchor="w").grid(row=0, column=0, sticky="w", padx=(12, 8), pady=12)
+
+            name_frame = ctk.CTkFrame(row, fg_color="transparent")
+            name_frame.grid(row=0, column=1, sticky="ew", padx=(0, 8), pady=12)
+            name_frame.columnconfigure(0, weight=1)
+
+            ctk.CTkLabel(name_frame, text=medico or "-", font=font("text", "bold"), text_color=COLORS["text"], anchor="w").grid(row=0, column=0, sticky="w")
+            if especialidade:
+                ctk.CTkLabel(name_frame, text=especialidade, font=font("small"), text_color=COLORS["text_secondary"], anchor="w").grid(row=1, column=0, sticky="w")
+
+            bar_container = ctk.CTkFrame(row, fg_color="transparent")
+            bar_container.grid(row=0, column=2, sticky="ew", padx=(0, 10), pady=12)
+            bar_container.columnconfigure(0, weight=1)
+            bar_container.columnconfigure(1, weight=0)
+
+            bar_width = max(0.08, (consultas_value / max_value) if max_value else 0.0)
+            bar_fill = ctk.CTkFrame(bar_container, height=8, fg_color=COLORS["primary"], corner_radius=999)
+            bar_fill.grid(row=0, column=0, sticky="ew")
+            bar_fill.configure(width=max(20, int(140 * bar_width)))
+            ctk.CTkFrame(bar_container, height=8, fg_color=COLORS["bg_soft"], corner_radius=999).grid(row=0, column=0, sticky="ew")
+
+            ctk.CTkLabel(row, text=str(consultas_value), font=font("text", "bold"), text_color=COLORS["text"], anchor="e").grid(row=0, column=3, sticky="e", padx=(0, 12), pady=12)
 
     def _update_filter_options(self, medicos, especialidades):
         if medicos:
@@ -1274,7 +1298,7 @@ class Relatorios(BaseScreen):
                 self._kpi_card_labels["medico_mais_produtivo"]["description"].configure(text=f"{consultas} consultas")
             else:
                 self._kpi_card_labels["medico_mais_produtivo"]["value"].configure(text="Nenhum")
-                self._kpi_card_labels["medico_mais_produtivo"]["description"].configure(text="")
+                self._kpi_card_labels["medico_mais_produtivo"]["description"].configure(text="Nenhuma consulta encontrada")
 
     def _process_load_queue(self):
         processed_item = None
