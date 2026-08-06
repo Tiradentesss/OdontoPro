@@ -254,7 +254,7 @@ class Relatorios(BaseScreen):
             )
             card.grid(row=0, column=index, sticky="nsew", padx=(0, 10) if index < len(kpi_cards) - 1 else 0)
 
-            icon_image = self._create_kpi_icon(glyph, COLORS["primary"], size=26)
+            icon_image = self._create_kpi_icon(glyph, COLORS["primary"], size=35)
             icon_label = ctk.CTkLabel(card, image=icon_image, text="", fg_color="transparent")
             icon_label.pack(anchor="w", padx=16, pady=(16, 4))
             if icon_image is not None:
