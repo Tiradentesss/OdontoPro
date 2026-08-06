@@ -1,9 +1,15 @@
+import csv
+import queue
+import threading
+import zipfile
+from datetime import datetime, timedelta
+from tkinter import Menu, filedialog
+from xml.sax.saxutils import escape as xml_escape
+
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import threading
-import queue
-from datetime import datetime, timedelta
+from matplotlib.patches import FancyBboxPatch
 
 from config.database import get_connection
 from .base import BaseScreen
@@ -23,6 +29,9 @@ class Relatorios(BaseScreen):
         self._cache = {}
         self._medicos_map = {"Todos": None}
         self._especialidades_map = {"Todos": None}
+        self._current_report_data = None
+        self.export_button = None
+        self._export_menu = None
 
         self.periodo_var = ctk.StringVar(value="Hoje")
         self.medico_var = ctk.StringVar(value="Todos")
@@ -54,17 +63,24 @@ class Relatorios(BaseScreen):
             text_color=COLORS["text"]
         ).pack(side="left")
 
-        ctk.CTkButton(
+        self.export_button = ctk.CTkButton(
             header,
-            text="Ações",
-            width=100,
+            text="⬇ Exportar",
+            width=110,
             height=34,
             fg_color=COLORS["primary"],
             hover_color=COLORS["primary_dark"],
             text_color="white",
             corner_radius=8,
-            state="disabled"
-        ).pack(side="right")
+            state="disabled",
+            command=self._show_export_menu
+        )
+        self.export_button.pack(side="right")
+
+        self._export_menu = Menu(self.scroll_frame, tearoff=0)
+        self._export_menu.add_command(label="Exportar para PDF", command=lambda: self._export_report("pdf"))
+        self._export_menu.add_command(label="Exportar para Excel (.xlsx)", command=lambda: self._export_report("xlsx"))
+        self._export_menu.add_command(label="Exportar para CSV", command=lambda: self._export_report("csv"))
 
         cards_frame = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
         cards_frame.pack(fill="x", padx=20, pady=(0, 20))
@@ -340,6 +356,189 @@ class Relatorios(BaseScreen):
             )
             value_label.pack(anchor="w", padx=16, pady=(0, 16))
             self._stat_value_labels[label_text] = value_label
+
+    def _show_export_menu(self):
+        if self.export_button is None:
+            return
+        if self._current_report_data is None:
+            return
+        self._export_menu.post(self.export_button.winfo_rootx(), self.export_button.winfo_rooty() + self.export_button.winfo_height())
+
+    def _build_export_payload(self, summary, chart_period, specialty_data, productivity_rows):
+        snapshot = self._capture_filter_snapshot()
+        payload = {
+            "filters": {
+                "Período": snapshot.get("periodo", ""),
+                "Médico": snapshot.get("medico_name", ""),
+                "Especialidade": snapshot.get("especialidade_name", ""),
+                "Status": snapshot.get("status", ""),
+            },
+            "summary": {
+                "Consultas": summary.get("total_consultas", 0),
+                "Pacientes": summary.get("total_pacientes", 0),
+                "Médicos": summary.get("total_medicos", 0),
+                "Cancelamentos": summary.get("cancelamentos", 0),
+                "Comparecimento": f"{summary.get('comparecimento', 0)}%",
+                "Novos Pacientes": summary.get("novos_pacientes", 0),
+                "Retornos": summary.get("retornos", 0),
+            },
+            "chart_period": chart_period or {"labels": [], "values": []},
+            "specialty_data": specialty_data or [],
+            "productivity_rows": productivity_rows or [],
+        }
+        return payload
+
+    def _export_report(self, export_format):
+        if self._current_report_data is None:
+            return
+
+        default_name = f"relatorio_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        if export_format == "pdf":
+            file_types = [("Arquivo PDF", "*.pdf")]
+            extension = "pdf"
+        elif export_format == "xlsx":
+            file_types = [("Planilha Excel", "*.xlsx")]
+            extension = "xlsx"
+        else:
+            file_types = [("CSV", "*.csv")]
+            extension = "csv"
+
+        path = filedialog.asksaveasfilename(
+            defaultextension=f".{extension}",
+            initialfile=f"{default_name}.{extension}",
+            filetypes=file_types,
+        )
+        if not path:
+            return
+
+        try:
+            if export_format == "pdf":
+                self._write_pdf_export(path, self._current_report_data)
+            elif export_format == "xlsx":
+                self._write_excel_export(path, self._current_report_data)
+            else:
+                self._write_csv_export(path, self._current_report_data)
+        except Exception as exc:
+            print(f"[RELATÓRIOS] erro ao exportar: {exc}")
+
+    def _write_csv_export(self, path, payload):
+        rows = []
+        rows.append(["Tipo", "Campo", "Valor"])
+        for label, value in payload["filters"].items():
+            rows.append(["Filtros", label, value])
+        for label, value in payload["summary"].items():
+            rows.append(["Resumo", label, value])
+        for index, label in enumerate(payload["chart_period"].get("labels", [])):
+            rows.append(["Período", label, payload["chart_period"].get("values", [])[index] if index < len(payload["chart_period"].get("values", [])) else 0])
+        for item in payload["specialty_data"]:
+            rows.append(["Especialidade", item[0] or "Sem Especialidade", item[1] or 0])
+        for index, row in enumerate(payload["productivity_rows"]):
+            rows.append(["Produtividade", f"{index + 1} - {row[0] or '-'}", f"{row[1] or '-'} | {row[2] or 0}"])
+
+        with open(path, "w", newline="", encoding="utf-8-sig") as handle:
+            writer = csv.writer(handle)
+            writer.writerows(rows)
+
+    def _write_excel_export(self, path, payload):
+        rows = []
+        rows.append(["Tipo", "Campo", "Valor"])
+        for label, value in payload["filters"].items():
+            rows.append(["Filtros", label, value])
+        for label, value in payload["summary"].items():
+            rows.append(["Resumo", label, value])
+        for index, label in enumerate(payload["chart_period"].get("labels", [])):
+            rows.append(["Período", label, payload["chart_period"].get("values", [])[index] if index < len(payload["chart_period"].get("values", [])) else 0])
+        for item in payload["specialty_data"]:
+            rows.append(["Especialidade", item[0] or "Sem Especialidade", item[1] or 0])
+        for index, row in enumerate(payload["productivity_rows"]):
+            rows.append(["Produtividade", f"{index + 1} - {row[0] or '-'}", f"{row[1] or '-'} | {row[2] or 0}"])
+
+        try:
+            from openpyxl import Workbook
+        except Exception:
+            Workbook = None
+
+        if Workbook is not None:
+            workbook = Workbook()
+            sheet = workbook.active
+            sheet.title = "Relatório"
+            for row in rows:
+                sheet.append(row)
+            workbook.save(path)
+            return
+
+        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
+            sheet_xml = []
+            for row in rows:
+                cells = []
+                for value in row:
+                    text = str(value)
+                    cells.append(f"<c t=\"inlineStr\"><is><t>{xml_escape(text)}</t></is></c>")
+                sheet_xml.append(f"<row>{''.join(cells)}</row>")
+            worksheet = f"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><sheetData>{''.join(sheet_xml)}</sheetData></worksheet>"
+            content_types = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>'
+            rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>'
+            workbook_xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Relatório" sheetId="1" r:id="rId1"/></sheets></workbook>'
+            app_xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>OdontoPro</Application></Properties>'
+            core_xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>Relatório</dc:title><dc:creator>OdontoPro</dc:creator><cp:lastModifiedBy>OdontoPro</cp:lastModifiedBy></cp:coreProperties>'
+            archive.writestr("[Content_Types].xml", content_types)
+            archive.writestr("_rels/.rels", rels)
+            archive.writestr("docProps/app.xml", app_xml)
+            archive.writestr("docProps/core.xml", core_xml)
+            archive.writestr("xl/workbook.xml", workbook_xml)
+            archive.writestr("xl/_rels/workbook.xml.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>')
+            archive.writestr("xl/worksheets/sheet1.xml", worksheet)
+
+    def _write_pdf_export(self, path, payload):
+        lines = [
+            "Relatório OdontoPro",
+            "",
+            "Filtros",
+        ]
+        for label, value in payload["filters"].items():
+            lines.append(f"- {label}: {value}")
+        lines.extend(["", "Resumo"])
+        for label, value in payload["summary"].items():
+            lines.append(f"- {label}: {value}")
+        lines.extend(["", "Consultas por Período"])
+        for index, label in enumerate(payload["chart_period"].get("labels", [])):
+            value = payload["chart_period"].get("values", [])[index] if index < len(payload["chart_period"].get("values", [])) else 0
+            lines.append(f"- {label}: {value}")
+        lines.extend(["", "Consultas por Especialidade"])
+        for item in payload["specialty_data"]:
+            lines.append(f"- {item[0] or 'Sem Especialidade'}: {item[1] or 0}")
+        lines.extend(["", "Médicos Mais Produtivos"])
+        for index, row in enumerate(payload["productivity_rows"]):
+            lines.append(f"- {index + 1}. {row[0] or '-'} | {row[1] or '-'} | {row[2] or 0}")
+
+        escaped_lines = []
+        for line in lines:
+            escaped_lines.append(line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)"))
+
+        content = "\n".join(escaped_lines)
+        stream = f"BT /F1 12 Tf 50 760 Td ({content}) Tj ET"
+        objects = [
+            "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+            "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
+            "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj",
+            f"4 0 obj << /Length {len(stream.encode('utf-8'))} >> stream\n{stream}\nendstream endobj",
+            "5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
+        ]
+        pdf_parts = ["%PDF-1.4", ""]
+        offsets = []
+        current_offset = 0
+        for obj in objects:
+            offsets.append(current_offset)
+            pdf_parts.append(obj)
+            current_offset = len("\n".join(pdf_parts).encode("utf-8"))
+        xref_offset = len("\n".join(pdf_parts[:-1]).encode("utf-8"))
+        pdf = "\n".join(pdf_parts)
+        pdf += f"\nxref\n0 6\n0000000000 65535 f \n"
+        for offset in offsets:
+            pdf += f"{offset:010d} 00000 n \n"
+        pdf += "trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n0\n%%EOF"
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(pdf)
 
     def _load_data_async(self):
         if self._loading:
@@ -668,42 +867,89 @@ class Relatorios(BaseScreen):
 
         labels = chart_period.get("labels", [])
         values = chart_period.get("values", [])
-        fig = Figure(figsize=(9, 3), dpi=100, facecolor=COLORS["card"])
+        if not labels or sum(values) == 0:
+            empty_frame = ctk.CTkFrame(self._chart_canvas_container, fg_color="transparent")
+            empty_frame.pack(fill="both", expand=True)
+            ctk.CTkLabel(
+                empty_frame,
+                text="📅",
+                font=font("title", "bold"),
+                text_color=COLORS["text"],
+            ).pack(pady=(40, 8))
+            ctk.CTkLabel(
+                empty_frame,
+                text="Nenhuma consulta encontrada para o período selecionado.",
+                font=font("small", "bold"),
+                text_color=COLORS["text_secondary"],
+            ).pack(pady=(0, 4))
+            ctk.CTkLabel(
+                empty_frame,
+                text="Altere os filtros para visualizar os dados.",
+                font=font("small"),
+                text_color=COLORS["text_secondary"],
+            ).pack()
+            return
+
+        fig = Figure(figsize=(9, 3.2), dpi=100, facecolor="white")
         ax = fig.add_subplot(111)
-        ax.set_facecolor(COLORS["card"])
+        ax.set_facecolor("white")
 
         bar_color = COLORS.get("primary", "#4f8cff")
         text_color = COLORS.get("text", "#000000")
         border_color = COLORS.get("border", "#cccccc")
+        grid_color = COLORS.get("border", "#cccccc")
 
-        bars = ax.bar(range(len(labels)), values, color=bar_color, edgecolor=bar_color, width=0.65)
-        ax.set_xticks(range(len(labels)))
-        ax.set_xticklabels(labels, fontsize=9, color=text_color, rotation=45, ha="right")
-        ax.tick_params(axis="y", colors=text_color)
+        positions = range(len(labels))
+        bar_width = 0.65
+
+        for x, value in zip(positions, values):
+            if value <= 0:
+                continue
+            bar = FancyBboxPatch(
+                (x - bar_width / 2, 0),
+                bar_width,
+                value,
+                boxstyle="round,pad=0.02,rounding_size=6",
+                linewidth=0,
+                facecolor=bar_color,
+                edgecolor="none",
+            )
+            ax.add_patch(bar)
+
+        ax.set_xlim(-0.5, len(labels) - 0.5)
+        ax.set_ylim(0, max(values) * 1.15 if values else 1)
+        ax.set_xticks(positions)
+        ax.set_xticklabels(labels, fontsize=10, color=text_color, rotation=45, ha="right")
+        ax.tick_params(axis="y", colors=text_color, labelsize=10)
+        ax.tick_params(axis="x", length=0)
+
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
         ax.spines["left"].set_color(border_color)
         ax.spines["bottom"].set_color(border_color)
-        ax.yaxis.grid(True, color=border_color, alpha=0.25, linestyle="--")
+        ax.yaxis.grid(True, color=grid_color, alpha=0.18, linestyle="--")
         ax.xaxis.grid(False)
-        ax.set_ylabel("Consultas", color=text_color, fontsize=9)
+        ax.set_ylabel("Consultas", color=text_color, fontsize=10, labelpad=12)
 
-        for bar in bars:
-            height = bar.get_height()
+        for x, value in zip(positions, values):
+            if value <= 0:
+                continue
             ax.annotate(
-                f"{int(height)}",
-                xy=(bar.get_x() + bar.get_width() / 2, height),
-                xytext=(0, 4),
+                f"{int(value)}",
+                xy=(x, value),
+                xytext=(0, 6),
                 textcoords="offset points",
                 ha="center",
                 va="bottom",
-                fontsize=8,
+                fontsize=9,
                 color=text_color,
             )
 
+        fig.tight_layout(pad=1.0)
+
         canvas = FigureCanvasTkAgg(fig, master=self._chart_canvas_container)
         canvas.draw()
-        canvas.get_tk_widget().pack(fill="both", expand=True, padx=0, pady=0)
+        canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
         self._chart_canvas = canvas
 
     def _render_pie_chart(self, specialty_data):
@@ -821,6 +1067,10 @@ class Relatorios(BaseScreen):
         self._stat_value_labels["Novos Pacientes"].configure(text=str(summary["novos_pacientes"]))
         self._stat_value_labels["Retornos"].configure(text=str(summary["retornos"]))
 
+        self._current_report_data = self._build_export_payload(summary, chart_period, specialty_data, productivity_rows)
+        if self.export_button is not None:
+            self.export_button.configure(state="normal")
+
         if medicos is not None or especialidades is not None:
             self._update_filter_options(medicos or [], especialidades or [])
 
@@ -861,6 +1111,8 @@ class Relatorios(BaseScreen):
 
         self._loading = False
         self.update_button.configure(state="normal")
+        if self.export_button is not None:
+            self.export_button.configure(state="disabled")
         self._loading_label.pack_forget()
 
         if error_msg:
