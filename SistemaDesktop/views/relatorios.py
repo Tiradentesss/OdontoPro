@@ -1,4 +1,5 @@
 import csv
+import os
 import queue
 import threading
 import zipfile
@@ -7,6 +8,7 @@ from tkinter import Menu, filedialog
 from xml.sax.saxutils import escape as xml_escape
 
 import customtkinter as ctk
+from PIL import Image, ImageDraw, ImageFont
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.patches import FancyBboxPatch
@@ -36,6 +38,7 @@ class Relatorios(BaseScreen):
         self._export_menu = None
         self._chart_hover_connection_id = None
         self._chart_bar_tooltip = None
+        self._kpi_icons = {}
 
         self.periodo_var = ctk.StringVar(value="Hoje")
         self.medico_var = ctk.StringVar(value="Todos")
@@ -55,6 +58,27 @@ class Relatorios(BaseScreen):
 
         self._build_structure()
         self._load_data_async()
+
+    def _create_kpi_icon(self, glyph, color, size=28):
+        try:
+            font_path = os.path.join(os.environ.get("WINDIR", "C:\\Windows"), "Fonts", "segmdl2.ttf")
+            if not os.path.exists(font_path):
+                return None
+
+            canvas_size = size + 10
+            image = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 0))
+            draw = ImageDraw.Draw(image)
+            font = ImageFont.truetype(font_path, int(size * 1.4))
+            bbox = draw.textbbox((0, 0), glyph, font=font)
+            glyph_w = bbox[2] - bbox[0]
+            glyph_h = bbox[3] - bbox[1]
+            x = (canvas_size - glyph_w) / 2 - bbox[0]
+            y = (canvas_size - glyph_h) / 2 - bbox[1]
+            draw.text((x, y), glyph, font=font, fill=color)
+            image = image.resize((size, size), Image.Resampling.LANCZOS)
+            return ctk.CTkImage(light_image=image, dark_image=image, size=(size, size))
+        except Exception:
+            return None
 
     def _build_structure(self):
         header = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
@@ -214,13 +238,13 @@ class Relatorios(BaseScreen):
 
         self._kpi_card_labels = {}
         kpi_cards = [
-            ("📅", "Total de Consultas", "total_consultas", "No período selecionado"),
-            ("✅", "Taxa de Comparecimento", "taxa_comparecimento", "Consultas realizadas"),
-            ("❌", "Taxa de Cancelamento", "taxa_cancelamento", "Consultas canceladas"),
-            ("🏆", "Médico em Destaque", "medico_mais_produtivo", "Nenhuma consulta encontrada"),
+            ("\uE787", "Total de Consultas", "total_consultas", "No período selecionado"),
+            ("\uE73E", "Taxa de Comparecimento", "taxa_comparecimento", "Consultas realizadas"),
+            ("\uE711", "Taxa de Cancelamento", "taxa_cancelamento", "Consultas canceladas"),
+            ("\uE7C1", "Médico em Destaque", "medico_mais_produtivo", "Nenhuma consulta encontrada"),
         ]
 
-        for index, (icon, title, key, description) in enumerate(kpi_cards):
+        for index, (glyph, title, key, description) in enumerate(kpi_cards):
             card = ctk.CTkFrame(
                 self.kpi_frame,
                 fg_color=COLORS["card"],
@@ -230,7 +254,12 @@ class Relatorios(BaseScreen):
             )
             card.grid(row=0, column=index, sticky="nsew", padx=(0, 10) if index < len(kpi_cards) - 1 else 0)
 
-            ctk.CTkLabel(card, text=icon, font=font("subtitle", "bold"), text_color=COLORS["primary"]).pack(anchor="w", padx=16, pady=(16, 4))
+            icon_image = self._create_kpi_icon(glyph, COLORS["primary"], size=26)
+            icon_label = ctk.CTkLabel(card, image=icon_image, text="", fg_color="transparent")
+            icon_label.pack(anchor="w", padx=16, pady=(16, 4))
+            if icon_image is not None:
+                self._kpi_icons[key] = icon_image
+
             ctk.CTkLabel(card, text=title, font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16)
 
             value_label = ctk.CTkLabel(card, text="--", font=font("title", "bold"), text_color=COLORS["text"])
