@@ -8,7 +8,6 @@ from tkinter import Menu, filedialog
 from xml.sax.saxutils import escape as xml_escape
 
 import customtkinter as ctk
-from PIL import Image, ImageDraw, ImageFont
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.patches import FancyBboxPatch
@@ -38,7 +37,6 @@ class Relatorios(BaseScreen):
         self._export_menu = None
         self._chart_hover_connection_id = None
         self._chart_bar_tooltip = None
-        self._kpi_icons = {}
 
         self.periodo_var = ctk.StringVar(value="Hoje")
         self.medico_var = ctk.StringVar(value="Todos")
@@ -58,27 +56,6 @@ class Relatorios(BaseScreen):
 
         self._build_structure()
         self._load_data_async()
-
-    def _create_kpi_icon(self, glyph, color, size=28):
-        try:
-            font_path = os.path.join(os.environ.get("WINDIR", "C:\\Windows"), "Fonts", "segmdl2.ttf")
-            if not os.path.exists(font_path):
-                return None
-
-            canvas_size = size + 10
-            image = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 0))
-            draw = ImageDraw.Draw(image)
-            font = ImageFont.truetype(font_path, int(size * 1.4))
-            bbox = draw.textbbox((0, 0), glyph, font=font)
-            glyph_w = bbox[2] - bbox[0]
-            glyph_h = bbox[3] - bbox[1]
-            x = (canvas_size - glyph_w) / 2 - bbox[0]
-            y = (canvas_size - glyph_h) / 2 - bbox[1]
-            draw.text((x, y), glyph, font=font, fill=color)
-            image = image.resize((size, size), Image.Resampling.LANCZOS)
-            return ctk.CTkImage(light_image=image, dark_image=image, size=(size, size))
-        except Exception:
-            return None
 
     def _build_structure(self):
         header = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
@@ -133,7 +110,10 @@ class Relatorios(BaseScreen):
 
         periodo_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         periodo_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=0)
-        ctk.CTkLabel(periodo_frame, text="Período", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
+        periodo_label_frame = ctk.CTkFrame(periodo_frame, fg_color="transparent")
+        periodo_label_frame.pack(anchor="w", padx=10, pady=(12, 0))
+        ctk.CTkLabel(periodo_label_frame, text="\uE787", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(periodo_label_frame, text="Período", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.periodo_combo = ctk.CTkComboBox(
             periodo_frame,
             values=["Hoje", "Semana", "Mês", "Ano", "Personalizado"],
@@ -152,7 +132,10 @@ class Relatorios(BaseScreen):
 
         medico_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         medico_frame.grid(row=0, column=1, sticky="nsew", padx=8, pady=0)
-        ctk.CTkLabel(medico_frame, text="Médico", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
+        medico_label_frame = ctk.CTkFrame(medico_frame, fg_color="transparent")
+        medico_label_frame.pack(anchor="w", padx=10, pady=(12, 0))
+        ctk.CTkLabel(medico_label_frame, text="\uE7C1", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(medico_label_frame, text="Médico", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.medico_combo = ctk.CTkComboBox(
             medico_frame,
             values=["Todos"],
@@ -171,7 +154,10 @@ class Relatorios(BaseScreen):
 
         especialidade_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         especialidade_frame.grid(row=0, column=2, sticky="nsew", padx=8, pady=0)
-        ctk.CTkLabel(especialidade_frame, text="Especialidade", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
+        especialidade_label_frame = ctk.CTkFrame(especialidade_frame, fg_color="transparent")
+        especialidade_label_frame.pack(anchor="w", padx=10, pady=(12, 0))
+        ctk.CTkLabel(especialidade_label_frame, text="\uEBD7", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(especialidade_label_frame, text="Especialidade", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.especialidade_combo = ctk.CTkComboBox(
             especialidade_frame,
             values=["Todos"],
@@ -190,7 +176,10 @@ class Relatorios(BaseScreen):
 
         status_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
         status_frame.grid(row=0, column=3, sticky="nsew", padx=(8, 0), pady=0)
-        ctk.CTkLabel(status_frame, text="Status", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
+        status_label_frame = ctk.CTkFrame(status_frame, fg_color="transparent")
+        status_label_frame.pack(anchor="w", padx=10, pady=(12, 0))
+        ctk.CTkLabel(status_label_frame, text="\uE73E", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(status_label_frame, text="Status", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.status_combo = ctk.CTkComboBox(
             status_frame,
             values=["Todos", "Agendada", "Realizada", "Cancelada"],
@@ -254,11 +243,7 @@ class Relatorios(BaseScreen):
             )
             card.grid(row=0, column=index, sticky="nsew", padx=(0, 10) if index < len(kpi_cards) - 1 else 0)
 
-            icon_image = self._create_kpi_icon(glyph, COLORS["primary"], size=35)
-            icon_label = ctk.CTkLabel(card, image=icon_image, text="", fg_color="transparent")
-            icon_label.pack(anchor="w", padx=16, pady=(16, 4))
-            if icon_image is not None:
-                self._kpi_icons[key] = icon_image
+            ctk.CTkLabel(card, text=glyph, font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(anchor="w", padx=16, pady=(16, 4))
 
             ctk.CTkLabel(card, text=title, font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16)
 
