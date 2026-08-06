@@ -131,10 +131,10 @@ class Relatorios(BaseScreen):
 
         form_frame = ctk.CTkFrame(filters_frame, fg_color="transparent")
         form_frame.pack(fill="x", padx=20, pady=(0, 20))
-        form_frame.columnconfigure((0, 1, 2), weight=1, uniform="filter_cols")
+        form_frame.columnconfigure((0, 1, 2, 3), weight=1, uniform="filter_cols")
 
         periodo_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
-        periodo_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=0)
+        periodo_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=0)
         ctk.CTkLabel(periodo_frame, text="Período", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
         self.periodo_combo = ctk.CTkComboBox(
             periodo_frame,
@@ -153,7 +153,7 @@ class Relatorios(BaseScreen):
         self.periodo_combo.pack(fill="x", padx=10, pady=(6, 10))
 
         medico_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
-        medico_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=0)
+        medico_frame.grid(row=0, column=1, sticky="nsew", padx=8, pady=0)
         ctk.CTkLabel(medico_frame, text="Médico", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
         self.medico_combo = ctk.CTkComboBox(
             medico_frame,
@@ -172,7 +172,7 @@ class Relatorios(BaseScreen):
         self.medico_combo.pack(fill="x", padx=10, pady=(6, 10))
 
         especialidade_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
-        especialidade_frame.grid(row=0, column=2, sticky="nsew", padx=(10, 0), pady=0)
+        especialidade_frame.grid(row=0, column=2, sticky="nsew", padx=8, pady=0)
         ctk.CTkLabel(especialidade_frame, text="Especialidade", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
         self.especialidade_combo = ctk.CTkComboBox(
             especialidade_frame,
@@ -190,9 +190,8 @@ class Relatorios(BaseScreen):
         self.especialidade_combo.set(self.especialidade_var.get())
         self.especialidade_combo.pack(fill="x", padx=10, pady=(6, 10))
 
-        status_frame = ctk.CTkFrame(filters_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
-        status_frame.pack(fill="x", padx=20, pady=(0, 20))
-        status_frame.columnconfigure(0, weight=1)
+        status_frame = ctk.CTkFrame(form_frame, fg_color=COLORS["card"], corner_radius=12, border_width=1, border_color=INNER_CARD_BORDER)
+        status_frame.grid(row=0, column=3, sticky="nsew", padx=(8, 0), pady=0)
         ctk.CTkLabel(status_frame, text="Status", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(anchor="w", padx=10, pady=(12, 0))
         self.status_combo = ctk.CTkComboBox(
             status_frame,
