@@ -86,52 +86,6 @@ class Relatorios(BaseScreen):
         self._export_menu.add_command(label="Exportar para Excel (.xlsx)", command=lambda: self._export_report("xlsx"))
         self._export_menu.add_command(label="Exportar para CSV", command=lambda: self._export_report("csv"))
 
-        cards_frame = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
-        cards_frame.pack(fill="x", padx=20, pady=(0, 20))
-        for idx in range(4):
-            cards_frame.grid_columnconfigure(idx, weight=1, uniform="report_cards")
-
-        self._card_value_labels = {}
-        cards = [
-            ("📅", "Consultas", "0"),
-            ("👥", "Pacientes", "0"),
-            ("🩺", "Médicos", "0"),
-            ("❌", "Cancelamentos", "0"),
-        ]
-
-        for index, (icon, title, value) in enumerate(cards):
-            card = ctk.CTkFrame(
-                cards_frame,
-                fg_color=COLORS["card"],
-                corner_radius=INNER_CARD_RADIUS,
-                border_width=1,
-                border_color=INNER_CARD_BORDER
-            )
-            card.grid(row=0, column=index, sticky="nsew", padx=(0, 10) if index < len(cards) - 1 else 0)
-
-            ctk.CTkLabel(
-                card,
-                text=icon,
-                font=font("subtitle", "bold"),
-                text_color=COLORS["primary"]
-            ).pack(anchor="w", padx=16, pady=(16, 4))
-
-            ctk.CTkLabel(
-                card,
-                text=title,
-                font=font("small"),
-                text_color=COLORS["text_secondary"]
-            ).pack(anchor="w", padx=16)
-
-            value_label = ctk.CTkLabel(
-                card,
-                text=value,
-                font=font("title", "bold"),
-                text_color=COLORS["text"]
-            )
-            value_label.pack(anchor="w", padx=16, pady=(8, 16))
-            self._card_value_labels[title] = value_label
-
         filters_frame = ctk.CTkFrame(
             self.scroll_frame,
             fg_color=COLORS["card"],
@@ -1244,11 +1198,6 @@ class Relatorios(BaseScreen):
     def _apply_loaded_data(self, summary, chart_period, specialty_data, productivity_rows, medicos, especialidades):
         if summary is None:
             return
-
-        self._card_value_labels["Consultas"].configure(text=str(summary["total_consultas"]))
-        self._card_value_labels["Pacientes"].configure(text=str(summary["total_pacientes"]))
-        self._card_value_labels["Médicos"].configure(text=str(summary["total_medicos"]))
-        self._card_value_labels["Cancelamentos"].configure(text=str(summary["cancelamentos"]))
 
         self._stat_value_labels["Comparecimento"].configure(text=f"{summary['comparecimento']}%")
         self._stat_value_labels["Cancelamentos"].configure(text=str(summary["cancelamentos"]))
