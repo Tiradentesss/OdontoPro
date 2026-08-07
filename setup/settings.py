@@ -1,5 +1,7 @@
 from pathlib import Path
+import logging
 import os
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import dj_database_url
 from dotenv import load_dotenv
 load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
@@ -8,10 +10,6 @@ load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
 # BASE
 # =========================
 # =========================
-
-OPTIONS = {
-    "ssl": {"ssl-mode": "REQUIRED"}
-}
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -172,6 +170,20 @@ TEMPLATES = [
 # =========================
 
 DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    # MySQLdb / mysqlclient does not accept the `ssl-mode=REQUIRED` query syntax
+    # that often appears in Railway/Aiven examples. Remove those params before
+    # django-db-url hands the DSN to the backend connector.
+    parsed = urlsplit(DATABASE_URL)
+    if parsed.scheme.lower().startswith('mysql'):
+        query_items = parse_qsl(parsed.query, keep_blank_values=True)
+        query_items = [item for item in query_items if item[0] not in {'ssl-mode', 'sslmode'}]
+        sanitized_query = urlencode(query_items)
+        DATABASE_URL = urlunsplit(parsed._replace(query=sanitized_query)).strip()
+        if os.getenv('DATABASE_URL') != DATABASE_URL:
+            logger = logging.getLogger(__name__)
+            logger.warning('Removi query params inválidos do DATABASE_URL para MySQL: ssl-mode/sslmode')
 
 if DATABASE_URL:
     DATABASES = {
