@@ -169,17 +169,18 @@ class Painel(BaseScreen):
         self._criar_botao_ir_para(card, 'agenda')
 
     def _render_resumo_relatorios(self, row, col):
-        card = self._criar_card("Resumo Relatórios", "Receita e despesas do mês", row, col, padx=(10, 0))
-        
+        card = self._criar_card("📊 Resumo dos Relatórios", "", row, col, padx=(10, 0))
+
         container = ctk.CTkFrame(card, fg_color="transparent")
         container.pack(fill="x", padx=20, pady=10)
-        container.grid_columnconfigure((0,1,2), weight=1)
+        container.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
-        f = self.dados_relatorios
+        f = self.dados_relatorios or {}
         metrics = [
-            ("Faturamento", f"R$ {f['faturamento']:,.0f}", self.colors['primary']),
-            ("Despesas", f"R$ {f['despesas']:,.0f}", self.colors['danger']),
-            ("Lucro", f"R$ {f['lucro']:,.0f}", self.colors['success'])
+            ("Pacientes", str(f.get('total_pacientes', 0)), self.colors['primary']),
+            ("Profissionais", str(f.get('total_medicos', 0)), self.colors['success']),
+            ("Consultas", str(f.get('total_consultas', 0)), self.colors['info']),
+            ("Comparecimento", f"{f.get('comparecimento', 0)}%", self.colors['warning'])
         ]
 
         for i, (lab, val, col_text) in enumerate(metrics):
@@ -191,17 +192,12 @@ class Painel(BaseScreen):
                 border_color=INNER_CARD_BORDER
             )
             box.grid(row=0, column=i, padx=4, sticky="nsew")
-            
+
             ctk.CTkLabel(box, text=lab, font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(pady=(10, 0))
             ctk.CTkLabel(box, text=val, font=ctk.CTkFont(size=19, weight="bold"), text_color=col_text).pack(pady=(0, 10))
 
-        # Footer Info
-        footer = ctk.CTkLabel(
-            card, text=f"✓ {f['realizadas']} de {f['total_consultas']} consultas concluídas este mês",
-            font=ctk.CTkFont(size=12, slant="italic"), text_color=self.colors['text_muted']
-        )
-        footer.pack(pady=(15, 20))
-        self._criar_botao_ir_para(card, 'relatorios')
+        botao_relatorios = self._criar_botao_ir_para(card, 'relatorios')
+        botao_relatorios.place_configure(y=-40)
 
     def _render_status_consultas(self, row, col):
         card = self._criar_card("Status das Consultas", "Distribuição de consultas por status", row, col, padx=(0, 10))
@@ -450,32 +446,28 @@ class Painel(BaseScreen):
             return []
 
     def _carregar_relatorios(self):
-        """Carrega resumo de relatórios do mês"""
+        """Carrega o resumo do mesmo domínio de indicadores usado pela aba Relatórios."""
         try:
             if not self.clinica_id:
                 return {
-                    'faturamento': 0,
-                    'despesas': 0,
-                    'lucro': 0,
                     'total_consultas': 0,
-                    'realizadas': 0
+                    'total_pacientes': 0,
+                    'total_medicos': 0,
+                    'comparecimento': 0,
                 }
-            
-            # Buscar dados do RelatoriosController
-            resumo = RelatoriosController.obter_resumo_relatorios(self.clinica_id)
+
+            resumo = RelatoriosController.obter_resumo_consultas(self.clinica_id)
             return resumo if resumo else {
-                'faturamento': 0,
-                'despesas': 0,
-                'lucro': 0,
                 'total_consultas': 0,
-                'realizadas': 0
+                'total_pacientes': 0,
+                'total_medicos': 0,
+                'comparecimento': 0,
             }
         except Exception as e:
             print(f"Erro ao carregar dados de relatórios: {e}")
             return {
-                'faturamento': 0,
-                'despesas': 0,
-                'lucro': 0,
                 'total_consultas': 0,
-                'realizadas': 0
+                'total_pacientes': 0,
+                'total_medicos': 0,
+                'comparecimento': 0,
             }

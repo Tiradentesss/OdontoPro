@@ -16,6 +16,7 @@ from config.database import get_connection
 from .base import BaseScreen
 from .theme import FONT_FAMILY, font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from controllers.consulta_controller import ConsultaController
+from controllers.relatorios_controller import RelatoriosController
 
 
 class Relatorios(BaseScreen):
@@ -707,28 +708,23 @@ class Relatorios(BaseScreen):
                 medicos = self._cache["filter_options"]["medicos"]
                 especialidades = self._cache["filter_options"]["especialidades"]
 
-            # Top cards and counts
-            consulta_params = filtro_params + [inicio, fim]
-            cursor.execute(f"""
-                SELECT
-                    COUNT(*) AS total_consultas,
-                    COUNT(DISTINCT c.paciente_id) AS total_pacientes,
-                    COUNT(DISTINCT c.medico_id) AS total_medicos,
-                    SUM(LOWER(TRIM(c.status)) = 'cancelada') AS cancelamentos,
-                    SUM(LOWER(TRIM(c.status)) = 'realizada') AS realizadas
-                FROM odontoPro_consulta c
-                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
-                LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id
-                WHERE {filtro_base}
-                  AND c.data_hora BETWEEN %s AND %s
-            """, tuple(consulta_params))
-            row = cursor.fetchone() or (0, 0, 0, 0, 0)
-            total_consultas, total_pacientes, total_medicos, cancelamentos, realizadas = row
+            # KPIs de Relatórios vêm do controller compartilhado.
+            summary = RelatoriosController.obter_resumo_consultas(
+                self.clinica_id,
+                data_inicio=inicio,
+                data_fim=fim,
+                status=status,
+                medico_id=medico_id,
+                especialidade_id=especialidade_id,
+                medico_name=medico_name,
+                especialidade_name=especialidade_name,
+            )
 
-            if total_consultas:
-                comparecimento = int(round((realizadas or 0) / total_consultas * 100))
-            else:
-                comparecimento = 0
+            total_consultas = summary.get("total_consultas", 0)
+            total_pacientes = summary.get("total_pacientes", 0)
+            total_medicos = summary.get("total_medicos", 0)
+            cancelamentos = summary.get("cancelamentos", 0)
+            comparecimento = summary.get("comparecimento", 0)
 
             # Novos pacientes: primeira consulta no período
             cursor.execute("""
@@ -795,7 +791,7 @@ class Relatorios(BaseScreen):
                 GROUP BY especialidade
                 ORDER BY total DESC
                 LIMIT 8
-            """, tuple(consulta_params))
+            """, tuple(filtro_params + [inicio, fim]))
             specialty_data = cursor.fetchall() or []
 
             # Médicos mais produtivos
@@ -811,7 +807,7 @@ class Relatorios(BaseScreen):
                 GROUP BY c.medico_id, m.nome, e.nome
                 ORDER BY consultas DESC
                 LIMIT 5
-            """, tuple(consulta_params))
+            """, tuple(filtro_params + [inicio, fim]))
             productivity_rows = cursor.fetchall() or []
 
             self._load_queue.put((

@@ -6,6 +6,105 @@ from decimal import Decimal
 
 
 class RelatoriosController:
+
+    @staticmethod
+    def obter_resumo_consultas(
+        clinica_id,
+        data_inicio=None,
+        data_fim=None,
+        status=None,
+        medico_id=None,
+        especialidade_id=None,
+        medico_name=None,
+        especialidade_name=None,
+    ):
+        """
+        Retorna o resumo compartilhado de indicadores usados pela tela de
+        Relatórios e pelo Painel: total de consultas, pacientes, profissionais
+        e percentual de comparecimento. Suporta filtros aplicados pela tela
+        de relatório através do mesmo contrato de dados.
+        """
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            if data_inicio is None:
+                data_inicio = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            if data_fim is None:
+                data_fim = datetime.now()
+
+            conditions = ["c.clinica_id = %s"]
+            params = [clinica_id]
+
+            if status and status not in ['Todos', 'Status', '']:
+                conditions.append("LOWER(TRIM(c.status)) = %s")
+                params.append(status.lower())
+
+            if medico_id not in [None, '', 'Todos', 'Médico']:
+                conditions.append("c.medico_id = %s")
+                params.append(medico_id)
+            elif medico_name and medico_name not in ['Todos', 'Médico', '']:
+                conditions.append("m.nome = %s")
+                params.append(medico_name)
+
+            if especialidade_id not in [None, '', 'Todos', 'Especialidade']:
+                conditions.append("c.especialidade_id = %s")
+                params.append(especialidade_id)
+            elif especialidade_name and especialidade_name not in ['Todos', 'Especialidade', '']:
+                conditions.append("LOWER(TRIM(e.nome)) = %s")
+                params.append(especialidade_name.lower())
+
+            where_clause = " AND ".join(conditions)
+
+            cursor.execute(f"""
+                SELECT
+                    COUNT(*) AS total_consultas,
+                    COUNT(DISTINCT c.paciente_id) AS total_pacientes,
+                    COUNT(DISTINCT c.medico_id) AS total_medicos,
+                    SUM(LOWER(TRIM(c.status)) = 'cancelada') AS cancelamentos,
+                    SUM(LOWER(TRIM(c.status)) = 'realizada') AS realizadas
+                FROM odontoPro_consulta c
+                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id
+                WHERE {where_clause}
+                  AND c.data_hora BETWEEN %s AND %s
+            """, tuple(params + [data_inicio, data_fim]))
+
+            row = cursor.fetchone() or (0, 0, 0, 0, 0)
+            total_consultas, total_pacientes, total_medicos, cancelamentos, realizadas = row
+
+            if total_consultas:
+                comparecimento = int(round((realizadas or 0) / total_consultas * 100))
+            else:
+                comparecimento = 0
+
+            return {
+                'total_consultas': int(total_consultas or 0),
+                'total_pacientes': int(total_pacientes or 0),
+                'total_medicos': int(total_medicos or 0),
+                'cancelamentos': int(cancelamentos or 0),
+                'comparecimento': int(comparecimento),
+                'novos_pacientes': 0,
+                'retornos': 0,
+            }
+        except Exception as e:
+            print(f"Erro ao obter resumo de consultas: {e}")
+            return {
+                'total_consultas': 0,
+                'total_pacientes': 0,
+                'total_medicos': 0,
+                'cancelamentos': 0,
+                'comparecimento': 0,
+                'novos_pacientes': 0,
+                'retornos': 0,
+            }
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
     
     @staticmethod
     def criar_transacao(tipo, descricao, valor, clinica_id, data=None, categoria=None):
