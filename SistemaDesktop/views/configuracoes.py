@@ -385,7 +385,7 @@ class Configuracoes(BaseScreen):
     def setup_ui(self):
         # Header com tabs e botão de tema
         header_container = ctk.CTkFrame(self.content_card, fg_color="transparent", height=44)
-        header_container.pack(fill="x", padx=20, pady=(20, 0))
+        header_container.pack(fill="x", padx=20, pady=(9, 0))
         header_container.pack_propagate(False)
 
         # Tabs à esquerda
