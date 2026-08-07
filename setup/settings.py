@@ -83,9 +83,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'cloudinary',
-    'cloudinary_storage',
-
     'odontoPro',
 ]
 
@@ -235,21 +232,11 @@ STATICFILES_DIRS = [
 ]
 
 # =========================
-# CLOUDINARY / MEDIA FILES
+# MEDIA FILES
 # =========================
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-CLOUDINARY_URL = os.getenv('CLOUDINARY_URL')
-if CLOUDINARY_URL:
-    CLOUDINARY_STORAGE = {
-        'CLOUDINARY_URL': CLOUDINARY_URL,
-        'DEFAULT_UPLOAD_OPTIONS': {
-            'resource_type': 'image',
-        },
-    }
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # 🔧 Configurar WhiteNoise para servir também arquivos de mídia
 # Isso é necessário no Railway pois ele não tem nginx/apache para servir mídia

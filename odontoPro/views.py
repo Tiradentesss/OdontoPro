@@ -12,6 +12,7 @@ from django.core import signing
 from django.conf import settings
 from django.core.management import call_command
 from django.templatetags.static import static
+from django.core.files.storage import default_storage
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade, Gerenciamento, Financeiro
 from datetime import datetime, date, timedelta
@@ -287,31 +288,38 @@ def login_paciente(request):
 
 # ---------- DASHBOARD PACIENTE ----------
 def _get_clinica_imagem_url(clinica):
+    # prioriza assertiva e evita 404 se o arquivo físico estiver ausente
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
-        return clinica.imagem.url
+        if default_storage.exists(clinica.imagem.name):
+            return clinica.imagem.url
 
     if clinica.logo and getattr(clinica.logo, 'name', None):
-        return clinica.logo.url
+        if default_storage.exists(clinica.logo.name):
+            return clinica.logo.url
 
     primeira = clinica.imagens.order_by('ordem').first()
     if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
-        return primeira.imagem.url
+        if default_storage.exists(primeira.imagem.name):
+            return primeira.imagem.url
 
     return static('img/sem-foto.jpg')
 
 
 def _get_clinica_logo_url(clinica):
     if clinica.logo and getattr(clinica.logo, 'name', None):
-        return clinica.logo.url
+        if default_storage.exists(clinica.logo.name):
+            return clinica.logo.url
 
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
-        return clinica.imagem.url
+        if default_storage.exists(clinica.imagem.name):
+            return clinica.imagem.url
 
     primeira = clinica.imagens.order_by('ordem').first()
     if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
-        return primeira.imagem.url
+        if default_storage.exists(primeira.imagem.name):
+            return primeira.imagem.url
 
-    return static('img/sem-foto-de-perfil.jpg')
+        return static('img/sem-foto-de-perfil.jpg')
 
 
 def dashboard_paciente(request):
