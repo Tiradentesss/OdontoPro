@@ -58,23 +58,6 @@ class Relatorios(BaseScreen):
         self._load_data_async()
 
     def _build_structure(self):
-        header = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
-        header.pack(fill="x", padx=20, pady=(20, 0))
-
-        self.export_button = ctk.CTkButton(
-            header,
-            text="⬇ Exportar",
-            width=110,
-            height=34,
-            fg_color=COLORS["primary"],
-            hover_color=COLORS["primary_dark"],
-            text_color="white",
-            corner_radius=8,
-            state="disabled",
-            command=self._show_export_menu
-        )
-        self.export_button.pack(side="right")
-
         self._export_menu = Menu(self.scroll_frame, tearoff=0)
         self._export_menu.add_command(label="Exportar para PDF", command=lambda: self._export_report("pdf"))
         self._export_menu.add_command(label="Exportar para Excel (.xlsx)", command=lambda: self._export_report("xlsx"))
@@ -358,6 +341,23 @@ class Relatorios(BaseScreen):
             )
             value_label.pack(anchor="w", padx=16, pady=(0, 16))
             self._stat_value_labels[label_text] = value_label
+
+        footer = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
+        footer.pack(fill="x", padx=20, pady=(0, 20))
+
+        self.export_button = ctk.CTkButton(
+            footer,
+            text="⬇ Exportar",
+            width=110,
+            height=34,
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
+            text_color="white",
+            corner_radius=8,
+            state="disabled",
+            command=self._show_export_menu
+        )
+        self.export_button.pack(side="right")
 
     def _show_export_menu(self):
         if self.export_button is None:
