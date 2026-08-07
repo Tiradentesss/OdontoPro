@@ -83,8 +83,33 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'cloudinary',
+    'cloudinary_storage',
+
     'odontoPro',
 ]
+
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', '')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY', '')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET', '')
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+    'API_KEY': CLOUDINARY_API_KEY,
+    'API_SECRET': CLOUDINARY_API_SECRET,
+}
+
+# Compatibility for older settings style used in Django 4.x docs.
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Cloudinary SDK receives the same environment values for runtime URL generation.
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    import cloudinary
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+    )
 
 
 # =========================
@@ -94,10 +119,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 
-    # Servir arquivos de mídia em produção (deve vir antes do WhiteNoise)
-    'odontoPro.middleware.MediaServeMiddleware',
-
-    # servir static no Railway
+    # Servir static no Railway
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -158,15 +180,13 @@ if DATABASE_URL:
             conn_max_age=600,
         )
     }
+
     engine = DATABASES['default'].get('ENGINE', '')
-    if 'mysql' in engine and not DEBUG:
-        DATABASES['default']['OPTIONS'] = {
-            'ssl': {'ssl-mode': 'REQUIRED'},
-        }
-    elif 'postgresql' in engine and not DEBUG:
+    if 'postgresql' in engine and not DEBUG:
         DATABASES['default']['OPTIONS'] = {
             'sslmode': 'require',
         }
+
 elif DEBUG:
     # Desenvolvimento local sem DATABASE_URL - usar SQLite
     DATABASES = {
@@ -224,17 +244,47 @@ USE_TZ = False
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+if DEBUG:
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+    STATICFILES_STORAGE_BACKEND = "django.contrib.staticfiles.storage.StaticFilesStorage"
+else:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    STATICFILES_STORAGE_BACKEND = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # onde estão seus arquivos css/js/img
 STATICFILES_DIRS = [
     BASE_DIR / "odontoPro/static"
 ]
 
+# Django 5: storage backend selection must be the same for the runtime storage
+# API and staticfiles resolution. Default to a non-manifest static backend while
+# in development, so `static` template tags don't explode on missing hashes.
+if DEBUG:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+
 # =========================
 # MEDIA FILES
 # =========================
 
+# Cloudinary becomes the storage backend for ImageField/FileField uploads.
+# Keeping MEDIA_URL for legacy references while Cloudinary's CDN URL resolves
+# through the file storage API and django-cloudinary-storage.
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 

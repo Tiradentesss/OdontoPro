@@ -24,7 +24,3 @@ urlpatterns = [
     path("", include("odontoPro.urls"))
 ]
 
-# Serve MEDIA files through Django while experiments run.
-# Em produção, configure um servidor estático (nginx, S3, etc.) se possível.
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
