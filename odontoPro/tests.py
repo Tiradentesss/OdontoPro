@@ -1,10 +1,12 @@
+from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from django.core import signing
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
-from .models import Paciente, Medico, Clinica, Consulta, Endereco, Gerenciamento, Permissao, Financeiro
+from django.templatetags.static import static
+from .models import Paciente, Medico, Clinica, Consulta, Endereco, Gerenciamento, Permissao, Financeiro, ClinicaImagem
 
 
 class FinanceiroDashboardTests(TestCase):
@@ -100,6 +102,55 @@ class FinanceiroDashboardTests(TestCase):
         self.assertContains(response, 'Centro de Relatórios')
         self.assertContains(response, 'Exportar para Excel (CSV)')
         self.assertContains(response, 'Relatório Gerencial Odontológico')
+
+
+class DashboardHomeImageRegressionTests(TestCase):
+    def setUp(self):
+        self.endereco = Endereco.objects.create(
+            cep="00000000",
+            numero="1",
+            quadra="",
+            rua="Rua X",
+            bairro="Centro",
+            cidade="Belém",
+            estado="PA"
+        )
+        self.clinica = Clinica.objects.create(
+            nome="Clinica Image Test",
+            cnpj="00000000",
+            endereco=self.endereco,
+            telefone="999999999",
+            conta_bancaria_juridica="0000-0",
+            email="clinica-image@example.com",
+            senha=make_password("clinica123"),
+            ativo=True,
+            avaliacao=5.0,
+        )
+        self.paciente = Paciente.objects.create(
+            nome="Paciente Teste",
+            email="paciente-image@example.com",
+            senha=make_password("123456"),
+            telefone="999999999",
+            clinica=self.clinica,
+        )
+
+    @patch('odontoPro.views._url_responds', side_effect=lambda url: False)
+    def test_dashboard_does_not_push_broken_gallery_urls_to_banner_images(self, _mock_responds):
+        with open('odontoPro/static/img/sem-foto.jpg', 'rb') as handle:
+            data = handle.read()
+        uploaded = SimpleUploadedFile('banner.jpg', data, content_type='image/jpeg')
+        ClinicaImagem.objects.create(clinica=self.clinica, imagem=uploaded)
+
+        session = self.client.session
+        session['paciente_id'] = self.paciente.id
+        session.save()
+
+        response = self.client.get(reverse('dashboard_paciente'))
+        self.assertEqual(response.status_code, 200)
+        context_clinicas = list(response.context['clinicas'])
+        self.assertTrue(context_clinicas)
+        first_clinica = context_clinicas[0]
+        self.assertEqual(first_clinica.banner_images, [static('img/sem-foto.jpg')])
 
 
 class LoginViewTests(TestCase):

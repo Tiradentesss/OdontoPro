@@ -228,19 +228,19 @@
             <!-- BANNER -->
             <div class="banner-card">
                 <div class="banner-carousel">
-                    {% if clinica.imagens.all %}
-                        {% for imagem in clinica.imagens.all %}
+                    {% if clinica.banner_images %}
+                        {% for url in clinica.banner_images %}
                             <div class="banner-slide {% if forloop.first %}active{% endif %}">
-                                <img src="{{ imagem.imagem.url }}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/sem-foto.jpg' %}';">
+                                <img src="{{ url }}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/sem-foto.jpg' %}';">
                             </div>
                         {% endfor %}
                     {% else %}
                         <div class="banner-slide active">
-                            <img src="{% if clinica.imagem %}{{ clinica.imagem.url }}{% elif clinica.logo %}{{ clinica.logo.url }}{% else %}{% static 'img/sem-foto.jpg' %}{% endif %}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/sem-foto.jpg' %}';">
+                            <img src="{% static 'img/sem-foto.jpg' %}" class="fundo-banner" onerror="this.onerror=null;this.src='{% static 'img/sem-foto.jpg' %}';">
                         </div>
                     {% endif %}
 
-                    {% if clinica.imagens.count > 1 %}
+                    {% if clinica.banner_images|length > 1 %}
                         <button type="button" class="carousel-control prev" aria-label="Imagem anterior">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
@@ -252,7 +252,7 @@
 
                 <!-- LOGO SOBREPOSTA -->
                 <div class="logo-sobreposta">
-                    <img src="{% if clinica.logo %}{{ clinica.logo.url }}{% elif clinica.imagem %}{{ clinica.imagem.url }}{% elif clinica.imagens.all %}{{ clinica.imagens.all.0.imagem.url }}{% else %}{% static 'img/sem-foto-de-perfil.jpg' %}{% endif %}" alt="Logo da clínica" onerror="this.onerror=null;this.src='{% static 'img/sem-foto-de-perfil.jpg' %}';">
+                    <img src="{% if clinica.logo_url %}{{ clinica.logo_url }}{% elif clinica.banner_url %}{{ clinica.banner_url }}{% else %}{% static 'img/sem-foto-de-perfil.jpg' %}{% endif %}" alt="Logo da clínica" onerror="this.onerror=null;this.src='{% static 'img/sem-foto-de-perfil.jpg' %}';">
                 </div>
             </div>
 

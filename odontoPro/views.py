@@ -13,6 +13,8 @@ from django.conf import settings
 from django.core.management import call_command
 from django.templatetags.static import static
 from django.core.files.storage import default_storage
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade, Gerenciamento, Financeiro
 from datetime import datetime, date, timedelta
@@ -287,39 +289,101 @@ def login_paciente(request):
 
 
 # ---------- DASHBOARD PACIENTE ----------
+def _url_responds(url):
+    if not url:
+        return False
+    try:
+        req = Request(url, method='HEAD', headers={'User-Agent': 'Mozilla/5.0'})
+        with urlopen(req, timeout=4) as resp:
+            return resp.status in (200, 204, 301, 302, 304)
+    except (HTTPError, URLError, TimeoutError, Exception):
+        return False
+
+
 def _get_clinica_imagem_url(clinica):
-    # prioriza assertiva e evita 404 se o arquivo físico estiver ausente
+    """Resolve a URL pública do banner da clínica sem consultar o storage local.
+
+    Com Cloudinary, default_storage.exists() pode reportar falso mesmo quando a
+    URL pública do objeto existe. Como a imagem deve ser entregue ao browser pelo
+    provedor CDN, o resultado correto é a propriedade .url do ImageField.
+    """
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
-        if default_storage.exists(clinica.imagem.name):
-            return clinica.imagem.url
+        try:
+            url = clinica.imagem.url
+            if _url_responds(url):
+                return url
+        except Exception:
+            pass
 
     if clinica.logo and getattr(clinica.logo, 'name', None):
-        if default_storage.exists(clinica.logo.name):
-            return clinica.logo.url
+        try:
+            url = clinica.logo.url
+            if _url_responds(url):
+                return url
+        except Exception:
+            pass
 
     primeira = clinica.imagens.order_by('ordem').first()
     if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
-        if default_storage.exists(primeira.imagem.name):
-            return primeira.imagem.url
+        try:
+            url = primeira.imagem.url
+            if _url_responds(url):
+                return url
+        except Exception:
+            pass
 
     return static('img/sem-foto.jpg')
 
 
 def _get_clinica_logo_url(clinica):
     if clinica.logo and getattr(clinica.logo, 'name', None):
-        if default_storage.exists(clinica.logo.name):
-            return clinica.logo.url
+        try:
+            url = clinica.logo.url
+            if _url_responds(url):
+                return url
+        except Exception:
+            pass
 
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
-        if default_storage.exists(clinica.imagem.name):
-            return clinica.imagem.url
+        try:
+            url = clinica.imagem.url
+            if _url_responds(url):
+                return url
+        except Exception:
+            pass
 
     primeira = clinica.imagens.order_by('ordem').first()
     if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
-        if default_storage.exists(primeira.imagem.name):
-            return primeira.imagem.url
+        try:
+            url = primeira.imagem.url
+            if _url_responds(url):
+                return url
+        except Exception:
+            pass
 
-        return static('img/sem-foto-de-perfil.jpg')
+    return static('img/sem-foto-de-perfil.jpg')
+
+
+def _get_valid_banner_images(clinica):
+    """Return only image URLs that the server can confirm over HTTP HEAD."""
+    urls = []
+
+    for img in clinica.imagens.all():
+        url = getattr(img.imagem, 'url', None)
+        if url and _url_responds(url):
+            urls.append(url)
+
+    if not urls and clinica.imagem and getattr(clinica.imagem, 'url', None):
+        url = clinica.imagem.url
+        if _url_responds(url):
+            urls.append(url)
+
+    if not urls and clinica.logo and getattr(clinica.logo, 'url', None):
+        url = clinica.logo.url
+        if _url_responds(url):
+            urls.append(url)
+
+    return urls
 
 
 def dashboard_paciente(request):
@@ -350,6 +414,9 @@ def dashboard_paciente(request):
     for c in clinicas:
         c.banner_url = _get_clinica_imagem_url(c)
         c.logo_url = _get_clinica_logo_url(c)
+        c.banner_images = _get_valid_banner_images(c)
+        if not c.banner_images:
+            c.banner_images = [static('img/sem-foto.jpg')]
 
     # Se não houver clínica cadastrada, mantém lista vazia (evita criação automática de clínica de exemplo).
     if not clinicas.exists():
@@ -886,7 +953,10 @@ def filtrar_consultas(request):
 @require_GET
 def clinica_detalhes(request, clinica_id):
     try:
-        clinica = Clinica.objects.get(id=clinica_id)
+        clinica = (Clinica.objects
+            .select_related('endereco')
+            .prefetch_related('imagens', 'medico_set__especialidades')
+            .get(id=clinica_id))
     except Clinica.DoesNotExist:
         return JsonResponse({"error": "Clínica não encontrada"}, status=404)
 
@@ -927,30 +997,42 @@ def clinica_detalhes(request, clinica_id):
     imagens = []
 
     if clinica.imagens.exists():
-        imagens = [img.imagem.url for img in clinica.imagens.all() if img.imagem]
+        for img in clinica.imagens.all():
+            if img.imagem:
+                url = img.imagem.url
+                if _url_responds(url):
+                    imagens.append(url)
         banner_url = imagens[0] if imagens else None
-    elif clinica.imagem:
-        imagens = [clinica.imagem.url]
-        banner_url = clinica.imagem.url
-    elif clinica.logo:
-        imagens = [clinica.logo.url]
-        banner_url = clinica.logo.url
+    if not imagens and clinica.imagem:
+        url = clinica.imagem.url
+        if _url_responds(url):
+            imagens = [url]
+            banner_url = url
+    if not imagens and clinica.logo:
+        url = clinica.logo.url
+        if _url_responds(url):
+            imagens = [url]
+            banner_url = url
+
+    logo_url = None
+    if clinica.logo:
+        logo_url = clinica.logo.url if _url_responds(clinica.logo.url) else None
 
     return JsonResponse({
     "nome": clinica.nome,
     "email": clinica.email,
     "telefone": clinica.telefone,
     "descricao": clinica.descricao,
-    "logo_url": clinica.logo.url if clinica.logo else None,
-    "imagem_url": clinica.imagem.url if clinica.imagem else None,
+    "logo_url": logo_url,
+    "imagem_url": clinica.imagem.url if clinica.imagem and _url_responds(clinica.imagem.url) else None,
     "banner_url": banner_url,
     "images": imagens,
-    "rua": clinica.endereco.rua,
-    "numero": clinica.endereco.numero,
-    "bairro": clinica.endereco.bairro,
-    "cidade": clinica.endereco.cidade,
-    "estado": clinica.endereco.estado,
-    "cep": clinica.endereco.cep,
+    "rua": clinica.endereco.rua if clinica.endereco else '',
+    "numero": clinica.endereco.numero if clinica.endereco else '',
+    "bairro": clinica.endereco.bairro if clinica.endereco else '',
+    "cidade": clinica.endereco.cidade if clinica.endereco else '',
+    "estado": clinica.endereco.estado if clinica.endereco else '',
+    "cep": clinica.endereco.cep if clinica.endereco else '',
     "especialidades": list(especialidades),
     "medicos": medicos,
     "avaliacoes": avaliacoes_json
@@ -1391,16 +1473,16 @@ def home(request):
     )
 
     for clinica in featured_clinics:
-        first_image = clinica.imagens.first()
-
+        candidate_images = []
+        if clinica.imagem:
+            candidate_images.append(clinica.imagem.url)
+        for gallery_image in clinica.imagens.all():
+            if gallery_image.imagem:
+                candidate_images.append(gallery_image.imagem.url)
         if clinica.logo:
-            clinica.display_image = clinica.logo.url
-        elif clinica.imagem:
-            clinica.display_image = clinica.imagem.url
-        elif first_image:
-            clinica.display_image = first_image.imagem.url
-        else:
-            clinica.display_image = static("img/sem-foto.jpg")
+            candidate_images.append(clinica.logo.url)
+
+        clinica.display_image = next((url for url in candidate_images if _url_responds(url)), static("img/sem-foto.jpg"))
 
         if clinica.endereco:
             location_parts = [part for part in [clinica.endereco.cidade, clinica.endereco.bairro] if part]
