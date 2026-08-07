@@ -59,14 +59,7 @@ class Relatorios(BaseScreen):
 
     def _build_structure(self):
         header = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
-        header.pack(fill="x", padx=20, pady=(20, 10))
-
-        ctk.CTkLabel(
-            header,
-            text="Relatórios",
-            font=font("title", "bold"),
-            text_color=COLORS["text"]
-        ).pack(side="left")
+        header.pack(fill="x", padx=20, pady=(20, 0))
 
         self.export_button = ctk.CTkButton(
             header,
