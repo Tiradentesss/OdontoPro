@@ -2947,6 +2947,28 @@ body.theme-dark .item-menu.ativo {
     box-sizing: border-box;
 }
 
+#aba-medicos > .card-branco {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+.theme-dark #aba-medicos > .card-branco {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.card-medico img {
+    width: 80px;
+    height: 80px;
+    display: block;
+    margin: 0 auto 10px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 /* Header da Clínica */
 .header-clinica-detalhe {
     display: flex;

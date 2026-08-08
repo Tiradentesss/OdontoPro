@@ -378,6 +378,20 @@ def _get_valid_banner_images(clinica):
         if _url_responds(url):
             urls.append(url)
 
+    return urls
+
+
+def _get_clinica_display_image(clinica):
+    images = _get_valid_banner_images(clinica)
+    if images:
+        return images[0]
+
+    logo = _get_clinica_logo_url(clinica)
+    if logo:
+        return logo
+
+    return static('img/sem-foto.jpg')
+
     if not urls and clinica.logo and getattr(clinica.logo, 'url', None):
         url = clinica.logo.url
         if _url_responds(url):
@@ -1473,16 +1487,7 @@ def home(request):
     )
 
     for clinica in featured_clinics:
-        candidate_images = []
-        if clinica.imagem:
-            candidate_images.append(clinica.imagem.url)
-        for gallery_image in clinica.imagens.all():
-            if gallery_image.imagem:
-                candidate_images.append(gallery_image.imagem.url)
-        if clinica.logo:
-            candidate_images.append(clinica.logo.url)
-
-        clinica.display_image = next((url for url in candidate_images if _url_responds(url)), static("img/sem-foto.jpg"))
+        clinica.display_image = _get_clinica_display_image(clinica)
 
         if clinica.endereco:
             location_parts = [part for part in [clinica.endereco.cidade, clinica.endereco.bairro] if part]

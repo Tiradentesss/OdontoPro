@@ -706,7 +706,7 @@ function abrirModalAgendamento(clinicaId) {
 
                         card.innerHTML = `
                             <img src="${foto}" 
-                                style="width:80px;height:80px;border-radius:50%;object-fit:contain;margin-bottom:10px;" onerror="this.onerror=null;this.src='/static/img/sem-foto-de-perfil.jpg';">
+                                style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;display:block;" onerror="this.onerror=null;this.src='/static/img/sem-foto-de-perfil.jpg';">
                             <h4 style="margin-bottom: 5px;">Dr(a). ${med.nome}</h4>
                             ${especialidadesHtml}
                         `;
@@ -1631,7 +1631,7 @@ function carregarMedicosClinica(clinicaId) {
 
                     medicoCard.innerHTML = `
                         <img src="${foto}" 
-                            style="width:80px;height:80px;border-radius:50%;object-fit:contain;margin-bottom:10px;" onerror="this.onerror=null;this.src='/static/img/SemIcon.png';">
+                            style="width:80px;height:80px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 10px;" onerror="this.onerror=null;this.src='/static/img/SemIcon.png';">
                         <h4>${medico.nome}</h4>
                         ${especialidadesHtml}
                     `;
