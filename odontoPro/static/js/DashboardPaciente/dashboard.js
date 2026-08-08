@@ -713,6 +713,8 @@ function abrirModalAgendamento(clinicaId) {
 
                         listaMedicos.appendChild(card);
                     });
+                    // initialize carousel controls after rendering
+                    initMedicosCarousel();
                 }
             }
             // ===== AVALIAÇÕES =====
@@ -1638,6 +1640,8 @@ function carregarMedicosClinica(clinicaId) {
 
                     listaMedicos.appendChild(medicoCard);
                 });
+                // initialize carousel controls after rendering
+                initMedicosCarousel();
             } else {
                 listaMedicos.innerHTML = '<p>Nenhum médico cadastrado nesta clínica.</p>';
             }
@@ -1649,6 +1653,27 @@ function carregarMedicosClinica(clinicaId) {
                 listaMedicos.innerHTML = '<p>Erro ao carregar médicos.</p>';
             }
         });
+}
+
+/* ================= MEDICOS CAROUSEL CONTROLS ================= */
+function initMedicosCarousel() {
+    const container = document.getElementById('lista-medicos');
+    const prev = document.getElementById('medicosPrev');
+    const next = document.getElementById('medicosNext');
+    if (!container) return;
+
+    const scrollStep = () => {
+        const card = container.querySelector('.card-medico');
+        return card ? (card.offsetWidth + parseInt(getComputedStyle(card).marginRight || 20)) : Math.floor(container.clientWidth * 0.8);
+    };
+
+    if (prev) {
+        prev.onclick = () => container.scrollBy({ left: -scrollStep(), behavior: 'smooth' });
+    }
+
+    if (next) {
+        next.onclick = () => container.scrollBy({ left: scrollStep(), behavior: 'smooth' });
+    }
 }
 
 function carregarEspecialidadesEMedicos(clinicaId) {

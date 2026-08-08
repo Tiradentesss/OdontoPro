@@ -793,6 +793,16 @@ body.theme-dark .tag-online {
     width: 260px;
 }
 
+/* Prevent sidebar from shrinking due to flexbox or content changes */
+.menu-lateral {
+    box-sizing: border-box;
+    flex: 0 0 90px; /* fixed base width */
+}
+
+.menu-lateral.aberto {
+    flex: 0 0 260px; /* fixed expanded width */
+}
+
 .botao-seta {
     position: absolute;
     right: -15px;
@@ -2968,6 +2978,49 @@ body.theme-dark .item-menu.ativo {
     border-radius: 50%;
     object-fit: cover;
 }
+
+/* Médicos carousel (horizontal scroll with prev/next controls) */
+.medicos-carousel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.medicos-carousel {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 12px 6px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    flex: 1 1 auto;
+}
+
+.medicos-carousel::-webkit-scrollbar {
+    height: 8px;
+}
+
+.medicos-carousel > .card-medico {
+    min-width: 240px;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+}
+
+.medicos-carousel-btn {
+    background: rgba(0,0,0,0.06);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.medicos-carousel-btn:focus { outline: 2px solid rgba(27,195,234,0.3); }
 
 /* Header da Clínica */
 .header-clinica-detalhe {
