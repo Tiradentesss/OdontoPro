@@ -3518,7 +3518,7 @@ body.theme-dark .item-menu.ativo {
     align-items: center;
     width: 100%;
     min-height: 100vh;
-    background-color: #f4f7fe;
+    background: transparent;
     padding: 40px 20px;
     box-sizing: border-box;
     overflow-y: auto;
