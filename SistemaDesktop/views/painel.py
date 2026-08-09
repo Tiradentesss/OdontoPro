@@ -279,11 +279,12 @@ class Painel(BaseScreen):
 
     def _render_alertas(self, row, col):
         card = self._criar_card("Notificações", "Alertas e avisos importantes", row, col, padx=(10, 0))
-        
+
+        resumo = self.dados_relatorios or {}
         alertas = [
-            ("⚠️", "Taxa de cancelamento subiu 5% esta semana", self.colors['danger']),
-            ("📅", "3 Pacientes aguardando confirmação", self.colors['info']),
-            ("🩺", "Atualização de prontuário pendente", self.colors['warning'])
+            ("📊", f"{resumo.get('total_consultas', 0)} consultas no período", self.colors['info']),
+            ("✅", f"{resumo.get('atendidos', 0)} pacientes atendidos", self.colors['success']),
+            ("⚠️", f"{resumo.get('cancelamentos', 0)} consultas canceladas", self.colors['danger'])
         ]
 
         for icon, msg, color in alertas:
