@@ -613,8 +613,17 @@ class Permissoes(BaseScreen):
             icon_frame = ctk.CTkFrame(card, fg_color=COLORS["hover"], width=44, height=44, corner_radius=12)
             icon_frame.grid(row=0, column=0, rowspan=2, padx=(12, 8), pady=10)
             icon_frame.grid_propagate(False)
+
+            icon_image = None
+            icon_text = config["icon"]
+            if perm_name == "Financeiro":
+                app = self.winfo_toplevel()
+                if hasattr(app, "_get_menu_icon"):
+                    icon_image = app._get_menu_icon("relatorios", config["color"])
+                    icon_text = ""
+
             ctk.CTkLabel(
-                icon_frame, text=config["icon"],
+                icon_frame, text=icon_text, image=icon_image,
                 font=font(ICON_SIZE), text_color=config['color']
             ).place(relx=0.5, rely=0.5, anchor="center")
 
