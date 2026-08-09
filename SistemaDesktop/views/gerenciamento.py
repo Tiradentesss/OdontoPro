@@ -261,10 +261,10 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 text_color=self.colors["primary"],
                 corner_radius=12,
                 border_width=0,
-                font=ctk.CTkFont(size=20, weight="bold"),
+                font=ctk.CTkFont(size=13, weight="bold"),
                 command=lambda m=medico: self._confirmar_exclusao_medico(m)
             )
-            excluir.place(relx=1.0, rely=0.5, anchor="e", x=-8)
+            excluir.place(relx=1.0, rely=0.0, anchor="ne", x=-8, y=6)
             
             for widget in [row, avatar, nome, email, especialidade]:
                 widget.bind("<Button-1>", lambda e, m=medico: self._select_medico(m))
