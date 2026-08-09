@@ -5,6 +5,7 @@ from PIL import Image, ImageDraw, ImageFont
 from .base import BaseScreen
 from .theme import COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from controllers.consulta_controller import ConsultaController
+from controllers.medico_controller import MedicoController
 
 
 class MedicosDisponibilidadeScreen(ctk.CTkFrame):
@@ -249,11 +250,80 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 anchor="w"
             )
             especialidade.grid(row=0, column=3, sticky="w", padx=8)
+
+            excluir = ctk.CTkButton(
+                row,
+                text="X",
+                width=24,
+                height=24,
+                fg_color="transparent",
+                hover_color=self.colors["primary_soft"],
+                text_color=self.colors["primary"],
+                corner_radius=12,
+                border_width=0,
+                font=ctk.CTkFont(size=20, weight="bold"),
+                command=lambda m=medico: self._confirmar_exclusao_medico(m)
+            )
+            excluir.place(relx=1.0, rely=0.5, anchor="e", x=-8)
             
             for widget in [row, avatar, nome, email, especialidade]:
                 widget.bind("<Button-1>", lambda e, m=medico: self._select_medico(m))
                 widget.bind("<Enter>", lambda e, r=row, s=is_selected: self._hover_row(r, s, True))
                 widget.bind("<Leave>", lambda e, r=row, s=is_selected: self._hover_row(r, s, False))
+
+    def _confirmar_exclusao_medico(self, medico):
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Confirmar exclusão")
+        dialog.resizable(False, False)
+        dialog.transient(self.winfo_toplevel())
+        dialog.grab_set()
+
+        mensagem = ctk.CTkLabel(
+            dialog,
+            text=f"Deseja excluir o médico:\n'{medico['nome']}'?",
+            font=ctk.CTkFont(size=14),
+            text_color=self.colors["text"],
+            justify="center"
+        )
+        mensagem.pack(padx=28, pady=(24, 18))
+
+        botoes = ctk.CTkFrame(dialog, fg_color="transparent")
+        botoes.pack(pady=(0, 20))
+
+        ctk.CTkButton(
+            botoes,
+            text="Sim",
+            width=80,
+            height=32,
+            command=lambda: self._excluir_medico_confirmado(medico, dialog)
+        ).pack(side="left", padx=6)
+        ctk.CTkButton(
+            botoes,
+            text="Não",
+            width=80,
+            height=32,
+            fg_color=self.colors["card_soft"],
+            text_color=self.colors["text"],
+            hover_color=self.colors["hover"],
+            command=dialog.destroy
+        ).pack(side="left", padx=6)
+
+        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        dialog.update_idletasks()
+        dialog.geometry(f"+{self.winfo_toplevel().winfo_rootx() + 120}+{self.winfo_toplevel().winfo_rooty() + 120}")
+
+    def _excluir_medico_confirmado(self, medico, dialog):
+        resultado = MedicoController.desassociar_medico(medico["id"], self.clinica_id)
+        dialog.destroy()
+
+        if not resultado.get("sucesso"):
+            messagebox.showerror("Erro", resultado.get("mensagem", "Não foi possível remover o médico da clínica."))
+            return
+
+        if self.selected_medico and self.selected_medico["id"] == medico["id"]:
+            self.selected_medico = None
+            self.right_subtitle.configure(text="Selecione um médico para configurar a agenda.")
+        self.refresh()
 
     def _update_pagination_tabs(self, total_paginas):
         """Atualiza as abas de paginação com números"""

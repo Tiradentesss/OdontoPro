@@ -297,3 +297,38 @@ class MedicoController:
                 cursor.close()
             if conn:
                 conn.close()
+
+    @staticmethod
+    def desassociar_medico(medico_id, clinica_id):
+        """Remove somente o vínculo do médico com a clínica informada."""
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE odontoPro_medico
+                SET clinica_id = NULL
+                WHERE id = %s AND clinica_id = %s
+                """,
+                (medico_id, clinica_id)
+            )
+
+            if cursor.rowcount == 0:
+                conn.rollback()
+                return {"sucesso": False, "mensagem": "Médico não está associado a esta clínica."}
+
+            conn.commit()
+            return {"sucesso": True, "mensagem": "Médico removido da clínica com sucesso."}
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            return {"sucesso": False, "mensagem": f"Erro ao remover médico da clínica: {str(e)}"}
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
