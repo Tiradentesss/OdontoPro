@@ -246,7 +246,7 @@ class Painel(BaseScreen):
         detalhe = ctk.CTkFrame(card, fg_color="transparent")
         detalhe.pack(fill="x", padx=20, pady=10)
         
-        itens = [("Pacientes", 'pacientes', 'info'), ("Médicos", 'medicos', 'success'), ("Gestão", 'gerentes', 'warning')]
+        itens = [("Consultas Realizadas", 'consultas_realizadas', 'info'), ("Médicos", 'medicos', 'success'), ("Gestão", 'gerentes', 'warning')]
         for label, key, color_key in itens:
             f = ctk.CTkFrame(detalhe, fg_color=self.colors['bg_app'], corner_radius=10)
             f.pack(fill="x", pady=3)
@@ -370,7 +370,7 @@ class Painel(BaseScreen):
         """Carrega resumo de usuários cadastrados"""
         try:
             if not self.clinica_id:
-                return {'pacientes': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
+                return {'pacientes': 0, 'consultas_realizadas': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
             
             conn = None
             cursor = None
@@ -394,6 +394,15 @@ class Painel(BaseScreen):
                 pacientes = cursor.fetchone()['total'] or 0
                 print(f"Pacientes encontrados: {pacientes}")
 
+                sql_consultas_realizadas = (
+                    "SELECT COUNT(*) AS total "
+                    "FROM odontoPro_consulta "
+                    "WHERE clinica_id = %s "
+                    "AND LOWER(TRIM(status)) = 'realizada'"
+                )
+                cursor.execute(sql_consultas_realizadas, (self.clinica_id,))
+                consultas_realizadas = cursor.fetchone()['total'] or 0
+
                 # Médicos: usar a mesma origem de dados do Corpo Clínico
                 print("Tabela consultada: odontoPro_medico via MedicoController.listar_medicos")
                 print("SQL executado (médicos): SELECT id, nome, email, crm_cro, ativo FROM odontoPro_medico WHERE clinica_id = %s ORDER BY nome ASC")
@@ -415,6 +424,7 @@ class Painel(BaseScreen):
                 
                 return {
                     'pacientes': pacientes,
+                    'consultas_realizadas': consultas_realizadas,
                     'medicos': medicos,
                     'gerentes': gerentes,
                     'total_usuarios': total_usuarios
@@ -422,7 +432,7 @@ class Painel(BaseScreen):
             except Exception as e:
                 print(f"Erro ao contar cadastros: {e}")
                 print("====================================")
-                return {'pacientes': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
+                return {'pacientes': 0, 'consultas_realizadas': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
             finally:
                 if cursor:
                     cursor.close()
@@ -431,7 +441,7 @@ class Painel(BaseScreen):
         except Exception as e:
             print(f"Erro geral: {e}")
             print("====================================")
-            return {'pacientes': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
+            return {'pacientes': 0, 'consultas_realizadas': 0, 'medicos': 0, 'gerentes': 0, 'total_usuarios': 0}
 
     def _carregar_medicos(self):
         """Carrega lista de médicos ativos"""
