@@ -177,7 +177,7 @@ class Painel(BaseScreen):
 
         f = self.dados_relatorios or {}
         metrics = [
-            ("Pacientes", str(f.get('total_pacientes', 0)), self.colors['primary']),
+            ("Atendidos", str(f.get('atendidos', 0)), self.colors['primary']),
             ("Profissionais", str(f.get('total_medicos', 0)), self.colors['success']),
             ("Consultas", str(f.get('total_consultas', 0)), self.colors['info']),
             ("Comparecimento", f"{f.get('comparecimento', 0)}%", self.colors['warning'])

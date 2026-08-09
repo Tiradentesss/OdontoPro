@@ -64,7 +64,10 @@ class RelatoriosController:
                     COUNT(DISTINCT c.paciente_id) AS total_pacientes,
                     COUNT(DISTINCT c.medico_id) AS total_medicos,
                     SUM(LOWER(TRIM(c.status)) = 'cancelada') AS cancelamentos,
-                    SUM(LOWER(TRIM(c.status)) = 'realizada') AS realizadas
+                    SUM(LOWER(TRIM(c.status)) = 'realizada') AS realizadas,
+                    COUNT(DISTINCT CASE
+                        WHEN LOWER(TRIM(c.status)) = 'realizada' THEN c.paciente_id
+                    END) AS atendidos
                 FROM odontoPro_consulta c
                 LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
                 LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id
@@ -72,8 +75,8 @@ class RelatoriosController:
                   AND c.data_hora BETWEEN %s AND %s
             """, tuple(params + [data_inicio, data_fim]))
 
-            row = cursor.fetchone() or (0, 0, 0, 0, 0)
-            total_consultas, total_pacientes, total_medicos, cancelamentos, realizadas = row
+            row = cursor.fetchone() or (0, 0, 0, 0, 0, 0)
+            total_consultas, total_pacientes, total_medicos, cancelamentos, realizadas, atendidos = row
 
             if total_consultas:
                 comparecimento = int(round((realizadas or 0) / total_consultas * 100))
@@ -85,6 +88,7 @@ class RelatoriosController:
                 'total_pacientes': int(total_pacientes or 0),
                 'total_medicos': int(total_medicos or 0),
                 'cancelamentos': int(cancelamentos or 0),
+                'atendidos': int(atendidos or 0),
                 'comparecimento': int(comparecimento),
                 'novos_pacientes': 0,
                 'retornos': 0,
@@ -96,6 +100,7 @@ class RelatoriosController:
                 'total_pacientes': 0,
                 'total_medicos': 0,
                 'cancelamentos': 0,
+                'atendidos': 0,
                 'comparecimento': 0,
                 'novos_pacientes': 0,
                 'retornos': 0,
