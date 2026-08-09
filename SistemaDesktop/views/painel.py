@@ -197,7 +197,7 @@ class Painel(BaseScreen):
             ctk.CTkLabel(box, text=val, font=ctk.CTkFont(size=19, weight="bold"), text_color=col_text).pack(pady=(0, 10))
 
         botao_relatorios = self._criar_botao_ir_para(card, 'relatorios')
-        botao_relatorios.place_configure(y=-40)
+        botao_relatorios.place_configure(x=-20, y=-8)
 
     def _render_status_consultas(self, row, col):
         card = self._criar_card("Status das Consultas", "Distribuição de consultas por status", row, col, padx=(0, 10))
