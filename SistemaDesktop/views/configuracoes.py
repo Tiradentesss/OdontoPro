@@ -4,7 +4,11 @@ from tkinter import filedialog, messagebox
 from .base import BaseScreen, ActionButtons
 from .theme import font, ICON_SIZE, COLORS, toggle_dark_mode, get_dark_mode, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from services.endereco_service import EnderecoService
+from services.cloudinary_service import upload_image_to_cloudinary
 import os
+import time
+import requests
+from io import BytesIO
 from PIL import Image, ImageTk, ImageDraw
 
 
@@ -12,13 +16,33 @@ class ImagePreview:
     """Classe utilitária para gerenciar previews de imagens"""
 
     @staticmethod
+    def _load_image(image_path):
+        if not image_path:
+            return None
+
+        try:
+            if isinstance(image_path, str) and image_path.lower().startswith(("http://", "https://")):
+                response = requests.get(image_path, timeout=15)
+                response.raise_for_status()
+                return Image.open(BytesIO(response.content))
+
+            if os.path.exists(image_path):
+                return Image.open(image_path)
+
+        except Exception as e:
+            print(f"Erro ao carregar imagem '{image_path}': {e}")
+
+        return None
+
+    @staticmethod
     def create_circular_preview(canvas, image_path, size=140, placeholder_text="IMG"):
         """Cria preview circular de imagem em um canvas"""
         canvas.delete("all")
 
-        if image_path and os.path.exists(image_path):
+        img = ImagePreview._load_image(image_path)
+        if img:
             try:
-                img = Image.open(image_path).convert("RGBA")
+                img = img.convert("RGBA")
                 img = img.resize((size - 10, size - 10), Image.Resampling.LANCZOS)
 
                 mask = Image.new("L", (size - 10, size - 10), 0)
@@ -31,21 +55,20 @@ class ImagePreview:
                 canvas.create_image(size // 2, size // 2, image=photo)
                 canvas.image = photo
                 canvas.create_oval(5, 5, size - 5, size - 5, outline=COLORS["primary"], width=2)
-
+                return
             except Exception as e:
-                print(f"Erro ao carregar imagem: {e}")
-                ImagePreview._draw_placeholder_circle(canvas, size, placeholder_text)
-        else:
-            ImagePreview._draw_placeholder_circle(canvas, size, placeholder_text)
+                print(f"Erro ao processar preview de imagem: {e}")
+
+        ImagePreview._draw_placeholder_circle(canvas, size, placeholder_text)
 
     @staticmethod
     def create_rectangular_preview(canvas, image_path, width=300, height=150, placeholder_text="IMG"):
         """Cria preview retangular de imagem em um canvas"""
         canvas.delete("all")
 
-        if image_path and os.path.exists(image_path):
+        img = ImagePreview._load_image(image_path)
+        if img:
             try:
-                img = Image.open(image_path)
                 img_ratio = img.width / img.height
                 canvas_ratio = width / height
 
@@ -66,12 +89,11 @@ class ImagePreview:
                 canvas.image = photo
 
                 canvas.create_rectangle(2, 2, width - 2, height - 2, outline=COLORS["border"], width=1)
-
+                return
             except Exception as e:
-                print(f"Erro ao carregar imagem: {e}")
-                ImagePreview._draw_placeholder_rectangle(canvas, width, height, placeholder_text)
-        else:
-            ImagePreview._draw_placeholder_rectangle(canvas, width, height, placeholder_text)
+                print(f"Erro ao processar preview de imagem: {e}")
+
+        ImagePreview._draw_placeholder_rectangle(canvas, width, height, placeholder_text)
 
     @staticmethod
     def _draw_placeholder_circle(canvas, size, text):
@@ -1498,19 +1520,32 @@ class Configuracoes(BaseScreen):
 
                 if "logo" in self.images:
                     logo_path = self.images["logo"]
-                    upload_dir = os.path.join(os.path.dirname(__file__), "../assets/clinicas/logo")
-                    os.makedirs(upload_dir, exist_ok=True)
+                    saved_logo = None
 
-                    extensao = os.path.splitext(logo_path)[1] or ".png"
-                    filename = f"clinica_{self.clinica_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{extensao}"
-                    dest_path = os.path.join(upload_dir, filename)
-                    shutil.copy(logo_path, dest_path)
+                    if os.path.exists(logo_path):
+                        try:
+                            public_id = f"clinica_{self.clinica_id}_{int(time.time())}"
+                            folder = f"odontopro/clinicas/{self.clinica_id}"
+                            saved_logo = upload_image_to_cloudinary(logo_path, public_id=public_id, folder=folder)
+                            print(f"[INFO] Logo enviada ao Cloudinary: {saved_logo}")
+                        except Exception as e:
+                            print(f"[AVISO] Não foi possível enviar a logo para o Cloudinary: {e}")
+
+                    if not saved_logo:
+                        upload_dir = os.path.join(os.path.dirname(__file__), "../assets/clinicas/logo")
+                        os.makedirs(upload_dir, exist_ok=True)
+
+                        extensao = os.path.splitext(logo_path)[1] or ".png"
+                        filename = f"clinica_{self.clinica_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{extensao}"
+                        dest_path = os.path.join(upload_dir, filename)
+                        shutil.copy(logo_path, dest_path)
+                        saved_logo = dest_path
 
                     cursor.execute("""
                         UPDATE odontoPro_clinica
                         SET logo = %s
                         WHERE id = %s
-                    """, (dest_path, self.clinica_id))
+                    """, (saved_logo, self.clinica_id))
 
                 if hasattr(self, "clinic_photos"):
                     saved_photos = []
