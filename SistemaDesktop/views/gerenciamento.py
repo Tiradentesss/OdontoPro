@@ -310,7 +310,10 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
         dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
         dialog.update_idletasks()
-        dialog.geometry(f"+{self.winfo_toplevel().winfo_rootx() + 120}+{self.winfo_toplevel().winfo_rooty() + 120}")
+        janela_principal = self.winfo_toplevel()
+        pos_x = janela_principal.winfo_rootx() + (janela_principal.winfo_width() - dialog.winfo_width()) // 2
+        pos_y = janela_principal.winfo_rooty() + (janela_principal.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{pos_x}+{pos_y}")
 
     def _excluir_medico_confirmado(self, medico, dialog):
         resultado = MedicoController.desassociar_medico(medico["id"], self.clinica_id)
