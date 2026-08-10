@@ -249,6 +249,8 @@ class AdminListFrame(ctk.CTkFrame):
             self.scroll_list,
             fg_color="transparent",
             corner_radius=8,
+            border_width=1,
+            border_color=COLORS["border"],
             height=60
         )
         row_frame.pack(fill="x", pady=2)
@@ -340,8 +342,8 @@ class AdminListFrame(ctk.CTkFrame):
         avatar_label.grid(
             row=0,
             column=0,
-            padx=(12, 8),
-            pady=0,
+            padx=(16, 12),
+            pady=11,
             sticky="ns"
         )
 
@@ -364,7 +366,7 @@ class AdminListFrame(ctk.CTkFrame):
             row=0,
             column=1,
             sticky="w",  # Alinhado à esquerda (sem expansão vertical)
-            padx=(8, 8),
+            padx=(12, 12),
             pady=0
         )
 
@@ -387,7 +389,7 @@ class AdminListFrame(ctk.CTkFrame):
             row=0,
             column=2,
             sticky="w",  # Sem expansão, alinhado à esquerda
-            padx=(8, 8),
+            padx=(12, 12),
             pady=0
         )
 
@@ -429,7 +431,7 @@ class AdminListFrame(ctk.CTkFrame):
             row=0,
             column=3,
             sticky="w",  # Sem expansão, alinhado à esquerda
-            padx=(8, 8),
+            padx=(12, 12),
             pady=0
         )
 
