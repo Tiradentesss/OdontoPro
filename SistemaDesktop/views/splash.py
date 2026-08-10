@@ -6,6 +6,7 @@ import os
 from config.database import get_connection
 from controllers.consulta_controller import ConsultaController
 from controllers.gerenciamento_controller import GerenciamentoController
+from views.theme import COLORS, font
 
 
 class SplashScreen(ctk.CTkToplevel):
@@ -30,16 +31,16 @@ class SplashScreen(ctk.CTkToplevel):
 
         self.geometry(f"{largura}x{altura}+{x}+{y}")
 
-        self.configure(fg_color="#FFFFFF")
+        self.configure(fg_color=COLORS["bg"])
 
         self.attributes("-topmost", True)
 
         frame = ctk.CTkFrame(
             self,
-            fg_color="#FFFFFF",
+            fg_color=COLORS["card"],
             corner_radius=25
         )
-        frame.pack(fill="both", expand=True, padx=2, pady=2)
+        frame.pack(fill="both", expand=True, padx=8, pady=8)
 
         self.caminho = os.path.join(
             os.path.dirname(__file__),
@@ -72,39 +73,49 @@ class SplashScreen(ctk.CTkToplevel):
             )
             # manter referência no widget também
             lbl.image = self.logo
-            lbl.pack(pady=(45, 10))
+            lbl.pack(pady=(28, 8))
 
         ctk.CTkLabel(
             frame,
             text="OdontoHub",
-            font=("Segoe UI", 30, "bold"),
-            text_color="#007AFF"
+            font=font(28, weight="bold"),
+            text_color=COLORS["primary"]
         ).pack()
 
         ctk.CTkLabel(
             frame,
             text="Sistema Inteligente para Clínicas",
-            font=("Segoe UI", 15),
-            text_color="#666666"
-        ).pack(pady=(5, 30))
+            font=font("small"),
+            text_color=COLORS["muted"]
+        ).pack(pady=(4, 24))
 
         self.status = ctk.CTkLabel(
             frame,
             text="Inicializando...",
-            font=("Segoe UI", 14),
-            text_color="#777777"
+            font=font("text_large"),
+            text_color=COLORS["text_secondary"]
         )
 
-        self.status.pack()
+        self.status.pack(pady=(0, 7))
+
+        self.percent = ctk.CTkLabel(
+            frame,
+            text="0%",
+            font=font("small", weight="bold"),
+            text_color=COLORS["primary_dark"]
+        )
+        self.percent.pack(pady=(0, 8))
 
         self.progress = ctk.CTkProgressBar(
             frame,
             width=420,
-            height=8,
-            progress_color="#007AFF"
+            height=7,
+            corner_radius=4,
+            fg_color=COLORS["primary_soft"],
+            progress_color=COLORS["primary"]
         )
 
-        self.progress.pack(pady=25)
+        self.progress.pack(pady=(0, 8))
 
         self.progress.set(0)
 
@@ -132,6 +143,7 @@ class SplashScreen(ctk.CTkToplevel):
                     return
                 self.progress.set(value)
                 self.status.configure(text=texto)
+                self.percent.configure(text=f"{round(value * 100)}%")
             except Exception:
                 pass
 
