@@ -189,15 +189,25 @@ class App(ctk.CTkToplevel):
             self.permissoes_usuario = self._carregar_permissoes_usuario()
 
         self.title("OdontoHub - Sistema de Gerenciamento")
-        largura = self.winfo_screenwidth()
-        altura = self.winfo_screenheight()
+        self.update_idletasks()
 
-        self.geometry(f"{largura}x{altura}+0+0")
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        window_width = min(max(1000, screen_width - 80), screen_width)
+        window_height = min(max(650, screen_height - 80), screen_height)
+        x = max(0, (screen_width - window_width) // 2)
+        y = max(0, (screen_height - window_height) // 2)
+
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.fullscreen = False
         self.bind("<F11>", self._toggle_fullscreen)
         self.bind("<Escape>", self._exit_fullscreen)
-        self.minsize(1000, 650)
+        self.minsize(min(1000, screen_width), min(650, screen_height))
         self.configure(fg_color=COLORS["bg"])
+
+        # Iniciar maximizado no Windows, mas sem forçar dimensões brutas da tela.
+        self.after(0, lambda: self.state("zoomed"))
 
         # Grid principal
         self.grid_columnconfigure(1, weight=1)

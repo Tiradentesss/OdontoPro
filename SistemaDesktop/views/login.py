@@ -18,13 +18,19 @@ class Login(ctk.CTkToplevel):
 
         self.update_idletasks()
 
-        largura = self.winfo_screenwidth()
-        altura = self.winfo_screenheight()
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
 
-        self.geometry(f"{largura}x{altura}+0+0")
+        window_width = min(max(1000, screen_width - 80), screen_width)
+        window_height = min(max(650, screen_height - 80), screen_height)
+        x = max(0, (screen_width - window_width) // 2)
+        y = max(0, (screen_height - window_height) // 2)
+
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
         self.fullscreen = False
         self.bind("<F11>", self._toggle_fullscreen)
         self.bind("<Escape>", self._exit_fullscreen)
+        self.minsize(min(1000, screen_width), min(650, screen_height))
 
         self.configure(fg_color=COLORS["content_bg"])
 
@@ -57,8 +63,8 @@ class Login(ctk.CTkToplevel):
             dentista_path = os.path.join(ASSETS_DIR, "dentistalogin.png")
             if os.path.exists(dentista_path):
                 dentista_pil = Image.open(dentista_path)
-                target_w = largura // 2
-                target_h = altura
+                target_w = screen_width // 2
+                target_h = screen_height
                 target_aspect = target_w / target_h
                 src_w, src_h = dentista_pil.size
                 src_aspect = src_w / src_h
