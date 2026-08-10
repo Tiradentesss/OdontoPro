@@ -455,6 +455,7 @@ class AdminListFrame(ctk.CTkFrame):
             width=24,
             height=24,
             fg_color="transparent",
+            bg_color="transparent",
             hover_color=COLORS["primary_soft"],
             text_color=COLORS["primary"],
             corner_radius=12,
