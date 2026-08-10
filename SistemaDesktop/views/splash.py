@@ -120,6 +120,10 @@ class SplashScreen(ctk.CTkToplevel):
 
         self.progress.grid(row=6, column=0, pady=(0, 8))
 
+        self._target_progress = 0.0
+        self._display_progress = 0.0
+        self._progress_animation_id = None
+        self._finish_pending = False
         self.progress.set(0)
 
         # Estado de controle da inicialização
@@ -148,13 +152,36 @@ class SplashScreen(ctk.CTkToplevel):
             try:
                 if not self.winfo_exists():
                     return
-                self.progress.set(value)
+                self._target_progress = max(0.0, min(1.0, value))
                 self.status.configure(text=texto)
-                self.percent.configure(text=f"{round(value * 100)}%")
+                self._start_progress_animation()
             except Exception:
                 pass
 
         self._schedule_after(0, _do)
+
+    def _start_progress_animation(self):
+        if self._progress_animation_id is None and self.winfo_exists():
+            self._progress_animation_id = self._schedule_after(35, self._animate_progress)
+
+    def _animate_progress(self):
+        self._progress_animation_id = None
+        if not self.winfo_exists():
+            return
+
+        if self._display_progress < self._target_progress:
+            self._display_progress = min(
+                self._display_progress + 0.02,
+                self._target_progress
+            )
+            self.progress.set(self._display_progress)
+            self.percent.configure(text=f"{round(self._display_progress * 100)}%")
+            self._start_progress_animation()
+            return
+
+        if self._finish_pending and self._display_progress >= 1.0:
+            self._finish_pending = False
+            self._schedule_after(300, self.finish)
 
     def _schedule_after(self, delay, callback):
         if not self.winfo_exists():
@@ -171,14 +198,14 @@ class SplashScreen(ctk.CTkToplevel):
         try:
             callback_id = self.after(delay, _guarded_callback)
             self._after_ids.add(callback_id)
+            return callback_id
         except Exception:
-            pass
+            return None
 
     def load_system(self):
         # A criação do App é a única etapa de inicialização; as telas carregam
         # seus próprios dados sem bloquear a abertura da janela principal.
-        self.update_progress(0.50, "Preparando interface...")
-        self.update_progress(1.0, "Preparando interface...")
+        self.update_progress(0.0, "Inicializando...")
         self._splash_tasks_complete = True
         print("[SPLASH] Tarefas próprias da Splash concluídas")
         self._try_finish()
@@ -196,6 +223,7 @@ class SplashScreen(ctk.CTkToplevel):
             return
 
         self._app_ready = True
+        self.update_progress(1.0, "Sistema pronto")
         self._try_finish()
 
     def _try_finish(self):
@@ -210,7 +238,8 @@ class SplashScreen(ctk.CTkToplevel):
 
         self._loading = False
         print("[SPLASH] Finalizando Splash")
-        self._schedule_after(50, self.finish)
+        self._finish_pending = True
+        self._start_progress_animation()
 
     def finish(self):
         # Se ocorreu erro durante a inicialização, não permitir fechamento da splash
