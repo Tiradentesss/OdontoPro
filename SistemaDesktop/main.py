@@ -13,7 +13,10 @@ class MainWindow:
             # Carregar preferência de tema
             load_theme_preference()
             
+            self.root = ctk.CTk()
+            self.root.withdraw()
             self.current_app = None
+            self.app_instance = None
             # Iniciar sem auto-login; exigirá clique no botão 'ENTRAR'
             self.show_login(auto_login_enabled=False)
         except Exception as e:
@@ -36,9 +39,10 @@ class MainWindow:
                         self.current_app.destroy()
                 except:
                     pass
+            self.app_instance = None
             
             # Criar e exibir login com flag de auto-login
-            self.current_app = Login(on_success=self.show_app, auto_login_enabled=auto_login_enabled)
+            self.current_app = Login(self.root, on_success=self.show_app, auto_login_enabled=auto_login_enabled)
             self.current_app.mainloop()
         except Exception as e:
             print(f"Erro ao exibir login: {e}")
@@ -49,75 +53,68 @@ class MainWindow:
         """Exibe a tela do aplicativo após login bem-sucedido"""
         try:
             print(f"✅ Login bem-sucedido para: {usuario_nome}")
-            # Em vez de fechar o login imediatamente, exibir a Splash SOBRE o login
             parent = self.current_app
+            splash = None
 
             def _on_splash_finish():
-                # Quando a Splash terminar, destruí-la, destruir o Login e criar o App
                 try:
-                    # Garantir que o splash libere qualquer grab
-                    try:
+                    app = self.app_instance
+                    if not app or not app._initialization_notified:
+                        return
+
+                    if splash and splash.winfo_exists():
                         splash.grab_release()
-                    except Exception:
-                        pass
+                        splash.destroy()
+                        print("[SPLASH] Splash destruída")
 
-                    # Destruir a Splash com segurança
-                    try:
-                        if splash and splash.winfo_exists():
-                            splash.destroy()
-                    except Exception:
-                        pass
+                    if parent and parent.winfo_exists():
+                        parent.destroy()
+                        print("[SPLASH] Login destruído após App pronto")
 
-                    # Destruir a janela de Login (mantida atrás da Splash)
-                    try:
-                        if parent and parent.winfo_exists():
-                            parent.destroy()
-                    except Exception:
-                        pass
-
-                    # Finalmente criar e iniciar o App
-                    self._start_app(usuario_nome, usuario_id, tipo_usuario, clinica_id)
+                    self.current_app = app
+                    app.deiconify()
+                    print("[SPLASH] App exibido")
+                    app.mainloop()
                 except Exception as e:
                     print(f"Erro na finalização da Splash: {e}")
 
+            def _on_app_ready():
+                print("[SPLASH] App pronto recebido pela MainWindow")
+                if splash and splash.winfo_exists():
+                    splash.set_initialization_result(True)
+
+            def _on_app_error(error):
+                if splash and splash.winfo_exists():
+                    splash.set_initialization_result(False, error)
+
             try:
                 splash = Splash(parent, on_finish=_on_splash_finish, usuario_nome=usuario_nome, clinica_id=clinica_id)
-                try:
-                    splash.transient(parent)
-                    splash.grab_set()
-                    splash.focus_force()
-                except Exception:
-                    pass
-                # Não chamar mainloop aqui — manter o mainloop do Login até que o App seja criado
-                return
+                splash.transient(parent)
+                splash.grab_set()
+                splash.focus_force()
             except Exception as e:
                 print(f"Erro ao exibir Splash: {e}")
-                # Fallback: criar App imediatamente
-                self._start_app(usuario_nome, usuario_id, tipo_usuario, clinica_id)
+                return
+
+            try:
+                self.app_instance = App(
+                    parent=self.root,
+                    usuario_nome=usuario_nome,
+                    usuario_id=usuario_id,
+                    tipo_usuario=tipo_usuario,
+                    clinica_id=clinica_id,
+                    on_logout=lambda: self.show_login(auto_login_enabled=False),
+                    on_initialization_complete=_on_app_ready,
+                    on_initialization_error=_on_app_error
+                )
+            except Exception as e:
+                print(f"Erro ao preparar App: {e}")
+                if splash and splash.winfo_exists():
+                    splash.set_initialization_result(False, e)
         except Exception as e:
             print(f"Erro ao exibir app: {e}")
             import traceback
             traceback.print_exc()
-            # Tentar voltar para login
-            self.show_login(auto_login_enabled=False)
-
-    def _start_app(self, usuario_nome, usuario_id, tipo_usuario, clinica_id):
-        """Destrói a janela de login e inicia a janela principal (App)."""
-        try:
-            # Criar e exibir app (assume que Login/Splash foram tratadas pelo on_finish)
-            self.current_app = App(
-                usuario_nome=usuario_nome,
-                usuario_id=usuario_id,
-                tipo_usuario=tipo_usuario,
-                clinica_id=clinica_id,
-                on_logout=lambda: self.show_login(auto_login_enabled=False)
-            )
-            self.current_app.mainloop()
-        except Exception as e:
-            print(f"Erro ao iniciar App: {e}")
-            import traceback
-            traceback.print_exc()
-            self.show_login(auto_login_enabled=False)
 
 
 if __name__ == "__main__":

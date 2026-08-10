@@ -125,6 +125,10 @@ class SplashScreen(ctk.CTkToplevel):
         # Estado de controle da inicialização
         self._loading = True
         self._error = None
+        self._splash_tasks_complete = False
+        self._app_ready = False
+        self._after_ids = set()
+        print("[SPLASH] Inicialização iniciada")
 
         # Impedir fechamento da janela enquanto estiver carregando
         try:
@@ -150,90 +154,63 @@ class SplashScreen(ctk.CTkToplevel):
             except Exception:
                 pass
 
+        self._schedule_after(0, _do)
+
+    def _schedule_after(self, delay, callback):
+        if not self.winfo_exists():
+            return
+
+        callback_id = None
+
+        def _guarded_callback():
+            if callback_id is not None:
+                self._after_ids.discard(callback_id)
+            if self.winfo_exists():
+                callback()
+
         try:
-            self.after(0, _do)
+            callback_id = self.after(delay, _guarded_callback)
+            self._after_ids.add(callback_id)
         except Exception:
             pass
 
     def load_system(self):
-        self.update_progress(0.08, "Conectando ao banco...")
-        try:
-            conn = get_connection()
-            conn.close()
-        except Exception as e:
-            self._error = e
-            print(f"[SPLASH ERROR] Falha ao conectar ao banco: {e}")
-            self.update_progress(0.0, "Erro ao conectar ao banco")
-            # Não continuar se houver erro crítico
-            return
-
-        self.update_progress(0.18, "Carregando permissões...")
-        try:
-            GerenciamentoController.inicializar_permissoes_padrao()
-        except Exception as e:
-            self._error = e
-            print(f"[SPLASH ERROR] Falha ao inicializar permissões: {e}")
-            self.update_progress(0.0, "Erro ao carregar permissões")
-            return
-
-        self.update_progress(0.30, f"Carregando usuário {self.usuario_nome}...")
-        try:
-            if self.usuario_nome:
-                self.master.update_idletasks()
-        except Exception:
-            pass
-
-        self.update_progress(0.45, "Carregando médicos...")
-        try:
-            ConsultaController.listar_medicos(self.clinica_id)
-        except Exception as e:
-            # não interromper totalmente por falha em dados não-críticos, apenas logar
-            print(f"[SPLASH WARNING] Falha ao carregar médicos: {e}")
-
-        self.update_progress(0.60, "Carregando especialidades...")
-        try:
-            ConsultaController.listar_especialidades()
-        except Exception as e:
-            print(f"[SPLASH WARNING] Falha ao carregar especialidades: {e}")
-
-        self.update_progress(0.70, "Carregando Agenda...")
-        try:
-            ConsultaController.listar_opcoes_filtro(self.clinica_id)
-        except Exception as e:
-            print(f"[SPLASH WARNING] Falha ao carregar opções da agenda: {e}")
-
-        self.update_progress(0.80, "Carregando Relatórios...")
-        try:
-            from controllers.relatorios_controller import RelatoriosController
-            RelatoriosController.obter_resumo_relatorios(self.clinica_id)
-        except Exception as e:
-            print(f"[SPLASH WARNING] Falha ao carregar relatórios: {e}")
-
-        self.update_progress(0.88, "Carregando imagens...")
-        try:
-            if os.path.exists(self.caminho):
-                with Image.open(self.caminho) as img:
-                    img.load()
-        except Exception as e:
-            print(f"[SPLASH WARNING] Falha ao carregar imagens: {e}")
-
-        self.update_progress(0.94, "Inicializando componentes...")
-        try:
-            self.master.update_idletasks()
-        except Exception as e:
-            print(f"[SPLASH WARNING] Falha em update_idletasks: {e}")
-        # Finalizar carregamento
-        # (A Splash realiza todas as inicializações necessárias aqui)
-
-        # Finalizar carregamento
+        # A criação do App é a única etapa de inicialização; as telas carregam
+        # seus próprios dados sem bloquear a abertura da janela principal.
+        self.update_progress(0.50, "Preparando interface...")
         self.update_progress(1.0, "Preparando interface...")
-        self._loading = False
+        self._splash_tasks_complete = True
+        print("[SPLASH] Tarefas próprias da Splash concluídas")
+        self._try_finish()
 
-        # Chamar finish (on_finish) na UI thread
-        try:
-            self.after(50, self.finish)
-        except Exception:
-            self.finish()
+    def set_initialization_result(self, success, error=None):
+        """Recebe a confirmação do App antes de liberar o fluxo de login."""
+        if not self.winfo_exists():
+            return
+
+        if not success:
+            self._error = error or RuntimeError("Falha durante a inicialização do App")
+            self._loading = True
+            self.update_progress(0.0, "Erro durante a inicialização. Aguarde ou verifique os detalhes.")
+            print(f"[SPLASH ERROR] Inicialização do App falhou: {self._error}")
+            return
+
+        self._app_ready = True
+        self._try_finish()
+
+    def _try_finish(self):
+        if not self.winfo_exists() or self._error:
+            return
+        if not (self._splash_tasks_complete and self._app_ready):
+            print(
+                f"[SPLASH] Aguardando conclusão: splash={self._splash_tasks_complete}, "
+                f"app={self._app_ready}"
+            )
+            return
+
+        self._loading = False
+        print("[SPLASH] Finalizando Splash")
+        self._schedule_after(50, self.finish)
 
     def finish(self):
         # Se ocorreu erro durante a inicialização, não permitir fechamento da splash
@@ -270,3 +247,12 @@ class SplashScreen(ctk.CTkToplevel):
                 self.destroy()
         except Exception:
             pass
+
+    def destroy(self):
+        for callback_id in tuple(self._after_ids):
+            try:
+                self.after_cancel(callback_id)
+            except Exception:
+                pass
+        self._after_ids.clear()
+        super().destroy()

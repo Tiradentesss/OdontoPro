@@ -348,6 +348,7 @@ class Configuracoes(BaseScreen):
         self.clinica_id = clinica_id
         self.usuario_id = usuario_id
         self.app = app  # Referência à aplicação principal para alternar tema globalmente
+        self.initialization_error = None
 
         self.colors = {
             "bg_main": COLORS["content_bg"],
@@ -1072,6 +1073,11 @@ class Configuracoes(BaseScreen):
                 return None
 
             except Exception as e:
+                erro_texto = str(e).lower()
+                if "unknown column" in erro_texto and "fotos" in erro_texto:
+                    print(f"[AVISO] Dados de fotos indisponíveis; Configurações continuará carregando: {e}")
+                else:
+                    self.initialization_error = e
                 print(f"[ERRO] Falha ao carregar dados da clínica: {e}")
                 return None
 

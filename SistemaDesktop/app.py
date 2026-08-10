@@ -20,7 +20,7 @@ from controllers.gerenciamento_controller import GerenciamentoController
 from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode, font, ASSETS_DIR, get_brand_logo_path
 
 
-class App(ctk.CTk):
+class App(ctk.CTkToplevel):
     def logout(self):
         """Faz logout e volta para a tela de login"""
         # Se houver um callback de logout, usar ele
@@ -147,13 +147,31 @@ class App(ctk.CTk):
         perm_necessaria = mapa_permissoes.get(tela)
         return perm_necessaria in self.permissoes_usuario if perm_necessaria else False
 
-    def __init__(self, usuario_nome="Usuário", usuario_id=None, tipo_usuario=None, clinica_id=None, on_logout=None):
+    def __init__(
+        self,
+        parent=None,
+        usuario_nome="Usuário",
+        usuario_id=None,
+        tipo_usuario=None,
+        clinica_id=None,
+        on_logout=None,
+        on_initialization_complete=None,
+        on_initialization_error=None
+    ):
         self.clinica_id = clinica_id
         self.usuario_id = usuario_id
         self.tipo_usuario = tipo_usuario
         self.on_logout = on_logout
+        self._on_initialization_complete = on_initialization_complete
+        self._on_initialization_error = on_initialization_error
+        self._initialization_error = None
+        self._initialization_notified = False
+        print("[SPLASH] App criado; cargas assíncronas não críticas não bloqueiam a prontidão")
         
-        super().__init__()
+        if parent is None:
+            raise RuntimeError("App requer a raiz Tk existente como parent")
+        super().__init__(master=parent)
+        self.withdraw()
 
         # Carregar preferência de tema
         load_theme_preference()
@@ -213,6 +231,7 @@ class App(ctk.CTk):
 
             if os.path.exists(brand_logo_path):
                 pil = Image.open(brand_logo_path)
+                self._brand_logo_pil = pil
                 prop = pil.width / pil.height if pil.height else 1
                 w = 200
                 h = int(w / prop)
@@ -226,6 +245,7 @@ class App(ctk.CTk):
             text="",
             image=self.brand_logo_img
         )
+        self.brand_logo_label.image = self.brand_logo_img
         self.brand_logo_label.pack(pady=12, padx=8, anchor="center")
         # subtítulo (pode existir quando não há imagem)
         self.brand_subtitle_label = None
@@ -301,7 +321,11 @@ class App(ctk.CTk):
         self.frames = {
             "painel": Painel(self.container, self.clinica_id, self.usuario_id, self.tipo_usuario),
             "agenda": Agenda(self.container, self.clinica_id),
-            "relatorios": Relatorios(self.container, self.clinica_id),
+            "relatorios": Relatorios(
+                self.container,
+                self.clinica_id,
+                on_initialization_complete=self._on_relatorios_initialized
+            ),
             "config": Configuracoes(self.container, self.tipo_usuario, self.clinica_id, self.usuario_id, self),
             "cadastro": Cadastro(self.container, self.clinica_id),
             "gerenciamento": Gerenciamento(self.container, self.clinica_id),
@@ -320,6 +344,36 @@ class App(ctk.CTk):
         self.current_frame = None
         self.current_frame_name = None
         self.show_frame("painel")
+
+        config_error = getattr(self.frames["config"], "initialization_error", None)
+        if config_error:
+            self._report_initialization_error(config_error)
+        else:
+            print("[SPLASH] Telas principais criadas")
+            self.after(0, self._check_initialization_complete)
+
+    def _on_relatorios_initialized(self, error=None):
+        if error:
+            print(f"[AVISO APP] Relatórios continuarão carregando após a abertura: {error}")
+            return
+        print("[SPLASH] Relatórios concluídos em segundo plano")
+
+    def _check_initialization_complete(self):
+        if self._initialization_error or self._initialization_notified:
+            return
+
+        self._initialization_notified = True
+        print("[SPLASH] App pronto; inicialização crítica concluída")
+        if callable(self._on_initialization_complete):
+            self._on_initialization_complete()
+
+    def _report_initialization_error(self, error):
+        if self._initialization_error:
+            return
+        self._initialization_error = error
+        print(f"[ERRO APP] Falha crítica durante a inicialização: {error}")
+        if callable(self._on_initialization_error):
+            self._on_initialization_error(error)
 
     def _hex_to_rgba(self, color, alpha=255):
         if not color:
@@ -444,6 +498,7 @@ class App(ctk.CTk):
             new_img = None
             if os.path.exists(path):
                 pil = Image.open(path)
+                self._brand_logo_pil = pil
                 prop = pil.width / pil.height if pil.height else 1
                 w = 200
                 h = int(w / prop)

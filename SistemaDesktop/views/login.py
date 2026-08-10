@@ -9,9 +9,9 @@ from services.remember_me_service import carregar_credenciais, salvar_credenciai
 from .theme import font, ICON_SIZE, COLORS, ASSETS_DIR, get_brand_logo_path, get_dark_mode
 
 
-class Login(ctk.CTk):
-    def __init__(self, on_success=None, auto_login_enabled=False):
-        super().__init__()
+class Login(ctk.CTkToplevel):
+    def __init__(self, parent, on_success=None, auto_login_enabled=False):
+        super().__init__(master=parent)
         self.on_success = on_success
         self.auto_login_enabled = auto_login_enabled  # Flag para permitir auto-login
         self.title("Login - OdontoHub")
@@ -356,13 +356,27 @@ class Login(ctk.CTk):
                 pass
         else:
             # Modo CTk puro (compatibilidade com versão anterior)
-            self.destroy()
+            self.withdraw()
+
+            app = None
+            def _app_ready():
+                if app and app.winfo_exists():
+                    app.deiconify()
+                    self.destroy()
+
+            def _app_error(error):
+                print(f"[ERRO LOGIN] Falha ao inicializar o App: {error}")
+                if self.winfo_exists():
+                    self.deiconify()
 
             from app import App
             app = App(
+                parent=self.master,
                 usuario_nome=usuario["nome"],
                 usuario_id=usuario["id"],
                 tipo_usuario=usuario["tipo"],
-                clinica_id=usuario["clinica_id"]
+                clinica_id=usuario["clinica_id"],
+                on_initialization_complete=_app_ready,
+                on_initialization_error=_app_error
             )
             app.mainloop()

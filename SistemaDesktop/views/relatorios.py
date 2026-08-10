@@ -20,10 +20,13 @@ from controllers.relatorios_controller import RelatoriosController
 
 
 class Relatorios(BaseScreen):
-    def __init__(self, parent, clinica_id=None):
+    def __init__(self, parent, clinica_id=None, on_initialization_complete=None):
         super().__init__(parent, "Relatórios")
 
         self.clinica_id = clinica_id
+        self._on_initialization_complete = on_initialization_complete
+        self._initialization_reported = False
+        self._initialization_thread = None
         self._loading = False
         self._load_queue = queue.Queue()
         self._current_thread_id = 0
@@ -578,6 +581,7 @@ class Relatorios(BaseScreen):
                 self._load_queue.put((thread_id, None, None, None, None, None, None, f"Erro interno: {e}"))
 
         thread = threading.Thread(target=thread_wrapper, daemon=False)
+        self._initialization_thread = thread
         thread.start()
 
         if self._timeout_id is not None:
@@ -1290,9 +1294,22 @@ class Relatorios(BaseScreen):
         if error_msg:
             self._loading_label.configure(text=f"Erro ao carregar: {error_msg}")
             self._loading_label.pack(anchor="w", padx=20, pady=(0, 10))
+            self._notify_initialization(error_msg)
             return
 
         self._apply_loaded_data(summary, chart_period, specialty_data, productivity_rows, medicos, especialidades)
+        self._notify_initialization(None)
+
+    def _notify_initialization(self, error=None):
+        if self._initialization_reported:
+            return
+        if self._initialization_thread and self._initialization_thread.is_alive():
+            if self.winfo_exists():
+                self.after(10, lambda: self._notify_initialization(error))
+            return
+        self._initialization_reported = True
+        if callable(self._on_initialization_complete):
+            self._on_initialization_complete(error)
 
     def create_transactions_section(self):
         container = ctk.CTkFrame(self.main_container, fg_color=COLORS["card"],
