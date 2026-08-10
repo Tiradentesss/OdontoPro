@@ -41,6 +41,9 @@ class SplashScreen(ctk.CTkToplevel):
             corner_radius=25
         )
         frame.pack(fill="both", expand=True, padx=8, pady=8)
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_rowconfigure(0, weight=1)
+        frame.grid_rowconfigure(7, weight=1)
 
         self.caminho = os.path.join(
             os.path.dirname(__file__),
@@ -73,21 +76,21 @@ class SplashScreen(ctk.CTkToplevel):
             )
             # manter referência no widget também
             lbl.image = self.logo
-            lbl.pack(pady=(28, 8))
+            lbl.grid(row=1, column=0, pady=(0, 8))
 
         ctk.CTkLabel(
             frame,
             text="OdontoHub",
             font=font(28, weight="bold"),
             text_color=COLORS["primary"]
-        ).pack()
+        ).grid(row=2, column=0)
 
         ctk.CTkLabel(
             frame,
             text="Sistema Inteligente para Clínicas",
             font=font("small"),
             text_color=COLORS["muted"]
-        ).pack(pady=(4, 24))
+        ).grid(row=3, column=0, pady=(4, 24))
 
         self.status = ctk.CTkLabel(
             frame,
@@ -96,7 +99,7 @@ class SplashScreen(ctk.CTkToplevel):
             text_color=COLORS["text_secondary"]
         )
 
-        self.status.pack(pady=(0, 7))
+        self.status.grid(row=4, column=0, pady=(0, 7))
 
         self.percent = ctk.CTkLabel(
             frame,
@@ -104,7 +107,7 @@ class SplashScreen(ctk.CTkToplevel):
             font=font("small", weight="bold"),
             text_color=COLORS["primary_dark"]
         )
-        self.percent.pack(pady=(0, 8))
+        self.percent.grid(row=5, column=0, pady=(0, 8))
 
         self.progress = ctk.CTkProgressBar(
             frame,
@@ -115,7 +118,7 @@ class SplashScreen(ctk.CTkToplevel):
             progress_color=COLORS["primary"]
         )
 
-        self.progress.pack(pady=(0, 8))
+        self.progress.grid(row=6, column=0, pady=(0, 8))
 
         self.progress.set(0)
 
