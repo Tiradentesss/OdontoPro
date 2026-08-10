@@ -277,6 +277,53 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
+    def excluir_gerente(gerente_id, current_user_id=None, clinica_id=None):
+        """
+        Exclui definitivamente um gerente e suas relações de permissões.
+        """
+        if current_user_id is not None and current_user_id == gerente_id:
+            return {
+                "sucesso": False,
+                "mensagem": "Não é permitido excluir a própria conta."
+            }
+
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                DELETE FROM odontoPro_gerenciamento_permissoes
+                WHERE gerenciamento_id = %s
+            """, (gerente_id,))
+
+            sql = "DELETE FROM odontoPro_gerenciamento WHERE id = %s"
+            params = [gerente_id]
+            if clinica_id is not None:
+                sql += " AND clinica_id = %s"
+                params.append(clinica_id)
+
+            cursor.execute(sql, tuple(params))
+            if cursor.rowcount == 0:
+                conn.rollback()
+                return {"sucesso": False, "mensagem": "Gerente não encontrado."}
+
+            conn.commit()
+            return {"sucesso": True, "mensagem": "Gerente excluído com sucesso"}
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            return {"sucesso": False, "mensagem": f"Erro ao excluir gerente: {str(e)}"}
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
     def adicionar_permissao_gerente(gerente_id, permissao_id):
         """
         Adiciona uma permissão a um gerente existente

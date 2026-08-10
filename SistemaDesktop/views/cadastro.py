@@ -1347,7 +1347,7 @@ class Cadastro(BaseScreen):
         """Valida e salva gerente no banco de dados"""
         try:
             nome = entries[0].get().strip()
-            email = entries[1].get().strip()
+            email = entries[2].get().strip()
             senha = self.senha_entry.get().strip()
             confirma_senha = self.confirma_senha_entry.get().strip()
             
@@ -1360,7 +1360,7 @@ class Cadastro(BaseScreen):
                 self._mostrar_mensagem("❌ Email é obrigatório!", sucesso=False)
                 return
             
-            if '@' not in email:
+            if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
                 self._mostrar_mensagem("❌ Email inválido. Deve conter '@'", sucesso=False)
                 return
             
@@ -1384,6 +1384,11 @@ class Cadastro(BaseScreen):
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
                 self._limpar_campos([entries[0], entries[1]])
                 self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
+
+                app = self.winfo_toplevel()
+                permissao_frame = getattr(app, "frames", {}).get("permissao")
+                if permissao_frame is not None and hasattr(permissao_frame, "refresh"):
+                    permissao_frame.refresh()
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:

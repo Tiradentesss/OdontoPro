@@ -104,9 +104,10 @@ class AdminListFrame(ctk.CTkFrame):
         3: {"weight": 0, "minsize": 110},  # Status - fixo, menor para não comprimir Nome
     }
 
-    def __init__(self, master, admins_data, on_click_callback, **kwargs):
+    def __init__(self, master, admins_data, on_click_callback, on_delete_callback, **kwargs):
         super().__init__(master, **kwargs)
         self.on_click_callback = on_click_callback
+        self.on_delete_callback = on_delete_callback
         self.admins_data = admins_data
         self.admin_rows = []
         self.avatar_labels = {}
@@ -446,6 +447,21 @@ class AdminListFrame(ctk.CTkFrame):
 
         status_badge.bind("<Button-1>", on_row_click)
 
+        excluir = ctk.CTkButton(
+            row_frame,
+            text="X",
+            width=24,
+            height=24,
+            fg_color="transparent",
+            hover_color=COLORS["primary_soft"],
+            text_color=COLORS["primary"],
+            corner_radius=12,
+            border_width=0,
+            font=ctk.CTkFont(size=13, weight="bold"),
+            command=lambda admin=info: self.on_delete_callback(admin)
+        )
+        excluir.place(relx=1.0, rely=0.0, anchor="ne", x=2, y=-5)
+
     def highlight_row(self, frame_to_select):
         if self.selected_row_frame is not None:
             try:
@@ -545,10 +561,17 @@ class Permissoes(BaseScreen):
             traceback.print_exc()
             return {}
 
+    def refresh(self):
+        self.admins_data = self.load_gerentes_from_database()
+        if hasattr(self, "admin_list_panel"):
+            self.admin_list_panel.admins_data = self.admins_data
+            self.admin_list_panel.refresh_list()
+
     def setup_ui(self):
         self.admin_list_panel = AdminListFrame(
             self.content_card, admins_data=self.admins_data,
             on_click_callback=self.on_admin_click,
+            on_delete_callback=self.confirmar_exclusao_gerente,
             fg_color=COLORS["card"], corner_radius=INNER_CARD_RADIUS, border_width=1, border_color=INNER_CARD_BORDER
         )
         self.admin_list_panel.grid(row=0, column=0, sticky="nsew", padx=(20, 10), pady=20)
@@ -692,6 +715,69 @@ class Permissoes(BaseScreen):
 
         if self._is_self_account_selected():
             self.account_status_switch.configure(state="disabled")
+
+    def confirmar_exclusao_gerente(self, gerente):
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Confirmar exclusão")
+        dialog.resizable(False, False)
+        dialog.transient(self.winfo_toplevel())
+        dialog.grab_set()
+
+        ctk.CTkLabel(
+            dialog,
+            text=f"Deseja excluir o gerente:\n'{gerente['nome']}'?",
+            font=font("text"),
+            text_color=COLORS["text"],
+            justify="center"
+        ).pack(padx=28, pady=(24, 18))
+
+        botoes = ctk.CTkFrame(dialog, fg_color="transparent")
+        botoes.pack(pady=(0, 20))
+
+        ctk.CTkButton(
+            botoes,
+            text="Sim",
+            width=80,
+            height=32,
+            command=lambda: self._excluir_gerente_confirmado(gerente, dialog)
+        ).pack(side="left", padx=6)
+        ctk.CTkButton(
+            botoes,
+            text="Não",
+            width=80,
+            height=32,
+            fg_color=COLORS["card_soft"],
+            text_color=COLORS["text"],
+            hover_color=COLORS["hover"],
+            command=dialog.destroy
+        ).pack(side="left", padx=6)
+
+        dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
+        dialog.update_idletasks()
+        dialog.geometry(f"+{self.winfo_toplevel().winfo_rootx() + 120}+{self.winfo_toplevel().winfo_rooty() + 120}")
+
+    def _excluir_gerente_confirmado(self, gerente, dialog):
+        resultado = GerenciamentoController.excluir_gerente(
+            gerente["id"],
+            current_user_id=self.usuario_logado_id,
+            clinica_id=self.clinica_id
+        )
+        dialog.destroy()
+
+        if not resultado.get("sucesso"):
+            messagebox.showerror("Erro", resultado.get("mensagem", "Não foi possível excluir o gerente."))
+            return
+
+        if self.selected_admin_id == gerente["id"]:
+            self.selected_admin_name = None
+            self.selected_admin_id = None
+            self.selected_admin_label.configure(text="Nenhum administrador selecionado")
+            self.toggle_switches_state("disabled")
+
+        self.admins_data = self.load_gerentes_from_database()
+        self.admin_list_panel.admins_data = self.admins_data
+        self.admin_list_panel.current_page = 1
+        self.admin_list_panel.refresh_list()
 
     def sync_account_status(self):
         if self.selected_admin_name:

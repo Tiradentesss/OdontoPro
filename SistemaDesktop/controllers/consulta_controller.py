@@ -74,7 +74,7 @@ class ConsultaController:
                 LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
                 LEFT JOIN odontoPro_especialidade e ON e.id = c.especialidade_id
                 WHERE {where_clause}
-                ORDER BY c.data_hora DESC
+                ORDER BY c.data_hora ASC
                 LIMIT %s OFFSET %s
             """
 
