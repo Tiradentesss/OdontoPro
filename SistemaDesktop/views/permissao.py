@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import os
+from functools import partial
 from tkinter import messagebox, filedialog
 from .base import BaseScreen
 from .theme import COLORS, font, ICON_SIZE, INNER_CARD_BORDER, INNER_CARD_RADIUS
@@ -449,6 +450,8 @@ class AdminListFrame(ctk.CTkFrame):
 
         status_badge.bind("<Button-1>", on_row_click)
 
+        gerente_para_excluir = {**info, "nome": nome}
+
         excluir = ctk.CTkButton(
             row_frame,
             text="X",
@@ -461,9 +464,12 @@ class AdminListFrame(ctk.CTkFrame):
             corner_radius=12,
             border_width=0,
             font=ctk.CTkFont(size=13, weight="bold"),
-            command=lambda admin=info: self.on_delete_callback(admin)
+            command=partial(self._handle_delete_click, gerente_para_excluir)
         )
         excluir.place(relx=1.0, rely=0.0, anchor="ne", x=2, y=-5)
+
+    def _handle_delete_click(self, gerente):
+        self.on_delete_callback(gerente)
 
     def highlight_row(self, frame_to_select):
         if self.selected_row_frame is not None:
@@ -574,7 +580,7 @@ class Permissoes(BaseScreen):
         self.admin_list_panel = AdminListFrame(
             self.content_card, admins_data=self.admins_data,
             on_click_callback=self.on_admin_click,
-            on_delete_callback=self.confirmar_exclusao_gerente,
+            on_delete_callback=self._confirmar_exclusao_gerente,
             fg_color=COLORS["card"], corner_radius=INNER_CARD_RADIUS, border_width=1, border_color=INNER_CARD_BORDER
         )
         self.admin_list_panel.grid(row=0, column=0, sticky="nsew", padx=(20, 10), pady=20)
@@ -719,7 +725,7 @@ class Permissoes(BaseScreen):
         if self._is_self_account_selected():
             self.account_status_switch.configure(state="disabled")
 
-    def confirmar_exclusao_gerente(self, gerente):
+    def _confirmar_exclusao_gerente(self, gerente):
         dialog = ctk.CTkToplevel(self)
         dialog.title("Confirmar exclusão")
         dialog.resizable(False, False)
@@ -728,8 +734,8 @@ class Permissoes(BaseScreen):
 
         ctk.CTkLabel(
             dialog,
-            text=f"Deseja excluir o gerente:\n'{gerente['nome']}'?",
-            font=font("text"),
+            text=f'Deseja excluir o gerente "{gerente["nome"]}"?',
+            font=ctk.CTkFont(size=14),
             text_color=COLORS["text"],
             justify="center"
         ).pack(padx=28, pady=(24, 18))
@@ -739,14 +745,14 @@ class Permissoes(BaseScreen):
 
         ctk.CTkButton(
             botoes,
-            text="Sim",
+            text="Excluir",
             width=80,
             height=32,
             command=lambda: self._excluir_gerente_confirmado(gerente, dialog)
         ).pack(side="left", padx=6)
         ctk.CTkButton(
             botoes,
-            text="Não",
+            text="Cancelar",
             width=80,
             height=32,
             fg_color=COLORS["card_soft"],
@@ -757,7 +763,10 @@ class Permissoes(BaseScreen):
 
         dialog.protocol("WM_DELETE_WINDOW", dialog.destroy)
         dialog.update_idletasks()
-        dialog.geometry(f"+{self.winfo_toplevel().winfo_rootx() + 120}+{self.winfo_toplevel().winfo_rooty() + 120}")
+        janela_principal = self.winfo_toplevel()
+        pos_x = janela_principal.winfo_rootx() + (janela_principal.winfo_width() - dialog.winfo_width()) // 2
+        pos_y = janela_principal.winfo_rooty() + (janela_principal.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{pos_x}+{pos_y}")
 
     def _excluir_gerente_confirmado(self, gerente, dialog):
         resultado = GerenciamentoController.excluir_gerente(
