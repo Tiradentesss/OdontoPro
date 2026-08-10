@@ -420,7 +420,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
         self.right_scroll = ctk.CTkScrollableFrame(
             self.right_card,
-            fg_color="transparent",
+            fg_color=self.colors["card"],
             corner_radius=0,
             border_width=0
         )
