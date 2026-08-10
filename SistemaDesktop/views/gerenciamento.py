@@ -389,7 +389,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         self.right_card.grid(row=0, column=1, sticky="nsew", padx=(12, 0), pady=10)
         self.right_card.grid_rowconfigure(1, weight=1)
-        self.right_card.grid_rowconfigure(3, weight=4)
         self.right_card.grid_columnconfigure(0, weight=1)
 
         title_frame = ctk.CTkFrame(self.right_card, fg_color="transparent")
@@ -419,24 +418,32 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         tip_label.pack(anchor="w", pady=(6, 0))
 
-        self.calendar_card = ctk.CTkFrame(
+        self.right_scroll = ctk.CTkScrollableFrame(
             self.right_card,
+            fg_color="transparent",
+            corner_radius=0,
+            border_width=0
+        )
+        self.right_scroll.grid(row=1, column=0, sticky="nsew", padx=0, pady=(0, 0))
+        self.right_scroll.grid_columnconfigure(0, weight=1)
+
+        self.calendar_card = ctk.CTkFrame(
+            self.right_scroll,
             fg_color=self.colors["card_soft"],
             corner_radius=INNER_CARD_RADIUS,
             border_width=1,
             border_color=INNER_CARD_BORDER
         )
-        self.calendar_card.grid(row=1, column=0, sticky="nsew", padx=16, pady=(12, 16))
-        self.right_card.grid_rowconfigure(1, weight=2)
+        self.calendar_card.grid(row=0, column=0, sticky="ew", padx=16, pady=(12, 16))
         self._build_calendar()
 
         info_card = ctk.CTkFrame(
-            self.right_card,
+            self.right_scroll,
             fg_color=self.colors["primary_soft"],
             corner_radius=12,
             border_width=0
         )
-        info_card.grid(row=2, column=0, sticky="ew", padx=16, pady=(0, 16))
+        info_card.grid(row=1, column=0, sticky="ew", padx=16, pady=(0, 16))
         
         self.date_info_label = ctk.CTkLabel(
             info_card,
@@ -446,8 +453,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
         self.date_info_label.pack(padx=16, pady=12, anchor="w")
 
-        slots_container = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        slots_container.grid(row=3, column=0, sticky="nsew", padx=16, pady=(12, 20))
+        slots_container = ctk.CTkFrame(self.right_scroll, fg_color="transparent")
+        slots_container.grid(row=2, column=0, sticky="ew", padx=16, pady=(0, 20))
         slots_container.grid_rowconfigure(0, weight=0)
         slots_container.grid_rowconfigure(1, weight=1)
         slots_container.grid_columnconfigure(0, weight=1)
@@ -476,8 +483,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         
         self._build_time_slots()
 
-        footer = ctk.CTkFrame(self.right_card, fg_color="transparent")
-        footer.grid(row=4, column=0, sticky="ew", padx=16, pady=(0, 28))
+        footer = ctk.CTkFrame(self.right_scroll, fg_color="transparent")
+        footer.grid(row=3, column=0, sticky="ew", padx=16, pady=(0, 28))
         footer.grid_columnconfigure(0, weight=1)
         
         self.selection_label = ctk.CTkLabel(
