@@ -187,26 +187,27 @@ class ModernInput(ctk.CTkFrame):
         self.applying_mask = True
         current_text = self.entry.get()
         current_pos = self.entry.index(tk.INSERT)
+        digits_only = ''.join(c for c in current_text if c.isdigit())
+        digits_before_cursor = ''.join(c for c in current_text[:current_pos] if c.isdigit())
 
         if self.mask == "cpf":
-            formatted = self._format_cpf(''.join(c for c in current_text if c.isdigit()))
-            cursor_pos = len(formatted)
+            formatted = self._format_cpf(digits_only)
         elif self.mask == "telefone":
-            formatted = self._format_telefone(''.join(c for c in current_text if c.isdigit()))
-            cursor_pos = len(formatted)
+            formatted = self._format_telefone(digits_only)
+        elif self.mask == "cnpj":
+            formatted = self._format_cnpj(digits_only)
         elif self.mask == "data":
-            formatted = self._format_data(''.join(c for c in current_text if c.isdigit()))
-            cursor_pos = len(formatted)
+            formatted = self._format_data(digits_only)
         elif self.mask == "cep":
-            formatted, cursor_pos = EnderecoService.formatar_cep(current_text)
+            formatted, _ = EnderecoService.formatar_cep(current_text)
         elif self.mask == "uf":
-            formatted, cursor_pos = EnderecoService.formatar_uf(current_text)
+            formatted, _ = EnderecoService.formatar_uf(current_text)
         elif self.mask == "cidade":
-            formatted, cursor_pos = EnderecoService.formatar_cidade(current_text)
+            formatted, _ = EnderecoService.formatar_cidade(current_text)
         else:
             formatted = current_text
-            cursor_pos = len(formatted)
 
+        cursor_pos = self._calculate_cursor_position(current_pos, formatted, len(digits_before_cursor))
         self.entry.delete(0, "end")
         self.entry.insert(0, formatted)
         self.entry.icursor(min(cursor_pos, len(formatted)))
@@ -222,6 +223,8 @@ class ModernInput(ctk.CTkFrame):
                 formatted = self._format_cpf(''.join(c for c in pasted_text if c.isdigit()))
             elif self.mask == "telefone":
                 formatted = self._format_telefone(''.join(c for c in pasted_text if c.isdigit()))
+            elif self.mask == "cnpj":
+                formatted = self._format_cnpj(''.join(c for c in pasted_text if c.isdigit()))
             elif self.mask == "data":
                 formatted = self._format_data(''.join(c for c in pasted_text if c.isdigit()))
             elif self.mask == "cep":
@@ -259,6 +262,21 @@ class ModernInput(ctk.CTkFrame):
         else:
             return f"{numbers[:3]}.{numbers[3:6]}.{numbers[6:9]}-{numbers[9:]}"
 
+    def _format_cnpj(self, numbers):
+        """Formata números como CNPJ: 00.000.000/0000-00"""
+        # Limitar a 14 dígitos
+        numbers = numbers[:14]
+        if len(numbers) <= 2:
+            return numbers
+        elif len(numbers) <= 5:
+            return f"{numbers[:2]}.{numbers[2:]}"
+        elif len(numbers) <= 8:
+            return f"{numbers[:2]}.{numbers[2:5]}.{numbers[5:]}"
+        elif len(numbers) <= 12:
+            return f"{numbers[:2]}.{numbers[2:5]}.{numbers[5:8]}/{numbers[8:]}"
+        else:
+            return f"{numbers[:2]}.{numbers[2:5]}.{numbers[5:8]}/{numbers[8:12]}-{numbers[12:]}"
+
     def _format_telefone(self, numbers):
         """Formata números como Telefone: (00) 00000-0000"""
         # Limitar a 11 dígitos
@@ -285,11 +303,17 @@ class ModernInput(ctk.CTkFrame):
 
     def _calculate_cursor_position(self, old_pos, formatted, numbers_only):
         """Calcula a posição do cursor após aplicar máscara"""
-        # Contar quantos números estão antes da posição do cursor
-        current_text = self.entry.get()  # Pega o texto antes da máscara ser aplicada
-        
-        # Retornar o fim do novo texto (cursor seguirá a digitação)
-        return len(formatted)
+        if numbers_only <= 0:
+            return min(old_pos, len(formatted))
+
+        cursor = 0
+        digits_seen = 0
+        while cursor < len(formatted) and digits_seen < numbers_only:
+            if formatted[cursor].isdigit():
+                digits_seen += 1
+            cursor += 1
+
+        return cursor
 
     def _setup_read_only(self):
         """Configura o entry como read-only bloqueando todas as modificações"""
@@ -349,6 +373,8 @@ class ModernInput(ctk.CTkFrame):
             formatted = self._format_cpf(''.join(c for c in str(value) if c.isdigit()))
         elif self.mask == "telefone":
             formatted = self._format_telefone(''.join(c for c in str(value) if c.isdigit()))
+        elif self.mask == "cnpj":
+            formatted = self._format_cnpj(''.join(c for c in str(value) if c.isdigit()))
         elif self.mask == "data":
             formatted = self._format_data(''.join(c for c in str(value) if c.isdigit()))
         elif self.mask == "cep":
@@ -785,9 +811,9 @@ class Configuracoes(BaseScreen):
 
             fields = [
                 {"label": "Nome da Clínica", "placeholder": "Nome oficial", "row": 0, "col": 0, "required": True},
-                {"label": "CNPJ", "placeholder": "00.000.000/0000-00", "row": 0, "col": 1, "required": True},
+                {"label": "CNPJ", "placeholder": "00.000.000/0000-00", "row": 0, "col": 1, "required": True, "mask": "cnpj"},
                 {"label": "E-mail Clínica", "placeholder": "email@clinica.com", "row": 1, "col": 0, "required": True},
-                {"label": "Telefone", "placeholder": "(00) 00000-0000", "row": 1, "col": 1, "required": True},
+                {"label": "Telefone", "placeholder": "(00) 00000-0000", "row": 1, "col": 1, "required": True, "mask": "telefone"},
             ]
 
             for field in fields:
