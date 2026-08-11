@@ -50,6 +50,8 @@ urlpatterns = [
     
     # 🔹 AVALIAÇÃO
     path('avaliacao/criar/', views.criar_avaliacao, name='criar_avaliacao'),
+    # API para notificações (polling)
+    path('api/notificacoes/', views.api_notificacoes_paciente, name='api_notificacoes_paciente'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -2272,3 +2272,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// ================= POLLING DE NOTIFICAÇÕES/CONSULTAS =================
+let _lastChecks = { consultasEtag: null };
+function iniciarPollingNotificacoes(intervalMs = 10000) {
+    if (!document.body) return;
+    setInterval(() => {
+        fetch('/api/notificacoes/', { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(json => {
+                if (!json.success) return;
+                // Atualizar badge/indicador
+                const tem = Array.isArray(json.notificacoes) && json.notificacoes.length > 0;
+                const botao = document.querySelector('.botao-notificacao');
+                const ponto = document.querySelector('.ponto-alerta');
+                if (botao) {
+                    if (tem) botao.classList.add('com-notificacao'); else botao.classList.remove('com-notificacao');
+                }
+                if (ponto) ponto.style.display = tem ? 'block' : 'none';
+
+                // Sincronizar cards de consulta com estados retornados
+                if (Array.isArray(json.consultas)) {
+                    json.consultas.forEach(c => {
+                        const card = document.querySelector(`.card-agendamento[data-consulta-id="${c.id}"]`);
+                        if (card && card.dataset.status !== c.status) {
+                            // Atualizar UI do card sem reload
+                            updateCardConsulta(c.id, c.data_hora, c.status);
+                            // Opcional: mostrar toast/alerta de mudança importante (confirmada)
+                            if (c.status === 'confirmada') {
+                                mostrarMensagem('Consulta Confirmada', `Seu médico confirmou a consulta para ${new Date(c.data_hora).toLocaleString()}`, 'success');
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error('Erro no polling de notificações:', err));
+    }, intervalMs);
+}
+
+// Iniciar polling quando a página estiver pronta
+document.addEventListener('DOMContentLoaded', () => {
+    iniciarPollingNotificacoes(10000);
+});

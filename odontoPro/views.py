@@ -32,6 +32,50 @@ from django.db import models
 import logging
 logger = logging.getLogger(__name__)
 
+
+@require_GET
+def api_notificacoes_paciente(request):
+    paciente_id = request.session.get('paciente_id')
+    if not paciente_id:
+        return JsonResponse({'success': False, 'error': 'Não autenticado'}, status=403)
+
+    paciente = Paciente.objects.filter(id=paciente_id).first()
+    if not paciente:
+        return JsonResponse({'success': False, 'error': 'Paciente não encontrado'}, status=404)
+
+    agora = timezone.now()
+
+    notificacoes_qs = Consulta.objects.filter(
+        (
+            models.Q(
+                data_hora__gte=agora - timedelta(days=1),
+                data_hora__lte=agora + timedelta(days=1),
+                status__in=["agendada", "confirmada"]
+            ) |
+            models.Q(
+                status="cancelada",
+                criado_em__gte=agora - timedelta(days=7)
+            )
+        ),
+        paciente=paciente
+    ).order_by("-data_hora")
+
+    notificacoes = []
+    for n in notificacoes_qs:
+        notificacoes.append({
+            'id': n.id,
+            'data_hora': n.data_hora.isoformat(),
+            'status': n.status,
+            'medico': n.medico.nome if n.medico else None,
+            'especialidade': n.especialidade.nome if n.especialidade else None,
+        })
+
+    # também retornar o resumo de consultas (id -> status) para sincronizar cards
+    consultas_qs = Consulta.objects.filter(paciente=paciente).order_by('-data_hora')[:50]
+    consultas = [{ 'id': c.id, 'status': c.status, 'data_hora': c.data_hora.isoformat() } for c in consultas_qs]
+
+    return JsonResponse({'success': True, 'notificacoes': notificacoes, 'consultas': consultas})
+
 def _parse_especialidades(post_data):
     especialidades = []
     for nome_esp in post_data.getlist('especialidades') + post_data.getlist('especialidades[]'):
