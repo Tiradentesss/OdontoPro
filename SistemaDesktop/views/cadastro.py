@@ -645,7 +645,7 @@ class Cadastro(BaseScreen):
         self.especialidade_map = {self.ESPECIALIDADE_PLACEHOLDER: None}
         especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER]
         try:
-            especialidades = ConsultaController.listar_especialidades_para_combo()
+            especialidades = ConsultaController.listar_especialidades_para_combo(self.clinica_id)
             if especialidades:
                 especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER] + [nome for _, nome in especialidades]
                 self.especialidade_map = {nome: especialidade_id for especialidade_id, nome in especialidades}
@@ -1292,6 +1292,7 @@ class Cadastro(BaseScreen):
                 self._mostrar_mensagem("Selecione uma especialidade.", sucesso=False)
                 return
 
+            especialidade = especialidade.strip() if isinstance(especialidade, str) else especialidade
             especialidade_id = self.especialidade_map.get(especialidade)
             if especialidade_id is None:
                 self._mostrar_mensagem("Selecione uma especialidade.", sucesso=False)

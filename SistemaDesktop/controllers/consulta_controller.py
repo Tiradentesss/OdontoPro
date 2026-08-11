@@ -380,6 +380,57 @@ class ConsultaController:
                 conn.close()
 
     @staticmethod
+    def listar_especialidades_por_clinica(clinica_id, conn=None):
+        """Lista especialidades válidas para a clínica informada.
+
+        Primeiro tenta usar as especialidades cadastradas para essa clínica.
+        Se a clínica não tiver especialidades próprias, retorna as especialidades
+        associadas aos médicos daquela clínica.
+        """
+
+        internal_conn = False
+        cursor = None
+        try:
+            if conn is None:
+                conn = get_connection()
+                internal_conn = True
+            cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                    SELECT id, nome
+                    FROM odontoPro_especialidade
+                    WHERE clinica_id = %s
+                    ORDER BY nome ASC
+                """,
+                (clinica_id,)
+            )
+            especialidades = cursor.fetchall() or []
+            if especialidades:
+                return especialidades
+
+            cursor.execute(
+                """
+                    SELECT DISTINCT e.id, e.nome
+                    FROM odontoPro_especialidade e
+                    JOIN odontoPro_medico_especialidades me ON e.id = me.especialidade_id
+                    JOIN odontoPro_medico m ON m.id = me.medico_id
+                    WHERE m.clinica_id = %s
+                    ORDER BY e.nome ASC
+                """,
+                (clinica_id,)
+            )
+            return cursor.fetchall() or []
+        except Exception as e:
+            print(f"[ConsultaController] Erro em listar_especialidades_por_clinica: {e}")
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+            if internal_conn and conn:
+                conn.close()
+
+    @staticmethod
     def preparar_especialidades_para_combo(especialidades):
         """Normaliza e ordena especialidades para uso em combo."""
         if not especialidades:
@@ -397,7 +448,7 @@ class ConsultaController:
         return sorted(cleaned, key=lambda item: item[1].lower())
 
     @staticmethod
-    def listar_especialidades_para_combo(conn=None):
+    def listar_especialidades_para_combo(clinica_id=None, conn=None):
         """Retorna a lista de especialidades pronta para uso em ComboBoxes:
         deduplicada, com nomes limpos e ordenada alfabeticamente.
 
@@ -405,7 +456,10 @@ class ConsultaController:
         `preparar_especialidades_para_combo` para garantir uma única fonte de
         verdade para as especialidades usadas em diferentes telas.
         """
-        especialidades_db = ConsultaController.listar_especialidades(conn=conn)
+        if clinica_id is not None:
+            especialidades_db = ConsultaController.listar_especialidades_por_clinica(clinica_id, conn=conn)
+        else:
+            especialidades_db = ConsultaController.listar_especialidades(conn=conn)
         return ConsultaController.preparar_especialidades_para_combo(especialidades_db)
 
     @staticmethod

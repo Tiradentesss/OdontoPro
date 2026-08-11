@@ -1836,7 +1836,7 @@ class Agenda(BaseScreen):
             start_ms = time.perf_counter()
             conn = get_db_connection()
             with db_lock:
-                especialidades = ConsultaController.listar_especialidades_para_combo(conn=conn)
+                especialidades = ConsultaController.listar_especialidades_para_combo(self.clinica_id, conn=conn)
             elapsed_ms = (time.perf_counter() - start_ms) * 1000
             print(f"[agenda] Especialidades carregadas em {elapsed_ms:.0f} ms")
             especialidades_carregadas = especialidades

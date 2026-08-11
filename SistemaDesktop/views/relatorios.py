@@ -703,7 +703,7 @@ class Relatorios(BaseScreen):
             # Cache filter options once for the clinic session
             if "filter_options" not in self._cache:
                 medicos = ConsultaController.listar_medicos(self.clinica_id)
-                especialidades = ConsultaController.listar_especialidades_para_combo()
+                especialidades = ConsultaController.listar_especialidades_para_combo(self.clinica_id)
                 self._cache["filter_options"] = {
                     "medicos": medicos,
                     "especialidades": especialidades,

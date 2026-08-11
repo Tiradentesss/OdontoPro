@@ -86,15 +86,21 @@ class MedicoController:
 
             # Adicionar especialidades se fornecidas
             if especialidades:
-                # especialidades pode conter ids ou nomes; normalizar para ids
+                # especialidades pode conter ids ou nomes; normalizar para ids.
+                # Se o valor for um ID numérico em string, mantemos o ID em vez de criar
+                # uma especialidade com o nome numérico.
                 from services.especialidade_service import EspecialidadeService
                 for espec in especialidades:
+                    espec_id = None
                     if isinstance(espec, str):
-                        # obter ou criar
-                        try:
-                            espec_id = EspecialidadeService.get_or_create(espec, conn=conn)
-                        except Exception:
-                            espec_id = None
+                        espec_str = espec.strip()
+                        if espec_str.isdigit():
+                            espec_id = int(espec_str)
+                        else:
+                            try:
+                                espec_id = EspecialidadeService.get_or_create(espec_str, conn=conn)
+                            except Exception:
+                                espec_id = None
                     else:
                         espec_id = espec
 
@@ -306,21 +312,49 @@ class MedicoController:
         try:
             conn = get_connection()
             cursor = conn.cursor()
-            cursor.execute(
-                """
-                UPDATE odontoPro_medico
-                SET clinica_id = NULL
-                WHERE id = %s AND clinica_id = %s
-                """,
-                (medico_id, clinica_id)
-            )
+            try:
+                cursor.execute(
+                    """
+                    UPDATE odontoPro_medico
+                    SET clinica_id = NULL
+                    WHERE id = %s AND clinica_id = %s
+                    """,
+                    (medico_id, clinica_id)
+                )
 
-            if cursor.rowcount == 0:
-                conn.rollback()
-                return {"sucesso": False, "mensagem": "Médico não está associado a esta clínica."}
+                if cursor.rowcount == 0:
+                    conn.rollback()
+                    return {"sucesso": False, "mensagem": "Médico não está associado a esta clínica."}
 
-            conn.commit()
-            return {"sucesso": True, "mensagem": "Médico removido da clínica com sucesso."}
+                conn.commit()
+                return {"sucesso": True, "mensagem": "Médico removido da clínica com sucesso."}
+            except Exception as inner_e:
+                # Tratamento específico quando a coluna clinica_id não aceita NULL (1048)
+                msg = str(inner_e).lower()
+                if "1048" in str(inner_e) or "cannot be null" in msg or "column 'clinica_id'" in msg:
+                    # Fallback mínimo: marcar o médico como inativo para que ele deixe de aparecer
+                    # nas listagens da clínica (listas usam ativo = 1). Isso preserva o cadastro
+                    # do médico e suas especialidades, evitando violar constraints do banco.
+                    try:
+                        cursor.execute(
+                            """
+                            UPDATE odontoPro_medico
+                            SET ativo = 0
+                            WHERE id = %s AND clinica_id = %s
+                            """,
+                            (medico_id, clinica_id)
+                        )
+                        if cursor.rowcount == 0:
+                            conn.rollback()
+                            return {"sucesso": False, "mensagem": "Médico não está associado a esta clínica."}
+                        conn.commit()
+                        return {"sucesso": True, "mensagem": "Médico removido da clínica com sucesso."}
+                    except Exception:
+                        if conn:
+                            conn.rollback()
+                        return {"sucesso": False, "mensagem": f"Erro ao remover médico da clínica: {str(inner_e)}"}
+                else:
+                    raise
 
         except Exception as e:
             if conn:
