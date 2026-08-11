@@ -135,7 +135,8 @@ def horarios_clinica(request, clinica_id):
         clinica_id=clinica_id,
         medico_id=medico_id,
         data_hora__date=data_dt.date(),
-    ).exclude(status="cancelada")
+        status__in=["agendada", "confirmada", "realizada"],
+    )
     horarios_ocupados = {
         consulta.data_hora.strftime("%H:%M")
         for consulta in consultas

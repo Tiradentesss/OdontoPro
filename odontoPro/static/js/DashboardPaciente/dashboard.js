@@ -1776,14 +1776,24 @@ function carregarHorarios(clinicaId, data, medicoId) {
     }
 
     const params = new URLSearchParams({ data, medico_id: medicoId });
+    const selectHorario = document.getElementById('selectHorario');
+    if (selectHorario) {
+        selectHorario.innerHTML = '<option value="">Carregando horários...</option>';
+        selectHorario.disabled = true;
+    }
+    if (window.calendarSelector) {
+        window.calendarSelector.availableTimes = [];
+        window.calendarSelector.renderTimeSlots();
+    }
+
     return fetch(`/clinica/${clinicaId}/horarios/?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
-            const selectHorario = document.getElementById('selectHorario');
-            if (!selectHorario) return Promise.reject('selectHorario não encontrado');
-            
-            selectHorario.innerHTML = '<option value="">Selecione o Horário</option>';
-            
+            if (selectHorario) {
+                selectHorario.innerHTML = '<option value="">Selecione o Horário</option>';
+                selectHorario.disabled = false;
+            }
+
             if (data.horarios && data.horarios.length > 0) {
                 data.horarios.forEach(horario => {
                     const option = document.createElement('option');
@@ -1804,7 +1814,7 @@ function carregarHorarios(clinicaId, data, medicoId) {
                 const option = document.createElement('option');
                 option.disabled = true;
                 option.textContent = 'Nenhum horário disponível';
-                selectHorario.appendChild(option);
+                if (selectHorario) selectHorario.appendChild(option);
                 
                 // Limpar disponibilidades se não houver horários
                 if (window.calendarSelector) {
