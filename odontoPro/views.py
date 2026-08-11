@@ -11,7 +11,6 @@ from django.utils.dateparse import parse_datetime
 from . import models
 from datetime import datetime, timedelta
 from django.utils.timezone import make_aware
-from .models import DiaSemanaDisponivel, HorarioAberto
 from PIL import Image
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -23,6 +22,7 @@ logger = logging.getLogger(__name__)
 @require_GET
 def horarios_clinica(request, clinica_id):
     data = request.GET.get("data")
+    medico_id = request.GET.get("medico_id")
     
       # yyyy-mm-dd
     if not data:
@@ -33,35 +33,56 @@ def horarios_clinica(request, clinica_id):
     except ValueError:
         return JsonResponse({"error": "Data inválida"}, status=400)
 
+    if not medico_id:
+        return JsonResponse({"horarios": []})
+
     dia_semana_map = {
-        0: "segunda",
-        1: "terca",
-        2: "quarta",
-        3: "quinta",
-        4: "sexta",
-        5: "sabado",
-        6: "domingo",
+        0: "Segunda",
+        1: "Terça",
+        2: "Quarta",
+        3: "Quinta",
+        4: "Sexta",
+        5: "Sábado",
+        6: "Domingo",
     }
 
     dia_str = dia_semana_map[data_dt.weekday()]
 
-    try:
-        dia = DiaSemanaDisponivel.objects.get(
-            clinica_id=clinica_id,
-            dia=dia_str
-        )
-    except DiaSemanaDisponivel.DoesNotExist:
-        return JsonResponse({"horarios": []})
+    medico_horarios = models.OdontoproMedicohorario.objects.filter(
+        medico_id=medico_id,
+        medico__clinica_id=clinica_id,
+        dia__iexact=dia_str,
+    ).order_by("hora_inicio")
 
     horarios = []
-    for h in dia.horarios.all():
-        hora = make_aware(datetime.combine(data_dt, h.hora_inicio))
-        hora_fim = h.hora_fim
-        while hora.time() < hora_fim:
+    for intervalo in medico_horarios:
+        hora = intervalo.hora_inicio
+        while hora < intervalo.hora_fim:
             horarios.append(hora.strftime("%H:%M"))
-            hora += timedelta(minutes=30)
+            hora = (datetime.combine(data_dt.date(), hora) + timedelta(minutes=30)).time()
 
-    return JsonResponse({"horarios": horarios})
+    consultas = models.OdontoproConsulta.objects.filter(
+        clinica_id=clinica_id,
+        medico_id=medico_id,
+        data_hora__date=data_dt.date(),
+    ).exclude(status="cancelada")
+    horarios_ocupados = {
+        consulta.data_hora.strftime("%H:%M")
+        for consulta in consultas
+    }
+    horarios_disponiveis = sorted(set(horarios) - horarios_ocupados)
+
+    logger.info(
+        "[AGENDA WEB] Clinica ID: %s | Medico ID: %s | Data: %s",
+        clinica_id,
+        medico_id,
+        data,
+    )
+    logger.info("[AGENDA WEB] Disponibilidades encontradas: %s", horarios)
+    logger.info("[AGENDA WEB] Horários ocupados: %s", sorted(horarios_ocupados))
+    logger.info("[AGENDA WEB] Horários disponíveis: %s", horarios_disponiveis)
+
+    return JsonResponse({"horarios": horarios_disponiveis})
 
 
 # -------- CANCELAR CONSULTA --------
@@ -300,11 +321,37 @@ def agendar_consulta(request):
     try:
         clinica = models.OdontoproClinica.objects.get(id=clinica_id)
         medico = models.OdontoproMedico.objects.get(id=medico_id)
-    except (models.OdontoproClinica.DoesNotExist, models.OdontoproClinica.DoesNotExist):
+    except (models.OdontoproClinica.DoesNotExist, models.OdontoproMedico.DoesNotExist):
         return JsonResponse({"success": False, "error": "Clínica ou médico não encontrado"}, status=404)
 
-    # 🔒 evita conflito de horário
-    if models.OdontoproConsulta.objects.filter(medico=medico, data_hora=data_hora).exists():
+    if medico.clinica_id != clinica.id:
+        return JsonResponse({"success": False, "error": "Médico não pertence à clínica"}, status=400)
+
+    dia_semana_map = {
+        0: "Segunda",
+        1: "Terça",
+        2: "Quarta",
+        3: "Quinta",
+        4: "Sexta",
+        5: "Sábado",
+        6: "Domingo",
+    }
+    dia_str = dia_semana_map[data_hora.weekday()]
+    horario_cadastrado = models.OdontoproMedicohorario.objects.filter(
+        medico_id=medico.id,
+        medico__clinica_id=clinica.id,
+        dia__iexact=dia_str,
+        hora_inicio__lte=data_hora.time(),
+        hora_fim__gt=data_hora.time(),
+    ).exists()
+    if not horario_cadastrado:
+        return JsonResponse({"success": False, "error": "Horário não está disponível"}, status=400)
+
+    if models.OdontoproConsulta.objects.filter(
+        clinica=clinica,
+        medico=medico,
+        data_hora=data_hora,
+    ).exclude(status="cancelada").exists():
         return JsonResponse({"success": False, "error": "Horário indisponível"})
 
     paciente = None

@@ -53,8 +53,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputData = document.getElementById('inputData');
     if (inputData) {
         inputData.addEventListener('change', function() {
-            if (this.value && clinicaSelecionada) {
-                carregarHorarios(clinicaSelecionada, this.value);
+            const medicoId = document.getElementById('selectProfissional')?.value;
+            if (this.value && clinicaSelecionada && medicoId) {
+                carregarHorarios(clinicaSelecionada, medicoId, this.value);
+            }
+        });
+    }
+
+    const selectProfissional = document.getElementById('selectProfissional');
+    if (selectProfissional) {
+        selectProfissional.addEventListener('change', function() {
+            const data = document.getElementById('inputData')?.value;
+            if (data && clinicaSelecionada && this.value) {
+                carregarHorarios(clinicaSelecionada, this.value, data);
             }
         });
     }
@@ -825,9 +836,9 @@ function carregarEspecialidadesEMedicos(clinicaId) {
         });
 }
 
-function carregarHorarios(clinicaId, data) {
-    // Buscar horários disponíveis da clínica para a data selecionada
-    fetch(`/clinica/${clinicaId}/horarios/?data=${data}`)
+function carregarHorarios(clinicaId, medicoId, data) {
+    const params = new URLSearchParams({ data, medico_id: medicoId });
+    fetch(`/clinica/${clinicaId}/horarios/?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
             const selectHorario = document.getElementById('selectHorario');
