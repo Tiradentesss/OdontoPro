@@ -76,6 +76,27 @@ function alternarMenu() {
 }
 
 /* ================= TROCAR DE TELA ================= */
+function atualizarTituloPaginaAtiva() {
+    const activeSection = document.querySelector('.tela.ativa');
+    const tituloHeader = document.querySelector('.titulo-pagina-header');
+    if (!tituloHeader || !activeSection) return;
+
+    const pageTitle = activeSection.dataset.pageTitle;
+    if (pageTitle) {
+        tituloHeader.textContent = pageTitle;
+        return;
+    }
+
+    const sectionTitles = {
+        'inicio': 'Página Inicial',
+        'consultas': 'Minhas Consultas',
+        'ajustes': 'Ajustes',
+        'perfil-clinica': 'Perfil da Clínica'
+    };
+
+    tituloHeader.textContent = sectionTitles[activeSection.id] || 'Página Inicial';
+}
+
 function mostrarTela(id, btn) {
     document.querySelectorAll(".tela").forEach(t => {
         t.classList.remove("ativa");
@@ -93,10 +114,12 @@ function mostrarTela(id, btn) {
         const area = document.querySelector(".area-conteudo");
         if (area) area.scrollTo({ top: 0, behavior: "smooth" });
     }
+    atualizarTituloPaginaAtiva();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     atualizarLogoMenu();
+    atualizarTituloPaginaAtiva();
 
     const inputBusca = document.getElementById("inputBuscaClinica");
 

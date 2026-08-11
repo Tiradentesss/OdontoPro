@@ -1014,6 +1014,31 @@ body.theme-dark .item-menu.ativo {
     justify-content: space-between;
     padding: 0 40px;
     border-bottom: 1px solid var(--cor-borda);
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-width: 0;
+    flex-wrap: wrap;
+}
+
+.titulo-pagina-header {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--texto-principal);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 420px;
+}
+
+.mensagem-boas-vindas {
+    margin: 0;
 }
 
 .controles-usuario {

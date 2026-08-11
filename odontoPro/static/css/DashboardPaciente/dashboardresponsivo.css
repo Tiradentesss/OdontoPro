@@ -266,6 +266,19 @@ body.theme-dark .btn-agendar-green {
     .barra-topo {
         padding: 0 15px;
         height: 60px;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .topbar-left {
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .titulo-pagina-header {
+        font-size: 18px;
+        max-width: 180px;
     }
 
     .controles-busca {

@@ -67,11 +67,14 @@
 <div class="container-principal">
 
 <header class="barra-topo">
-    <div class="mensagem-boas-vindas">
-        <div class="icone-boas-vindas">👋</div>
-        <div class="texto-boas-vindas">
-            <strong>Bem-vindo, {{ paciente.nome }}</strong>
-            <span>Que bom ter você de volta.</span>
+    <div class="topbar-left">
+        <h1 class="titulo-pagina-header">Página Inicial</h1>
+        <div class="mensagem-boas-vindas">
+            <div class="icone-boas-vindas">👋</div>
+            <div class="texto-boas-vindas">
+                <strong>Bem-vindo, {{ paciente.nome }}</strong>
+                <span>Que bom ter você de volta.</span>
+            </div>
         </div>
     </div>
 
@@ -136,9 +139,7 @@
         {% endif %}
 
 <!-- ================= INÍCIO ================= -->
-<section id="inicio" class="tela {% if aba_ativa == 'inicio' %}ativa{% endif %}">
-
-    <h2 class="titulo-pagina">Página Inicial</h2>
+<section id="inicio" class="tela {% if aba_ativa == 'inicio' %}ativa{% endif %}" data-page-title="Página Inicial">
 
     <div class="welcome-banner-modern">
         <div class="banner-text">
@@ -282,7 +283,7 @@
 </section>
 
 <!-- ================= PERFIL DA CLÍNICA ================= -->
-<section id="perfil-clinica" class="tela {% if aba_ativa == 'perfil-clinica' %}ativa{% endif %}">
+<section id="perfil-clinica" class="tela {% if aba_ativa == 'perfil-clinica' %}ativa{% endif %}" data-page-title="Perfil da Clínica">
     <div class="container-perfil">
         <h1 class="titulo-sessao">Sobre a Clinica</h1>
         <div class="card-branco header-clinica-detalhe">
@@ -537,8 +538,7 @@
 </section>
 
 <!-- ================= CONSULTAS ================= -->
-<section id="consultas" class="tela {% if aba_ativa == 'consultas' %}ativa{% endif %}">
-    <h2 class="titulo-pagina">Minhas Consultas</h2>
+<section id="consultas" class="tela {% if aba_ativa == 'consultas' %}ativa{% endif %}" data-page-title="Minhas Consultas">
 
     <div class="filtros-consultas">
         <div class="filtros-consultas-status">
@@ -778,8 +778,7 @@
 </section>
 
 <!-- ================= AJUSTES ================= -->
-<section id="ajustes" class="tela {% if aba_ativa == 'ajustes' %}ativa{% endif %}">
-        <h2 class="titulo-pagina">Ajustes</h2>
+<section id="ajustes" class="tela {% if aba_ativa == 'ajustes' %}ativa{% endif %}" data-page-title="Ajustes">
         <div class="container-config">
             <div class="abas-config">
                 <button class="aba-item ativa" onclick="trocarAba(event, 'aba-perfil')">Configurações</button>
