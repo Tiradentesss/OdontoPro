@@ -31,8 +31,9 @@ function atualizarBotaoTema() {
 
 /* ================= FUNÇÃO PARA CARREGAR HORÁRIOS ================= */
 function carregarHorariosHandler() {
-    if (this.value && clinicaSelecionada) {
-        carregarHorarios(clinicaSelecionada, this.value);
+    const medicoId = document.getElementById('selectProfissional')?.value;
+    if (this.value && clinicaSelecionada && medicoId) {
+        carregarHorarios(clinicaSelecionada, this.value, medicoId);
     }
 }
 
@@ -1760,7 +1761,7 @@ function atualizarMedicosPorEspecialidade() {
     }
 }
 
-function carregarHorarios(clinicaId, data) {
+function carregarHorarios(clinicaId, data, medicoId) {
     // Prevenir múltiplas requisições simultâneas
     if (carregarHorarios.isLoading) {
         console.log('[dashboard] Requisição já em andamento, ignorando...');
@@ -1768,8 +1769,13 @@ function carregarHorarios(clinicaId, data) {
     }
     carregarHorarios.isLoading = true;
 
-    // Buscar horários disponíveis da clínica para a data selecionada
-    return fetch(`/clinica/${clinicaId}/horarios/?data=${data}`)
+    if (!medicoId) {
+        carregarHorarios.isLoading = false;
+        return Promise.resolve([]);
+    }
+
+    const params = new URLSearchParams({ data, medico_id: medicoId });
+    return fetch(`/clinica/${clinicaId}/horarios/?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
             const selectHorario = document.getElementById('selectHorario');
