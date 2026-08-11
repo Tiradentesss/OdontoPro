@@ -6,7 +6,7 @@ from django.core import signing
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from django.templatetags.static import static
-from .models import Paciente, Medico, Clinica, Consulta, Endereco, Gerenciamento, Permissao, Financeiro, ClinicaImagem
+from .models import Paciente, Medico, Clinica, Consulta, Endereco, Especialidade, Gerenciamento, Permissao, Financeiro, ClinicaImagem
 
 
 class FinanceiroDashboardTests(TestCase):
@@ -494,6 +494,45 @@ class LoginViewTests(TestCase):
         self.assertEqual(cons.paciente, self.paciente)
         # session key remains unchanged
         self.assertEqual(self.client.session.session_key, key_before)
+
+    def test_clinica_detalhes_retains_only_clinic_specialties(self):
+        clinica, medico = self.helper_create_clinic_and_doctor()
+        outra_endereco = Endereco.objects.create(
+            cep='22222222',
+            numero='20',
+            quadra='',
+            rua='Rua Z',
+            bairro='Bairro Norte',
+            cidade='Belém',
+            estado='PA'
+        )
+        outra_clinica = Clinica.objects.create(
+            nome='Outra Clínica',
+            cnpj='22222222',
+            endereco=outra_endereco,
+            telefone='55555555',
+            conta_bancaria_juridica='1111-1',
+            email='outraclinica@example.com',
+            senha=make_password('senhaoutra')
+        )
+        especialidade_clinica = Especialidade.objects.create(
+            clinica=clinica,
+            nome='Ortodontia',
+            preco='150.00'
+        )
+        especialidade_outra = Especialidade.objects.create(
+            clinica=outra_clinica,
+            nome='Periodontia',
+            preco='200.00'
+        )
+        medico.especialidades.add(especialidade_clinica, especialidade_outra)
+
+        resp = self.client.get(reverse('clinica_detalhes', args=[clinica.id]))
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        ids = [esp[0] for esp in data.get('especialidades', [])]
+        self.assertIn(especialidade_clinica.id, ids)
+        self.assertNotIn(especialidade_outra.id, ids)
 
     def test_agendar_consulta_with_lost_session_and_signed_uid(self):
         clinica, medico = self.helper_create_clinic_and_doctor()

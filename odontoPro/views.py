@@ -974,17 +974,17 @@ def clinica_detalhes(request, clinica_id):
     except Clinica.DoesNotExist:
         return JsonResponse({"error": "Clínica não encontrada"}, status=404)
 
-    especialidades = set()
-    for medico in clinica.medico_set.all():
-        for esp in medico.especialidades.all():
-            especialidades.add((esp.id, esp.nome, float(esp.preco) if esp.preco else 0))
+    especialidades = [
+        (esp.id, esp.nome, float(esp.preco) if esp.preco else 0)
+        for esp in clinica.especialidades.all()
+    ]
 
     medicos = [
         {
             "id": m.id,
             "nome": m.nome,
             "foto_url": m.foto.url if m.foto else None,
-            "especialidades": [esp.id for esp in m.especialidades.all()]
+            "especialidades": [esp.id for esp in m.especialidades.filter(clinica=clinica)]
         }
         for m in clinica.medico_set.all()
     ]
