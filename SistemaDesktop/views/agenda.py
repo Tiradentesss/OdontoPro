@@ -465,12 +465,12 @@ class Agenda(BaseScreen):
         # Configuração das colunas
         self.col_config = [
             {'key': 'avatar',        'minsize': 52,  'weight': 0, 'title': '',               'anchor': 'center', 'padx_left': 12, 'padx_right': 4},
-            {'key': 'nome',          'minsize': 150, 'weight': 1, 'title': 'Nome',           'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
-            {'key': 'especialidade', 'minsize': 120, 'weight': 1, 'title': 'Especialidade', 'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
-            {'key': 'medico',        'minsize': 130, 'weight': 1, 'title': 'Médico',         'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
-            {'key': 'data',          'minsize': 100, 'weight': 0, 'title': 'Data',           'anchor': 'center', 'padx_left': 12, 'padx_right': 8},
-            {'key': 'hora',          'minsize': 80,  'weight': 0, 'title': 'Hora',           'anchor': 'center', 'padx_left': 12, 'padx_right': 8},
-            {'key': 'status',        'minsize': 130, 'weight': 0, 'title': 'Status',         'anchor': 'center', 'padx_left': 12, 'padx_right': 12},
+            {'key': 'nome',          'minsize': 0, 'weight': 1, 'title': 'Nome',           'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
+            {'key': 'especialidade', 'minsize': 0, 'weight': 1, 'title': 'Especialidade', 'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
+            {'key': 'medico',        'minsize': 0, 'weight': 1, 'title': 'Médico',         'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
+            {'key': 'data',          'minsize': 0, 'weight': 1, 'title': 'Data',           'anchor': 'center', 'padx_left': 12, 'padx_right': 8},
+            {'key': 'hora',          'minsize': 0, 'weight': 1, 'title': 'Hora',           'anchor': 'center', 'padx_left': 12, 'padx_right': 8},
+            {'key': 'status',        'minsize': 0, 'weight': 1, 'title': 'Status',         'anchor': 'center', 'padx_left': 12, 'padx_right': 12},
         ]
 
         self.col_widths = {conf['key']: conf['minsize'] for conf in self.col_config}

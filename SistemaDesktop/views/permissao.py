@@ -609,10 +609,15 @@ class Permissoes(BaseScreen):
         )
         self.selected_admin_label.pack(side="left", padx=15)
 
-        self.permissions_container = ctk.CTkFrame(self.right_card, fg_color="transparent")
+        self.permissions_container = ctk.CTkScrollableFrame(
+            self.right_card,
+            fg_color="transparent",
+            corner_radius=0,
+            border_width=0
+        )
         self.permissions_container.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
-        self.permissions_container.grid_columnconfigure(0, weight=1, minsize=210)
-        self.permissions_container.grid_columnconfigure(1, weight=1, minsize=210)
+        self.permissions_container.grid_columnconfigure(0, weight=1)
+        self.permissions_container.grid_columnconfigure(1, weight=1)
 
         permissions_config = {
             "Painel":        {"icon": "📊", "desc": "Acesso ao dashboard",     "color": COLORS["accent"]},

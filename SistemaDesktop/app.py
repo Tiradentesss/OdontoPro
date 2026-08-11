@@ -196,7 +196,7 @@ class App(ctk.CTkToplevel):
         self.fullscreen = False
         self.bind("<F11>", self._toggle_fullscreen)
         self.bind("<Escape>", self._exit_fullscreen)
-        self.minsize(1000, 650)
+        self.minsize(1200, 650)
         self.configure(fg_color=COLORS["bg"])
 
         # Grid principal

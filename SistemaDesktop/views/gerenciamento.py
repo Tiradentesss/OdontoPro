@@ -95,8 +95,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         main_container = ctk.CTkFrame(self, fg_color="transparent")
         main_container.grid(row=0, column=0, sticky="nsew", padx=20, pady=20)
         main_container.grid_rowconfigure(0, weight=1)
-        main_container.grid_columnconfigure(0, weight=1, minsize=500)
-        main_container.grid_columnconfigure(1, weight=1, minsize=500)
+        main_container.grid_columnconfigure(0, weight=1)
+        main_container.grid_columnconfigure(1, weight=1)
 
         self._build_left_panel(main_container)
         self._build_right_panel(main_container)
@@ -214,9 +214,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             row.grid_propagate(False)
             
             row.grid_columnconfigure(0, weight=0, minsize=50)
-            row.grid_columnconfigure(1, weight=1, minsize=240)
-            row.grid_columnconfigure(2, weight=1, minsize=240)
-            row.grid_columnconfigure(3, weight=1, minsize=180)
+            row.grid_columnconfigure(1, weight=1)
+            row.grid_columnconfigure(2, weight=1)
+            row.grid_columnconfigure(3, weight=1)
             row.grid_rowconfigure(0, weight=1)
             
             avatar_img = self._create_avatar(medico["nome"], 32)

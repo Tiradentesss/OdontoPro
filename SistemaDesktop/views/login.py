@@ -22,6 +22,7 @@ class Login(ctk.CTkToplevel):
         altura = self.winfo_screenheight()
 
         self.geometry(f"{largura}x{altura}+0+0")
+        self.minsize(900, 600)
         self.fullscreen = False
         self.bind("<F11>", self._toggle_fullscreen)
         self.bind("<Escape>", self._exit_fullscreen)
