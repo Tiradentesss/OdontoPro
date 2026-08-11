@@ -265,20 +265,61 @@ body.theme-dark .btn-agendar-green {
     /* 4. Topbar e Busca */
     .barra-topo {
         padding: 0 15px;
-        height: 60px;
+        min-height: 60px;
+        height: auto;
         align-items: center;
         flex-wrap: wrap;
+        justify-content: space-between;
         gap: 10px;
     }
 
     .topbar-left {
         gap: 10px;
         flex-wrap: wrap;
+        min-width: 0;
+        flex: 1 1 1;
+        overflow: hidden;
     }
 
     .titulo-pagina-header {
         font-size: 18px;
-        max-width: 180px;
+        max-width: 140px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mensagem-boas-vindas {
+        display: none;
+    }
+
+    .controles-usuario {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+        min-width: 0;
+        flex-shrink: 0;
+    }
+
+    .bloco-usuario {
+        width: auto;
+        max-width: 120px;
+        min-width: 0;
+        padding: 8px 10px;
+        overflow: hidden;
+    }
+
+    .bloco-usuario .info-usuario {
+        display: none;
+    }
+
+    .botao-notificacao {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        flex-shrink: 0;
     }
 
     .controles-busca {
@@ -422,8 +463,6 @@ body.theme-dark .btn-agendar-green {
         width: 95% !important;
         max-height: 95vh;
         padding: 20px 15px !important;
-    }
-
     }
 
     /* 5. Abas de navegação interna */
