@@ -320,26 +320,35 @@ class CalendarTimeSelector {
 
     console.log('[calendar] confirmarDataSelecionada called, selectedDate:', this.selectedDate);
 
-    const modal = document.getElementById('modal-calendario');
-    if (modal) {
-      modal.classList.remove('mostrar');
-      modal.style.display = 'none';
-    }
-
     const inputData = document.getElementById('inputData');
+    const medicoId = document.getElementById('selectProfissional')?.value;
+
     if (inputData && inputData.value) {
       if (typeof carregarHorarios === 'function' && typeof clinicaSelecionada !== 'undefined' && clinicaSelecionada) {
         console.log('[calendar] chamando carregarHorarios', clinicaSelecionada, inputData.value);
-        
-        // Aguardar carregamento dos horários antes de abrir o modal
-        const medicoId = document.getElementById('selectProfissional')?.value;
+
+        // Se não tiver médico selecionado, avisar e manter o calendário aberto
         if (!medicoId) {
+          if (typeof mostrarMensagem === 'function') {
+            mostrarMensagem('Atenção', 'Selecione um profissional antes de escolher horários.', 'warning');
+          } else {
+            alert('Selecione um profissional antes de escolher horários.');
+          }
           return;
         }
+
+        // Aguardar carregamento dos horários antes de fechar o calendário e abrir o modal de horários
         carregarHorarios(clinicaSelecionada, inputData.value, medicoId)
           .then((horarios) => {
             console.log('[calendar] Horários carregados com sucesso:', horarios);
-            
+
+            // Fechar modal calendário
+            const modal = document.getElementById('modal-calendario');
+            if (modal) {
+              modal.classList.remove('mostrar');
+              modal.style.display = 'none';
+            }
+
             // Abrir modal horários após horários terem sido carregados
             if (typeof abrirModalHorario === 'function') {
               abrirModalHorario();
@@ -353,19 +362,36 @@ class CalendarTimeSelector {
           })
           .catch((error) => {
             console.error('[calendar] Erro ao carregar horários:', error);
-            alert('Erro ao carregar horários disponíveis. Tente novamente.');
-            
-            // Abrir modal mesmo com erro para permitir retry
-            if (typeof abrirModalHorario === 'function') {
-              abrirModalHorario();
+            if (typeof mostrarMensagem === 'function') {
+              mostrarMensagem('Erro', 'Erro ao carregar horários disponíveis. Tente novamente.', 'error');
+            } else {
+              alert('Erro ao carregar horários disponíveis. Tente novamente.');
             }
+
+            // Manter calendário aberto para retry
           });
-        
+
         return; // Retornar aqui para não continuar com o código antigo
       }
     }
 
-    // Abrir modal horários (se carregarHorarios não foi chamado)
+    // Se não há dados, avisar
+    if (!inputData || !inputData.value) {
+      if (typeof mostrarMensagem === 'function') {
+        mostrarMensagem('Atenção', 'Por favor, selecione uma data primeiro.', 'warning');
+      } else {
+        alert('Por favor, selecione uma data primeiro.');
+      }
+      return;
+    }
+
+    // Se não foi possível carregarHorarios, fechar calendário e abrir modal de horários mesmo assim
+    const modal = document.getElementById('modal-calendario');
+    if (modal) {
+      modal.classList.remove('mostrar');
+      modal.style.display = 'none';
+    }
+
     if (typeof abrirModalHorario === 'function') {
       abrirModalHorario();
     } else {
@@ -443,16 +469,20 @@ class CalendarTimeSelector {
 
   renderTimeSlots() {
     let html = '';
-    this.availableTimes.forEach(time => {
-      html += `<div class="time-slot" data-time="${time}">${time}</div>`;
-    });
-    
+    if (!this.availableTimes || this.availableTimes.length === 0) {
+      html = '<div class="no-times" style="grid-column: 1 / -1; padding: 12px; color: #666; text-align: center;">Nenhum horário disponível</div>';
+    } else {
+      this.availableTimes.forEach(time => {
+        html += `<div class="time-slot" data-time="${time}">${time}</div>`;
+      });
+    }
+
     // Tentar renderizar em .time-slots (pode haver múltiplos)
     const containers = document.querySelectorAll('.time-slots');
     containers.forEach(container => {
       container.innerHTML = html;
     });
-    
+
     this.attachEventListeners();
   }
 

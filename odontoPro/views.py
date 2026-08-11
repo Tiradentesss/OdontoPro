@@ -212,6 +212,22 @@ def reagendar_consulta(request, consulta_id):
                     return JsonResponse({"success": False, "error": "Data inválida"}, status=400)
                 messages.error(request, "Data inválida")
             else:
+                # Não permitir reagendar para data/hora passada
+                agora = timezone.now()
+                if dt <= agora:
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({"success": False, "error": "Não é possível reagendar para data/hora passada."}, status=400)
+                    messages.error(request, "Não é possível reagendar para data/hora passada.")
+                    return redirect('dashboard_paciente')
+
+                # Verificar conflito de horário (ocupado por outra consulta não-cancelada)
+                conflito = Consulta.objects.filter(medico=consulta.medico, data_hora=dt).exclude(id=consulta.id).exclude(status='cancelada').exists()
+                if conflito:
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({"success": False, "error": "Horário já ocupado"}, status=400)
+                    messages.error(request, "Horário já ocupado")
+                    return redirect('dashboard_paciente')
+
                 if consulta.status == "perdida":
                     nova_consulta = Consulta.objects.create(
                         paciente=consulta.paciente,
@@ -256,6 +272,20 @@ def reagendar_consulta(request, consulta_id):
             messages.error(request, "Informe a nova data e horário.")
         else:
             dt = _parse_local_datetime(f"{nova_data}T{novo_horario}:00")
+            if not dt:
+                messages.error(request, "Data inválida")
+                return redirect('dashboard_paciente')
+
+            agora = timezone.now()
+            if dt <= agora:
+                messages.error(request, "Não é possível reagendar para data/hora passada.")
+                return redirect('dashboard_paciente')
+
+            conflito = Consulta.objects.filter(medico=consulta.medico, data_hora=dt).exclude(id=consulta.id).exclude(status='cancelada').exists()
+            if conflito:
+                messages.error(request, "Horário já ocupado")
+                return redirect('dashboard_paciente')
+
             if consulta.status == "perdida":
                 Consulta.objects.create(
                     paciente=consulta.paciente,
@@ -266,11 +296,11 @@ def reagendar_consulta(request, consulta_id):
                     medico=consulta.medico,
                     especialidade=consulta.especialidade,
                     observacoes=consulta.observacoes,
-                    data_hora=dt or consulta.data_hora,
+                    data_hora=dt,
                     status="agendada",
                 )
             else:
-                consulta.data_hora = dt or consulta.data_hora
+                consulta.data_hora = dt
                 consulta.status = "agendada"
                 consulta.save()
 
@@ -1181,11 +1211,20 @@ def agendar_consulta(request):
     if not data_hora:
         return JsonResponse({"success": False, "error": "Data inválida"})
 
+    # Não permitir agendar no passado
+    agora = timezone.now()
+    if data_hora <= agora:
+        return JsonResponse({"success": False, "error": "Não é possível agendar em data/hora passada"})
+
     try:
         clinica = Clinica.objects.get(id=clinica_id)
         medico = Medico.objects.get(id=medico_id)
     except (Clinica.DoesNotExist, Medico.DoesNotExist):
         return JsonResponse({"success": False, "error": "Clínica ou médico não encontrado"}, status=404)
+
+    # Garantir que o médico pertença à mesma clínica
+    if medico.clinica_id != clinica.id:
+        return JsonResponse({"success": False, "error": "Médico não pertence à clínica selecionada"}, status=400)
 
     try:
         especialidade = Especialidade.objects.get(id=especialidade_id, clinica=clinica)

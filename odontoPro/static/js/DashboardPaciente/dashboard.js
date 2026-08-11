@@ -2268,7 +2268,26 @@ document.addEventListener('DOMContentLoaded', () => {
         // Se já houver uma data selecionada, atualizar horários para o profissional
         const inputData = document.getElementById('inputData');
         if (inputData && inputData.value) {
-            carregarHorarios(clinicaSelecionada, inputData.value, medicoId).catch(() => {});
+            // Atualizar calendarSelector.availableTimes para sincronizar UI do calendário
+            carregarHorarios(clinicaSelecionada, inputData.value, medicoId)
+                .then(horarios => {
+                    if (window.calendarSelector) {
+                        window.calendarSelector.availableTimes = horarios || [];
+                        window.calendarSelector.renderTimeSlots();
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // Auto-selecionar primeiro profissional disponível se nenhum estiver selecionado
+        const selectedProfId = selectProfissional.value;
+        if (!selectedProfId) {
+            const firstOption = selectProfissional.querySelector('option[value]:not([value=""])');
+            if (firstOption) {
+                selectProfissional.value = firstOption.value;
+                const event = new Event('change', { bubbles: true });
+                selectProfissional.dispatchEvent(event);
+            }
         }
     });
 });
