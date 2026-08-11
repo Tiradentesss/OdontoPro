@@ -244,6 +244,7 @@ class Cadastro(BaseScreen):
         self._cep_after_id = None
         self._ultimo_cep_consultado = None
         self.action_frames = {}
+        self.modal_sucesso = None
 
         # =============================
         # 1. BARRA DE ABAS (TOPO)
@@ -1187,8 +1188,8 @@ class Cadastro(BaseScreen):
             )
             
             if resultado["sucesso"]:
-                self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
                 self._limpar_formulario_paciente(entries)
+                self._mostrar_modal_sucesso("Paciente cadastrado com sucesso")
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:
@@ -1314,8 +1315,8 @@ class Cadastro(BaseScreen):
             )
             
             if resultado["sucesso"]:
-                self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
                 self._limpar_formulario_profissional(entries)
+                self._mostrar_modal_sucesso("Profissional cadastrado com sucesso")
 
                 print("========== CADASTRO ===========")
                 print("Médico salvo com sucesso")
@@ -1385,8 +1386,8 @@ class Cadastro(BaseScreen):
             )
             
             if resultado["sucesso"]:
-                self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
                 self._limpar_formulario_profissional(entries)
+                self._mostrar_modal_sucesso("Gerente cadastrado com sucesso")
 
                 app = self.winfo_toplevel()
                 permissao_frame = getattr(app, "frames", {}).get("permissao")
@@ -1420,6 +1421,71 @@ class Cadastro(BaseScreen):
         self.tipo_profissional.set("Médico")
         self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
         self._ao_mudar_tipo_profissional("Médico")
+
+    def _mostrar_modal_sucesso(self, mensagem):
+        if self.modal_sucesso and self.modal_sucesso.winfo_exists():
+            self.modal_sucesso.focus_force()
+            return
+
+        janela_principal = self.winfo_toplevel()
+        modal = ctk.CTkToplevel(janela_principal)
+        self.modal_sucesso = modal
+        modal.title("Cadastro concluído")
+        modal.resizable(False, False)
+        modal.transient(janela_principal)
+        modal.protocol("WM_DELETE_WINDOW", lambda: None)
+
+        card = ctk.CTkFrame(
+            modal,
+            fg_color=COLORS["card"],
+            corner_radius=12,
+            border_width=1,
+            border_color=COLORS["border"]
+        )
+        card.pack(fill="both", expand=True, padx=2, pady=2)
+
+        ctk.CTkLabel(
+            card,
+            text=mensagem,
+            font=font("subtitle", "bold"),
+            text_color=COLORS["text"]
+        ).pack(padx=28, pady=(28, 20))
+
+        ctk.CTkButton(
+            card,
+            text="OK",
+            width=90,
+            height=34,
+            corner_radius=6,
+            fg_color=COLORS["primary"],
+            hover_color=COLORS["primary_dark"],
+            font=font("button_large", "bold"),
+            command=self._fechar_modal_sucesso
+        ).pack(pady=(0, 24))
+
+        modal.update_idletasks()
+        largura = modal.winfo_width()
+        altura = modal.winfo_height()
+        x = janela_principal.winfo_rootx() + (janela_principal.winfo_width() - largura) // 2
+        y = janela_principal.winfo_rooty() + (janela_principal.winfo_height() - altura) // 2
+        modal.geometry(f"{largura}x{altura}+{x}+{y}")
+        modal.update_idletasks()
+        centro_janela_x = janela_principal.winfo_rootx() + janela_principal.winfo_width() / 2
+        centro_janela_y = janela_principal.winfo_rooty() + janela_principal.winfo_height() / 2
+        centro_modal_x = modal.winfo_rootx() + modal.winfo_width() / 2
+        centro_modal_y = modal.winfo_rooty() + modal.winfo_height() / 2
+        correcao_x = round(centro_janela_x - centro_modal_x)
+        correcao_y = round(centro_janela_y - centro_modal_y)
+        if correcao_x or correcao_y:
+            modal.geometry(f"{largura}x{altura}+{x + correcao_x}+{y + correcao_y}")
+        modal.grab_set()
+        modal.focus_force()
+
+    def _fechar_modal_sucesso(self):
+        if self.modal_sucesso and self.modal_sucesso.winfo_exists():
+            self.modal_sucesso.grab_release()
+            self.modal_sucesso.destroy()
+        self.modal_sucesso = None
 
     def _mostrar_mensagem(self, mensagem, sucesso=True):
         """Exibe uma mensagem de feedback ao usuário"""
