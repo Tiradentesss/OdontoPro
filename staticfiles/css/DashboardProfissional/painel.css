@@ -21,11 +21,15 @@ body {
     width: 260px;
     height: 100vh;
     background-color: var(--bg-sidebar);
-    border-right: 1px solid #E2E8F0;
-    display: flex;
-    flex-direction: column;
-    padding: 2rem 1.5rem;
-    position: fixed;
+    .badge-status.confirmada {
+        background-color: #f7fee7;
+        color: #365314;
+    }
+
+    .badge-status.realizada {
+        background-color: #ecfdf3;
+        color: var(--verde-sucesso);
+    }
 }
 
 .logo-container {

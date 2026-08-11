@@ -945,7 +945,7 @@ function aplicarFiltrosConsultas() {
         card.classList.toggle("perdida-card", isPerdida);
 
         const statusMatch = filtroStatus === "todas"
-            || (filtroStatus === "perdidas" ? isPerdida : status === filtroStatus);
+            || (filtroStatus === "perdidas" ? isPerdida : (filtroStatus === 'agendada' ? (status === 'agendada' || status === 'confirmada') : status === filtroStatus));
 
         const especialidadeMatch = !especialidadeSelecionada || especialidade === especialidadeSelecionada;
         const dataMatch = !dataSelecionada || (dataHora ? dataHora.startsWith(dataSelecionada) : false);
@@ -1000,6 +1000,7 @@ function reorganizarConsultasPorData() {
     // Prioridade de status (ordem em que deve aparecer)
     const statusPriority = {
         'agendada': 1,
+        'confirmada': 1,
         'realizada': 2,
         'cancelada': 3,
         'perdida': 4

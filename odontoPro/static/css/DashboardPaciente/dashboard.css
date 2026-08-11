@@ -16,15 +16,15 @@
     --perigo: #EF4444;
     --perigo-escuro: #DC2626;
     --status-borda-agendada: #facc15;
-    --status-borda-confirmada: #1bc3ea;
+    --status-borda-confirmada: #a3e635;
     --status-borda-perdida: #9ca3af;
     --status-borda-realizada: #22c55e;
     --status-borda-cancelada: #ef4444;
     --status-ativo-avaliacao: #ffda78;
     --status-badge-agendada-bg: #fef9c3;
     --status-badge-agendada-text: #a16207;
-    --status-badge-confirmada-bg: #dbeafe;
-    --status-badge-confirmada-text: #1d4ed8;
+    --status-badge-confirmada-bg: #f7fee7;
+    --status-badge-confirmada-text: #365314;
     --status-badge-perdida-bg: #f3f4f6;
     --status-badge-perdida-text: #4b5563;
     --status-badge-realizada-bg: #dcfce7;
@@ -467,6 +467,10 @@ body {
     border-left-color: #facc15 !important;
 }
 
+.theme-dark .card-agendamento[data-status="confirmada"] {
+    border-left-color: var(--status-borda-confirmada) !important;
+}
+
 .theme-dark .card-agendamento[data-status="realizada"],
 .theme-dark .realizado-card {
     border-left-color: #22c55e !important;
@@ -662,8 +666,8 @@ body.theme-dark .tag-online {
 }
 
 .theme-dark .status-badge.confirmada {
-    background: rgba(27, 195, 234, 0.16);
-    color: #1bc3ea;
+    background: rgba(163, 230, 53, 0.12);
+    color: #365314;
 }
 
 .theme-dark .status-badge.perdida {
@@ -4155,6 +4159,10 @@ body.theme-dark .item-menu.ativo {
 
 .card-agendamento[data-status="agendada"] {
     border-left-color: var(--status-borda-agendada);
+}
+
+.card-agendamento[data-status="confirmada"] {
+    border-left-color: var(--status-borda-confirmada);
 }
 
 .status-badge.agendada {

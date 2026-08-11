@@ -3646,9 +3646,18 @@ body.theme-dark .item-menu.ativo {
     border-left-color: #facc15; /* amarelo */
 }
 
+.card-agendamento[data-status="confirmada"] {
+    border-left-color: #a3e635; /* amarelo-esverdeado */
+}
+
 .status-badge.agendada {
     background: #fef9c3;
     color: #a16207;
+}
+
+.status-badge.confirmada {
+    background: #f7fee7;
+    color: #365314;
 }
 
 .card-agendamento[data-status="cancelada"],

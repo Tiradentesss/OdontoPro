@@ -529,7 +529,11 @@ body {
     white-space: nowrap;
 }
 
-.badge-status.confirmada,
+.badge-status.confirmada {
+    background-color: #f7fee7;
+    color: #365314;
+}
+
 .badge-status.realizada {
     background-color: #ecfdf3;
     color: var(--verde-sucesso);
