@@ -24,7 +24,7 @@ from decimal import Decimal
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from django.utils.dateparse import parse_datetime as django_parse_datetime
-from .models import DiaSemanaDisponivel, HorarioAberto
+from .models import MedicoHorario
 from PIL import Image
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -45,9 +45,10 @@ def _parse_especialidades(post_data):
 @require_GET
 def horarios_clinica(request, clinica_id):
     data = request.GET.get("data")
+    medico_id = request.GET.get("medico_id")
     
       # yyyy-mm-dd
-    if not data:
+    if not data or not medico_id:
         return JsonResponse({"error": "Data não informada"}, status=400)
 
     try:
@@ -55,35 +56,59 @@ def horarios_clinica(request, clinica_id):
     except ValueError:
         return JsonResponse({"error": "Data inválida"}, status=400)
 
-    dia_semana_map = {
-        0: "segunda",
-        1: "terca",
-        2: "quarta",
-        3: "quinta",
-        4: "sexta",
-        5: "sabado",
-        6: "domingo",
-    }
+    try:
+        medico = Medico.objects.get(id=medico_id)
+    except Medico.DoesNotExist:
+        return JsonResponse({"error": "Médico não encontrado"}, status=404)
 
+    if medico.clinica_id != clinica_id:
+        return JsonResponse({"error": "Médico não pertence à clínica"}, status=400)
+
+    dia_semana_map = {
+        0: "Segunda",
+        1: "Terça",
+        2: "Quarta",
+        3: "Quinta",
+        4: "Sexta",
+        5: "Sábado",
+        6: "Domingo",
+    }
     dia_str = dia_semana_map[data_dt.weekday()]
 
-    try:
-        dia = DiaSemanaDisponivel.objects.get(
-            clinica_id=clinica_id,
-            dia=dia_str
-        )
-    except DiaSemanaDisponivel.DoesNotExist:
-        return JsonResponse({"horarios": []})
+    intervalos = MedicoHorario.objects.filter(
+        medico=medico,
+        dia__iexact=dia_str,
+    ).order_by("hora_inicio")
 
     horarios = []
-    for h in dia.horarios.all():
-        hora = make_aware(datetime.combine(data_dt, h.hora_inicio))
-        hora_fim = h.hora_fim
-        while hora.time() < hora_fim:
+    for intervalo in intervalos:
+        hora = intervalo.hora_inicio
+        while hora < intervalo.hora_fim:
             horarios.append(hora.strftime("%H:%M"))
-            hora += timedelta(minutes=30)
+            hora = (datetime.combine(data_dt.date(), hora) + timedelta(minutes=30)).time()
 
-    return JsonResponse({"horarios": horarios})
+    consultas = Consulta.objects.filter(
+        clinica_id=clinica_id,
+        medico_id=medico_id,
+        data_hora__date=data_dt.date(),
+    ).exclude(status="cancelada")
+    horarios_ocupados = {
+        consulta.data_hora.strftime("%H:%M")
+        for consulta in consultas
+    }
+    horarios_disponiveis = sorted(set(horarios) - horarios_ocupados)
+
+    logger.info(
+        "[AGENDA WEB] Clinica ID: %s | Medico ID: %s | Data: %s",
+        clinica_id,
+        medico_id,
+        data,
+    )
+    logger.info("[AGENDA WEB] Disponibilidades encontradas: %s", horarios)
+    logger.info("[AGENDA WEB] Horários ocupados: %s", sorted(horarios_ocupados))
+    logger.info("[AGENDA WEB] Horários disponíveis: %s", horarios_disponiveis)
+
+    return JsonResponse({"horarios": horarios_disponiveis})
 
 
 # -------- CANCELAR CONSULTA --------

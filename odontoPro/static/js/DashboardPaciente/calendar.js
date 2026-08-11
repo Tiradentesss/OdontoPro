@@ -119,15 +119,25 @@ class CalendarTimeSelector {
     }
     
     // Fazer requisições para verificar disponibilidade de cada data
-    const promises = daysToCheck.map(dateString => 
-      fetch(`/clinica/${clinicaSelecionada}/horarios/?data=${dateString}`)
+    const medicoId = document.getElementById('selectProfissional')?.value;
+    if (!medicoId) {
+      daysToCheck.forEach(dateString => {
+        this.dateAvailability[dateString] = false;
+      });
+      this.renderCalendar();
+      return;
+    }
+
+    const promises = daysToCheck.map(dateString => {
+      const params = new URLSearchParams({ data: dateString, medico_id: medicoId });
+      return fetch(`/clinica/${clinicaSelecionada}/horarios/?${params.toString()}`)
         .then(response => response.json())
         .then(data => ({
           date: dateString,
           hasHorarios: data.horarios && data.horarios.length > 0
         }))
         .catch(() => ({ date: dateString, hasHorarios: false }))
-    );
+    });
     
     Promise.all(promises).then(results => {
       // Atualizar status de disponibilidade
@@ -312,7 +322,11 @@ class CalendarTimeSelector {
         console.log('[calendar] chamando carregarHorarios', clinicaSelecionada, inputData.value);
         
         // Aguardar carregamento dos horários antes de abrir o modal
-        carregarHorarios(clinicaSelecionada, inputData.value)
+        const medicoId = document.getElementById('selectProfissional')?.value;
+        if (!medicoId) {
+          return;
+        }
+        carregarHorarios(clinicaSelecionada, inputData.value, medicoId)
           .then((horarios) => {
             console.log('[calendar] Horários carregados com sucesso:', horarios);
             
@@ -565,7 +579,10 @@ function confirmarDataSelecionada() {
     if (inputData && inputData.value) {
       if (typeof carregarHorarios === 'function' && typeof clinicaSelecionada !== 'undefined' && clinicaSelecionada) {
         console.log('[global] carregando horarios manual', clinicaSelecionada, inputData.value);
-        carregarHorarios(clinicaSelecionada, inputData.value);
+        const medicoId = document.getElementById('selectProfissional')?.value;
+        if (medicoId) {
+          carregarHorarios(clinicaSelecionada, inputData.value, medicoId);
+        }
       }
       const modalHorario = document.getElementById('modal-horarios');
       const modalCalendario = document.getElementById('modal-calendario');
