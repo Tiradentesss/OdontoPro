@@ -1077,17 +1077,10 @@ class Cadastro(BaseScreen):
                 self._mostrar_mensagem(f"Erro: {str(e)}", sucesso=False)
 
         def _limpar():
-            entries = target_entries or []
-            for e in entries:
-                try:
-                    content = e.get()
-                    if content:
-                        if isinstance(e, ctk.CTkComboBox):
-                            e.set("")
-                        else:
-                            e.delete(0, "end")
-                except Exception:
-                    pass
+            if target_entries is self.paciente_entries:
+                self._limpar_formulario_paciente(target_entries)
+            else:
+                self._limpar_formulario_profissional(target_entries)
 
         ActionButtons(
             container,
@@ -1195,7 +1188,7 @@ class Cadastro(BaseScreen):
             
             if resultado["sucesso"]:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
-                self._limpar_campos(entries)
+                self._limpar_formulario_paciente(entries)
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:
@@ -1322,10 +1315,7 @@ class Cadastro(BaseScreen):
             
             if resultado["sucesso"]:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
-                self._limpar_campos([entries[0], entries[1]])
-                self._limpar_campos([self.cro_entry, self.telefone_entry])
-                self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
-                self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
+                self._limpar_formulario_profissional(entries)
 
                 print("========== CADASTRO ===========")
                 print("Médico salvo com sucesso")
@@ -1396,8 +1386,7 @@ class Cadastro(BaseScreen):
             
             if resultado["sucesso"]:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=True)
-                self._limpar_campos([entries[0], entries[1]])
-                self._limpar_campos([self.senha_entry, self.confirma_senha_entry])
+                self._limpar_formulario_profissional(entries)
 
                 app = self.winfo_toplevel()
                 permissao_frame = getattr(app, "frames", {}).get("permissao")
@@ -1412,12 +1401,25 @@ class Cadastro(BaseScreen):
         """Limpa os campos de entrada"""
         for e in entries:
             try:
-                if isinstance(e, ctk.CTkComboBox):
+                if isinstance(e, ctk.CTkTextbox):
+                    e.delete("1.0", "end")
+                elif isinstance(e, ctk.CTkComboBox):
                     e.set("")
                 else:
                     e.delete(0, "end")
             except Exception:
                 pass
+
+    def _limpar_formulario_paciente(self, entries):
+        self._limpar_campos(entries)
+        self.sexo_paciente.set("")
+
+    def _limpar_formulario_profissional(self, entries):
+        self._limpar_campos(entries)
+        self.sexo_profissional.set("")
+        self.tipo_profissional.set("Médico")
+        self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
+        self._ao_mudar_tipo_profissional("Médico")
 
     def _mostrar_mensagem(self, mensagem, sucesso=True):
         """Exibe uma mensagem de feedback ao usuário"""
