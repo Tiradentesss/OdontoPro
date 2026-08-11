@@ -1188,8 +1188,8 @@ class Cadastro(BaseScreen):
             )
             
             if resultado["sucesso"]:
-                self._limpar_formulario_paciente(entries)
                 self._mostrar_modal_sucesso("Paciente cadastrado com sucesso")
+                self.after_idle(lambda: self._limpar_formulario_paciente(entries))
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:
@@ -1315,8 +1315,8 @@ class Cadastro(BaseScreen):
             )
             
             if resultado["sucesso"]:
-                self._limpar_formulario_profissional(entries)
                 self._mostrar_modal_sucesso("Profissional cadastrado com sucesso")
+                self.after_idle(lambda: self._limpar_formulario_profissional(entries))
 
                 print("========== CADASTRO ===========")
                 print("Médico salvo com sucesso")
@@ -1338,7 +1338,7 @@ class Cadastro(BaseScreen):
                     print("Chamando atualização do Gerenciamento...")
                     print(f"Instância alvo Gerenciamento id(self): {id(target)}")
                     try:
-                        target.refresh()
+                        self.after_idle(target.refresh)
                     except Exception as e:
                         print(f"Erro ao atualizar Gerenciamento: {e}")
                 else:
@@ -1386,13 +1386,13 @@ class Cadastro(BaseScreen):
             )
             
             if resultado["sucesso"]:
-                self._limpar_formulario_profissional(entries)
                 self._mostrar_modal_sucesso("Gerente cadastrado com sucesso")
+                self.after_idle(lambda: self._limpar_formulario_profissional(entries))
 
                 app = self.winfo_toplevel()
                 permissao_frame = getattr(app, "frames", {}).get("permissao")
                 if permissao_frame is not None and hasattr(permissao_frame, "refresh"):
-                    permissao_frame.refresh()
+                    self.after_idle(permissao_frame.refresh)
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:
