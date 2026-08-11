@@ -243,6 +243,7 @@ class Cadastro(BaseScreen):
         self._aplicando_mascara_endereco = False
         self._cep_after_id = None
         self._ultimo_cep_consultado = None
+        self.action_frames = {}
 
         # =============================
         # 1. BARRA DE ABAS (TOPO)
@@ -264,6 +265,12 @@ class Cadastro(BaseScreen):
             border_color=INNER_CARD_BORDER
         )
         self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+
+        self.action_area = ctk.CTkFrame(
+            self.cadastro_card,
+            fg_color="transparent"
+        )
+        self.action_area.pack(fill="x", padx=20, pady=(0, 20))
 
         self.container_conteudo = ctk.CTkFrame(
             self.scroll_frame,
@@ -300,12 +307,19 @@ class Cadastro(BaseScreen):
         if hasattr(self, 'frame_profissionais') and self.frame_profissionais:
             self.frame_profissionais.pack_forget()
 
+        for frame_acao in self.action_frames.values():
+            frame_acao.pack_forget()
+
         if aba_selecionada == "Pacientes":
             if self.frame_pacientes:
                 self.frame_pacientes.pack(fill="both", expand=True)
+            if "Pacientes" in self.action_frames:
+                self.action_frames["Pacientes"].pack(fill="x")
         else:
             if self.frame_profissionais:
                 self.frame_profissionais.pack(fill="both", expand=True)
+            if "Profissionais" in self.action_frames:
+                self.action_frames["Profissionais"].pack(fill="x")
 
     def _atualizar_estilo_abas(self, ativa):
         estilo_ativo = {
@@ -1041,11 +1055,11 @@ class Cadastro(BaseScreen):
     # BOTÕES DE AÇÃO - CORRIGIDO
     # =====================================================
     def _botoes_acao(self, parent, texto_principal, target_entries=None):
-        # ESPAÇADOR PARA GARANTIR QUE OS BOTÕES APAREÇAM
-        espacador = ctk.CTkFrame(parent, fg_color="transparent", height=30)
-        espacador.pack(fill="x")
+        tipo_aba = "Pacientes" if target_entries is self.paciente_entries else "Profissionais"
+        action_frame = ctk.CTkFrame(self.action_area, fg_color="transparent")
+        self.action_frames[tipo_aba] = action_frame
         
-        container = ctk.CTkFrame(parent, fg_color="transparent")
+        container = ctk.CTkFrame(action_frame, fg_color="transparent")
         container.pack(fill="x", padx=self.padding_lateral, pady=14)
 
         def _salvar():
