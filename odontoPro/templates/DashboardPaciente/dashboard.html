@@ -404,8 +404,10 @@
                     <div class="selection-group">
                         <label class="group-title">Gênero</label>
                         <div class="radio-options">
-                            <label><input type="radio" name="gender" value="Masculino" {% if paciente.sexo|lower == 'masculino' or paciente.sexo|lower == 'm' %}checked{% endif %} {% if paciente.sexo %}disabled{% endif %}> Masculino</label>
-                            <label><input type="radio" name="gender" value="Feminino" {% if paciente.sexo|lower == 'feminino' or paciente.sexo|lower == 'f' %}checked{% endif %} {% if paciente.sexo %}disabled{% endif %}> Feminino</label>
+                            <div class="gender-group">
+                                <label><input type="radio" name="gender" value="m" {% if paciente.sexo|lower == 'masculino' or paciente.sexo|lower == 'm' %}checked{% endif %} {% if paciente.sexo %}disabled{% endif %}> Masculino</label>
+                                <label><input type="radio" name="gender" value="f" {% if paciente.sexo|lower == 'feminino' or paciente.sexo|lower == 'f' %}checked{% endif %} {% if paciente.sexo %}disabled{% endif %}> Feminino</label>
+                            </div>
                         </div>
                     </div>
                 </div>

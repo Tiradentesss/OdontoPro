@@ -2246,3 +2246,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Atualiza disponibilidade quando o profissional selecionado muda
+document.addEventListener('DOMContentLoaded', () => {
+    const selectProfissional = document.getElementById('selectProfissional');
+    if (!selectProfissional) return;
+
+    selectProfissional.addEventListener('change', () => {
+        const medicoId = selectProfissional.value;
+        // Recarrega disponibilidade do calendário para o novo profissional
+        if (window.calendarSelector) {
+            try {
+                window.calendarSelector.dateAvailability = {};
+                window.calendarSelector.loadDateAvailability(window.calendarSelector.currentDate.getFullYear(), window.calendarSelector.currentDate.getMonth());
+            } catch (err) {
+                console.warn('Erro ao atualizar disponibilidade do calendário:', err);
+            }
+        }
+
+        // Se já houver uma data selecionada, atualizar horários para o profissional
+        const inputData = document.getElementById('inputData');
+        if (inputData && inputData.value) {
+            carregarHorarios(clinicaSelecionada, inputData.value, medicoId).catch(() => {});
+        }
+    });
+});

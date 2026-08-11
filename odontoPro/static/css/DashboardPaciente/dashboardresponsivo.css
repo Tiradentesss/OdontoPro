@@ -228,6 +228,33 @@ body.theme-dark .btn-agendar-green {
         text-align: left;
     }
 
+    /* Estilizar seleção de gênero para ficar lado a lado em mobile */
+    .gender-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        width: 100%;
+        margin-top: 6px;
+    }
+
+    .gender-group label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: 48%;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #f7fafc;
+        cursor: pointer;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    .gender-group input[type="radio"] {
+        width: 18px;
+        height: 18px;
+    }
+
     .input-group>div {
         width: 100%;
     }
