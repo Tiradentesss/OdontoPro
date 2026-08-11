@@ -230,24 +230,27 @@ body.theme-dark .btn-agendar-green {
 
     /* Estilizar seleção de gênero para ficar lado a lado em mobile */
     .gender-group {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        width: 100%;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 10px !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
         margin-top: 6px;
     }
 
     .gender-group label {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        width: 48%;
-        padding: 8px 10px;
-        border-radius: 10px;
-        background: #f7fafc;
-        cursor: pointer;
-        font-size: 14px;
-        box-sizing: border-box;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex: 1 1 48% !important;
+        min-width: 0 !important;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+        background: #f7fafc !important;
+        cursor: pointer !important;
+        font-size: 14px !important;
+        box-sizing: border-box !important;
+        justify-content: center;
     }
 
     .gender-group input[type="radio"] {

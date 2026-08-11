@@ -299,29 +299,19 @@ body.theme-dark #modal-calendario .btn-close-modal:hover {
 }
 
 .day-cell.selected {
-  background-color: #1BC3EA;
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(27, 195, 234, 0.45);
+  background-color: #1BC3EA !important;
+  color: white !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(27, 195, 234, 0.45) !important;
 }
 
+/* Do not highlight the current day as if it were a selected booking.
+   Only visually indicate when a date has been explicitly selected by the user. */
 .day-cell.today {
-  background-color: var(--col-green);
-  color: white;
-  font-weight: 700;
+  background-color: transparent;
+  color: var(--col-black);
+  font-weight: 500;
 }
-
-.day-cell.today:before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 2px solid var(--col-green);
-  border-radius: 8px;
-  top: 0;
-  left: 0;
-}
-
 .day-cell.disabled,
 .day-cell.other-month {
   background-color: transparent;
@@ -349,15 +339,16 @@ body.theme-dark #modal-calendario .btn-close-modal:hover {
 }
 
 .day-cell.unavailable {
-  background-color: #f0f0f0;
-  color: #999;
+  /* Make unavailable dates visually darker / more muted than normal days */
+  background-color: #d9d9d9;
+  color: #666666;
   font-weight: 500;
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 1;
 }
 
 .day-cell.unavailable:hover {
-  background-color: #f0f0f0;
+  background-color: #d9d9d9;
   transform: none;
   cursor: not-allowed;
 }
@@ -373,9 +364,10 @@ body.theme-dark .day-cell.available:hover {
 }
 
 body.theme-dark .day-cell.unavailable {
-  background-color: rgba(255, 255, 255, 0.06);
-  color: #666;
-  opacity: 0.5;
+  /* Darker / lower-contrast appearance for unavailable days in dark mode */
+  background-color: rgba(0, 0, 0, 0.45);
+  color: rgba(255,255,255,0.65);
+  opacity: 1;
 }
 
 /* ASIDE SECTION */

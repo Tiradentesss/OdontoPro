@@ -59,7 +59,17 @@ class CalendarTimeSelector {
       const isSelected = this.selectedDate && dateString === this.formatDate(this.selectedDate);
       const isWeekend = currentCellDate.getDay() === 0 || currentCellDate.getDay() === 6;
       const isAvailable = this.dateAvailability[dateString] === true;
-      const isUnavailable = this.dateAvailability[dateString] === false;
+      // By default treat explicitly false as unavailable
+      let isUnavailable = this.dateAvailability[dateString] === false;
+
+      // Mark past dates and the current date as unavailable to prevent same-day bookings
+      const todayNoTime = new Date();
+      todayNoTime.setHours(0,0,0,0);
+      const cellNoTime = new Date(currentCellDate.getTime());
+      cellNoTime.setHours(0,0,0,0);
+      if (cellNoTime <= todayNoTime) {
+        isUnavailable = true;
+      }
       
       let classes = 'day-cell';
       if (isToday) classes += ' today';
