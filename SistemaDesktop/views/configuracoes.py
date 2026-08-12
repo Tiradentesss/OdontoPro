@@ -1013,13 +1013,15 @@ class Configuracoes(BaseScreen):
 
         # Cabeçalho da lista (3 colunas)
         header = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
-        header.grid_columnconfigure(0, weight=3)
+        # Garantir largura mínima da coluna de nome para alinhar a coluna de valores
+        header.grid_columnconfigure(0, weight=3, minsize=420)
         header.grid_columnconfigure(1, weight=1)
         header.grid_columnconfigure(2, weight=0)
         header.pack(fill="x", padx=8, pady=(6, 6))
 
         ctk.CTkLabel(header, text="Serviço", font=font("text", "bold"), text_color=self.colors["text_primary"]).grid(row=0, column=0, sticky="w")
-        ctk.CTkLabel(header, text="Valor", font=font("text", "bold"), text_color=self.colors["text_secondary"]).grid(row=0, column=1, sticky="w")
+        # Ajuste mínimo: deslocar levemente o título "Valor" para centralizar sobre a coluna
+        ctk.CTkLabel(header, text="Valor", font=font("text", "bold"), text_color=self.colors["text_secondary"]).grid(row=0, column=1, sticky="w", padx=(0, 40))
         ctk.CTkLabel(header, text="", font=font("text", "bold"), text_color=self.colors["text_secondary"]).grid(row=0, column=2, sticky="e")
 
         # Corpo da lista será preenchido por _carregar_servicos
@@ -1069,7 +1071,8 @@ class Configuracoes(BaseScreen):
         # Para cada serviço, criar uma linha com 3 colunas
         for idx, s in enumerate(servicos):
             row = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
-            row.grid_columnconfigure(0, weight=3)
+            # Manter mesma largura mínima que o cabeçalho para alinhar valores
+            row.grid_columnconfigure(0, weight=3, minsize=420)
             row.grid_columnconfigure(1, weight=1)
             row.grid_columnconfigure(2, weight=0)
             row.pack(fill="x", padx=8, pady=6)

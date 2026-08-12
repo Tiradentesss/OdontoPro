@@ -219,7 +219,7 @@ class App(ctk.CTkToplevel):
 
         # Header: centered logo
         brand_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        brand_frame.pack(pady=(16, 8), padx=8, fill="x")
+        brand_frame.pack(pady=(16, 8), padx=20, fill="x")
 
 # Carrega a logo OdontoHub da sidebar usando apenas os arquivos corretos para cada tema
         self.brand_logo_img = None
