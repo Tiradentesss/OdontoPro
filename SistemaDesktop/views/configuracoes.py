@@ -1128,7 +1128,43 @@ class Configuracoes(BaseScreen):
         top.title("Adicionar Serviço e Valor")
         top.transient(self)
         top.grab_set()
-        top.geometry("480x220")
+
+        # Tamanho inicial confortável para exibir todos os campos sem cortar
+        modal_w, modal_h = 520, 300
+        top.geometry(f"{modal_w}x{modal_h}")
+        # Não permitir redimensionamento manual (manter comportamento modal)
+        try:
+            top.resizable(False, False)
+        except Exception:
+            pass
+
+        # Garantir que dimensões e layout foram aplicados antes de calcular posição
+        try:
+            top.update_idletasks()
+        except Exception:
+            pass
+
+        # Centralizar em relação à janela principal (toplevel pai)
+        try:
+            parent_win = self.winfo_toplevel()
+            parent_win.update_idletasks()
+            px = parent_win.winfo_rootx()
+            py = parent_win.winfo_rooty()
+            pw = parent_win.winfo_width()
+            ph = parent_win.winfo_height()
+
+            x = px + (pw - modal_w) // 2
+            y = py + (ph - modal_h) // 2
+
+            # Garantir que o modal fique dentro dos limites da tela
+            screen_w = top.winfo_screenwidth()
+            screen_h = top.winfo_screenheight()
+            x = max(0, min(x, screen_w - modal_w))
+            y = max(0, min(y, screen_h - modal_h))
+
+            top.geometry(f"{modal_w}x{modal_h}+{x}+{y}")
+        except Exception as e:
+            print(f"[AVISO] Não foi possível centralizar modal: {e}")
 
         body = ctk.CTkFrame(top, fg_color="transparent")
         body.pack(fill="both", expand=True, padx=16, pady=12)
