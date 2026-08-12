@@ -1075,7 +1075,7 @@ class Configuracoes(BaseScreen):
             row.pack(fill="x", padx=8, pady=6)
 
             nome = s.get("nome") if isinstance(s, dict) else s[1]
-            valor = s.get("valor") if isinstance(s, dict) else s[2]
+            valor = s.get("preco") if isinstance(s, dict) else s[2]
             serv_id = s.get("id") if isinstance(s, dict) else s[0]
 
             # Formatar valor para padrão BR (milhares com . e decimais com ,)
@@ -1104,7 +1104,7 @@ class Configuracoes(BaseScreen):
                 conn = get_connection()
                 cursor = conn.cursor(dictionary=True)
                 cursor.execute("""
-                    SELECT id, nome, valor
+                    SELECT id, nome, preco
                     FROM odontoPro_especialidade
                     WHERE clinica_id = %s
                     ORDER BY nome ASC
@@ -1176,19 +1176,26 @@ class Configuracoes(BaseScreen):
     def _salvar_servico_no_banco(self, nome, valor):
         try:
             from config.database import get_connection
+            import traceback
             conn = None
             cursor = None
             try:
+                # Debug: mostrar valores sendo salvos
+                print(f"[DEBUG] clinica_id: {self.clinica_id} (tipo: {type(self.clinica_id)})")
+                print(f"[DEBUG] nome: {nome} (tipo: {type(nome)})")
+                print(f"[DEBUG] valor: {valor} (tipo: {type(valor)})")
+                
                 conn = get_connection()
                 cursor = conn.cursor()
                 cursor.execute("""
-                    INSERT INTO odontoPro_especialidade (nome, valor, clinica_id)
+                    INSERT INTO odontoPro_especialidade (nome, preco, clinica_id)
                     VALUES (%s, %s, %s)
                 """, (nome, str(valor), self.clinica_id))
                 conn.commit()
                 return True
             except Exception as e:
-                print(f"Erro ao salvar serviço: {e}")
+                print(f"[ERRO] Falha ao salvar serviço: {e}")
+                traceback.print_exc()
                 return False
             finally:
                 if cursor:
@@ -1196,7 +1203,9 @@ class Configuracoes(BaseScreen):
                 if conn:
                     conn.close()
         except Exception as e:
-            print(f"Erro ao salvar serviço (import/conn): {e}")
+            print(f"[ERRO] Falha ao salvar serviço (import/conn): {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def _excluir_servico(self, servico_id):
@@ -1206,6 +1215,8 @@ class Configuracoes(BaseScreen):
                 return
 
             from config.database import get_connection
+            import mysql.connector
+            
             conn = None
             cursor = None
             try:
@@ -1213,17 +1224,38 @@ class Configuracoes(BaseScreen):
                 cursor = conn.cursor()
                 cursor.execute("DELETE FROM odontoPro_especialidade WHERE id = %s", (servico_id,))
                 conn.commit()
-                self._carregar_servicos()
+                
+                if cursor.rowcount > 0:
+                    self._carregar_servicos()
+                    messagebox.showinfo("Sucesso", "Serviço excluído com sucesso.")
+                else:
+                    messagebox.showwarning("Aviso", f"Serviço não encontrado.")
+                    
+            except mysql.connector.errors.IntegrityError as e:
+                # Erro de chave estrangeira (Foreign Key Constraint)
+                if "1451" in str(e):
+                    messagebox.showerror("Não é possível excluir", 
+                        "Este serviço está vinculado a consultas agendadas.\n\n"
+                        "Para excluir este serviço, primeiro cancele ou delete as consultas relacionadas.")
+                else:
+                    messagebox.showerror("Erro", f"Falha ao excluir serviço: {e}")
+                    
             except Exception as e:
-                print(f"Erro ao excluir serviço: {e}")
+                print(f"[ERRO] Falha ao excluir serviço: {e}")
+                import traceback
+                traceback.print_exc()
                 messagebox.showerror("Erro", "Falha ao excluir serviço. Veja o console.")
+                
             finally:
                 if cursor:
                     cursor.close()
                 if conn:
                     conn.close()
+                    
         except Exception as e:
-            print(f"Erro ao excluir serviço (fluxo): {e}")
+            print(f"[ERRO] Erro no fluxo de exclusão: {e}")
+            import traceback
+            traceback.print_exc()
 
 
     # ==================== PERFIL ====================
