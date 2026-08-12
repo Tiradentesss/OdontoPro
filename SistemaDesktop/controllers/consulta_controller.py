@@ -1,3 +1,4 @@
+from datetime import datetime
 from config.database import get_connection
 from services.query_logger import timed_sql
 from models.data import LIMITE_CONSULTAS
@@ -93,6 +94,60 @@ class ConsultaController:
             return dados or []
         except Exception as e:
             print(f"[ConsultaController] Erro em listar_por_clinica: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def listar_proximas_por_clinica(clinica_id, limite=LIMITE_CONSULTAS, excluir_canceladas=True):
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            where_clause = "c.clinica_id = %s AND c.data_hora >= %s"
+            params = [clinica_id, datetime.now()]
+
+            if excluir_canceladas:
+                where_clause += " AND LOWER(TRIM(c.status)) != 'cancelada'"
+
+            query = f"""
+                SELECT
+                    c.id,
+                    p.nome,
+                    c.data_hora,
+                    c.status,
+                    p.telefone,
+                    p.email,
+                    p.sexo,
+                    p.data_nascimento,
+                    p.cpf,
+                    p.foto,
+                    c.observacoes,
+                    m.nome AS medico_nome,
+                    COALESCE(e.nome, '') AS especialidade
+                FROM odontoPro_consulta c
+                LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id
+                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                LEFT JOIN odontoPro_especialidade e ON e.id = c.especialidade_id
+                WHERE {where_clause}
+                ORDER BY c.data_hora ASC
+                LIMIT %s
+            """
+
+            params.append(limite)
+            cursor.execute(query, tuple(params))
+            dados = cursor.fetchall()
+            print(f"[ConsultaController] Total de próximas consultas encontradas: {len(dados) if dados else 0}")
+            return dados or []
+        except Exception as e:
+            print(f"[ConsultaController] Erro em listar_proximas_por_clinica: {e}")
             import traceback
             traceback.print_exc()
             return []

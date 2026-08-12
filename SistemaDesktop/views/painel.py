@@ -318,17 +318,14 @@ class Painel(BaseScreen):
         return contagem
 
     def _carregar_consultas_hoje(self):
-        """Carrega consultas agendadas para hoje"""
+        """Carrega as próximas consultas da clínica logada, excluindo consultas passadas e canceladas."""
         try:
-            if not self.clinica_id: 
+            if not self.clinica_id:
                 return []
-            # Busca consultas de hoje
-            data_hoje = date.today().strftime('%Y-%m-%d')
-            consultas = ConsultaController.listar_por_clinica(
-                self.clinica_id, 
-                pagina=0, 
-                limite=5, 
-                data=data_hoje
+
+            consultas = ConsultaController.listar_proximas_por_clinica(
+                self.clinica_id,
+                limite=5
             )
             return consultas if consultas else []
         except Exception as e:

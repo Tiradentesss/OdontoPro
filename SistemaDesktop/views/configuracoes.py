@@ -983,21 +983,47 @@ class Configuracoes(BaseScreen):
 
     def _render_preferences_services(self, parent):
         scroll = parent
-
+        # Cabeçalho da seção (mantido conforme solicitado)
         self._secao_titulo(scroll, "Serviços Oferecidos", padx=0)
 
-        self.services_text = ctk.CTkTextbox(
+        # Botão de adicionar serviço
+        add_btn = ctk.CTkButton(
             scroll,
-            height=180,
+            text='+ Adicionar Serviço e Valor',
+            fg_color=COLORS.get("primary"),
+            hover_color=COLORS.get("accent_hover", self.colors.get("primary_soft")),
+            font=font("text", "bold"),
+            text_color="white",
             corner_radius=8,
+            height=36,
+            command=self._abrir_modal_adicionar_servico
+        )
+        add_btn.pack(anchor="w", pady=(8, 12))
+
+        # Frame rolável que conterá a lista de serviços
+        self.services_list_frame = ctk.CTkScrollableFrame(
+            scroll,
+            fg_color="transparent",
             border_width=1,
             border_color=self.colors["border"],
-            fg_color=COLORS["input_bg"],
-            font=font("text"),
-            text_color=self.colors["text_primary"]
+            corner_radius=8,
+            height=220
         )
-        self.services_text.pack(fill="both", expand=True, anchor="w", padx=0, pady=(10, 0))
-        self.services_text.insert("1.0", "• Limpeza profissional\n• Clareamento dental\n• Implantes\n• Aparelhos ortodônticos")
+        self.services_list_frame.pack(fill="both", expand=True, padx=0, pady=(0, 10))
+
+        # Cabeçalho da lista (3 colunas)
+        header = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
+        header.grid_columnconfigure(0, weight=3)
+        header.grid_columnconfigure(1, weight=1)
+        header.grid_columnconfigure(2, weight=0)
+        header.pack(fill="x", padx=8, pady=(6, 6))
+
+        ctk.CTkLabel(header, text="Serviço", font=font("text", "bold"), text_color=self.colors["text_primary"]).grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(header, text="Valor", font=font("text", "bold"), text_color=self.colors["text_secondary"]).grid(row=0, column=1, sticky="w")
+        ctk.CTkLabel(header, text="", font=font("text", "bold"), text_color=self.colors["text_secondary"]).grid(row=0, column=2, sticky="e")
+
+        # Corpo da lista será preenchido por _carregar_servicos
+        self._carregar_servicos()
 
     def _render_preferences_description(self, parent):
         scroll = parent
@@ -1016,6 +1042,189 @@ class Configuracoes(BaseScreen):
         )
         self.description_text.pack(fill="both", expand=True, anchor="w", padx=0, pady=(10, 0))
         self.description_text.insert("1.0", "Bem-vindo à nossa clínica! Somos uma equipe dedicada a proporcionar o melhor cuidado para seu sorriso...")
+
+    # ==================== SERVIÇOS (Banco) ====================
+    def _carregar_servicos(self):
+        """Carrega e renderiza a lista de serviços da clínica atual."""
+        # Limpa linhas anteriores (mantém apenas o cabeçalho)
+        for w in list(self.services_list_frame.winfo_children()):
+            # keep header label frames (we treat first child as header)
+            # header was packed first, so remove all except the first header frame
+            pass
+
+        # Remove all except first (header)
+        children = self.services_list_frame.winfo_children()
+        if len(children) > 1:
+            for ch in children[1:]:
+                ch.destroy()
+
+        # Buscar serviços no banco
+        servicos = self._buscar_servicos_no_banco()
+
+        if not servicos:
+            empty = ctk.CTkLabel(self.services_list_frame, text="Nenhum serviço cadastrado ainda.", text_color=self.colors["text_secondary"], font=font("text"))
+            empty.pack(padx=8, pady=12)
+            return
+
+        # Para cada serviço, criar uma linha com 3 colunas
+        for idx, s in enumerate(servicos):
+            row = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
+            row.grid_columnconfigure(0, weight=3)
+            row.grid_columnconfigure(1, weight=1)
+            row.grid_columnconfigure(2, weight=0)
+            row.pack(fill="x", padx=8, pady=6)
+
+            nome = s.get("nome") if isinstance(s, dict) else s[1]
+            valor = s.get("valor") if isinstance(s, dict) else s[2]
+            serv_id = s.get("id") if isinstance(s, dict) else s[0]
+
+            # Formatar valor para padrão BR (milhares com . e decimais com ,)
+            try:
+                from decimal import Decimal
+                v = Decimal(valor)
+                v_str = f"{v:,.2f}"
+                # trocar 1,234.56 -> 1.234,56
+                v_str = v_str.replace(',', 'X').replace('.', ',').replace('X', '.')
+                valor_text = f"R$ {v_str}"
+            except Exception:
+                valor_text = f"R$ {valor}"
+
+            ctk.CTkLabel(row, text=nome, text_color=self.colors["text_primary"], font=font("text")).grid(row=0, column=0, sticky="w")
+            ctk.CTkLabel(row, text=valor_text, text_color=self.colors["text_secondary"], font=font("text")).grid(row=0, column=1, sticky="w")
+
+            del_btn = ctk.CTkButton(row, text="🗑", width=36, height=28, fg_color="transparent", hover_color=self.colors.get("row_hover", COLORS.get("hover")), text_color=COLORS.get("danger"), command=lambda sid=serv_id: self._excluir_servico(sid))
+            del_btn.grid(row=0, column=2, sticky="e")
+
+    def _buscar_servicos_no_banco(self):
+        try:
+            from config.database import get_connection
+            conn = None
+            cursor = None
+            try:
+                conn = get_connection()
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("""
+                    SELECT id, nome, valor
+                    FROM odontoPro_especialidade
+                    WHERE clinica_id = %s
+                    ORDER BY nome ASC
+                """, (self.clinica_id,))
+                rows = cursor.fetchall() or []
+                return rows
+            except Exception as e:
+                print(f"Erro ao buscar serviços: {e}")
+                return []
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        except Exception as e:
+            print(f"Erro ao buscar serviços (import/conn): {e}")
+            return []
+
+    def _abrir_modal_adicionar_servico(self):
+        top = ctk.CTkToplevel(self)
+        top.title("Adicionar Serviço e Valor")
+        top.transient(self)
+        top.grab_set()
+        top.geometry("480x220")
+
+        body = ctk.CTkFrame(top, fg_color="transparent")
+        body.pack(fill="both", expand=True, padx=16, pady=12)
+
+        ctk.CTkLabel(body, text="Serviço", font=font("text", "bold"), text_color=self.colors["text_primary"]).pack(anchor="w")
+        nome_entry = ctk.CTkEntry(body, placeholder_text="Ex: Limpeza profissional", width=440, fg_color=COLORS.get("input_bg"))
+        nome_entry.pack(fill="x", pady=(6, 12))
+
+        ctk.CTkLabel(body, text="Valor (R$)", font=font("text", "bold"), text_color=self.colors["text_primary"]).pack(anchor="w")
+        valor_entry = ctk.CTkEntry(body, placeholder_text="Ex: 150.00", width=200, fg_color=COLORS.get("input_bg"))
+        valor_entry.pack(fill="x", pady=(6, 12))
+
+        error_label = ctk.CTkLabel(body, text="", text_color=COLORS.get("danger"), font=font("text"))
+        error_label.pack(anchor="w", pady=(0, 8))
+
+        def on_save():
+            nome = nome_entry.get().strip()
+            # normalizar espaços internos
+            nome = " ".join(nome.split())
+            raw_val = valor_entry.get().strip()
+            raw_val = raw_val.replace(',', '.')
+            if not nome:
+                error_label.configure(text="Nome do serviço não pode ficar vazio.")
+                return
+            try:
+                from decimal import Decimal, InvalidOperation
+                val = Decimal(raw_val)
+                if val < 0:
+                    error_label.configure(text="Valor não pode ser negativo.")
+                    return
+            except Exception:
+                error_label.configure(text="Valor inválido. Use 150.00 ou 150,00")
+                return
+
+            saved = self._salvar_servico_no_banco(nome, val)
+            if saved:
+                top.destroy()
+                self._carregar_servicos()
+            else:
+                error_label.configure(text="Erro ao salvar serviço. Veja o console.")
+
+        save_btn = ctk.CTkButton(body, text="Salvar", fg_color=COLORS.get("primary"), hover_color=COLORS.get("accent_hover", self.colors.get("primary_soft")), command=on_save, font=font("text", "bold"))
+        save_btn.pack(anchor="e", pady=(6, 0))
+
+    def _salvar_servico_no_banco(self, nome, valor):
+        try:
+            from config.database import get_connection
+            conn = None
+            cursor = None
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO odontoPro_especialidade (nome, valor, clinica_id)
+                    VALUES (%s, %s, %s)
+                """, (nome, str(valor), self.clinica_id))
+                conn.commit()
+                return True
+            except Exception as e:
+                print(f"Erro ao salvar serviço: {e}")
+                return False
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        except Exception as e:
+            print(f"Erro ao salvar serviço (import/conn): {e}")
+            return False
+
+    def _excluir_servico(self, servico_id):
+        try:
+            result = messagebox.askyesno("Confirmar Exclusão", "Tem certeza que deseja excluir este serviço?")
+            if not result:
+                return
+
+            from config.database import get_connection
+            conn = None
+            cursor = None
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                cursor.execute("DELETE FROM odontoPro_especialidade WHERE id = %s", (servico_id,))
+                conn.commit()
+                self._carregar_servicos()
+            except Exception as e:
+                print(f"Erro ao excluir serviço: {e}")
+                messagebox.showerror("Erro", "Falha ao excluir serviço. Veja o console.")
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        except Exception as e:
+            print(f"Erro ao excluir serviço (fluxo): {e}")
+
 
     # ==================== PERFIL ====================
     def _render_profile(self, parent):
