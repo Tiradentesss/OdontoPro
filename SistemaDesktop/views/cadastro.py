@@ -645,13 +645,18 @@ class Cadastro(BaseScreen):
         self.especialidade_map = {self.ESPECIALIDADE_PLACEHOLDER: None}
         especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER]
         try:
-            especialidades = ConsultaController.listar_especialidades_para_combo(self.clinica_id)
+            # Carregar diretamente as especialidades/serviços cadastrados para a clínica
+            # Fonte: tabela odontoPro_especialidade filtrada por clinica_id
+            especialidades = ConsultaController.listar_especialidades_por_clinica(self.clinica_id)
             if especialidades:
                 especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER] + [nome for _, nome in especialidades]
                 self.especialidade_map = {nome: especialidade_id for especialidade_id, nome in especialidades}
                 self.especialidade_map[self.ESPECIALIDADE_PLACEHOLDER] = None
-        except Exception:
-            pass
+        except Exception as e:
+            # Não esconder erro — logar para diagnóstico
+            import traceback
+            print(f"[ERRO] Falha ao carregar especialidades para combo: {e}")
+            traceback.print_exc()
         
         self.especialidade_medico = ctk.CTkOptionMenu(
             especialidade_container,
@@ -1422,6 +1427,56 @@ class Cadastro(BaseScreen):
         self.tipo_profissional.set("Médico")
         self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
         self._ao_mudar_tipo_profissional("Médico")
+
+    def refresh(self):
+        """Atualiza dados dinâmicos da tela quando o frame é exibido.
+
+        Esta função é chamada pelo App.show_frame() antes do frame ser empacotado.
+        Aqui recarregamos a lista de especialidades/serviços para garantir que
+        mudanças feitas em Configurações → Minha Clínica → Serviços fiquem
+        disponíveis imediatamente.
+        """
+        try:
+            especialidades = ConsultaController.listar_especialidades_por_clinica(self.clinica_id)
+            especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER]
+            nova_map = {self.ESPECIALIDADE_PLACEHOLDER: None}
+            if especialidades:
+                especialidade_valores = [self.ESPECIALIDADE_PLACEHOLDER] + [nome for _, nome in especialidades]
+                nova_map = {nome: especialidade_id for especialidade_id, nome in especialidades}
+                nova_map[self.ESPECIALIDADE_PLACEHOLDER] = None
+
+            # Atualizar o OptionMenu sem recriar widgets
+            current = None
+            try:
+                current = self.especialidade_medico.get()
+            except Exception:
+                current = None
+
+            # Aplicar novos valores
+            try:
+                self.especialidade_medico.configure(values=especialidade_valores)
+            except Exception:
+                # Em versões antigas do CTk, use set of values via config alias
+                try:
+                    self.especialidade_medico.config(values=especialidade_valores)
+                except Exception:
+                    pass
+
+            # Atualizar o mapa interno
+            self.especialidade_map = nova_map
+
+            # Restaurar seleção se possível, senão placeholder
+            if current in especialidade_valores:
+                try:
+                    self.especialidade_medico.set(current)
+                except Exception:
+                    self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
+            else:
+                self.especialidade_medico.set(self.ESPECIALIDADE_PLACEHOLDER)
+        except Exception as e:
+            import traceback
+            print(f"[ERRO] Falha ao atualizar Cadastro.refresh(): {e}")
+            traceback.print_exc()
 
     def _mostrar_modal_sucesso(self, mensagem):
         if self.modal_sucesso and self.modal_sucesso.winfo_exists():
