@@ -40,3 +40,15 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# test files (keep dev environment clean)
+backend/test_*.js
+backend/test-*.png
+**/test-*.png
+src/**/*.test.js
+
+# temporary files and backups
+*.tmp
+*.bak
+*.swp
+*~
