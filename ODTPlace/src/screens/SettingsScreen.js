@@ -9,6 +9,10 @@ export default function SettingsScreen({ navigation, showBottomNav = true }) {
   const { user } = useAuth();
   const { isDarkMode, colors } = useTheme();
 
+  const handleChangeProfileImage = () => {
+    navigation?.navigate?.('PersonalInfo');
+  };
+
   return (
     <ImageBackground
       source={require('../../assets/imagem background.png')}
@@ -21,11 +25,23 @@ export default function SettingsScreen({ navigation, showBottomNav = true }) {
 
         <View style={styles.content}>
           <View style={[styles.topCard, { backgroundColor: isDarkMode ? '#1E293B' : 'transparent' }]}> 
-            <View style={[styles.iconWrapper, { backgroundColor: isDarkMode ? '#334155' : '#E0F2FE' }]}> 
-              <Text style={[styles.iconInitial, { color: isDarkMode ? '#38BDF8' : '#0EA5E9' }]}> 
-                {(user?.nome ?? user?.name ?? 'N').charAt(0).toUpperCase()}
-              </Text>
-            </View>
+            <TouchableOpacity
+              style={[styles.iconWrapper, { backgroundColor: isDarkMode ? '#334155' : '#E0F2FE' }]}
+              activeOpacity={0.8}
+              onPress={handleChangeProfileImage}
+            >
+              {user?.foto ? (
+                <Image
+                  source={{ uri: user.foto }}
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={[styles.iconInitial, { color: isDarkMode ? '#38BDF8' : '#0EA5E9' }]}> 
+                  {(user?.nome ?? user?.name ?? 'N').charAt(0).toUpperCase()}
+                </Text>
+              )}
+            </TouchableOpacity>
             <Text style={[styles.profileName, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>{user?.nome ?? user?.name ?? 'Nome da Conta'}</Text>
             <Text style={[styles.profileSubtitle, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>{user?.email ?? 'Email não informado'}</Text>
           </View>
@@ -105,6 +121,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 18,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 70,
   },
   iconInitial: {
     fontSize: 48,
