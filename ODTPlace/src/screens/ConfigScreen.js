@@ -80,11 +80,17 @@ export default function ConfigScreen({ navigation }) {
         {/* Bloco do Perfil do Usuário */}
         <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.avatarContainer}>
+            {user?.foto ? (
               <Image 
-                source={ user?.foto ? { uri: user.foto } : require('../../assets/profile.png') } 
+                source={{ uri: user.foto }} 
                 style={[styles.avatar, { borderColor: colors.border }]} 
                 onError={() => console.warn('Failed to load profile avatar for user', user?.id || user?.email)}
               />
+            ) : (
+              <View style={[styles.avatar, { borderColor: colors.border, backgroundColor: '#e0f2fe', justifyContent: 'center', alignItems: 'center' }]}>
+                <Feather name="user" size={32} color="#0ea5e9" />
+              </View>
+            )}
             <TouchableOpacity style={[styles.editBadge, { backgroundColor: colors.brandBlue }]} activeOpacity={0.8}>
               <Feather name="camera" size={12} color="#FFFFFF" />
             </TouchableOpacity>

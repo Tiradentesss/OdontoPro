@@ -48,17 +48,23 @@ export default function ProfileScreen({ navigation, route }) {
     <View style={styles.container}>
       <View style={styles.profileHeader}>
         <View style={styles.profileInfo}>
-          <Image 
-            style={styles.imagem2} 
-            source={user.foto ? { uri: user.foto } : require('../../assets/profile.png')} 
-            onError={() => console.warn('Failed to load profile image for user:', user.id || user.email)}
-          />
+          {user?.foto ? (
+            <Image 
+              style={styles.imagem2} 
+              source={{ uri: user.foto }} 
+              onError={() => console.warn('Failed to load profile image for user:', user.id || user.email)}
+            />
+          ) : (
+            <View style={[styles.imagem2, { backgroundColor: '#e0f2fe', justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={{ fontSize: 24, color: '#0ea5e9' }}>👤</Text>
+            </View>
+          )}
           <Text style={styles.titulo}>{user.nome || 'Paciente'}</Text>
         </View>
 
         <Image 
           style={styles.imagem} 
-          source={user.foto ? { uri: user.foto } : require('../../assets/profile.png')} 
+          source={user?.foto ? { uri: user.foto } : { uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==' }} 
           onError={() => console.warn('Failed to load large profile image for user:', user.id || user.email)}
         />
         <Text style={styles.titulo}>Nome: {user.nome || 'Não informado'}</Text>
