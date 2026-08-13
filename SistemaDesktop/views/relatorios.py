@@ -663,25 +663,37 @@ class Relatorios(BaseScreen):
 
     def _get_date_range(self, periodo):
         agora = datetime.now()
+
+        def end_of_day(dt):
+            return dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+
         if periodo == "Hoje":
             inicio = agora.replace(hour=0, minute=0, second=0, microsecond=0)
-            fim = agora
+            fim = end_of_day(agora)
             tipo = "hoje"
         elif periodo == "Semana":
-            inicio = agora - timedelta(days=7)
-            fim = agora
+            # Últimos 7 dias (início no começo do dia 7 dias atrás, até o fim do dia atual)
+            inicio = (agora - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+            fim = end_of_day(agora)
             tipo = "semana"
         elif periodo == "Mês":
+            # Do primeiro dia do mês às 00:00 até o último dia do mês às 23:59:59.999999
             inicio = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            fim = agora
+            # calcular último dia do mês
+            if agora.month == 12:
+                next_month = agora.replace(year=agora.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            else:
+                next_month = agora.replace(month=agora.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            fim = end_of_day(next_month - timedelta(microseconds=1))
             tipo = "mes"
         elif periodo == "Ano":
             inicio = agora.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-            fim = agora
+            fim = end_of_day(agora.replace(month=12, day=31))
             tipo = "ano"
         else:
-            inicio = agora - timedelta(days=30)
-            fim = agora
+            # Personalizado / padrão: último 30 dias completos (começando à meia-noite)
+            inicio = (agora - timedelta(days=30)).replace(hour=0, minute=0, second=0, microsecond=0)
+            fim = end_of_day(agora)
             tipo = "personalizado"
 
         return inicio, fim, tipo
@@ -699,6 +711,16 @@ class Relatorios(BaseScreen):
         try:
             conn = get_connection()
             cursor = conn.cursor()
+
+            # Logs de diagnóstico iniciais (temporários)
+            print("[RELATÓRIOS DEBUG]")
+            print(f"clinica_id: {self.clinica_id}")
+            print(f"periodo: {periodo}")
+            print(f"inicio: {inicio}")
+            print(f"fim: {fim}")
+            print(f"status: {status}")
+            print(f"medico_id: {medico_id}")
+            print(f"especialidade_id: {especialidade_id}")
 
             # Cache filter options once for the clinic session
             if "filter_options" not in self._cache:
@@ -729,6 +751,14 @@ class Relatorios(BaseScreen):
             total_medicos = summary.get("total_medicos", 0)
             cancelamentos = summary.get("cancelamentos", 0)
             comparecimento = summary.get("comparecimento", 0)
+
+            # Logs de diagnóstico após resumo
+            print("[RELATÓRIOS DEBUG] resumo retornado:")
+            print(f"total_consultas: {total_consultas}")
+            print(f"total_pacientes: {total_pacientes}")
+            print(f"total_medicos: {total_medicos}")
+            print(f"cancelamentos: {cancelamentos}")
+            print(f"comparecimento: {comparecimento}")
 
             # Novos pacientes: primeira consulta no período
             cursor.execute("""
@@ -813,6 +843,14 @@ class Relatorios(BaseScreen):
                 LIMIT 5
             """, tuple(filtro_params + [inicio, fim]))
             productivity_rows = cursor.fetchall() or []
+
+            # Log antes de colocar na fila (diagnóstico)
+            try:
+                print("[RELATÓRIOS DEBUG QUEUE PUT]")
+                print(f"thread_id: {thread_id}")
+                print(f"total_consultas: {int(total_consultas or 0)}")
+            except Exception:
+                pass
 
             self._load_queue.put((
                 thread_id,
@@ -1206,6 +1244,15 @@ class Relatorios(BaseScreen):
         if summary is None:
             return
 
+        # Logs no início de _apply_loaded_data (diagnóstico)
+        try:
+            print("[RELATÓRIOS DEBUG APPLY]")
+            print(f"total_consultas: {summary.get('total_consultas')}")
+            print(f"comparecimento: {summary.get('comparecimento')}")
+            print(f"cancelamentos: {summary.get('cancelamentos')}")
+        except Exception:
+            pass
+
         self._stat_value_labels["Comparecimento"].configure(text=f"{summary['comparecimento']}%")
         self._stat_value_labels["Cancelamentos"].configure(text=str(summary["cancelamentos"]))
         self._stat_value_labels["Novos Pacientes"].configure(text=str(summary["novos_pacientes"]))
@@ -1233,7 +1280,28 @@ class Relatorios(BaseScreen):
         comparecimento_pct = summary.get("comparecimento", 0)
 
         if self._kpi_card_labels.get("total_consultas"):
+            try:
+                current_text = self._kpi_card_labels["total_consultas"]["value"].cget("text")
+            except Exception:
+                current_text = "<unknown>"
+            try:
+                print("[RELATÓRIOS DEBUG KPI]")
+                print(f"total_consultas recebido: {total_consultas}")
+                print(f"valor atual do label: {current_text}")
+            except Exception:
+                pass
+
             self._kpi_card_labels["total_consultas"]["value"].configure(text=str(total_consultas))
+
+            try:
+                after_text = self._kpi_card_labels["total_consultas"]["value"].cget("text")
+            except Exception:
+                after_text = "<unknown>"
+            try:
+                print("[RELATÓRIOS DEBUG KPI]")
+                print(f"valor após configure: {after_text}")
+            except Exception:
+                pass
 
         if self._kpi_card_labels.get("taxa_comparecimento"):
             comparecimento_text = f"{int(comparecimento_pct)}%" if total_consultas else "--"
@@ -1276,6 +1344,16 @@ class Relatorios(BaseScreen):
             return
 
         thread_id, summary, chart_period, specialty_data, productivity_rows, medicos, especialidades, error_msg = processed_item
+
+        # Logs após recuperar item da fila (diagnóstico)
+        try:
+            print("[RELATÓRIOS DEBUG QUEUE GET]")
+            print(f"thread_id: {thread_id}")
+            print(f"current_thread_id: {self._current_thread_id}")
+            print(f"summary: {summary}")
+            print(f"error_msg: {error_msg}")
+        except Exception:
+            pass
 
         if self._timeout_id is not None:
             try:
