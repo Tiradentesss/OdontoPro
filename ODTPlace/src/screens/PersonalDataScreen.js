@@ -15,6 +15,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getDoctorById, updateDoctorProfile } from '../services/api';
+import ImageSelector from '../components/ImageSelector';
 
 export default function PersonalDataScreen({ navigation }) {
   const { user, login } = useAuth();
@@ -25,6 +26,7 @@ export default function PersonalDataScreen({ navigation }) {
   const [specialties, setSpecialties] = useState([]);
   const [focusedInput, setFocusedInput] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
 
   const { isDarkMode, colors } = useTheme();
 
@@ -34,6 +36,7 @@ export default function PersonalDataScreen({ navigation }) {
       setEmail(user?.email || '');
       setPhone(user?.telefone || '');
       setCro(user?.crm_cro || user?.cpf || '');
+      setProfilePhotoUrl(user?.foto || null);
       setSpecialties(Array.isArray(user?.especialidades) ? user.especialidades.filter(Boolean) : []);
     };
 
@@ -50,6 +53,7 @@ export default function PersonalDataScreen({ navigation }) {
         setEmail(doctor.email || user?.email || '');
         setPhone(doctor.telefone || user?.telefone || '');
         setCro(doctor.crm_cro || user?.crm_cro || '');
+        setProfilePhotoUrl(doctor.foto || user?.foto || null);
         setSpecialties(Array.isArray(doctor.especialidades) ? doctor.especialidades.filter(Boolean) : []);
       } catch (error) {
         console.log('Error loading doctor profile:', error);
@@ -57,7 +61,7 @@ export default function PersonalDataScreen({ navigation }) {
     };
 
     loadDoctorProfile();
-  }, [user?.id, user?.nome, user?.email, user?.telefone, user?.crm_cro, user?.cpf, user?.especialidades]);
+  }, [user?.id, user?.nome, user?.email, user?.telefone, user?.crm_cro, user?.cpf, user?.especialidades, user?.foto]);
 
   const handleSave = async () => {
     if (!user?.id) {
@@ -74,8 +78,21 @@ export default function PersonalDataScreen({ navigation }) {
         crm_cro: cro,
       };
 
+      // Include photo URL if it was updated
+      if (profilePhotoUrl) {
+        payload.foto = profilePhotoUrl;
+      }
+
       const updated = await updateDoctorProfile(user.id, payload);
-      login({ ...user, ...updated, nome: updated?.nome || name, email: updated?.email || email, telefone: updated?.telefone || phone, crm_cro: updated?.crm_cro || cro });
+      login({ 
+        ...user, 
+        ...updated, 
+        nome: updated?.nome || name, 
+        email: updated?.email || email, 
+        telefone: updated?.telefone || phone, 
+        crm_cro: updated?.crm_cro || cro,
+        foto: updated?.foto || profilePhotoUrl,
+      });
       Alert.alert('Informações Atualizadas', 'Seus dados cadastrais foram salvos com sucesso no sistema.', [{ text: 'Ok', onPress: () => navigation.goBack() }]);
     } catch (error) {
       console.log('Error updating doctor profile:', error);
@@ -119,6 +136,21 @@ export default function PersonalDataScreen({ navigation }) {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Seus Dados Cadastrais</Text>
           <Text style={[styles.sectionSubtitle, { color: colors.mutedText }]}>Mantenha seus canais de contato e documentação atualizados.</Text>
         </View>
+
+        {/* Foto de Perfil */}
+        <ImageSelector
+          currentImageUri={profilePhotoUrl}
+          onUploadSuccess={(result) => {
+            setProfilePhotoUrl(result.url);
+            Alert.alert('Sucesso', 'Foto atualizada! Clique em "Salvar Alterações" para confirmar.');
+          }}
+          onUploadError={(error) => {
+            console.error('Upload error:', error);
+          }}
+          folder="professionals"
+          metadata={{ doctorId: user?.id }}
+          placeholderText="Selecionar Foto"
+        />
 
         {/* Formulário em Bloco Único Premium */}
         <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>

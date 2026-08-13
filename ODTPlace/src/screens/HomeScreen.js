@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, ImageBackground, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, FlatList, ImageBackground, ActivityIndicator, Image } from 'react-native';
 import HomeHeader from '../components/HomeHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getClinics } from '../services/api';
@@ -70,7 +70,15 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
                         onPress={() => navigation.navigate('ClinicDetail', { clinic: item, user })}
                         >
                                 <View style={styles.cardHeader}>
-                                    <View style={styles.clinicLogo} />
+                                        {item.logo || item.imagem ? (
+                                            <Image
+                                                source={{ uri: item.logo || item.imagem }}
+                                                style={styles.clinicLogoImage}
+                                                resizeMode="cover"
+                                            />
+                                        ) : (
+                                            <View style={styles.clinicLogo} />
+                                        )}
 
                                     <View style={styles.infoBlock}>
                                         <Text style={[styles.clinicName, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>{item.nome}</Text>
@@ -151,6 +159,13 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         backgroundColor: '#e0f2fe',
         marginRight: 14,
+    },
+    clinicLogoImage: {
+        width: 58,
+        height: 58,
+        borderRadius: 16,
+        marginRight: 14,
+        backgroundColor: '#e0f2fe',
     },
     clinicLogo: {
         width: 58,

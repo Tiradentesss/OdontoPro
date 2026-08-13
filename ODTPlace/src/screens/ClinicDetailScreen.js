@@ -10,6 +10,7 @@ import {
     TextInput,
     Linking,
     Alert,
+    Image,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import ScheduleHeader from '../components/ScheduleHeader';
@@ -82,9 +83,17 @@ export default function ClinicDetailScreen({ route, navigation }) {
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <View style={[styles.clinicCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
                         <View style={styles.clinicHeader}>
-                            <View style={[styles.clinicImagePlaceholder, isDarkMode && { backgroundColor: '#1E293B' }]}> 
-                                <Text style={[styles.imageLabel, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>Foto</Text>
-                            </View>
+                            {(clinic.logo || clinic.imagem) ? (
+                                <Image
+                                    source={{ uri: clinic.logo || clinic.imagem }}
+                                    style={styles.clinicImage}
+                                    resizeMode="cover"
+                                />
+                            ) : (
+                                <View style={[styles.clinicImagePlaceholder, isDarkMode && { backgroundColor: '#1E293B' }]}> 
+                                    <Text style={[styles.imageLabel, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>Foto</Text>
+                                </View>
+                            )}
                             <View style={styles.clinicHeaderInfo}>
                                 <Text style={[styles.clinicTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]} numberOfLines={2}>{clinic.nome}</Text>
                                 {clinic.especialidade ? (
@@ -279,6 +288,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
+    },
+    clinicImage: {
+        width: 110,
+        height: 110,
+        borderRadius: 24,
+        marginRight: 16,
+        backgroundColor: '#e0f2fe',
     },
     imageLabel: {
         color: '#0ea5e9',

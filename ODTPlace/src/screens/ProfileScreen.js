@@ -51,6 +51,7 @@ export default function ProfileScreen({ navigation, route }) {
           <Image 
             style={styles.imagem2} 
             source={user.foto ? { uri: user.foto } : require('../../assets/profile.png')} 
+            onError={() => console.warn('Failed to load profile image for user:', user.id || user.email)}
           />
           <Text style={styles.titulo}>{user.nome || 'Paciente'}</Text>
         </View>
@@ -58,6 +59,7 @@ export default function ProfileScreen({ navigation, route }) {
         <Image 
           style={styles.imagem} 
           source={user.foto ? { uri: user.foto } : require('../../assets/profile.png')} 
+          onError={() => console.warn('Failed to load large profile image for user:', user.id || user.email)}
         />
         <Text style={styles.titulo}>Nome: {user.nome || 'Não informado'}</Text>
       </View>

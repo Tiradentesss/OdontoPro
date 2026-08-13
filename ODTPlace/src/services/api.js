@@ -1,6 +1,5 @@
 import axios from "axios";
 import { Platform } from "react-native";
-import Constants from "expo-constants";
 
 const normalizeBaseUrl = (value) => {
   if (!value) return null;
@@ -16,12 +15,6 @@ const resolveApiBaseUrl = () => {
   const configuredUrl = normalizeBaseUrl(process.env.EXPO_PUBLIC_API_URL);
   if (configuredUrl) {
     return ensureApiSuffix(configuredUrl);
-  }
-
-  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
-  if (hostUri) {
-    const host = hostUri.split(":")[0];
-    return `http://${host}:3001/api`;
   }
 
   if (Platform.OS === "android") {
@@ -135,7 +128,13 @@ export const loginPatient = async (email, senha) => {
     }
     // Server errors
     if (error.response) {
-      throw error;
+      // Map common server response codes to friendly messages
+      if (error.response.status === 401) {
+        throw new Error('Credenciais inválidas. Verifique seu email e senha.');
+      }
+      // Otherwise rethrow the original error to preserve details
+      const serverMessage = error.response.data?.error || error.response.statusText || 'Erro no servidor';
+      throw new Error(serverMessage);
     }
     throw new Error('Erro de conexão. Tente novamente.');
   }
@@ -239,3 +238,73 @@ export const updateDoctorProfile = async (doctorId, profileData) => {
     throw error;
   }
 };
+
+/**
+ * Upload image file to Cloudinary through backend
+ * @param {Object} image - Image object with uri, name, type
+ * @param {string} folder - Cloudinary folder
+ * @param {Object} metadata - Additional metadata
+ * @param {Function} onProgress - Progress callback
+ * @returns {Promise} - Upload response with secure_url and public_id
+ */
+export const uploadImage = async (image, folder = 'users', metadata = {}, onProgress = null) => {
+  try {
+    const formData = new FormData();
+    
+    formData.append('file', {
+      uri: image.uri,
+      name: image.filename || `image_${Date.now()}.jpg`,
+      type: image.mimeType || 'image/jpeg',
+    });
+
+    formData.append('folder', folder);
+    if (metadata && Object.keys(metadata).length > 0) {
+      formData.append('metadata', JSON.stringify(metadata));
+    }
+
+    const response = await api.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 30000,
+      onUploadProgress: (progressEvent) => {
+        if (onProgress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percentCompleted);
+        }
+      },
+    });
+
+    if (!response.data || response.status !== 200) {
+      throw new Error('Invalid response from server');
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error('Image upload error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete image from Cloudinary through backend
+ * @param {string} publicId - Cloudinary public ID
+ * @returns {Promise} - Delete response
+ */
+export const deleteImage = async (publicId) => {
+  try {
+    if (!publicId) {
+      throw new Error('Public ID is required');
+    }
+
+    const response = await api.delete(`/images/${publicId}`, {
+      timeout: 10000,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Image delete error:', error);
+    throw error;
+  }
+};
+

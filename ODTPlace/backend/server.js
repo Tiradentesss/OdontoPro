@@ -7,8 +7,50 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 const db = require('./config/database');
 const { normalizeAppointmentDateValue, normalizeAppointmentRows } = require('./utils/appointmentTime');
+
+// Configure Cloudinary
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config({ cloudinary_url: process.env.CLOUDINARY_URL });
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
+
+  // Helper to resolve image fields: if value is a Cloudinary public_id, convert to secure URL
+  const resolveImageField = (value) => {
+    if (!value) return null;
+    if (typeof value !== 'string') return value;
+    if (value.startsWith('http') || value.startsWith('data:')) return value;
+    try {
+      // cloudinary.url will generate the full secure URL for a public_id
+      return cloudinary.url(value, { secure: true });
+    } catch (e) {
+      return value;
+    }
+  };
+
+// Configure multer for file uploads (in-memory storage)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    // Only accept image files
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, and WebP are allowed.'));
+    }
+  },
+});
 
 // Support both Django PBKDF2 hashes and bcrypt hashes for backward compatibility.
 async function verifyPassword(inputPassword, storedHash) {
@@ -82,7 +124,13 @@ app.get('/api/clinics', (req, res) => {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error. Using mock data.', data: mockClinics });
     }
-    res.json(results);
+      // Normalize image fields
+      const normalized = results.map((row) => ({
+        ...row,
+        logo: resolveImageField(row.logo),
+        imagem: resolveImageField(row.imagem),
+      }));
+      res.json(normalized);
   });
 });
 
@@ -96,7 +144,10 @@ app.get('/api/clinics/:id', (req, res) => {
     if (results.length === 0) {
       return res.status(404).json({ error: 'Clinic not found' });
     }
-    res.json(results[0]);
+      const row = results[0];
+      row.logo = resolveImageField(row.logo);
+      row.imagem = resolveImageField(row.imagem);
+      res.json(row);
   });
 });
 
@@ -122,7 +173,12 @@ app.get('/api/clinics/:clinicId/doctors', (req, res) => {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error. Using mock data.', data: mockDoctors });
     }
-    res.json(results.map((row) => ({ ...row, especialidades: row.especialidades ? row.especialidades.split(',') : [] })));
+      const mapped = results.map((row) => ({
+        ...row,
+        foto: resolveImageField(row.foto),
+        especialidades: row.especialidades ? row.especialidades.split(',') : [],
+      }));
+      res.json(mapped);
   });
 });
 
@@ -143,7 +199,8 @@ app.get('/api/doctors/:id', (req, res) => {
       return res.status(404).json({ error: 'Doctor not found' });
     }
     const doctor = results[0];
-    res.json({ ...doctor, especialidades: doctor.especialidades ? doctor.especialidades.split(',') : [] });
+      doctor.foto = resolveImageField(doctor.foto);
+      res.json({ ...doctor, especialidades: doctor.especialidades ? doctor.especialidades.split(',') : [] });
   });
 });
 
@@ -219,24 +276,64 @@ app.get('/api/patients/:id', (req, res) => {
     if (results.length === 0) {
       return res.status(404).json({ error: 'Patient not found' });
     }
-    res.json(results[0]);
+      const row = results[0];
+      row.foto = resolveImageField(row.foto);
+      res.json(row);
   });
 });
 
 app.put('/api/patients/:id', (req, res) => {
   const patientId = req.params.id;
-  const { nome, email, telefone, cpf, data_nascimento, sexo } = req.body;
+  const { nome, email, telefone, cpf, data_nascimento, sexo, foto } = req.body;
   if (useMockData()) {
-    return res.json({ id: patientId, nome, email, telefone, cpf, data_nascimento, sexo, foto: null });
+    return res.json({ id: patientId, nome, email, telefone, cpf, data_nascimento, sexo, foto: foto || null });
   }
 
-  const query = 'UPDATE odontoPro_paciente SET nome = ?, email = ?, telefone = ?, cpf = ?, data_nascimento = ?, sexo = ? WHERE id = ?';
-  db.query(query, [nome, email, telefone, cpf, data_nascimento, sexo, patientId], (err) => {
+  const updates = [];
+  const params = [];
+
+  if (nome !== undefined) {
+    updates.push('nome = ?');
+    params.push(nome);
+  }
+  if (email !== undefined) {
+    updates.push('email = ?');
+    params.push(email);
+  }
+  if (telefone !== undefined) {
+    updates.push('telefone = ?');
+    params.push(telefone);
+  }
+  if (cpf !== undefined) {
+    updates.push('cpf = ?');
+    params.push(cpf);
+  }
+  if (data_nascimento !== undefined) {
+    updates.push('data_nascimento = ?');
+    params.push(data_nascimento);
+  }
+  if (sexo !== undefined) {
+    updates.push('sexo = ?');
+    params.push(sexo);
+  }
+  if (foto !== undefined) {
+    updates.push('foto = ?');
+    params.push(foto);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({ error: 'No valid fields to update' });
+  }
+
+  params.push(patientId);
+  const query = `UPDATE odontoPro_paciente SET ${updates.join(', ')} WHERE id = ?`;
+
+  db.query(query, params, (err) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: err.message });
     }
-    res.json({ id: patientId, nome, email, telefone, cpf, data_nascimento, sexo });
+    res.json({ id: patientId, nome, email, telefone, cpf, data_nascimento, sexo, foto: foto || null });
   });
 });
 
@@ -377,8 +474,9 @@ app.post('/api/login', (req, res) => {
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const { senha: _, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+      const { senha: _, ...userWithoutPassword } = user;
+      userWithoutPassword.foto = resolveImageField(userWithoutPassword.foto);
+      res.json(userWithoutPassword);
   });
 });
 
@@ -404,8 +502,9 @@ app.post('/api/login/profissional', (req, res) => {
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const { senha: _, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+      const { senha: _, ...userWithoutPassword } = user;
+      userWithoutPassword.foto = resolveImageField(userWithoutPassword.foto);
+      res.json(userWithoutPassword);
   });
 });
 
@@ -458,4 +557,179 @@ app.get('/api/doctors/:id/stats', (req, res) => {
       return res.json({ completed_consultations: completed, positive_reviews: averageRating });
     });
   });
+});
+
+// ============================================
+// CLOUDINARY UPLOAD ENDPOINT
+// ============================================
+
+/**
+ * POST /api/upload
+ * Upload image to Cloudinary and return URL
+ * 
+ * Expected form data:
+ * - file: Image file (binary)
+ * - folder: Cloudinary folder (e.g., 'users', 'professionals')
+ * - metadata: JSON string with additional metadata (optional)
+ */
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  try {
+    // Validate file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    // Debug: log file info
+    try {
+      console.log('Upload received: filename=', req.file.originalname, 'mimetype=', req.file.mimetype, 'size=', req.file.size);
+      console.log('First bytes:', req.file.buffer.slice(0, 8).toString('hex'));
+    } catch (e) {
+      // ignore
+    }
+
+    // Get folder from request, default to 'app'
+    const folder = req.body.folder || 'app';
+    
+    // Parse metadata if provided
+    let metadata = {};
+    try {
+      if (req.body.metadata) {
+        metadata = JSON.parse(req.body.metadata);
+      }
+    } catch (parseError) {
+      console.warn('Could not parse metadata:', parseError);
+    }
+
+    // Upload to Cloudinary from buffer
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: folder,
+          resource_type: 'auto',
+          // Store metadata as tags for reference
+          tags: Object.keys(metadata).map(key => `${key}:${metadata[key]}`),
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      // Write buffer to stream
+      stream.end(req.file.buffer);
+    });
+
+    // Return success response
+    res.json({
+      success: true,
+      secure_url: uploadResult.secure_url,
+      public_id: uploadResult.public_id,
+      resource_type: uploadResult.resource_type,
+      format: uploadResult.format,
+      width: uploadResult.width,
+      height: uploadResult.height,
+      bytes: uploadResult.bytes,
+      created_at: uploadResult.created_at,
+    });
+
+  } catch (error) {
+    console.error('Upload error:', error);
+
+    // Determine error type and return appropriate status
+    if (error.message && error.message.includes('Invalid file type')) {
+      return res.status(400).json({ error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.' });
+    }
+
+    if (error.message && error.message.includes('file too large')) {
+      return res.status(413).json({ error: 'File too large. Maximum size is 5MB.' });
+    }
+
+    res.status(500).json({ error: 'Failed to upload image', details: error.message });
+  }
+});
+
+// ============================================
+// CLOUDINARY DELETE ENDPOINT
+// ============================================
+
+/**
+ * DELETE /api/images/:publicId
+ * Delete image from Cloudinary
+ * 
+ * Params:
+ * - publicId: Cloudinary public ID of the image
+ */
+app.delete('/api/images/:publicId', async (req, res) => {
+  try {
+    let { publicId } = req.params;
+
+    // Validate input
+    if (!publicId || publicId.length === 0) {
+      return res.status(400).json({ error: 'Public ID or image URL is required' });
+    }
+
+    // If a full URL was provided, try to extract the Cloudinary public_id from it
+    const extractPublicIdFromUrl = (url) => {
+      try {
+        // Match /upload/(v12345/)?<public_id>.<ext>
+        const m = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+(?:$|[?])/);
+        if (m && m[1]) return decodeURIComponent(m[1]);
+      } catch (e) {
+        // ignore
+      }
+      return null;
+    };
+
+    if (publicId.startsWith('http') || publicId.includes('/upload/')) {
+      const extracted = extractPublicIdFromUrl(publicId);
+      if (extracted) {
+        publicId = extracted;
+      }
+    }
+
+    // Delete from Cloudinary - try default (image) then raw if not found
+    let deleteResult = await cloudinary.uploader.destroy(publicId);
+
+    if (deleteResult.result === 'not found') {
+      // Try deleting as raw resource via uploader
+      deleteResult = await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+    }
+
+    if (deleteResult.result === 'not found') {
+      // As a last resort, try the admin API to delete resources (handles raw/public_id differences)
+      try {
+        const apiResult = await cloudinary.api.delete_resources([publicId], { resource_type: 'raw' });
+        // apiResult.deleted is an object mapping public_id -> 'deleted'|'not_found'
+        const deleted = apiResult.deleted && apiResult.deleted[publicId];
+        if (deleted === 'deleted') {
+          return res.json({ success: true, message: 'Image deleted via api.delete_resources', result: 'deleted' });
+        }
+      } catch (e) {
+        console.warn('api.delete_resources error:', e.message || e);
+      }
+    }
+
+    // Check result
+    if (deleteResult.result === 'ok') {
+      return res.json({
+        success: true,
+        message: 'Image deleted successfully',
+        result: deleteResult.result,
+      });
+    } else if (deleteResult.result === 'not found') {
+      return res.status(404).json({
+        error: 'Image not found in Cloudinary',
+        result: deleteResult.result,
+      });
+    } else {
+      return res.status(400).json({
+        error: 'Failed to delete image',
+        result: deleteResult.result,
+      });
+    }
+
+  } catch (error) {
+    console.error('Delete image error:', error);
+    res.status(500).json({ error: 'Failed to delete image', details: error.message });
+  }
 });

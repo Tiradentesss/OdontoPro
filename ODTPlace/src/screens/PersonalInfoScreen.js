@@ -15,6 +15,7 @@ import ScheduleHeader from '../components/ScheduleHeader';
 import { useAuth } from '../context/AuthContext';
 import { updatePatientProfile } from '../services/api';
 import { useTheme } from '../components/ThemeContext';
+import ImageSelector from '../components/ImageSelector';
 
 export default function PersonalInfoScreen({ navigation }) {
     const { user, login } = useAuth();
@@ -25,6 +26,7 @@ export default function PersonalInfoScreen({ navigation }) {
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
     const [loading, setLoading] = useState(false);
+    const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
 
     useEffect(() => {
         if (user) {
@@ -33,6 +35,7 @@ export default function PersonalInfoScreen({ navigation }) {
             setEmail(user.email || '');
             setPhone(user.telefone || user.phone || '');
             setAddress(user.endereco || user.address || '');
+            setProfilePhotoUrl(user.foto || null);
         }
     }, [user]);
 
@@ -48,14 +51,19 @@ export default function PersonalInfoScreen({ navigation }) {
                 endereco: address,
             };
 
+            // Include photo if updated
+            if (profilePhotoUrl) {
+                profileData.foto = profilePhotoUrl;
+            }
+
             const updatedProfile = await updatePatientProfile(user.id, profileData);
-            login({ ...user, ...updatedProfile });
+            login({ ...user, ...updatedProfile, foto: profilePhotoUrl });
             Alert.alert('Sucesso', 'Informações atualizadas com sucesso.');
         } catch (error) {
             console.log('Profile update error:', error);
             if (error?.response?.status === 404) {
                 Alert.alert('Aviso', 'Funcionalidade de atualização ainda não implementada no backend. Os dados foram salvos localmente.');
-                login({ ...user, nome: fullName, cpf, email, telefone: phone, endereco: address });
+                login({ ...user, nome: fullName, cpf, email, telefone: phone, endereco: address, foto: profilePhotoUrl });
             } else {
                 const errorMessage = error?.response?.data?.error || error.message || 'Não foi possível salvar as informações.';
                 Alert.alert('Erro', errorMessage);
@@ -81,6 +89,21 @@ export default function PersonalInfoScreen({ navigation }) {
                     {loading ? (
                         <ActivityIndicator size="large" color="#0ea5e9" style={{ marginTop: 32 }} />
                     ) : null}
+
+                    {/* Foto de Perfil */}
+                    <ImageSelector
+                        currentImageUri={profilePhotoUrl}
+                        onUploadSuccess={(result) => {
+                            setProfilePhotoUrl(result.url);
+                            Alert.alert('Sucesso', 'Foto atualizada! Clique em "Alterar Informações" para confirmar.');
+                        }}
+                        onUploadError={(error) => {
+                            console.error('Upload error:', error);
+                        }}
+                        folder="patients"
+                        metadata={{ patientId: user?.id }}
+                        placeholderText="Selecionar Foto"
+                    />
 
                     <View style={styles.fieldGroup}>
                         <Text style={[styles.label, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Nome Completo</Text>

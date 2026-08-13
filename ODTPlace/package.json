@@ -15,10 +15,11 @@
     "@react-navigation/native-stack": "^7.14.10",
     "axios": "^1.15.2",
     "canvas": "^3.2.3",
-    "expo": "~54.0.34",
+    "expo": "~54.0.36",
     "expo-blur": "~15.0.8",
-    "expo-clipboard": "~4.0.1",
+    "expo-clipboard": "~8.0.8",
     "expo-device": "~8.0.10",
+    "expo-image-picker": "~17.0.11",
     "expo-linear-gradient": "~15.0.8",
     "expo-notifications": "~0.32.17",
     "expo-status-bar": "~3.0.9",
@@ -32,6 +33,7 @@
     "canvas@3.2.3": true
   },
   "devDependencies": {
+    "@react-native/dev-middleware": "^0.87.0",
     "expo-module-scripts": "^56.0.3"
   }
 }
