@@ -115,8 +115,15 @@ class Painel(BaseScreen):
             app.show_frame(nome_tela)
 
     def _criar_botao_ir_para(self, parent, destino):
+        # Reserve a small footer area inside the card so content never
+        # overlaps the button. The footer is transparent and only used
+        # to position the button at the bottom-right with consistent
+        # spacing from card borders and content above.
+        footer = ctk.CTkFrame(parent, fg_color="transparent")
+        footer.pack(fill="x", side="bottom", padx=20, pady=(8, 12))
+
         botao = ctk.CTkButton(
-            parent,
+            footer,
             text="Ir para",
             width=90,
             height=30,
@@ -129,7 +136,7 @@ class Painel(BaseScreen):
             cursor="hand2",
             command=lambda: self._navegar_para(destino)
         )
-        botao.place(relx=1.0, rely=1.0, anchor="se", x=-20, y=-20)
+        botao.pack(side="right")
         return botao
 
     def _render_proximas_consultas(self, row, col):
@@ -197,7 +204,6 @@ class Painel(BaseScreen):
             ctk.CTkLabel(box, text=val, font=ctk.CTkFont(size=19, weight="bold"), text_color=col_text).pack(pady=(0, 10))
 
         botao_relatorios = self._criar_botao_ir_para(card, 'relatorios')
-        botao_relatorios.place_configure(x=-20, y=-8)
 
     def _render_status_consultas(self, row, col):
         card = self._criar_card("Status das Consultas", "Distribuição de consultas por status", row, col, padx=(0, 10))
