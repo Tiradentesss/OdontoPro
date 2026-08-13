@@ -146,7 +146,7 @@ class Painel(BaseScreen):
             self._render_vazio(card, "Nenhum compromisso agendado para hoje")
             return
 
-        for item in self.dados_consultas_hoje[:4]:
+        for item in self.dados_consultas_hoje[:2]:
             # Parsing simplificado para exemplo
             nome = item[1] if isinstance(item, (list, tuple)) else "Paciente"
             horario = item[2].strftime('%H:%M') if hasattr(item[2], 'strftime') else "00:00"
