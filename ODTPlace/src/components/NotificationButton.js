@@ -15,20 +15,24 @@ export default function NotificationButton({
 
   // Verifica se existe alguma notificação não lida
   const hasNotification = notifications.some(item => !item.read);
-  const outerBg = '#FFFFFF';
-  const innerBg = isDarkMode ? colors.container : colors.brandBlue;
-  const iconColor = isDarkMode ? colors.text : '#FFFFFF';
+  
+  // Light mode: white background with blue border and blue icon
+  // Dark mode: dark background with border and light icon
+  const buttonBg = isDarkMode ? colors.container : '#FFFFFF';
+  const buttonBorder = isDarkMode ? colors.border : '#0EA5E9';
+  const iconContainerBg = isDarkMode ? '#334155' : '#0EA5E9';
+  const iconTint = isDarkMode ? '#94A3B8' : '#FFFFFF';
 
   return (
     <TouchableOpacity
-      style={[styles.button, { backgroundColor: outerBg, borderColor: isDarkMode ? colors.border : '#FFFFFF' }]}
+      style={[styles.button, { backgroundColor: buttonBg, borderColor: buttonBorder }]}
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <View style={[styles.iconContainer, { backgroundColor: innerBg }]}> 
+      <View style={[styles.iconContainer, { backgroundColor: iconContainerBg }]}> 
         <Image
           source={require('../../assets/IconNotificacao.png')}
-          style={[styles.icon, { tintColor: iconColor }]}
+          style={[styles.icon, { tintColor: iconTint }]}
           resizeMode="contain"
         />
       </View>
