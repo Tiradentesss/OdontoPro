@@ -267,7 +267,11 @@ class Painel(BaseScreen):
             self._render_vazio(card, "Nenhum profissional disponível no momento")
             return
 
-        for prof in self.dados_medicos[:3]:
+        # Garantir que apenas médicos sejam considerados (fonte já é MedicoController)
+        # Ordenar localmente por ID decrescente para mostrar os mais recentes
+        medicos_para_exibir = sorted(self.dados_medicos or [], key=lambda m: m.get('id', 0), reverse=True)[:3]
+
+        for prof in medicos_para_exibir:
             nome = prof.get('nome', 'Médico')
             espec = prof.get('especialidade', 'Geral')
             
