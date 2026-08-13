@@ -177,20 +177,30 @@ class Painel(BaseScreen):
 
     def _render_resumo_relatorios(self, row, col):
         card = self._criar_card("📊 Resumo dos Relatórios", "", row, col, padx=(10, 0))
-
+        # Reutiliza os dados reais carregados em self.dados_relatorios
+        # e apresenta 4 indicadores internos com destaque no valor.
         container = ctk.CTkFrame(card, fg_color="transparent")
         container.pack(fill="x", padx=20, pady=10)
         container.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
         f = self.dados_relatorios or {}
+        # Indicadores preferenciais vindos da lógica de Relatórios
         metrics = [
-            ("Atendidos", str(f.get('atendidos', 0)), self.colors['primary']),
-            ("Profissionais", str(f.get('total_medicos', 0)), self.colors['success']),
-            ("Consultas", str(f.get('total_consultas', 0)), self.colors['info']),
-            ("Comparecimento", f"{f.get('comparecimento', 0)}%", self.colors['warning'])
+            ("👥", "Pacientes atendidos", str(f.get('atendidos', 0)), self.colors['info']),
+            ("✅", "Consultas realizadas", str(f.get('realizadas', 0)), self.colors['success']),
+            ("❌", "Cancelamentos", str(f.get('cancelamentos', 0)), self.colors['danger']),
+            ("📊", "Comparecimento", f"{f.get('comparecimento', 0)}%", self.colors['warning']),
         ]
 
-        for i, (lab, val, col_text) in enumerate(metrics):
+        # Reorganizar em grade 2x2 para melhorar legibilidade
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_rowconfigure(1, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+        container.grid_columnconfigure(1, weight=1)
+
+        for i, (icon, title, value, col_text) in enumerate(metrics):
+            r = i // 2
+            c = i % 2
             box = ctk.CTkFrame(
                 container,
                 fg_color=self.colors['bg_app'],
@@ -198,10 +208,16 @@ class Painel(BaseScreen):
                 border_width=1,
                 border_color=INNER_CARD_BORDER
             )
-            box.grid(row=0, column=i, padx=4, sticky="nsew")
+            box.grid(row=r, column=c, padx=8, pady=8, sticky="nsew")
 
-            ctk.CTkLabel(box, text=lab, font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(pady=(10, 0))
-            ctk.CTkLabel(box, text=val, font=ctk.CTkFont(size=19, weight="bold"), text_color=col_text).pack(pady=(0, 10))
+            # Ícone + título (superior)
+            header = ctk.CTkFrame(box, fg_color="transparent")
+            header.pack(fill="x", padx=14, pady=(12, 6))
+            ctk.CTkLabel(header, text=icon, font=ctk.CTkFont(size=18), text_color=col_text).pack(side="left")
+            ctk.CTkLabel(header, text=title, font=ctk.CTkFont(size=13), text_color=self.colors['text_secondary']).pack(side="left", padx=(10, 0))
+
+            # Valor em destaque (centralizado à esquerda)
+            ctk.CTkLabel(box, text=value, font=ctk.CTkFont(size=22, weight="bold"), text_color=col_text).pack(anchor="w", padx=14, pady=(2, 14))
 
         botao_relatorios = self._criar_botao_ir_para(card, 'relatorios')
 
@@ -289,18 +305,87 @@ class Painel(BaseScreen):
 
     def _render_alertas(self, row, col):
         card = self._criar_card("Notificações", "Alertas e avisos importantes", row, col, padx=(10, 0))
+        # Gerar até 3 notificações reais e relevantes, priorizando eventos que precisam de atenção.
+        notificacoes = []
+        try:
+            hoje = date.today()
 
-        resumo = self.dados_relatorios or {}
-        alertas = [
-            ("📊", f"{resumo.get('total_consultas', 0)} consultas no período", self.colors['info']),
-            ("✅", f"{resumo.get('atendidos', 0)} pacientes atendidos", self.colors['success']),
-            ("⚠️", f"{resumo.get('cancelamentos', 0)} consultas canceladas", self.colors['danger'])
-        ]
+            # 1) Próxima consulta (mais próxima no futuro)
+            proximas = ConsultaController.listar_proximas_por_clinica(self.clinica_id, limite=5)
+            if proximas:
+                primeiro = proximas[0]
+                nome = primeiro[1] if not isinstance(primeiro, dict) else primeiro.get('nome')
+                dt = primeiro[2] if not isinstance(primeiro, dict) else primeiro.get('data_hora')
+                if hasattr(dt, 'strftime'):
+                    when = f"Hoje às {dt.strftime('%H:%M')}" if getattr(dt, 'date', lambda: None)() == hoje else dt.strftime('%d/%m %H:%M')
+                else:
+                    when = ''
+                notificacoes.append(("Próxima consulta", f"{nome} • {when}", self.colors['info']))
 
-        for icon, msg, color in alertas:
+            # 2) Consulta aguardando confirmação para hoje
+            aguardando = ConsultaController.listar_por_clinica(self.clinica_id, data=hoje, status='agendada', limite=5)
+            if aguardando:
+                # pegar a primeira (mais próxima) que esteja com status 'agendada'
+                item = None
+                for it in aguardando:
+                    status = it[3] if not isinstance(it, dict) else it.get('status')
+                    if isinstance(status, str) and status.strip().lower() == 'agendada':
+                        item = it
+                        break
+                if item:
+                    nome = item[1] if not isinstance(item, dict) else item.get('nome')
+                    dt = item[2] if not isinstance(item, dict) else item.get('data_hora')
+                    when = f"Hoje às {dt.strftime('%H:%M')}" if hasattr(dt, 'strftime') and getattr(dt, 'date', lambda: None)() == hoje else (dt.strftime('%d/%m %H:%M') if hasattr(dt, 'strftime') else '')
+                    notificacoes.append(("Aguardando confirmação", f"{nome} • {when}", self.colors['warning']))
+
+            # 3) Consulta cancelada recentemente (ordenar por data_hora desc)
+            canceladas = ConsultaController.listar_por_clinica(self.clinica_id, status='cancelada', limite=10)
+            if canceladas:
+                cancel_sorted = sorted(canceladas, key=lambda c: (c[2] if not isinstance(c, dict) else c.get('data_hora')) or datetime.min, reverse=True)
+                recent = cancel_sorted[0]
+                nome = recent[1] if not isinstance(recent, dict) else recent.get('nome')
+                dt = recent[2] if not isinstance(recent, dict) else recent.get('data_hora')
+                when = f"Hoje às {dt.strftime('%H:%M')}" if hasattr(dt, 'strftime') and getattr(dt, 'date', lambda: None)() == hoje else (dt.strftime('%d/%m %H:%M') if hasattr(dt, 'strftime') else '')
+                notificacoes.append(("Consulta cancelada", f"{nome} • {when}", self.colors['danger']))
+
+            # 4) Novo paciente cadastrado (mais recente)
+            pacientes = PacienteController.listar_pacientes(self.clinica_id)
+            if pacientes:
+                recent_p = sorted(pacientes, key=lambda p: p.get('id', 0) if isinstance(p, dict) else (p[0] if len(p) > 0 else 0), reverse=True)[0]
+                nome_p = recent_p.get('nome') if isinstance(recent_p, dict) else recent_p[1] if len(recent_p) > 1 else ''
+                notificacoes.append(("Novo paciente cadastrado", f"{nome_p}", self.colors['primary']))
+
+            # 5) Novo médico cadastrado (mais recente)
+            medicos = MedicoController.listar_medicos(self.clinica_id)
+            if medicos:
+                recent_m = sorted(medicos, key=lambda m: m.get('id', 0) if isinstance(m, dict) else (m[0] if len(m) > 0 else 0), reverse=True)[0]
+                nome_m = recent_m.get('nome') if isinstance(recent_m, dict) else recent_m[1] if len(recent_m) > 1 else ''
+                notificacoes.append(("Novo médico cadastrado", f"{nome_m}", self.colors['success']))
+
+        except Exception as e:
+            print(f"Erro ao gerar notificações: {e}")
+
+        # Remover duplicatas simples (mesmo título e texto)
+        vistos = set()
+        finais = []
+        for t, m, col in notificacoes:
+            key = (t, m)
+            if key in vistos:
+                continue
+            vistos.add(key)
+            finais.append((t, m, col))
+            if len(finais) >= 3:
+                break
+
+        if not finais:
+            ctk.CTkLabel(card, text="Nenhuma notificação importante no momento.", text_color=self.colors['text_muted'], font=ctk.CTkFont(slant="italic")).pack(pady=20)
+            return
+
+        for title, msg, color in finais:
             f = ctk.CTkFrame(card, fg_color=self.colors['bg_app'], corner_radius=10, border_width=1, border_color=self.colors['border'])
-            f.pack(fill="x", padx=20, pady=4)
-            ctk.CTkLabel(f, text=f"{icon}  {msg}", text_color=color, font=ctk.CTkFont(size=14, weight="bold")).pack(padx=15, pady=12, anchor="w")
+            f.pack(fill="x", padx=20, pady=6)
+            ctk.CTkLabel(f, text=title, text_color=color, font=ctk.CTkFont(size=14, weight="bold")).pack(anchor="w", padx=12, pady=(10, 0))
+            ctk.CTkLabel(f, text=msg, text_color=self.colors['text_secondary'], font=ctk.CTkFont(size=12)).pack(anchor="w", padx=12, pady=(0, 10))
 
     def _render_vazio(self, parent, mensagem):
         ctk.CTkLabel(parent, text=mensagem, text_color=self.colors['text_muted'], 
