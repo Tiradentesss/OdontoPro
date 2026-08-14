@@ -46,7 +46,8 @@ class Clinica(models.Model):
     logo = models.ImageField(
         upload_to='clinicas/logo/',
         null=True,
-        blank=True
+        blank=True,
+        max_length=1024,
     )
 
     # 🔹 EXISTENTE (mantido para compatibilidade)
