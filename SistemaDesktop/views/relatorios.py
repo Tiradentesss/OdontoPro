@@ -208,7 +208,7 @@ class Relatorios(BaseScreen):
         self._loading_label.pack_forget()
 
         self.kpi_frame = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
-        self.kpi_frame.pack(fill="x", padx=20, pady=(0, 20))
+        self.kpi_frame.pack(fill="x", padx=20, pady=(0, 12))
         for idx in range(4):
             self.kpi_frame.grid_columnconfigure(idx, weight=1, uniform="kpi_cards")
 
@@ -230,19 +230,19 @@ class Relatorios(BaseScreen):
             )
             card.grid(row=0, column=index, sticky="nsew", padx=(0, 10) if index < len(kpi_cards) - 1 else 0)
 
-            ctk.CTkLabel(card, text=glyph, font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(anchor="w", padx=16, pady=(16, 4))
+            ctk.CTkLabel(card, text=glyph, font=ctk.CTkFont(size=24, weight="normal"), text_color=COLORS["primary"]).pack(anchor="w", padx=16, pady=(12, 3))
 
-            ctk.CTkLabel(card, text=title, font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16)
+            ctk.CTkLabel(card, text=title, font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16, pady=(3, 0))
 
             if key == "medico_mais_produtivo":
                 value_label = ctk.CTkLabel(card, text="--", font=font("text", "bold"), text_color=COLORS["text"], wraplength=180, justify="left")
-                value_label.pack(anchor="w", padx=16, pady=(8, 4))
+                value_label.pack(anchor="w", padx=16, pady=(6, 3))
             else:
                 value_label = ctk.CTkLabel(card, text="--", font=font("title", "bold"), text_color=COLORS["text"])
-                value_label.pack(anchor="w", padx=16, pady=(8, 2))
+                value_label.pack(anchor="w", padx=16, pady=(6, 1))
 
             desc_label = ctk.CTkLabel(card, text=description, font=font("small"), text_color=COLORS["text_secondary"])
-            desc_label.pack(anchor="w", padx=16, pady=(0, 16))
+            desc_label.pack(anchor="w", padx=16, pady=(0, 10))
 
             self._kpi_card_labels[key] = {
                 "value": value_label,
