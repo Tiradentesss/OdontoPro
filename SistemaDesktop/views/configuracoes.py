@@ -10,6 +10,7 @@ import time
 import requests
 from io import BytesIO
 from PIL import Image, ImageTk, ImageDraw
+import re
 
 
 class ImagePreview:
@@ -823,7 +824,8 @@ class Configuracoes(BaseScreen):
                     info_col,
                     label=field["label"],
                     placeholder=field["placeholder"],
-                    required=field.get("required", False)
+                    required=field.get("required", False),
+                    mask=field.get("mask")
                 )
                 input_widget.grid(
                     row=field["row"],
@@ -1372,27 +1374,22 @@ class Configuracoes(BaseScreen):
                 print(f"[DEBUG] Carregando dados da clínica ID: {self.clinica_id}")
 
                 cursor.execute("""
-                    SELECT nome, cnpj, email, telefone, logo, fotos
+                    SELECT nome, cnpj, email, telefone, logo
                     FROM odontoPro_clinica
                     WHERE id = %s
                 """, (self.clinica_id,))
 
                 result = cursor.fetchone()
                 if result:
-                    fotos = []
-                    if len(result) > 5 and result[5]:
-                        try:
-                            fotos = json.loads(result[5]) if isinstance(result[5], str) else result[5]
-                        except Exception:
-                            fotos = []
-
+                    # photos/fotos column is not available in the current schema.
+                    # Keep UI compatibility by returning an empty list for photos.
                     data = {
                         "nome": result[0] or "",
                         "cnpj": result[1] or "",
                         "email": result[2] or "",
                         "telefone": result[3] or "",
                         "logo": result[4] or "",
-                        "photos": fotos
+                        "photos": []
                     }
                     print(f"[DEBUG] Dados carregados: {data}")
                     return data
@@ -1818,40 +1815,65 @@ class Configuracoes(BaseScreen):
                 email = self.clinic_entries["E-mail Clínica"].get().strip()
                 telefone = self.clinic_entries["Telefone"].get().strip()
 
+                # Store only digits for CNPJ and Telefone in DB
+                try:
+                    cnpj_clean = re.sub(r"\D", "", cnpj)
+                except Exception:
+                    cnpj_clean = cnpj
+
+                try:
+                    telefone_clean = re.sub(r"\D", "", telefone)
+                except Exception:
+                    telefone_clean = telefone
+
                 cursor.execute("""
                     UPDATE odontoPro_clinica
                     SET nome = %s, cnpj = %s, email = %s, telefone = %s
                     WHERE id = %s
-                """, (nome, cnpj, email, telefone, self.clinica_id))
+                """, (nome, cnpj_clean, email, telefone_clean, self.clinica_id))
 
                 if "logo" in self.images:
                     logo_path = self.images["logo"]
                     saved_logo = None
 
-                    if os.path.exists(logo_path):
-                        try:
-                            public_id = f"clinica_{self.clinica_id}_{int(time.time())}"
-                            folder = f"odontopro/clinicas/{self.clinica_id}"
-                            saved_logo = upload_image_to_cloudinary(logo_path, public_id=public_id, folder=folder)
-                            print(f"[INFO] Logo enviada ao Cloudinary: {saved_logo}")
-                        except Exception as e:
-                            print(f"[AVISO] Não foi possível enviar a logo para o Cloudinary: {e}")
+                    try:
+                        # Case A: user selected a remote URL (already uploaded)
+                        if isinstance(logo_path, str) and logo_path.lower().startswith(("http://", "https://")):
+                            saved_logo = logo_path
 
-                    if not saved_logo:
-                        upload_dir = os.path.join(os.path.dirname(__file__), "../assets/clinicas/logo")
-                        os.makedirs(upload_dir, exist_ok=True)
+                        # Case B: local file selected -> upload to Cloudinary
+                        elif isinstance(logo_path, str) and os.path.exists(logo_path):
+                            try:
+                                public_id = f"clinica_{self.clinica_id}_{int(time.time())}"
+                                folder = f"odontopro/clinicas/{self.clinica_id}"
+                                print(f"[LOGO] Iniciando upload Cloudinary for clinica_id={self.clinica_id}")
+                                saved_logo = upload_image_to_cloudinary(logo_path, public_id=public_id, folder=folder)
+                                print(f"[LOGO] Upload concluído, URL recebida: {saved_logo}")
+                            except Exception as e:
+                                print(f"[AVISO] Falha ao enviar logo para Cloudinary: {e}")
+                                messagebox.showerror("Erro", f"Falha ao enviar a logo para o Cloudinary: {str(e)}")
+                                saved_logo = None
 
-                        extensao = os.path.splitext(logo_path)[1] or ".png"
-                        filename = f"clinica_{self.clinica_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{extensao}"
-                        dest_path = os.path.join(upload_dir, filename)
-                        shutil.copy(logo_path, dest_path)
-                        saved_logo = dest_path
+                        else:
+                            # The value is neither an accessible local file nor an http url.
+                            print(f"[AVISO] Valor inesperado para self.images['logo']: {logo_path}")
+                            saved_logo = None
 
-                    cursor.execute("""
-                        UPDATE odontoPro_clinica
-                        SET logo = %s
-                        WHERE id = %s
-                    """, (saved_logo, self.clinica_id))
+                    except Exception as e:
+                        print(f"[ERRO] Erro ao processar imagem da logo: {e}")
+                        saved_logo = None
+
+                    # Only update DB when we have a valid HTTPS URL returned by Cloudinary or an existing remote URL
+                    if saved_logo and isinstance(saved_logo, str) and saved_logo.lower().startswith("https://"):
+                        cursor.execute("""
+                            UPDATE odontoPro_clinica
+                            SET logo = %s
+                            WHERE id = %s
+                        """, (saved_logo, self.clinica_id))
+                        print(f"[LOGO] Atualizando clinica_id={self.clinica_id} com URL Cloudinary")
+                    else:
+                        # Do not overwrite existing logo in DB. Keep previous value.
+                        print(f"[LOGO] Nenhuma URL válida para atualizar no banco; mantendo logo atual para clinica_id={self.clinica_id}")
 
                 if hasattr(self, "clinic_photos"):
                     saved_photos = []
@@ -1859,21 +1881,21 @@ class Configuracoes(BaseScreen):
                     os.makedirs(upload_dir, exist_ok=True)
 
                     for i, photo_path in enumerate(self.clinic_photos):
-                        if os.path.exists(photo_path):
-                            if not os.path.abspath(photo_path).startswith(os.path.abspath(upload_dir)):
-                                extensao = os.path.splitext(photo_path)[1] or ".jpg"
-                                filename = f"clinica_{self.clinica_id}_foto_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{i}{extensao}"
-                                dest_path = os.path.join(upload_dir, filename)
-                                shutil.copy(photo_path, dest_path)
-                                saved_photos.append(dest_path)
-                            else:
-                                saved_photos.append(photo_path)
-
-                    cursor.execute("""
-                        UPDATE odontoPro_clinica
-                        SET fotos = %s
-                        WHERE id = %s
-                    """, (json.dumps(saved_photos), self.clinica_id))
+                        # Keep UI behavior (allow selecting photos locally) but do not persist
+                        # them to the database yet since the `fotos` column does not exist.
+                        try:
+                            if os.path.exists(photo_path):
+                                if not os.path.abspath(photo_path).startswith(os.path.abspath(upload_dir)):
+                                    extensao = os.path.splitext(photo_path)[1] or ".jpg"
+                                    filename = f"clinica_{self.clinica_id}_foto_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{i}{extensao}"
+                                    dest_path = os.path.join(upload_dir, filename)
+                                    shutil.copy(photo_path, dest_path)
+                                    saved_photos.append(dest_path)
+                                else:
+                                    saved_photos.append(photo_path)
+                        except Exception as _e:
+                            # Ignore photo copy errors for now; do not block saving clinic data
+                            print(f"[AVISO] Erro ao processar foto local: {_e}")
 
                 # Salvar endereço
                 if self.address_entries:
@@ -1883,6 +1905,12 @@ class Configuracoes(BaseScreen):
                     cidade = self.address_entries["Cidade"].get().strip()
                     estado = self.address_entries["Estado"].get().strip()
                     cep = self.address_entries["CEP"].get().strip()
+
+                    # Save CEP to DB as digits only (e.g., 66017010) to avoid column length/format issues
+                    try:
+                        cep_clean = re.sub(r"\D", "", cep)
+                    except Exception:
+                        cep_clean = cep
 
                     cursor.execute("""
                         SELECT endereco_id
@@ -1898,12 +1926,12 @@ class Configuracoes(BaseScreen):
                             UPDATE odontoPro_endereco
                             SET rua = %s, numero = %s, bairro = %s, cidade = %s, estado = %s, cep = %s
                             WHERE id = %s
-                        """, (rua, numero, bairro, cidade, estado, cep, endereco_id))
+                        """, (rua, numero, bairro, cidade, estado, cep_clean, endereco_id))
                     else:
                         cursor.execute("""
                             INSERT INTO odontoPro_endereco (rua, numero, bairro, cidade, estado, cep)
-                            VALUES (%s, %s, %s, %s, %s, %s)
-                        """, (rua, numero, bairro, cidade, estado, cep))
+                                VALUES (%s, %s, %s, %s, %s, %s)
+                            """, (rua, numero, bairro, cidade, estado, cep_clean))
 
                         novo_endereco_id = cursor.lastrowid
 
