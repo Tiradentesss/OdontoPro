@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar, Dimensions, Image } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context'; 
 import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
 import { getDoctorById, getProfessionalAppointments, getDoctorStats } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { getPatientAvatarSource } from '../utils/patientAvatar';
 
 const { width } = Dimensions.get('window');
 
@@ -79,6 +80,7 @@ export default function HomeScreen({ navigation }) {
     const appointmentDate = new Date(next.data_hora);
     return {
       patient: next.nome,
+      patientPhoto: getPatientAvatarSource(next),
       procedure: next.observacoes || next.especialidade_nome || 'Consulta',
       time: appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       date: appointmentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' }),
@@ -256,10 +258,14 @@ export default function HomeScreen({ navigation }) {
           }}
         >
           <View style={styles.reminderHeader}>
-            <View style={[styles.avatarPlaceholder, { backgroundColor: nextAppointment.avatarColor }]}>
-              <Text style={[styles.avatarText, { color: nextAppointment.textColor }]}>
-                {nextAppointment.patient.charAt(0)}
-              </Text>
+            <View style={[styles.avatarPlaceholder, { backgroundColor: nextAppointment.avatarColor, overflow: 'hidden' }]}>
+              {nextAppointment.patientPhoto?.uri ? (
+                <Image source={nextAppointment.patientPhoto} style={styles.avatarImage} resizeMode="cover" />
+              ) : (
+                <Text style={[styles.avatarText, { color: nextAppointment.textColor }]}>
+                  {nextAppointment.patient.charAt(0)}
+                </Text>
+              )}
             </View>
             <View style={styles.reminderInfo}>
               <Text style={[styles.patientName, { color: colors.text }]}>{nextAppointment.patient}</Text>
@@ -453,6 +459,10 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 15,
     fontWeight: '700',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   reminderInfo: {
     flex: 1,

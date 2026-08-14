@@ -59,12 +59,12 @@ export default function PatientProfileScreen({ route, navigation }) {
   const currentPatient = appointment
     ? {
         name: appointment.nome,
-        avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=120&h=120',
+        avatar: appointment.paciente_foto || appointment.foto || appointment.avatar || null,
       }
     : params?.patient
       ? {
           name: params.patient.name,
-          avatar: params.patient.avatar,
+          avatar: params.patient.avatar || null,
         }
       : fallbackPatient;
 
@@ -115,7 +115,13 @@ export default function PatientProfileScreen({ route, navigation }) {
         {/* Bloco de Perfil Principal */}
         <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.avatarWrapper}>
-            <Image source={{ uri: currentPatient?.avatar }} style={[styles.avatarBig, { borderColor: isDarkMode ? '#1E293B' : '#EFF6FF' }]} />
+            {currentPatient?.avatar ? (
+              <Image source={{ uri: currentPatient.avatar }} style={[styles.avatarBig, { borderColor: isDarkMode ? '#1E293B' : '#EFF6FF' }]} />
+            ) : (
+              <View style={[styles.avatarBig, styles.avatarFallback, { borderColor: isDarkMode ? '#1E293B' : '#EFF6FF', backgroundColor: isDarkMode ? '#1E3A8A' : '#E0F2FE' }]}> 
+                <Text style={[styles.avatarFallbackText, { color: isDarkMode ? '#60A5FA' : '#0EA5E9' }]}>{currentPatient?.name?.charAt(0)?.toUpperCase() || 'P'}</Text>
+              </View>
+            )}
             <View style={[styles.activeBadge, { borderColor: colors.card }]} />
           </View>
           <Text style={[styles.patientNameText, { color: colors.text }]}>{currentPatient?.name}</Text>

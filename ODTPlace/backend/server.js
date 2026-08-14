@@ -343,7 +343,7 @@ app.get(['/api/appointments', '/appointments'], (req, res) => {
   }
 
   const { medico_id, clinica_id } = req.query;
-  let query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id WHERE 1=1`;
+  let query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE 1=1`;
   const params = [];
 
   if (medico_id) {
@@ -363,7 +363,11 @@ app.get(['/api/appointments', '/appointments'], (req, res) => {
       console.error('Appointments query failed, returning mock data:', err.message);
       return res.json(mockAppointments);
     }
-    res.json(normalizeAppointmentRows(results));
+    const normalized = (normalizeAppointmentRows(results) || []).map((row) => ({
+      ...row,
+      paciente_foto: resolveImageField(row?.paciente_foto),
+    }));
+    res.json(normalized);
   });
 });
 
@@ -378,10 +382,10 @@ app.get(['/api/appointments/:patientEmail', '/appointments/:patientEmail'], (req
   let query, params;
   
   if (isNumericId) {
-    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id WHERE c.paciente_id = ? ORDER BY c.data_hora DESC`;
+    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE c.paciente_id = ? ORDER BY c.data_hora DESC`;
     params = [parseInt(patientEmail)];
   } else {
-    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id WHERE c.email = ? ORDER BY c.data_hora DESC`;
+    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE c.email = ? ORDER BY c.data_hora DESC`;
     params = [patientEmail];
   }
   
@@ -389,7 +393,11 @@ app.get(['/api/appointments/:patientEmail', '/appointments/:patientEmail'], (req
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json(normalizeAppointmentRows(results));
+    const normalized = (normalizeAppointmentRows(results) || []).map((row) => ({
+      ...row,
+      paciente_foto: resolveImageField(row?.paciente_foto),
+    }));
+    res.json(normalized);
   });
 });
 

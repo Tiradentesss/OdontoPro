@@ -17,6 +17,7 @@ import { Feather } from "@expo/vector-icons";
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getProfessionalAppointments } from '../services/api';
+import { getPatientAvatarSource } from '../utils/patientAvatar';
 
 const getStatusConfig = (isDarkMode) => ({
   "Novo Agendamento": {
@@ -189,7 +190,7 @@ export default function AgendaScreen({ navigation, route }) {
         specialty: item.especialidade_nome || 'Especialidade',
         clinic: item.clinica_nome || 'Clínica',
         patientPhone: item.telefone || item.contato || '',
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.nome || 'Paciente')}&background=0D8ABC&color=fff&size=120`,
+        avatarSource: getPatientAvatarSource(item),
         appointment: item,
         config,
       };
@@ -231,7 +232,7 @@ export default function AgendaScreen({ navigation, route }) {
           </View>
 
           <View style={styles.patientInfoContainer}>
-            <Image source={{ uri: item.avatar }} style={styles.avatar} />
+            <Image source={item.avatarSource} style={styles.avatar} />
             <View style={styles.patientTextColumn}>
               <Text style={[styles.patientName, { color: colors.text }]}>{item.patientName}</Text>
               <Text style={styles.patientMotivo}>{item.motivo}</Text>
