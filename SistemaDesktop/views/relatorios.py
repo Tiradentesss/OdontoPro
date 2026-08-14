@@ -1,3 +1,4 @@
+import calendar
 import csv
 import math
 import os
@@ -42,6 +43,10 @@ class Relatorios(BaseScreen):
         self._export_menu = None
         self._chart_hover_connection_id = None
         self._chart_bar_tooltip = None
+        self._custom_period_modal = None
+        self._custom_period_previous_value = "Hoje"
+        self.custom_date_start = None
+        self.custom_date_end = None
 
         self.periodo_var = ctk.StringVar(value="Hoje")
         self.medico_var = ctk.StringVar(value="Todos")
@@ -106,7 +111,8 @@ class Relatorios(BaseScreen):
             button_hover_color=COLORS["primary_dark"],
             text_color=COLORS["text"],
             dropdown_fg_color=COLORS["card"],
-            width=1
+            width=1,
+            command=self._handle_period_change,
         )
         self.periodo_combo.set(self.periodo_var.get())
         self.periodo_combo.pack(fill="x", padx=10, pady=(6, 10))
@@ -363,6 +369,216 @@ class Relatorios(BaseScreen):
             command=self._show_export_menu
         )
         self.export_button.pack(side="right")
+
+    def _handle_period_change(self, value):
+        if value == "Personalizado":
+            self._open_custom_period_modal()
+            return
+        self._custom_period_previous_value = value
+
+    def _open_custom_period_modal(self):
+        if self._custom_period_modal is not None:
+            try:
+                self._custom_period_modal.focus_set()
+            except Exception:
+                pass
+            return
+
+        self._custom_period_previous_value = self.periodo_combo.get() if self.periodo_combo.get() not in ["", "Personalizado"] else self._custom_period_previous_value
+        modal = ctk.CTkToplevel(self)
+        modal.title("Selecionar período personalizado")
+        modal.transient(self)
+        modal.grab_set()
+        modal.attributes("-topmost", True)
+        modal.resizable(False, False)
+        modal.configure(fg_color=COLORS["card"])
+
+        self._custom_period_modal = modal
+        self._custom_period_type = ctk.StringVar(value="Intervalo")
+        self._custom_period_error = ctk.StringVar(value="")
+
+        window_width = 480
+        window_height = 340
+        x = self.winfo_rootx() + (self.winfo_width() - window_width) // 2
+        y = self.winfo_rooty() + (self.winfo_height() - window_height) // 2
+        modal.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+        header = ctk.CTkFrame(modal, fg_color="transparent")
+        header.pack(fill="x", padx=18, pady=(16, 8))
+        ctk.CTkLabel(header, text="Selecionar período personalizado", font=font("subtitle", "bold"), text_color=COLORS["text"]).pack(anchor="w", side="left")
+        ctk.CTkButton(header, text="✕", width=26, height=26, fg_color="transparent", text_color=COLORS["text_secondary"], hover_color=COLORS["border"], corner_radius=8, command=self._close_custom_period_modal).pack(side="right")
+
+        option_frame = ctk.CTkFrame(modal, fg_color="transparent")
+        option_frame.pack(fill="x", padx=18, pady=(0, 12))
+        options = ["Ano", "Mês", "Data", "Intervalo"]
+        for option in options:
+            btn = ctk.CTkButton(
+                option_frame,
+                text=option,
+                width=90,
+                height=30,
+                fg_color=COLORS["primary"] if self._custom_period_type.get() == option else "transparent",
+                hover_color=COLORS["primary_dark"],
+                text_color="white" if self._custom_period_type.get() == option else COLORS["text"],
+                border_width=1 if self._custom_period_type.get() != option else 0,
+                border_color=COLORS["border"],
+                corner_radius=8,
+                command=lambda selected=option: self._set_custom_period_type(selected),
+            )
+            btn.pack(side="left", padx=(0, 8))
+            if option == self._custom_period_type.get():
+                btn.configure(fg_color=COLORS["primary"], text_color="white", border_width=0)
+
+        self._custom_period_content = ctk.CTkFrame(modal, fg_color="transparent")
+        self._custom_period_content.pack(fill="both", expand=True, padx=18, pady=(0, 8))
+        self._render_custom_period_content()
+
+        self._custom_period_error_label = ctk.CTkLabel(modal, textvariable=self._custom_period_error, font=font("small"), text_color="#d64545")
+        self._custom_period_error_label.pack(anchor="w", padx=18, pady=(0, 8))
+
+        footer = ctk.CTkFrame(modal, fg_color="transparent")
+        footer.pack(fill="x", padx=18, pady=(0, 18))
+        ctk.CTkButton(footer, text="Cancelar", width=100, fg_color="transparent", text_color=COLORS["text"], border_width=1, border_color=COLORS["border"], hover_color=COLORS["border"], command=self._cancel_custom_period_modal).pack(side="right", padx=(8, 0))
+        ctk.CTkButton(footer, text="Aplicar", width=100, fg_color=COLORS["primary"], hover_color=COLORS["primary_dark"], text_color="white", command=self._apply_custom_period).pack(side="right")
+
+        modal.protocol("WM_DELETE_WINDOW", self._cancel_custom_period_modal)
+
+    def _close_custom_period_modal(self):
+        if self._custom_period_modal is not None:
+            try:
+                self._custom_period_modal.destroy()
+            except Exception:
+                pass
+            self._custom_period_modal = None
+
+    def _cancel_custom_period_modal(self):
+        self._close_custom_period_modal()
+        self.periodo_combo.set(self._custom_period_previous_value)
+
+    def _set_custom_period_type(self, selected_type):
+        if self._custom_period_modal is None:
+            return
+        self._custom_period_type.set(selected_type)
+        self._render_custom_period_content()
+
+    def _render_custom_period_content(self):
+        if self._custom_period_modal is None:
+            return
+        for child in self._custom_period_content.winfo_children():
+            child.destroy()
+        option = self._custom_period_type.get()
+
+        if option == "Ano":
+            year_frame = ctk.CTkFrame(self._custom_period_content, fg_color="transparent")
+            year_frame.pack(fill="x", pady=12)
+            ctk.CTkLabel(year_frame, text="Ano", font=font("small", "bold"), text_color=COLORS["text"]).pack(anchor="w")
+            years = [str(year) for year in range(datetime.now().year - 5, datetime.now().year + 6)]
+            self._custom_year_var = ctk.StringVar(value=str(datetime.now().year))
+            ctk.CTkComboBox(year_frame, values=years, variable=self._custom_year_var, width=220, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"]).pack(anchor="w", pady=(6, 0))
+        elif option == "Mês":
+            year_frame = ctk.CTkFrame(self._custom_period_content, fg_color="transparent")
+            year_frame.pack(fill="x", pady=(8, 8))
+            ctk.CTkLabel(year_frame, text="Ano", font=font("small", "bold"), text_color=COLORS["text"]).pack(anchor="w")
+            years = [str(year) for year in range(datetime.now().year - 5, datetime.now().year + 6)]
+            self._custom_month_year_var = ctk.StringVar(value=str(datetime.now().year))
+            ctk.CTkComboBox(year_frame, values=years, variable=self._custom_month_year_var, width=220, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"]).pack(anchor="w", pady=(6, 0))
+
+            month_frame = ctk.CTkFrame(self._custom_period_content, fg_color="transparent")
+            month_frame.pack(fill="x", pady=(8, 8))
+            ctk.CTkLabel(month_frame, text="Mês", font=font("small", "bold"), text_color=COLORS["text"]).pack(anchor="w")
+            months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+            self._custom_month_var = ctk.StringVar(value=months[datetime.now().month - 1])
+            month_combo = ctk.CTkComboBox(month_frame, values=months, variable=self._custom_month_var, width=220, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            month_combo.pack(anchor="w", pady=(6, 0))
+        elif option == "Data":
+            date_frame = ctk.CTkFrame(self._custom_period_content, fg_color="transparent")
+            date_frame.pack(fill="x", pady=12)
+            ctk.CTkLabel(date_frame, text="Data", font=font("small", "bold"), text_color=COLORS["text"]).pack(anchor="w")
+            self._custom_day_var = ctk.StringVar(value=str(datetime.now().day))
+            self._custom_month_date_var = ctk.StringVar(value=str(datetime.now().month))
+            self._custom_year_date_var = ctk.StringVar(value=str(datetime.now().year))
+            day_box = ctk.CTkComboBox(date_frame, values=[str(i) for i in range(1, 32)], variable=self._custom_day_var, width=80, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            month_box = ctk.CTkComboBox(date_frame, values=[str(i) for i in range(1, 13)], variable=self._custom_month_date_var, width=90, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            year_box = ctk.CTkComboBox(date_frame, values=[str(year) for year in range(datetime.now().year - 10, datetime.now().year + 11)], variable=self._custom_year_date_var, width=100, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            for widget in (day_box, month_box, year_box):
+                widget.pack(side="left", padx=(0, 8), pady=(6, 0))
+        else:
+            date_frame = ctk.CTkFrame(self._custom_period_content, fg_color="transparent")
+            date_frame.pack(fill="x", pady=8)
+            ctk.CTkLabel(date_frame, text="Data inicial", font=font("small", "bold"), text_color=COLORS["text"]).pack(anchor="w")
+            self._custom_start_day_var = ctk.StringVar(value=str(datetime.now().day))
+            self._custom_start_month_var = ctk.StringVar(value=str(datetime.now().month))
+            self._custom_start_year_var = ctk.StringVar(value=str(datetime.now().year))
+            start_day = ctk.CTkComboBox(date_frame, values=[str(i) for i in range(1, 32)], variable=self._custom_start_day_var, width=80, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            start_month = ctk.CTkComboBox(date_frame, values=[str(i) for i in range(1, 13)], variable=self._custom_start_month_var, width=90, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            start_year = ctk.CTkComboBox(date_frame, values=[str(year) for year in range(datetime.now().year - 10, datetime.now().year + 11)], variable=self._custom_start_year_var, width=100, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            for widget in (start_day, start_month, start_year):
+                widget.pack(side="left", padx=(0, 8), pady=(6, 0))
+
+            end_frame = ctk.CTkFrame(self._custom_period_content, fg_color="transparent")
+            end_frame.pack(fill="x", pady=(18, 0))
+            ctk.CTkLabel(end_frame, text="Data final", font=font("small", "bold"), text_color=COLORS["text"]).pack(anchor="w")
+            self._custom_end_day_var = ctk.StringVar(value=str(datetime.now().day))
+            self._custom_end_month_var = ctk.StringVar(value=str(datetime.now().month))
+            self._custom_end_year_var = ctk.StringVar(value=str(datetime.now().year))
+            end_day = ctk.CTkComboBox(end_frame, values=[str(i) for i in range(1, 32)], variable=self._custom_end_day_var, width=80, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            end_month = ctk.CTkComboBox(end_frame, values=[str(i) for i in range(1, 13)], variable=self._custom_end_month_var, width=90, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            end_year = ctk.CTkComboBox(end_frame, values=[str(year) for year in range(datetime.now().year - 10, datetime.now().year + 11)], variable=self._custom_end_year_var, width=100, height=34, fg_color=COLORS["input_bg"], border_color=COLORS["border"], button_color=COLORS["primary"], dropdown_fg_color=COLORS["card"])
+            for widget in (end_day, end_month, end_year):
+                widget.pack(side="left", padx=(0, 8), pady=(6, 0))
+
+    def _parse_custom_date(self, year, month, day):
+        return datetime(int(year), int(month), int(day), 0, 0, 0, 0)
+
+    def _parse_custom_interval(self, start_year, start_month, start_day, end_year, end_month, end_day):
+        start_dt = self._parse_custom_date(start_year, start_month, start_day)
+        end_dt = self._parse_custom_date(end_year, end_month, end_day)
+        if start_dt > end_dt:
+            return None, "A data inicial não pode ser maior que a data final."
+        return start_dt, end_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    def _apply_custom_period(self):
+        if self._custom_period_modal is None:
+            return
+
+        option = self._custom_period_type.get()
+        try:
+            if option == "Ano":
+                year = int(self._custom_year_var.get())
+                inicio = datetime(year, 1, 1, 0, 0, 0, 0)
+                fim = datetime(year, 12, 31, 23, 59, 59, 999999)
+            elif option == "Mês":
+                year = int(self._custom_month_year_var.get())
+                month_name = self._custom_month_var.get()
+                month_index = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"].index(month_name) + 1
+                last_day = calendar.monthrange(year, month_index)[1]
+                inicio = datetime(year, month_index, 1, 0, 0, 0, 0)
+                fim = datetime(year, month_index, last_day, 23, 59, 59, 999999)
+            elif option == "Data":
+                year = int(self._custom_year_date_var.get())
+                month = int(self._custom_month_date_var.get())
+                day = int(self._custom_day_var.get())
+                inicio = datetime(year, month, day, 0, 0, 0, 0)
+                fim = datetime(year, month, day, 23, 59, 59, 999999)
+            else:
+                start_year = int(self._custom_start_year_var.get())
+                start_month = int(self._custom_start_month_var.get())
+                start_day = int(self._custom_start_day_var.get())
+                end_year = int(self._custom_end_year_var.get())
+                end_month = int(self._custom_end_month_var.get())
+                end_day = int(self._custom_end_day_var.get())
+                inicio, message = self._parse_custom_interval(start_year, start_month, start_day, end_year, end_month, end_day)
+                if inicio is None:
+                    self._custom_period_error.set(message)
+                    return
+                fim = datetime(end_year, end_month, end_day, 23, 59, 59, 999999)
+            self.custom_date_start = inicio
+            self.custom_date_end = fim
+            self._close_custom_period_modal()
+            self.periodo_combo.set("Personalizado")
+            self._load_data_async()
+        except Exception:
+            self._custom_period_error.set("Selecione uma data válida para o período personalizado.")
 
     def _show_export_menu(self):
         if self.export_button is None:
@@ -688,9 +904,12 @@ class Relatorios(BaseScreen):
             fim = end_of_day(agora.replace(month=12, day=31))
             tipo = "ano"
         else:
-            # Personalizado / padrão: último 30 dias completos (começando à meia-noite)
-            inicio = (agora - timedelta(days=30)).replace(hour=0, minute=0, second=0, microsecond=0)
-            fim = end_of_day(agora)
+            if self.custom_date_start is not None and self.custom_date_end is not None:
+                inicio = self.custom_date_start
+                fim = self.custom_date_end
+            else:
+                inicio = (agora - timedelta(days=30)).replace(hour=0, minute=0, second=0, microsecond=0)
+                fim = end_of_day(agora)
             tipo = "personalizado"
 
         return inicio, fim, tipo
