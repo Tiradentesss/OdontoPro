@@ -1,4 +1,5 @@
 import csv
+import math
 import os
 import queue
 import threading
@@ -672,8 +673,8 @@ class Relatorios(BaseScreen):
             fim = end_of_day(agora)
             tipo = "hoje"
         elif periodo == "Semana":
-            # Últimos 7 dias (início no começo do dia 7 dias atrás, até o fim do dia atual)
-            inicio = (agora - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+            # 7 dias completos, incluindo hoje: 6 dias anteriores + dia atual
+            inicio = (agora - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
             fim = end_of_day(agora)
             tipo = "semana"
         elif periodo == "Mês":
@@ -984,10 +985,46 @@ class Relatorios(BaseScreen):
             zorder=3,
         )
 
+        periodo_atual = self.periodo_combo.get() if hasattr(self, "periodo_combo") and self.periodo_combo is not None else (self.periodo_var.get() if hasattr(self, "periodo_var") else "")
+
+        tick_positions = list(positions)
+        tick_labels = list(labels)
+
+        if periodo_atual == "Hoje":
+            tick_positions = list(range(0, len(labels), 2))
+            tick_labels = [labels[i] for i in tick_positions]
+            if len(labels) > 1 and tick_positions[-1] != len(labels) - 1:
+                tick_positions.append(len(labels) - 1)
+                tick_labels.append(labels[-1])
+        elif periodo_atual == "Semana":
+            tick_positions = list(positions)
+            tick_labels = list(labels)
+        elif periodo_atual == "Mês":
+            step = 3
+            tick_positions = list(range(0, len(labels), step))
+            tick_labels = [labels[i] for i in tick_positions]
+            if len(labels) > 0 and tick_positions[-1] != len(labels) - 1:
+                tick_positions.append(len(labels) - 1)
+                tick_labels.append(labels[-1])
+        elif periodo_atual == "Ano":
+            tick_positions = list(positions)
+            tick_labels = list(labels)
+        else:
+            max_visible_ticks = 10
+            if len(labels) <= max_visible_ticks:
+                step = 1
+            else:
+                step = max(1, math.ceil(len(labels) / max_visible_ticks))
+            tick_positions = list(range(0, len(labels), step))
+            tick_labels = [labels[i] for i in tick_positions]
+            if len(labels) > 0 and tick_positions[-1] != len(labels) - 1:
+                tick_positions.append(len(labels) - 1)
+                tick_labels.append(labels[-1])
+
         ax.set_xlim(-0.5, len(labels) - 0.5)
         ax.set_ylim(0, y_limit)
-        ax.set_xticks(positions)
-        ax.set_xticklabels(labels, fontsize=10, color=text_color, rotation=35, ha="right", rotation_mode="anchor")
+        ax.set_xticks(tick_positions)
+        ax.set_xticklabels(tick_labels, fontsize=10, color=text_color, rotation=35, ha="right", rotation_mode="anchor")
         ax.tick_params(axis="y", colors=text_color, labelsize=10)
         ax.tick_params(axis="x", length=0)
 
