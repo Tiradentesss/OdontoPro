@@ -10,7 +10,7 @@ from xml.sax.saxutils import escape as xml_escape
 import customtkinter as ctk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-from matplotlib.patches import FancyBboxPatch
+from matplotlib.ticker import MaxNLocator
 
 from config.database import get_connection
 from .base import BaseScreen
@@ -967,26 +967,26 @@ class Relatorios(BaseScreen):
         grid_color = COLORS.get("border", "#cccccc")
 
         positions = range(len(labels))
-        bar_width = 0.65
+        bar_width = 0.45
+        positive_values = [value for value in values if value > 0]
+        y_max = max(positive_values) if positive_values else 1
+        y_limit = max(2, y_max + 1)
 
-        for x, value in zip(positions, values):
-            if value <= 0:
-                continue
-            bar = FancyBboxPatch(
-                (x - bar_width / 2, 0),
-                bar_width,
-                value,
-                boxstyle="round,pad=0.02,rounding_size=6",
-                linewidth=0,
-                facecolor=bar_color,
-                edgecolor="none",
-            )
-            ax.add_patch(bar)
+        bar_container = ax.bar(
+            positions,
+            values,
+            width=bar_width,
+            color=bar_color,
+            edgecolor=bar_color,
+            linewidth=1.0,
+            alpha=0.95,
+            zorder=3,
+        )
 
         ax.set_xlim(-0.5, len(labels) - 0.5)
-        ax.set_ylim(0, max(values) * 1.15 if values else 1)
-        ax.set_xticks(positions)
-        ax.set_xticklabels(labels, fontsize=10, color=text_color, rotation=45, ha="right")
+        ax.set_ylim(0, y_limit)
+        ax.set_xticks(list(positions))
+        ax.set_xticklabels(labels, fontsize=10, color=text_color, rotation=35, ha="right")
         ax.tick_params(axis="y", colors=text_color, labelsize=10)
         ax.tick_params(axis="x", length=0)
 
@@ -994,28 +994,19 @@ class Relatorios(BaseScreen):
         ax.spines["right"].set_visible(False)
         ax.spines["left"].set_color(border_color)
         ax.spines["bottom"].set_color(border_color)
-        ax.yaxis.grid(True, color=grid_color, alpha=0.18, linestyle="--")
+        ax.spines["left"].set_linewidth(1.0)
+        ax.spines["bottom"].set_linewidth(1.0)
+        ax.yaxis.grid(True, color=grid_color, alpha=0.12, linestyle="--", zorder=0)
         ax.xaxis.grid(False)
         ax.set_ylabel("Consultas", color=text_color, fontsize=10, labelpad=12)
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
-        bar_patches = []
-        for index, (x, value) in enumerate(zip(positions, values)):
+        for patch, value in zip(bar_container.patches, values):
             if value <= 0:
                 continue
-            patch = FancyBboxPatch(
-                (x - bar_width / 2, 0),
-                bar_width,
-                value,
-                boxstyle="round,pad=0.02,rounding_size=6",
-                linewidth=0,
-                facecolor=bar_color,
-                edgecolor="none",
-            )
-            ax.add_patch(patch)
-            bar_patches.append((patch, chart_period["details"][index]))
             ax.annotate(
                 f"{int(value)}",
-                xy=(x, value),
+                xy=(patch.get_x() + patch.get_width() / 2, value),
                 xytext=(0, 6),
                 textcoords="offset points",
                 ha="center",
@@ -1055,7 +1046,7 @@ class Relatorios(BaseScreen):
                     self._chart_canvas.draw_idle()
                 return
 
-            for patch, details in bar_patches:
+            for patch, details in zip(bar_container.patches, chart_period["details"]):
                 contains, _ = patch.contains(event)
                 if contains:
                     tooltip_text = (
