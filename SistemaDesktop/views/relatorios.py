@@ -98,7 +98,7 @@ class Relatorios(BaseScreen):
         periodo_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=0)
         periodo_label_frame = ctk.CTkFrame(periodo_frame, fg_color="transparent")
         periodo_label_frame.pack(anchor="w", padx=10, pady=(12, 0))
-        ctk.CTkLabel(periodo_label_frame, text="\uE787", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(periodo_label_frame, text="📅", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 6))
         ctk.CTkLabel(periodo_label_frame, text="Período", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.periodo_combo = ctk.CTkComboBox(
             periodo_frame,
@@ -121,7 +121,7 @@ class Relatorios(BaseScreen):
         medico_frame.grid(row=0, column=1, sticky="nsew", padx=8, pady=0)
         medico_label_frame = ctk.CTkFrame(medico_frame, fg_color="transparent")
         medico_label_frame.pack(anchor="w", padx=10, pady=(12, 0))
-        ctk.CTkLabel(medico_label_frame, text="\uE7C1", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(medico_label_frame, text="🩺", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 6))
         ctk.CTkLabel(medico_label_frame, text="Médico", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.medico_combo = ctk.CTkComboBox(
             medico_frame,
@@ -143,7 +143,7 @@ class Relatorios(BaseScreen):
         especialidade_frame.grid(row=0, column=2, sticky="nsew", padx=8, pady=0)
         especialidade_label_frame = ctk.CTkFrame(especialidade_frame, fg_color="transparent")
         especialidade_label_frame.pack(anchor="w", padx=10, pady=(12, 0))
-        ctk.CTkLabel(especialidade_label_frame, text="\uEBD7", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(especialidade_label_frame, text="🦷", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 6))
         ctk.CTkLabel(especialidade_label_frame, text="Especialidade", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.especialidade_combo = ctk.CTkComboBox(
             especialidade_frame,
@@ -165,7 +165,7 @@ class Relatorios(BaseScreen):
         status_frame.grid(row=0, column=3, sticky="nsew", padx=(8, 0), pady=0)
         status_label_frame = ctk.CTkFrame(status_frame, fg_color="transparent")
         status_label_frame.pack(anchor="w", padx=10, pady=(12, 0))
-        ctk.CTkLabel(status_label_frame, text="\uE73E", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 8))
+        ctk.CTkLabel(status_label_frame, text="📊", font=ctk.CTkFont(size=28, weight="normal"), text_color=COLORS["primary"]).pack(side="left", padx=(0, 6))
         ctk.CTkLabel(status_label_frame, text="Status", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.status_combo = ctk.CTkComboBox(
             status_frame,
