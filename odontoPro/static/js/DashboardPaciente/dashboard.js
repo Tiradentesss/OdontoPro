@@ -635,6 +635,9 @@ function abrirModalAgendamento(clinicaId) {
             }
 
             atualizarEnderecoCarousel(data.images || [], data.banner_url || data.logo_url || "/static/img/sem-foto.jpg");
+            
+            // Atualizar mapa dinamicamente com o endereco da clinica
+            atualizarMapaDinamico(data.rua, data.numero, data.bairro, data.cidade, data.estado, data.cep);
 
             // ===== ESPECIALIDADES =====
             const selectEspecialidade = document.getElementById("selectEspecialidade");
@@ -818,6 +821,8 @@ function inicializarCarouselsDeClinica() {
         }
     });
 }
+
+function atualizarMapaDinamico(rua, numero, bairro, cidade, estado, cep) {\n    // Construir endereco completo para o Google Maps\n    const endereco = `${rua}, ${numero}, ${bairro}, ${cidade} - ${estado}, ${cep}, Brasil`;\n    const enderecoEncoded = encodeURIComponent(endereco);\n    \n    // Encontrar o iframe do mapa e atualizar seu src\n    const mapaDiv = document.querySelector('.mapa-google');\n    if (mapaDiv) {\n        const iframe = mapaDiv.querySelector('iframe');\n        if (iframe) {\n            // Usar URL simples do Google Maps que funciona sem API key\n            const novoSrc = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.513239247653!2d-48.4901!3d-1.4558!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr`;\n            \n            // Atualizar o src do iframe diretamente\n            iframe.src = `https://maps.google.com/maps?q=${enderecoEncoded}&t=m&z=15&output=embed`;\n        }\n    }\n}
 
 function atualizarEnderecoCarousel(images, fallback) {
     const carousel = document.getElementById('enderecoCarousel');
