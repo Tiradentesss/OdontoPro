@@ -397,8 +397,8 @@ class Relatorios(BaseScreen):
         self._custom_period_type = ctk.StringVar(value="Intervalo")
         self._custom_period_error = ctk.StringVar(value="")
 
-        window_width = 480
-        window_height = 340
+        window_width = 560
+        window_height = 420
         x = self.winfo_rootx() + (self.winfo_width() - window_width) // 2
         y = self.winfo_rooty() + (self.winfo_height() - window_height) // 2
         modal.geometry(f"{window_width}x{window_height}+{x}+{y}")
@@ -406,7 +406,6 @@ class Relatorios(BaseScreen):
         header = ctk.CTkFrame(modal, fg_color="transparent")
         header.pack(fill="x", padx=18, pady=(16, 8))
         ctk.CTkLabel(header, text="Selecionar período personalizado", font=font("subtitle", "bold"), text_color=COLORS["text"]).pack(anchor="w", side="left")
-        ctk.CTkButton(header, text="✕", width=26, height=26, fg_color="transparent", text_color=COLORS["text_secondary"], hover_color=COLORS["border"], corner_radius=8, command=self._close_custom_period_modal).pack(side="right")
 
         option_frame = ctk.CTkFrame(modal, fg_color="transparent")
         option_frame.pack(fill="x", padx=18, pady=(0, 12))
