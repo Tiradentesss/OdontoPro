@@ -966,7 +966,7 @@ class Relatorios(BaseScreen):
         border_color = COLORS.get("border", "#cccccc")
         grid_color = COLORS.get("border", "#cccccc")
 
-        positions = range(len(labels))
+        positions = list(range(len(labels)))
         bar_width = 0.45
         positive_values = [value for value in values if value > 0]
         y_max = max(positive_values) if positive_values else 1
@@ -976,6 +976,7 @@ class Relatorios(BaseScreen):
             positions,
             values,
             width=bar_width,
+            align="center",
             color=bar_color,
             edgecolor=bar_color,
             linewidth=1.0,
@@ -985,8 +986,8 @@ class Relatorios(BaseScreen):
 
         ax.set_xlim(-0.5, len(labels) - 0.5)
         ax.set_ylim(0, y_limit)
-        ax.set_xticks(list(positions))
-        ax.set_xticklabels(labels, fontsize=10, color=text_color, rotation=35, ha="right")
+        ax.set_xticks(positions)
+        ax.set_xticklabels(labels, fontsize=10, color=text_color, rotation=35, ha="right", rotation_mode="anchor")
         ax.tick_params(axis="y", colors=text_color, labelsize=10)
         ax.tick_params(axis="x", length=0)
 
