@@ -678,14 +678,9 @@ class Relatorios(BaseScreen):
             fim = end_of_day(agora)
             tipo = "semana"
         elif periodo == "Mês":
-            # Do primeiro dia do mês às 00:00 até o último dia do mês às 23:59:59.999999
-            inicio = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            # calcular último dia do mês
-            if agora.month == 12:
-                next_month = agora.replace(year=agora.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-            else:
-                next_month = agora.replace(month=agora.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
-            fim = end_of_day(next_month - timedelta(microseconds=1))
+            # Ano completo atual para agrupar por mês
+            inicio = agora.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            fim = end_of_day(agora.replace(month=12, day=31))
             tipo = "mes"
         elif periodo == "Ano":
             inicio = agora.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -872,14 +867,12 @@ class Relatorios(BaseScreen):
             labels = [d.strftime("%d/%m") for d in label_keys]
             group_expr = "DATE(c.data_hora)"
         elif periodo_tipo == "mes":
-            start_date = inicio.date()
-            delta = (fim.date() - start_date).days
-            label_keys = [start_date + timedelta(days=i) for i in range(delta + 1)]
-            labels = [d.strftime("%d/%m") for d in label_keys]
-            group_expr = "DATE(c.data_hora)"
+            label_keys = list(range(1, 13))
+            labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+            group_expr = "MONTH(c.data_hora)"
         else:
             label_keys = list(range(1, 13))
-            labels = [datetime(1900, m, 1).strftime("%b") for m in label_keys]
+            labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
             group_expr = "MONTH(c.data_hora)"
 
         params = filtro_params + [inicio, fim]
@@ -1000,12 +993,8 @@ class Relatorios(BaseScreen):
             tick_positions = list(positions)
             tick_labels = list(labels)
         elif periodo_atual == "Mês":
-            step = 3
-            tick_positions = list(range(0, len(labels), step))
-            tick_labels = [labels[i] for i in tick_positions]
-            if len(labels) > 0 and tick_positions[-1] != len(labels) - 1:
-                tick_positions.append(len(labels) - 1)
-                tick_labels.append(labels[-1])
+            tick_positions = list(range(12))
+            tick_labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
         elif periodo_atual == "Ano":
             tick_positions = list(positions)
             tick_labels = list(labels)
@@ -1024,7 +1013,7 @@ class Relatorios(BaseScreen):
         ax.set_xlim(-0.5, len(labels) - 0.5)
         ax.set_ylim(0, y_limit)
         ax.set_xticks(tick_positions)
-        ax.set_xticklabels(tick_labels, fontsize=10, color=text_color, rotation=35, ha="right", rotation_mode="anchor")
+        ax.set_xticklabels(tick_labels, fontsize=10, color=text_color, rotation=0, ha="center")
         ax.tick_params(axis="y", colors=text_color, labelsize=10)
         ax.tick_params(axis="x", length=0)
 
