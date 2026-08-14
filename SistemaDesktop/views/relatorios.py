@@ -683,7 +683,8 @@ class Relatorios(BaseScreen):
             fim = end_of_day(agora.replace(month=12, day=31))
             tipo = "mes"
         elif periodo == "Ano":
-            inicio = agora.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            # Últimos 5 anos completos, incluindo o ano atual
+            inicio = agora.replace(year=agora.year - 4, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
             fim = end_of_day(agora.replace(month=12, day=31))
             tipo = "ano"
         else:
@@ -870,6 +871,12 @@ class Relatorios(BaseScreen):
             label_keys = list(range(1, 13))
             labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
             group_expr = "MONTH(c.data_hora)"
+        elif periodo_tipo == "ano":
+            start_year = inicio.year
+            end_year = fim.year
+            label_keys = list(range(start_year, end_year + 1))
+            labels = [str(year) for year in label_keys]
+            group_expr = "YEAR(c.data_hora)"
         else:
             label_keys = list(range(1, 13))
             labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
@@ -997,6 +1004,8 @@ class Relatorios(BaseScreen):
             tick_labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
         elif periodo_atual == "Ano":
             tick_positions = list(positions)
+            tick_labels = list(labels)
+            tick_positions = list(range(len(labels)))
             tick_labels = list(labels)
         else:
             max_visible_ticks = 10
