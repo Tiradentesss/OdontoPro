@@ -593,27 +593,41 @@ function getCsrfToken() {
 let clinicaSelecionada = null;
 
 function abrirModalAgendamento(clinicaId) {
+    try {
+        console.log("🔷 CLINICA CLICADA:", clinicaId);
+        
+        if (!clinicaId) {
+            console.error("❌ clinicaId inválido:", clinicaId);
+            return;
+        }
+        
+        clinicaSelecionada = clinicaId;
 
-    console.log("CLINICA CLICADA:", clinicaId);
-    clinicaSelecionada = clinicaId;
+        // Vai para tela perfil da clínica
+        console.log("📍 Mostrando tela perfil-clinica");
+        mostrarTela('perfil-clinica', null);
 
-    // Vai para tela perfil da clínica
-    mostrarTela('perfil-clinica', null);
+        // Carrega dados da clínica via Django
+        console.log("🌐 Carregando dados de /clinica/" + clinicaId + "/detalhes/");
+        fetch(`/clinica/${clinicaId}/detalhes/`)
+            .then(response => {
+                console.log("📥 Response status:", response.status);
+                return response.json();
+            })
+            .then(data => {
 
-    // Carrega dados da clínica via Django
-    fetch(`/clinica/${clinicaId}/detalhes/`)
-        .then(response => response.json())
-        .then(data => {
+                if (data.error) {
+                    console.error("❌ Erro na resposta:", data.error);
+                    alert(data.error);
+                    return;
+                }
 
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
-
-            document.getElementById("detalheNomeClinica").innerText = data.nome;
-            document.getElementById("detalheEmailClinica").innerText = data.email;
-            document.getElementById("detalheTelefoneClinica").innerText = data.telefone;
-            document.getElementById("detalheDescricaoClinica").innerText = data.descricao;
+                console.log("✅ Dados da clínica carregados:", data);
+                
+                document.getElementById("detalheNomeClinica").innerText = data.nome;
+                document.getElementById("detalheEmailClinica").innerText = data.email;
+                document.getElementById("detalheTelefoneClinica").innerText = data.telefone;
+                document.getElementById("detalheDescricaoClinica").innerText = data.descricao;
 
             document.getElementById("detalheEnderecoClinica").innerText =
                 `${data.rua}, ${data.numero} - ${data.bairro}, ${data.cidade} - ${data.estado}, CEP: ${data.cep}`;
@@ -784,8 +798,12 @@ function abrirModalAgendamento(clinicaId) {
 
         })
         .catch(error => {
-            console.error("Erro ao carregar clínica:", error);
+            console.error("❌ Erro ao carregar clínica:", error);
+            alert("Erro ao carregar dados da clínica. Verifique o console para mais detalhes.");
         });
+    } catch (err) {
+        console.error("❌ Erro geral em abrirModalAgendamento:", err);
+    }
 }
 
 function inicializarCarouselsDeClinica() {
@@ -810,12 +828,14 @@ function inicializarCarouselsDeClinica() {
         };
 
         if (prev) {
-            prev.addEventListener('click', () => {
+            prev.addEventListener('click', (event) => {
+                event.stopPropagation();
                 atualizarSlide(Number(carousel.dataset.currentSlide) - 1);
             });
         }
         if (next) {
-            next.addEventListener('click', () => {
+            next.addEventListener('click', (event) => {
+                event.stopPropagation();
                 atualizarSlide(Number(carousel.dataset.currentSlide) + 1);
             });
         }

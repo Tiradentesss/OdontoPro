@@ -273,7 +273,7 @@
                     </div>
                 </div>
 
-                <button type="button" class="btn-saiba-mais" onclick="abrirModalAgendamento('{{ clinica.id }}')">
+                <button type="button" class="btn-saiba-mais" onclick="event.stopPropagation(); abrirModalAgendamento('{{ clinica.id }}'); return false;">
                     Saiba Mais
                 </button>
             </div>
