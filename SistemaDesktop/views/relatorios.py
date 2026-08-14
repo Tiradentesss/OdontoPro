@@ -234,8 +234,12 @@ class Relatorios(BaseScreen):
 
             ctk.CTkLabel(card, text=title, font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16)
 
-            value_label = ctk.CTkLabel(card, text="--", font=font("title", "bold"), text_color=COLORS["text"])
-            value_label.pack(anchor="w", padx=16, pady=(8, 2))
+            if key == "medico_mais_produtivo":
+                value_label = ctk.CTkLabel(card, text="--", font=font("text", "bold"), text_color=COLORS["text"], wraplength=180, justify="left")
+                value_label.pack(anchor="w", padx=16, pady=(8, 4))
+            else:
+                value_label = ctk.CTkLabel(card, text="--", font=font("title", "bold"), text_color=COLORS["text"])
+                value_label.pack(anchor="w", padx=16, pady=(8, 2))
 
             desc_label = ctk.CTkLabel(card, text=description, font=font("small"), text_color=COLORS["text_secondary"])
             desc_label.pack(anchor="w", padx=16, pady=(0, 16))
