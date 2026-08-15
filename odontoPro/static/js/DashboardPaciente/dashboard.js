@@ -694,13 +694,15 @@ function abrirModalAgendamento(clinicaId) {
 
                         card.innerHTML = `
                             <div class="especialidade-card-header">
-                                <strong class="especialidade-nome">${espNome}</strong>
+                                <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
+                                    <strong class="especialidade-nome">${espNome}</strong>
+                                    <div class="especialidade-desc" style="display:none;">${escapeHtml(espDesc)}</div>
+                                </div>
                                 <div class="especialidade-meta">
                                     <span class="especialidade-preco">R$ ${espPreco.toFixed(2).replace('.', ',')}</span>
                                     <button type="button" class="esp-info-btn" aria-expanded="false" title="Informações"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></button>
                                 </div>
                             </div>
-                            <div class="especialidade-card-body" style="display:none;">${escapeHtml(espDesc)}</div>
                             <div class="especialidade-card-footer">${count} médico${count === 1 ? '' : 's'}</div>
                         `;
 

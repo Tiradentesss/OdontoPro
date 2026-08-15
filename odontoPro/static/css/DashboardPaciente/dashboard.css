@@ -3437,9 +3437,11 @@ body.theme-dark .item-menu.ativo {
     font-weight:700;
 }
 .especialidade-card-body { margin-top:8px; color:var(--texto-suave); font-size:13px; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 300ms ease, opacity 250ms ease; }
+.especialidade-desc { margin-top:2px; color:var(--texto-suave); font-size:13px; max-height:0; overflow:hidden; opacity:0; transition: max-height 300ms ease, opacity 250ms ease; }
 .especialidade-card-footer { margin-top:8px; font-size:12px; color:var(--texto-suave); }
 .especialidade-card.expanded { border-color: var(--azul-claro); box-shadow: 0 8px 22px rgba(27,195,234,0.06); }
 .especialidade-card.expanded .especialidade-card-body { max-height: 400px; opacity: 1; }
+.especialidade-card.expanded .especialidade-desc { max-height: 300px; opacity: 1; }
 .esp-info-btn i { transition: transform 200ms ease; }
 .esp-info-btn[aria-expanded="true"] i { transform: rotate(90deg); }
 
