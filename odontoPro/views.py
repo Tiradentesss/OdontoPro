@@ -436,13 +436,18 @@ def _get_clinica_imagem_url(clinica):
 
 
 def _get_clinica_logo_url(clinica):
-    if clinica.logo and getattr(clinica.logo, 'name', None):
-        try:
-            url = clinica.logo.url
-            if _url_responds(url):
-                return url
-        except Exception:
-            pass
+    if clinica.logo:
+        raw_logo = str(clinica.logo).strip()
+        if raw_logo.startswith(("http://", "https://")):
+            return raw_logo
+
+        if getattr(clinica.logo, 'name', None):
+            try:
+                url = clinica.logo.url
+                if _url_responds(url):
+                    return url
+            except Exception:
+                pass
 
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
         try:
