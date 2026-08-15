@@ -2878,9 +2878,10 @@ body.theme-dark .item-menu.ativo {
 
 .config-actions {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 24px;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
     margin-top: 24px;
 }
 
@@ -2906,6 +2907,7 @@ body.theme-dark .item-menu.ativo {
     margin: 0;
     width: 100%;
 }
+
 
 @media (max-width: 768px) {
     .config-actions {

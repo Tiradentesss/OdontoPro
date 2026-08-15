@@ -110,6 +110,30 @@ body {
     box-shadow: 0 0 0 3px rgba(27, 195, 234, 0.1);
 }
 
+/* input with icon / toggle password */
+.input-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.input-with-icon input {
+    flex: 1;
+}
+.toggle-password {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.toggle-password:hover {
+    background: rgba(0,0,0,0.04);
+}
+
 .forgot-password {
     text-align: right;
     font-size: 12px;

@@ -54,7 +54,10 @@
 
           <div class="input-group">
             <label for="password">Senha</label>
-            <input type="password" id="password" name="senha" placeholder="********" required>
+            <div class="input-with-icon">
+              <input type="password" id="password" name="senha" placeholder="********" required>
+              <button type="button" class="toggle-password" aria-label="Mostrar senha"><i class="fa-solid fa-eye"></i></button>
+            </div>
             <a href="#" class="forgot-password" id="openForgot">Esqueci senha</a>
           </div>
 
@@ -65,11 +68,7 @@
           <span>ou</span>
         </div>
 
-        <div class="social-login">
-          <button class="social-btn facebook"><i class="fab fa-facebook-f"></i></button>
-          <button class="social-btn google"><i class="fa-brands fa-google"></i></button>
-          <button class="social-btn twitter"><i class="fab fa-twitter"></i></button>
-        </div>
+        <!-- Social login buttons removed per request -->
 
         <p class="signup-text">
           Ainda não tem uma conta?
@@ -95,11 +94,7 @@
         <p>Escolha como deseja se cadastrar</p>
       </div>
 
-      <div class="social-login-modal">
-        <button class="social-btn facebook"><i class="fa-brands fa-facebook-f"></i></button>
-        <button class="social-btn google"><i class="fa-brands fa-google"></i></button>
-        <button class="social-btn twitter"><i class="fa-brands fa-twitter"></i></button>
-      </div>
+      <!-- Social login options removed from modal per request -->
 
       <div class="divider">
         <span>ou preencha os dados</span>
