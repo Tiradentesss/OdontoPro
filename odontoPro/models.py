@@ -249,8 +249,8 @@ class Especialidade(models.Model):
         blank=True
     )
     nome = models.CharField(max_length=80)
-    descricao = models.TextField(null=True, blank=True)
     preco = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
+    descricao = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.nome
