@@ -37,6 +37,18 @@ function carregarHorariosHandler() {
     }
 }
 
+// simple HTML escaper for descriptions
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+        .replace(/\n/g, '<br>');
+}
+
 /* ================= MENU LATERAL ================= */
 function atualizarLogoMenu() {
     const menu = document.getElementById("menuLateral");
@@ -673,13 +685,45 @@ function abrirModalAgendamento(clinicaId) {
                         const espId = String(esp[0]);
                         const espNome = esp[1];
                         const espPreco = Number(esp[2] || 0);
+                        const espDesc = esp[3] || "";
                         const count = countsByEspecialidade[espId] || 0;
-                        const item = document.createElement("li");
-                        item.textContent = `${espNome} - R$ ${espPreco.toFixed(2).replace('.', ',')} (${count} médico${count === 1 ? "" : "s"})`;
-                        detalheServicos.appendChild(item);
+
+                        const card = document.createElement('div');
+                        card.className = 'especialidade-card';
+                        card.dataset.espId = espId;
+
+                        card.innerHTML = `
+                            <div class="especialidade-card-header">
+                                <strong class="especialidade-nome">${espNome}</strong>
+                                <div class="especialidade-meta">
+                                    <span class="especialidade-preco">R$ ${espPreco.toFixed(2).replace('.', ',')}</span>
+                                    <button type="button" class="esp-info-btn" aria-expanded="false" title="Informações"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></button>
+                                </div>
+                            </div>
+                            <div class="especialidade-card-body" style="display:none;">${escapeHtml(espDesc)}</div>
+                            <div class="especialidade-card-footer">${count} médico${count === 1 ? '' : 's'}</div>
+                        `;
+
+                        detalheServicos.appendChild(card);
                     });
+
+                    // Attach toggle handlers for info buttons
+                    detalheServicos.querySelectorAll('.esp-info-btn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const expanded = this.getAttribute('aria-expanded') === 'true';
+                            const card = this.closest('.especialidade-card');
+                            if (expanded) {
+                                this.setAttribute('aria-expanded', 'false');
+                                card.classList.remove('expanded');
+                            } else {
+                                this.setAttribute('aria-expanded', 'true');
+                                card.classList.add('expanded');
+                            }
+                        });
+                    });
+
                 } else {
-                    detalheServicos.innerHTML = "<li>Nenhuma especialidade cadastrada.</li>";
+                    detalheServicos.innerHTML = "<div class='empty-state'>Nenhuma especialidade cadastrada.</div>";
                 }
             }
 

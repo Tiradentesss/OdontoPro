@@ -1075,7 +1075,7 @@ def clinica_detalhes(request, clinica_id):
         return JsonResponse({"error": "Clínica não encontrada"}, status=404)
 
     especialidades = [
-        (esp.id, esp.nome, float(esp.preco) if esp.preco else 0)
+        (esp.id, esp.nome, float(esp.preco) if esp.preco else 0, esp.descricao or "")
         for esp in clinica.especialidades.all()
     ]
 
