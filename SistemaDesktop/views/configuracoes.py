@@ -1080,7 +1080,7 @@ class Configuracoes(BaseScreen):
             text="Valor",
             font=font("text", "bold"),
             text_color=self.colors["text_secondary"],
-            width=120,
+            width=118,
             anchor="w"
         )
         valor_header.grid(row=0, column=1, sticky="w")
