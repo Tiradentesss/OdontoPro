@@ -403,10 +403,15 @@ def _url_responds(url):
 def _get_clinica_imagem_url(clinica):
     """Resolve a URL pública do banner da clínica sem consultar o storage local.
 
-    Com Cloudinary, default_storage.exists() pode reportar falso mesmo quando a
-    URL pública do objeto existe. Como a imagem deve ser entregue ao browser pelo
-    provedor CDN, o resultado correto é a propriedade .url do ImageField.
+    Quando o valor do campo já é uma URL absoluta do Cloudinary, usar essa URL
+    diretamente evita que ImageField.url re-prefixe '/media/' e corrompa o link.
     """
+    if clinica.imagem:
+        raw_imagem = str(clinica.imagem).strip()
+        if raw_imagem.startswith(("http://", "https://")):
+            if _url_responds(raw_imagem):
+                return raw_imagem
+
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
         try:
             url = clinica.imagem.url
@@ -478,10 +483,15 @@ def _get_valid_banner_images(clinica):
         if url and _url_responds(url):
             urls.append(url)
 
-    if not urls and clinica.imagem and getattr(clinica.imagem, 'url', None):
-        url = clinica.imagem.url
-        if _url_responds(url):
-            urls.append(url)
+    if not urls and clinica.imagem:
+        raw_imagem = str(clinica.imagem).strip()
+        if raw_imagem.startswith(("http://", "https://")):
+            if _url_responds(raw_imagem):
+                urls.append(raw_imagem)
+        else:
+            url = getattr(clinica.imagem, 'url', None)
+            if url and _url_responds(url):
+                urls.append(url)
 
     return urls
 
