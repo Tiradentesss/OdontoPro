@@ -18,7 +18,7 @@ from urllib.error import HTTPError, URLError
 
 from .models import Paciente, Clinica, Consulta, Medico, Avaliacao, Endereco, Especialidade, Gerenciamento, Financeiro
 from datetime import datetime, date, timedelta
-from django.db.models import Q, Sum, Count
+from django.db.models import Q, Sum, Count, Avg
 import json
 from decimal import Decimal
 from django.utils import timezone
@@ -538,9 +538,19 @@ def dashboard_paciente(request):
         return redirect("login_paciente")
 
     paciente = Paciente.objects.get(id=paciente_id)
-    clinicas = Clinica.objects.prefetch_related('imagens').all().order_by("nome")
+    clinicas = (
+        Clinica.objects
+        .prefetch_related('imagens')
+        .annotate(
+            avaliacao_media_real=Avg('avaliacoes_clinica__nota'),
+            num_avaliacoes_real=Count('avaliacoes_clinica', distinct=True),
+        )
+        .order_by("nome")
+    )
 
     for c in clinicas:
+        c.avaliacao_media_real = float(c.avaliacao_media_real or 0.0)
+        c.num_avaliacoes_real = c.num_avaliacoes_real or 0
         c.banner_url = _get_clinica_imagem_url(c)
         c.logo_url = _get_clinica_logo_url(c)
         c.banner_images = _get_valid_banner_images(c)
@@ -1108,7 +1118,12 @@ def clinica_detalhes(request, clinica_id):
     # 🔹 BUSCAR AVALIAÇÕES APENAS DESSA CLÍNICA
     avaliacoes = Avaliacao.objects.filter(
         clinica=clinica
-    ).select_related("paciente").order_by("-data_postagem")
+    ).select_related("paciente", "medico").order_by("-data_postagem")
+
+    avaliacao_aggregate = avaliacoes.aggregate(
+        avaliacao_media=Avg('nota'),
+        num_avaliacoes=Count('id'),
+    )
 
     avaliacoes_json = [
         {
@@ -1120,6 +1135,9 @@ def clinica_detalhes(request, clinica_id):
         }
         for av in avaliacoes
     ]
+
+    avaliacao_media = float(avaliacao_aggregate['avaliacao_media'] or 0.0)
+    num_avaliacoes = avaliacao_aggregate['num_avaliacoes'] or 0
 
     # Separar banner principal da galeria de fotos da clínica.
     banner_url = _get_clinica_imagem_url(clinica)
@@ -1201,6 +1219,8 @@ def clinica_detalhes(request, clinica_id):
     "cep": clinica.endereco.cep if clinica.endereco else '',
     "especialidades": list(especialidades),
     "medicos": medicos,
+    "avaliacao_media": avaliacao_media,
+    "num_avaliacoes": num_avaliacoes,
     "avaliacoes": avaliacoes_json,
     "horarios_funcionamento": horarios_funcionamento,
     })
@@ -1642,13 +1662,20 @@ def home(request):
     logged_in = is_patient or is_professional
 
     featured_clinics = list(
-        Clinica.objects.filter(ativo=True, avaliacao__gte=4.0)
+        Clinica.objects.filter(ativo=True)
         .select_related("endereco")
         .prefetch_related("imagens")
-        .order_by("-avaliacao", "-num_avaliacoes", "nome")
+        .annotate(
+            avaliacao_media=Avg('avaliacoes_clinica__nota'),
+            num_avaliacoes=Count('avaliacoes_clinica', distinct=True),
+        )
+        .filter(avaliacao_media__gte=4.0)
+        .order_by("-avaliacao_media", "-num_avaliacoes", "nome")
     )
 
     for clinica in featured_clinics:
+        clinica.avaliacao = float(clinica.avaliacao_media or 0.0)
+        clinica.num_avaliacoes = clinica.num_avaliacoes or 0
         clinica.display_image = _get_clinica_display_image(clinica)
 
         if clinica.endereco:

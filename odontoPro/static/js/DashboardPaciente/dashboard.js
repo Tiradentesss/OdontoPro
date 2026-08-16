@@ -726,6 +726,19 @@ function abrirModalAgendamento(clinicaId) {
             document.getElementById("detalheTelefoneClinica").innerText = data.telefone;
             document.getElementById("detalheDescricaoClinica").innerText = data.descricao;
 
+            const avaliacaoMedia = Number(data.avaliacao_media || 0);
+            const numAvaliacoes = Number(data.num_avaliacoes || 0);
+            const detalheAvaliacao = document.getElementById("detalheAvaliacaoClinica");
+            if (detalheAvaliacao) {
+                detalheAvaliacao.innerHTML = `
+                    <span class="rating-stars-inline">
+                        <i class="fa-solid fa-star star-yellow"></i>
+                        ${avaliacaoMedia.toFixed(1)}
+                    </span>
+                    <span class="rating-count-inline">(${numAvaliacoes} avaliação${numAvaliacoes === 1 ? '' : 'ões'})</span>
+                `;
+            }
+
             document.getElementById("detalheEnderecoClinica").innerText =
                 `${data.rua}, ${data.numero} - ${data.bairro}, ${data.cidade} - ${data.estado}, CEP: ${data.cep}`;
 

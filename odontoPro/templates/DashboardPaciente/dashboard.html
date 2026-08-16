@@ -226,7 +226,7 @@
 
     <div class="grid-clinicas" id="listaClinicas">
         {% for clinica in clinicas %}
-        <div class="card-clinica card-clickable" data-avaliacao="{{ clinica.avaliacao|default:0 }}" data-estado="{{ clinica.endereco.estado|default:'' }}" data-cidade="{{ clinica.endereco.cidade|default:'' }}" onclick="abrirModalAgendamento('{{ clinica.id }}')">
+        <div class="card-clinica card-clickable" data-avaliacao="{{ clinica.avaliacao_media_real|default:0|floatformat:1 }}" data-estado="{{ clinica.endereco.estado|default:'' }}" data-cidade="{{ clinica.endereco.cidade|default:'' }}" onclick="abrirModalAgendamento('{{ clinica.id }}')">
 
             <!-- BANNER -->
             <div class="banner-card">
@@ -269,7 +269,7 @@
                 <div class="rating-row">
                     <div class="rating-stars">
                         <i class="fa-solid fa-star star-yellow"></i>
-                        <span>{{ clinica.avaliacao|default:"0.0" }}</span>
+                        <span>{{ clinica.avaliacao_media_real|default:"0.0"|floatformat:1 }}</span>
                     </div>
                 </div>
 
@@ -298,6 +298,10 @@
                     </p>
                     <p><i class="fa-solid fa-phone-volume"></i>
                         <span id="detalheTelefoneClinica">(00) 00000-0000</span>
+                    </p>
+                    <p id="detalheAvaliacaoClinica" class="detalhe-avaliacao-clinica">
+                        <i class="fa-solid fa-star star-yellow"></i>
+                        0.0
                     </p>
                 </div>
             </div>

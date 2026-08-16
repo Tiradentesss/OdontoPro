@@ -8,7 +8,8 @@ from django.utils import timezone
 from django.templatetags.static import static
 from .models import (
     Paciente, Medico, Clinica, Consulta, Endereco, Especialidade, Gerenciamento,
-    Permissao, Financeiro, ClinicaImagem, DiaSemanaDisponivel, HorarioAberto
+    Permissao, Financeiro, ClinicaImagem, DiaSemanaDisponivel, HorarioAberto,
+    Avaliacao
 )
 
 
@@ -166,6 +167,44 @@ class ClinicBusinessHoursApiTests(TestCase):
         self.assertTrue(horarios[6]['fechado'])
         self.assertIsNone(horarios[6]['hora_inicio'])
         self.assertIsNone(horarios[6]['hora_fim'])
+
+    def test_clinica_detalhes_uses_real_review_aggregate(self):
+        self.clinica.avaliacao = 0
+        self.clinica.num_avaliacoes = 0
+        self.clinica.save(update_fields=['avaliacao', 'num_avaliacoes'])
+
+        paciente_1 = Paciente.objects.create(
+            nome='Paciente Um',
+            email='p1@example.com',
+            senha=make_password('123456'),
+            telefone='111111111',
+            clinica=self.clinica,
+        )
+        paciente_2 = Paciente.objects.create(
+            nome='Paciente Dois',
+            email='p2@example.com',
+            senha=make_password('123456'),
+            telefone='222222222',
+            clinica=self.clinica,
+        )
+        medico = Medico.objects.create(
+            nome='Dr. Teste',
+            email='medico-avaliacao@example.com',
+            senha=make_password('medsenha'),
+            telefone='333333333',
+            crm_cro='1234',
+            clinica=self.clinica,
+        )
+
+        Avaliacao.objects.create(clinica=self.clinica, medico=medico, paciente=paciente_1, nota=4, comentario='Bom')
+        Avaliacao.objects.create(clinica=self.clinica, medico=medico, paciente=paciente_2, nota=5, comentario='Ótimo')
+
+        resp = self.client.get(reverse('clinica_detalhes', args=[self.clinica.id]))
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+
+        self.assertEqual(payload['num_avaliacoes'], 2)
+        self.assertEqual(payload['avaliacao_media'], 4.5)
 
 
 class DashboardHomeImageRegressionTests(TestCase):
