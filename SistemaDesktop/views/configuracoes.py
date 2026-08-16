@@ -1386,8 +1386,27 @@ class Configuracoes(BaseScreen):
 
                 result = cursor.fetchone()
                 if result:
-                    # photos/fotos column is not available in the current schema.
-                    # Keep UI compatibility by returning an empty list for photos.
+                    # Carregar as 3 fotos da galeria da tabela odontoPro_clinicaimagem
+                    photos = [None, None, None]  # Índices 0, 1, 2 para ordens 1, 2, 3
+                    
+                    cursor.execute("""
+                        SELECT imagem, ordem
+                        FROM odontoPro_clinicaimagem
+                        WHERE clinica_id = %s
+                        AND ordem IN (1, 2, 3)
+                        ORDER BY ordem ASC
+                    """, (self.clinica_id,))
+                    
+                    galeria_result = cursor.fetchall()
+                    if galeria_result:
+                        for row in galeria_result:
+                            imagem_url = row[0]
+                            ordem = row[1]
+                            # ordem 1 → índice 0, ordem 2 → índice 1, ordem 3 → índice 2
+                            if 1 <= ordem <= 3:
+                                photos[ordem - 1] = imagem_url
+                        print(f"[DEBUG] Fotos carregadas: {photos}")
+                    
                     data = {
                         "nome": result[0] or "",
                         "cnpj": result[1] or "",
@@ -1395,7 +1414,7 @@ class Configuracoes(BaseScreen):
                         "telefone": result[3] or "",
                         "logo": result[4] or "",
                         "imagem": result[5] or "",
-                        "photos": []
+                        "photos": photos
                     }
                     print(f"[DEBUG] Dados carregados: {data}")
                     return data
@@ -1405,11 +1424,8 @@ class Configuracoes(BaseScreen):
 
             except Exception as e:
                 erro_texto = str(e).lower()
-                if "unknown column" in erro_texto and "fotos" in erro_texto:
-                    print(f"[AVISO] Dados de fotos indisponíveis; Configurações continuará carregando: {e}")
-                else:
-                    self.initialization_error = e
                 print(f"[ERRO] Falha ao carregar dados da clínica: {e}")
+                self.initialization_error = e
                 return None
 
             finally:
@@ -2071,27 +2087,76 @@ class Configuracoes(BaseScreen):
                         # Do not overwrite existing logo in DB. Keep previous value.
                         print(f"[LOGO] Nenhuma URL válida para atualizar no banco; mantendo logo atual para clinica_id={self.clinica_id}")
 
-                if hasattr(self, "clinic_photos"):
-                    saved_photos = []
-                    upload_dir = os.path.join(os.path.dirname(__file__), "../assets/clinicas/fotos")
-                    os.makedirs(upload_dir, exist_ok=True)
-
-                    for i, photo_path in enumerate(self.clinic_photos):
-                        # Keep UI behavior (allow selecting photos locally) but do not persist
-                        # them to the database yet since the `fotos` column does not exist.
-                        try:
-                            if os.path.exists(photo_path):
-                                if not os.path.abspath(photo_path).startswith(os.path.abspath(upload_dir)):
-                                    extensao = os.path.splitext(photo_path)[1] or ".jpg"
-                                    filename = f"clinica_{self.clinica_id}_foto_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{i}{extensao}"
-                                    dest_path = os.path.join(upload_dir, filename)
-                                    shutil.copy(photo_path, dest_path)
-                                    saved_photos.append(dest_path)
+                if hasattr(self, "clinic_photos") and self.clinic_photos:
+                    # Processar as 3 fotos da galeria
+                    failed_photos = []
+                    
+                    for index, photo_path in enumerate(self.clinic_photos):
+                        ordem = index + 1  # ordem 1, 2, 3
+                        
+                        # Se for None ou vazio, pular (não criar/deletar registro)
+                        if not photo_path:
+                            print(f"[FOTO {ordem}] Vazio, pulando")
+                            continue
+                        
+                        # Se já for URL remota, preservar
+                        if isinstance(photo_path, str) and photo_path.lower().startswith(("http://", "https://")):
+                            print(f"[FOTO {ordem}] URL remota detectada, preservando: {photo_path[:80]}...")
+                            saved_url = photo_path
+                        # Se for arquivo local, fazer upload
+                        elif isinstance(photo_path, str) and os.path.exists(photo_path):
+                            try:
+                                timestamp = int(time.time())
+                                public_id = f"clinica_{self.clinica_id}_foto_{ordem}_{timestamp}"
+                                folder = f"odontopro/clinicas/{self.clinica_id}/galeria"
+                                print(f"[FOTO {ordem}] Iniciando upload Cloudinary...")
+                                saved_url = upload_image_to_cloudinary(photo_path, public_id=public_id, folder=folder)
+                                print(f"[FOTO {ordem}] Upload concluído: {saved_url[:80]}...")
+                            except Exception as upload_error:
+                                print(f"[FOTO {ordem} - ERRO] Falha no upload: {upload_error}")
+                                failed_photos.append(ordem)
+                                continue
+                        else:
+                            print(f"[FOTO {ordem}] Caminho inválido ou não encontrado: {photo_path}")
+                            continue
+                        
+                        # UPSERT: verificar se já existe registro para essa ordem
+                        if saved_url and isinstance(saved_url, str) and saved_url.lower().startswith("https://"):
+                            try:
+                                cursor.execute("""
+                                    SELECT id
+                                    FROM odontoPro_clinicaimagem
+                                    WHERE clinica_id = %s AND ordem = %s
+                                """, (self.clinica_id, ordem))
+                                
+                                existing_record = cursor.fetchone()
+                                
+                                if existing_record:
+                                    # UPDATE
+                                    cursor.execute("""
+                                        UPDATE odontoPro_clinicaimagem
+                                        SET imagem = %s
+                                        WHERE clinica_id = %s AND ordem = %s
+                                    """, (saved_url, self.clinica_id, ordem))
+                                    print(f"[FOTO {ordem}] Record atualizado (ID: {existing_record[0]})")
                                 else:
-                                    saved_photos.append(photo_path)
-                        except Exception as _e:
-                            # Ignore photo copy errors for now; do not block saving clinic data
-                            print(f"[AVISO] Erro ao processar foto local: {_e}")
+                                    # INSERT
+                                    cursor.execute("""
+                                        INSERT INTO odontoPro_clinicaimagem
+                                        (clinica_id, imagem, ordem)
+                                        VALUES (%s, %s, %s)
+                                    """, (self.clinica_id, saved_url, ordem))
+                                    print(f"[FOTO {ordem}] Novo registro inserido")
+                            except Exception as db_error:
+                                print(f"[FOTO {ordem} - ERRO] Falha ao salvar no banco: {db_error}")
+                                failed_photos.append(ordem)
+                                continue
+                    
+                    # Informar erros ao usuário
+                    if failed_photos:
+                        erro_msg = f"Falha ao processar as seguintes fotos: {', '.join(str(f) for f in failed_photos)}. Tente novamente."
+                        messagebox.showwarning("Aviso", erro_msg)
+                        print(f"[AVISO] Fotos com erro: {failed_photos}")
 
                 # Salvar endereço
                 if self.address_entries:
