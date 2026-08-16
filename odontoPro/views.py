@@ -1121,8 +1121,8 @@ def clinica_detalhes(request, clinica_id):
         for av in avaliacoes
     ]
 
-    # Prioridade lógica para imagem de banner
-    banner_url = None
+    # Separar banner principal da galeria de fotos da clínica.
+    banner_url = _get_clinica_imagem_url(clinica)
     imagens = []
 
     if clinica.imagens.exists():
@@ -1142,18 +1142,6 @@ def clinica_detalhes(request, clinica_id):
                     imagens.append(url)
             except Exception:
                 pass
-
-        banner_url = imagens[0] if imagens else None
-    if not imagens and clinica.imagem:
-        url = clinica.imagem.url
-        if _url_responds(url):
-            imagens = [url]
-            banner_url = url
-    if not imagens and clinica.logo:
-        url = clinica.logo.url
-        if _url_responds(url):
-            imagens = [url]
-            banner_url = url
 
     logo_url = None
     if clinica.logo:
