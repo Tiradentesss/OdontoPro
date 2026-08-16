@@ -846,22 +846,24 @@ class Configuracoes(BaseScreen):
         _, fotos_body = self._create_card_section(
             scroll,
             "Fotos da Clínica",
-            "Adicione fachada, recepção e ambientes internos"
+            "Gerencie o banner principal e as fotos exibidas no site"
         )
 
         self.clinic_photos_container = ctk.CTkFrame(
             fotos_body,
             fg_color=COLORS["input_bg"],
             corner_radius=INNER_CARD_RADIUS,
-            height=360,
             border_width=1,
             border_color=self.colors["border"]
         )
         self.clinic_photos_container.pack(fill="both", expand=True, pady=(4, 0))
-        self.clinic_photos_container.pack_propagate(False)
 
-        self.clinic_photos = []
-        self.current_photo_index = 0
+        # Novo layout: Banner + Galeria (3 fotos)
+        self.clinic_banner = None  # Banner principal
+        self.clinic_photos = []     # Galeria: máximo 3 fotos
+        self.current_photo_index = 0  # Para compatibilidade
+        self.photo_cards = []       # Lista de cards da galeria
+        self.photo_canvases = []    # Lista de canvases dos cards
 
         if clinica_data and clinica_data.get("photos"):
             self.clinic_photos = clinica_data["photos"]
@@ -1523,96 +1525,159 @@ class Configuracoes(BaseScreen):
         )
 
     def _setup_clinic_photos_ui(self):
+        """Reorganiza a UI de fotos em duas seções: Banner Principal e Galeria"""
         for widget in self.clinic_photos_container.winfo_children():
             widget.destroy()
 
         # Frame principal que ocupa todo o container
         main_wrap = ctk.CTkFrame(self.clinic_photos_container, fg_color="transparent")
-        main_wrap.pack(fill="both", expand=True, padx=18, pady=18)
-        
-        # CORREÇÃO: Usar grid para dividir espaço entre preview (expansível) e footer (fixo)
-        main_wrap.grid_rowconfigure(0, weight=1)      # Row 0: preview_frame EXPANDE
-        main_wrap.grid_rowconfigure(1, weight=0)      # Row 1: footer NÃO expande (altura fixa)
-        main_wrap.grid_columnconfigure(0, weight=1)   # Coluna: ambos ocupam 100% da largura
+        main_wrap.pack(fill="both", expand=True, padx=16, pady=16)
+        main_wrap.grid_columnconfigure(0, weight=1)
 
-        # Frame de preview - agora NÃO usa expand=True
-        preview_frame = ctk.CTkFrame(
+        # ==================== BANNER PRINCIPAL ====================
+        # Título da seção Banner
+        banner_title = ctk.CTkLabel(
+            main_wrap,
+            text="Banner Principal",
+            font=font("text", "bold"),
+            text_color=self.colors["text_primary"]
+        )
+        banner_title.pack(anchor="w", pady=(0, 4))
+
+        # Subtítulo do Banner
+        banner_subtitle = ctk.CTkLabel(
+            main_wrap,
+            text="Imagem exibida em destaque no perfil da clínica",
+            font=font("text", "normal"),
+            text_color=self.colors["text_secondary"]
+        )
+        banner_subtitle.pack(anchor="w", pady=(0, 12))
+
+        # Frame do preview do banner (16:9)
+        banner_preview_frame = ctk.CTkFrame(
             main_wrap,
             fg_color=COLORS['card'],
             corner_radius=8,
             border_width=1,
-            border_color=self.colors["border"]
+            border_color=self.colors["border"],
+            height=180
         )
-        # MUDANÇA: grid() em vez de pack() para usar sistema de grid do main_wrap
-        preview_frame.grid(row=0, column=0, sticky="nsew", pady=0)
+        banner_preview_frame.pack(fill="x", pady=(0, 12))
+        banner_preview_frame.pack_propagate(False)
 
-        self.clinic_photo_canvas = tk.Canvas(
-            preview_frame,
+        # Canvas do banner (proporção 16:9)
+        self.banner_canvas = tk.Canvas(
+            banner_preview_frame,
             bg=self.colors["bg_card"],
             highlightthickness=0,
             bd=0
         )
-        self.clinic_photo_canvas.pack(fill="both", expand=True, padx=12, pady=12)
-        self.clinic_photo_canvas.bind("<Configure>", self._on_canvas_resize)
+        self.banner_canvas.pack(fill="both", expand=True, padx=12, pady=12)
+        self.banner_canvas.bind("<Configure>", self._on_banner_canvas_resize)
 
-        # Footer com altura fixa de 52px
-        footer = ctk.CTkFrame(main_wrap, fg_color="transparent", height=52)
-        footer.grid(row=1, column=0, sticky="ew", pady=0)
-        footer.pack_propagate(False)
-
-        nav_frame = ctk.CTkFrame(footer, fg_color="transparent", height=44)
-        nav_frame.pack(side="left", fill="y", padx=0, pady=0)
-
-        self.prev_btn = ctk.CTkButton(
-            nav_frame,
-            text="◀",
-            width=44,
-            height=44,
-            font=("Arial", 20, "bold"),
-            fg_color=self.colors["accent"],
-            hover_color=self.colors["accent_hover"],
-            text_color="white",
-            corner_radius=6,
-            command=self._previous_clinic_photo
-        )
-        self.prev_btn.pack(side="left", padx=(0, 6), pady=0)
-
-        self.photo_counter_label = ctk.CTkLabel(
-            nav_frame,
-            text="0/0",
-            font=("Arial", 10, "bold"),
-            text_color=self.colors["text_secondary"]
-        )
-        self.photo_counter_label.pack(side="left", padx=10, pady=0)
-
-        self.next_btn = ctk.CTkButton(
-            nav_frame,
-            text="▶",
-            width=44,
-            height=44,
-            font=("Arial", 20, "bold"),
-            fg_color=self.colors["accent"],
-            hover_color=self.colors["accent_hover"],
-            text_color="white",
-            corner_radius=6,
-            command=self._next_clinic_photo
-        )
-        self.next_btn.pack(side="left", padx=(6, 0), pady=0)
-
-        self.add_photo_btn = ctk.CTkButton(
-            footer,
-            text="+ Adicionar Foto",
-            width=170,
-            height=44,
+        # Botão do banner
+        select_banner_btn = ctk.CTkButton(
+            main_wrap,
+            text="+ Selecionar Banner",
+            height=40,
             font=("Arial", 11, "bold"),
             fg_color=self.colors["accent"],
             hover_color=self.colors["accent_hover"],
             corner_radius=6,
-            command=self._add_clinic_photo
+            command=self._add_clinic_banner
         )
-        self.add_photo_btn.pack(side="right", padx=0, pady=0)
+        select_banner_btn.pack(anchor="e", pady=(0, 24))
 
-        self._update_clinic_photos_display()
+        # ==================== GALERIA DA CLÍNICA ====================
+        # Título da galeria
+        gallery_title = ctk.CTkLabel(
+            main_wrap,
+            text="Galeria da Clínica",
+            font=font("text", "bold"),
+            text_color=self.colors["text_primary"]
+        )
+        gallery_title.pack(anchor="w", pady=(0, 4))
+
+        # Subtítulo da galeria
+        gallery_subtitle = ctk.CTkLabel(
+            main_wrap,
+            text="Adicione até 3 fotos dos ambientes da clínica",
+            font=font("text", "normal"),
+            text_color=self.colors["text_secondary"]
+        )
+        gallery_subtitle.pack(anchor="w", pady=(0, 12))
+
+        # Frame da galeria (grid 3 colunas)
+        gallery_frame = ctk.CTkFrame(main_wrap, fg_color="transparent")
+        gallery_frame.pack(fill="x", expand=True, pady=(0, 12))
+        gallery_frame.grid_columnconfigure((0, 1, 2), weight=1)
+
+        # Criar 3 cards de foto
+        self.photo_cards = []
+        self.photo_canvases = []
+
+        for idx in range(3):
+            # Card da foto
+            card_frame = ctk.CTkFrame(
+                gallery_frame,
+                fg_color=COLORS['card'],
+                corner_radius=8,
+                border_width=1,
+                border_color=self.colors["border"]
+            )
+            card_frame.grid(row=0, column=idx, sticky="nsew", padx=(0 if idx == 0 else 8, 0))
+            card_frame.grid_rowconfigure((0, 1), weight=0)
+            card_frame.grid_columnconfigure(0, weight=1)
+
+            # Número da foto
+            photo_num_label = ctk.CTkLabel(
+                card_frame,
+                text=f"Foto {idx + 1}",
+                font=font("text", "bold"),
+                text_color=self.colors["text_primary"]
+            )
+            photo_num_label.grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 8))
+
+            # Canvas de preview
+            photo_canvas = tk.Canvas(
+                card_frame,
+                bg=self.colors["bg_card"],
+                highlightthickness=0,
+                bd=0,
+                height=120
+            )
+            photo_canvas.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
+            photo_canvas.grid_propagate(False)
+            
+            # Armazenar reference para atualizar depois
+            self.photo_canvases.append(photo_canvas)
+
+            # Frame para botão
+            btn_frame = ctk.CTkFrame(card_frame, fg_color="transparent")
+            btn_frame.grid(row=2, column=0, sticky="ew", padx=12, pady=(0, 12))
+
+            # Botão de adicionar foto
+            add_btn = ctk.CTkButton(
+                btn_frame,
+                text="+ Adicionar foto",
+                height=32,
+                font=("Arial", 10, "bold"),
+                fg_color=self.colors["accent"],
+                hover_color=self.colors["accent_hover"],
+                corner_radius=6,
+                command=lambda index=idx: self._add_gallery_photo(index)
+            )
+            add_btn.pack(fill="x")
+
+            self.photo_cards.append({
+                "frame": card_frame,
+                "canvas": photo_canvas,
+                "btn": add_btn
+            })
+
+        # Inicializar displays
+        self._update_banner_display()
+        self._update_gallery_display()
 
     def _update_clinic_photos_display(self, canvas_width=None, canvas_height=None):
         if canvas_width is None:
@@ -1677,6 +1742,94 @@ class Configuracoes(BaseScreen):
 
     def _on_canvas_resize(self, event):
         self._update_clinic_photos_display(event.width, event.height)
+
+    # ==================== NOVO LAYOUT: BANNER PRINCIPAL ====================
+    def _update_banner_display(self, canvas_width=None, canvas_height=None):
+        """Atualiza o preview do banner com proporção 16:9"""
+        if canvas_width is None:
+            # Assumir width do container aproximadamente
+            canvas_width = 400
+        if canvas_height is None:
+            # Proporção 16:9
+            canvas_height = int(canvas_width * 9 / 16)
+
+        if not self.clinic_banner:
+            # Estado vazio
+            ImagePreview.create_rectangular_preview(
+                self.banner_canvas,
+                None,
+                canvas_width,
+                canvas_height,
+                "Nenhum banner selecionado\nClique para adicionar"
+            )
+        else:
+            # Mostrar banner
+            ImagePreview.create_rectangular_preview(
+                self.banner_canvas,
+                self.clinic_banner,
+                canvas_width,
+                canvas_height,
+                "BANNER"
+            )
+
+    def _on_banner_canvas_resize(self, event):
+        """Callback quando o banner redimensiona"""
+        # Manter proporção 16:9
+        canvas_height = int(event.width * 9 / 16)
+        self._update_banner_display(event.width, canvas_height)
+
+    def _add_clinic_banner(self):
+        """Selecionar imagem para o banner"""
+        file_path = filedialog.askopenfilename(
+            title="Selecionar imagem do banner",
+            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.gif")]
+        )
+        if file_path:
+            self.clinic_banner = file_path
+            self._update_banner_display()
+
+    # ==================== NOVO LAYOUT: GALERIA DA CLÍNICA ====================
+    def _update_gallery_display(self):
+        """Atualiza os previews dos 3 cards da galeria"""
+        if not hasattr(self, 'photo_canvases') or not self.photo_canvases:
+            return
+
+        for idx, canvas in enumerate(self.photo_canvases):
+            if idx < len(self.clinic_photos) and self.clinic_photos[idx]:
+                # Mostrar foto
+                ImagePreview.create_rectangular_preview(
+                    canvas,
+                    self.clinic_photos[idx],
+                    300,
+                    120,
+                    "FOTO"
+                )
+            else:
+                # Espaço vazio
+                ImagePreview.create_rectangular_preview(
+                    canvas,
+                    None,
+                    300,
+                    120,
+                    "+ Adicionar foto"
+                )
+
+    def _add_gallery_photo(self, index):
+        """Adicionar foto a um card específico da galeria"""
+        if index < 0 or index >= 3:
+            return
+
+        file_path = filedialog.askopenfilename(
+            title=f"Selecionar foto {index + 1} da clínica",
+            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.gif")]
+        )
+        if file_path:
+            # Garantir que a lista tem 3 posições
+            while len(self.clinic_photos) <= index:
+                self.clinic_photos.append(None)
+            
+            self.clinic_photos[index] = file_path
+            self._update_gallery_display()
 
     def _change_avatar(self):
         file_path = filedialog.askopenfilename(
