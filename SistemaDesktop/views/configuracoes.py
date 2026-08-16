@@ -63,8 +63,13 @@ class ImagePreview:
         ImagePreview._draw_placeholder_circle(canvas, size, placeholder_text)
 
     @staticmethod
-    def create_rectangular_preview(canvas, image_path, width=300, height=150, placeholder_text="IMG"):
-        """Cria preview retangular de imagem em um canvas"""
+    def create_rectangular_preview(canvas, image_path, width=300, height=150, placeholder_text="IMG", fit_mode="contain"):
+        """Cria preview retangular de imagem em um canvas
+        
+        fit_mode:
+            "contain" - ajusta a imagem para caber dentro da área, deixando espaço em branco se necessário (padrão)
+            "cover"   - ajusta a imagem para cobrir toda a área, fazendo crop centralizado se necessário
+        """
         canvas.delete("all")
 
         img = ImagePreview._load_image(image_path)
@@ -73,22 +78,57 @@ class ImagePreview:
                 img_ratio = img.width / img.height
                 canvas_ratio = width / height
 
-                if img_ratio > canvas_ratio:
-                    new_width = width
-                    new_height = int(width / img_ratio)
+                if fit_mode == "cover":
+                    # Comportamento cover: Escala para cobrir toda a área, depois faz crop centralizado
+                    # Calcula a escala necessária para cobrir (usar max em vez de min)
+                    scale = max(width / img.width, height / img.height)
+                    
+                    new_width = int(img.width * scale)
+                    new_height = int(img.height * scale)
+                    
+                    # Redimensiona mantendo proporção
+                    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                    
+                    # Calcula crop centralizado
+                    left = (new_width - width) // 2
+                    top = (new_height - height) // 2
+                    right = left + width
+                    bottom = top + height
+                    
+                    # Garante que não sai dos limites
+                    left = max(0, left)
+                    top = max(0, top)
+                    right = min(new_width, right)
+                    bottom = min(new_height, bottom)
+                    
+                    # Faz o crop
+                    img = img.crop((left, top, right, bottom))
+                    
+                    # Se ficou menor do que deveria (casos edge), redimensiona para o tamanho exato
+                    if img.size != (width, height):
+                        img = img.resize((width, height), Image.Resampling.LANCZOS)
+                    
+                    photo = ImageTk.PhotoImage(img)
+                    # Desenha no centro do canvas (que agora tem tamanho exato)
+                    canvas.create_image(width // 2, height // 2, image=photo)
                 else:
-                    new_height = height
-                    new_width = int(height * img_ratio)
+                    # Comportamento contain: Redimensiona para caber dentro, deixando espaço em branco (padrão)
+                    if img_ratio > canvas_ratio:
+                        new_width = width
+                        new_height = int(width / img_ratio)
+                    else:
+                        new_height = height
+                        new_width = int(height * img_ratio)
 
-                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
-                x_offset = (width - new_width) // 2
-                y_offset = (height - new_height) // 2
+                    x_offset = (width - new_width) // 2
+                    y_offset = (height - new_height) // 2
 
-                photo = ImageTk.PhotoImage(img)
-                canvas.create_image(x_offset + new_width // 2, y_offset + new_height // 2, image=photo)
+                    photo = ImageTk.PhotoImage(img)
+                    canvas.create_image(x_offset + new_width // 2, y_offset + new_height // 2, image=photo)
+                
                 canvas.image = photo
-
                 canvas.create_rectangle(2, 2, width - 2, height - 2, outline=COLORS["border"], width=1)
                 return
             except Exception as e:
@@ -1820,13 +1860,14 @@ class Configuracoes(BaseScreen):
 
         for idx, canvas in enumerate(self.photo_canvases):
             if idx < len(self.clinic_photos) and self.clinic_photos[idx]:
-                # Mostrar foto
+                # Mostrar foto - usar fit_mode="cover" para preencher completamente
                 ImagePreview.create_rectangular_preview(
                     canvas,
                     self.clinic_photos[idx],
                     260,
                     92,
-                    "FOTO"
+                    "FOTO",
+                    fit_mode="cover"
                 )
             else:
                 # Espaço vazio
@@ -1835,7 +1876,8 @@ class Configuracoes(BaseScreen):
                     None,
                     260,
                     92,
-                    "Sem imagem"
+                    "Sem imagem",
+                    fit_mode="cover"
                 )
 
     def _add_gallery_photo(self, index):
