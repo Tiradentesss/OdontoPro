@@ -877,7 +877,6 @@ function atualizarEnderecoCarousel(images, fallback) {
     fotos.forEach((url, index) => {
         const slide = document.createElement('div');
         slide.className = 'endereco-slide' + (index === 0 ? ' active' : '');
-        slide.style.setProperty('--slide-background', `url("${url}")`);
         slide.innerHTML = `<img src="${url}" alt="Imagem da clínica">`;
         slidesWrapper.appendChild(slide);
     });
