@@ -1126,11 +1126,23 @@ def clinica_detalhes(request, clinica_id):
     imagens = []
 
     if clinica.imagens.exists():
-        for img in clinica.imagens.all():
-            if img.imagem:
+        for img in clinica.imagens.all().order_by('ordem'):
+            if not img.imagem:
+                continue
+
+            raw_image = str(img.imagem).strip()
+            if raw_image.startswith(("http://", "https://")):
+                if _url_responds(raw_image):
+                    imagens.append(raw_image)
+                continue
+
+            try:
                 url = img.imagem.url
                 if _url_responds(url):
                     imagens.append(url)
+            except Exception:
+                pass
+
         banner_url = imagens[0] if imagens else None
     if not imagens and clinica.imagem:
         url = clinica.imagem.url
