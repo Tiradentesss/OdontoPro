@@ -77,7 +77,8 @@ class ClinicaImagem(models.Model):
     imagem = models.ImageField(
         upload_to='clinicas/capa/',
         null=False,
-        blank=False
+        blank=False,
+        max_length=1024
     )
 
     ordem = models.PositiveIntegerField(default=1)
