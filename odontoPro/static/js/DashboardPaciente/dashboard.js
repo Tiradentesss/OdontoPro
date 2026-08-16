@@ -689,12 +689,12 @@ function abrirModalAgendamento(clinicaId) {
                         const card = document.createElement('div');
                         card.className = 'especialidade-card';
                         card.dataset.espId = espId;
+                        card.dataset.espDescricao = espDesc;
 
                         card.innerHTML = `
                             <div class="especialidade-card-header">
                                 <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
                                     <strong class="especialidade-nome">${espNome}</strong>
-                                    <div class="especialidade-desc" style="display:none;">${escapeHtml(espDesc)}</div>
                                 </div>
                                 <div class="especialidade-meta">
                                     <span class="especialidade-preco">R$ ${espPreco.toFixed(2).replace('.', ',')}</span>
@@ -707,18 +707,15 @@ function abrirModalAgendamento(clinicaId) {
                         detalheServicos.appendChild(card);
                     });
 
-                    // Attach toggle handlers for info buttons
+                    // Attach handlers for info buttons to open modal
                     detalheServicos.querySelectorAll('.esp-info-btn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const expanded = this.getAttribute('aria-expanded') === 'true';
+                        btn.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            event.stopPropagation();
                             const card = this.closest('.especialidade-card');
-                            if (expanded) {
-                                this.setAttribute('aria-expanded', 'false');
-                                card.classList.remove('expanded');
-                            } else {
-                                this.setAttribute('aria-expanded', 'true');
-                                card.classList.add('expanded');
-                            }
+                            const nomeServico = card.querySelector('.especialidade-nome').textContent;
+                            const descricaoServico = card.dataset.espDescricao || "";
+                            abrirModalDescricao(nomeServico, descricaoServico);
                         });
                     });
 
@@ -2405,6 +2402,54 @@ function iniciarPollingNotificacoes(intervalMs = 10000) {
             .catch(err => console.error('Erro no polling de notificações:', err));
     }, intervalMs);
 }
+
+// Funções para abrir e fechar modal de descrição do serviço
+function abrirModalDescricao(nomeServico, descricao) {
+    const modal = document.getElementById('modalDescricaoServico');
+    const modalNome = document.getElementById('modalNomeServico');
+    const modalConteudo = document.getElementById('modalDescricaoConteudo');
+    
+    if (!modal) return;
+    
+    // Definir nome do serviço
+    modalNome.textContent = nomeServico;
+    
+    // Definir descrição ou mensagem padrão
+    if (descricao && descricao.trim() !== '') {
+        modalConteudo.textContent = descricao;
+    } else {
+        modalConteudo.textContent = 'Descrição não cadastrada para este serviço.';
+    }
+    
+    // Mostrar modal
+    modal.classList.add('ativo');
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharModalDescricao() {
+    const modal = document.getElementById('modalDescricaoServico');
+    if (modal) {
+        modal.classList.remove('ativo');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Fechar modal ao clicar no overlay (fora do conteúdo)
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('modalDescricaoServico');
+    if (!modal) return;
+    
+    if (event.target === modal) {
+        fecharModalDescricao();
+    }
+});
+
+// Fechar modal com tecla Escape
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        fecharModalDescricao();
+    }
+});
 
 // Iniciar polling quando a página estiver pronta
 document.addEventListener('DOMContentLoaded', () => {

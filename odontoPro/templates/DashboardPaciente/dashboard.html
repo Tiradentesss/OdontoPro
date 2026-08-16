@@ -1133,5 +1133,24 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
     <script src="{% static 'js/logo-theme-switcher.js' %}"></script>
 
+<!-- Modal de Descrição do Serviço -->
+<div id="modalDescricaoServico" class="modal-overlay">
+    <div class="modal-conteudo">
+        <div class="modal-header">
+            <h2 class="modal-titulo">Descrição do Serviço</h2>
+            <button type="button" class="modal-fechar" aria-label="Fechar modal" onclick="fecharModalDescricao()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-servico-nome" id="modalNomeServico"></div>
+            <div class="modal-servico-descricao" id="modalDescricaoConteudo"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-fechar" onclick="fecharModalDescricao()">Fechar</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

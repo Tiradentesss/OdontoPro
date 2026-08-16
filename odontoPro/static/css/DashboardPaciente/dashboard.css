@@ -4827,3 +4827,149 @@ button.btn-avaliado:disabled {
     font-size: 12px;
     color: #94a3b8;
 }
+
+/* Modal de Descrição do Serviço */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 200ms ease;
+}
+
+.modal-overlay.ativo {
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-conteudo {
+    background: var(--branco);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 300ms ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.modal-titulo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--texto-principal);
+    margin: 0;
+}
+
+.modal-fechar {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--texto-suave);
+    transition: color 200ms ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+}
+
+.modal-fechar:hover {
+    color: var(--texto-principal);
+    background-color: var(--fundo-cinza);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-servico-nome {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--azul-claro);
+    margin-bottom: 12px;
+}
+
+.modal-servico-descricao {
+    font-size: 14px;
+    color: var(--texto-suave);
+    line-height: 1.6;
+    white-space: pre-line;
+}
+
+.modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--cor-borda);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-fechar {
+    background-color: var(--azul-claro);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 200ms ease;
+}
+
+.btn-fechar:hover {
+    background-color: #16a8c9;
+}
+
+@media (max-width: 768px) {
+    .modal-conteudo {
+        width: 95%;
+        max-width: 90%;
+        max-height: 70vh;
+    }
+    
+    .modal-header {
+        padding: 16px;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+    
+    .modal-titulo {
+        font-size: 16px;
+    }
+}
