@@ -1075,8 +1075,15 @@ class Configuracoes(BaseScreen):
         header.pack(fill="x", padx=8, pady=(6, 6))
 
         ctk.CTkLabel(header, text="Serviço", font=font("text", "bold"), text_color=self.colors["text_primary"]).grid(row=0, column=0, sticky="w")
-        # Ajuste mínimo: deslocar levemente o título "Valor" para centralizar sobre a coluna
-        ctk.CTkLabel(header, text="Valor", font=font("text", "bold"), text_color=self.colors["text_secondary"]).grid(row=0, column=1, sticky="w", padx=(0, 40))
+        valor_header = ctk.CTkLabel(
+            header,
+            text="Valor",
+            font=font("text", "bold"),
+            text_color=self.colors["text_secondary"],
+            width=120,
+            anchor="w"
+        )
+        valor_header.grid(row=0, column=1, sticky="w")
         ctk.CTkLabel(header, text="", font=font("text", "bold"), text_color=self.colors["text_secondary"]).grid(row=0, column=2, sticky="e")
 
         # Corpo da lista será preenchido por _carregar_servicos
