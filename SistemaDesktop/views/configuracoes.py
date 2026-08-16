@@ -1156,11 +1156,283 @@ class Configuracoes(BaseScreen):
         if hasattr(self, "horario_modal") and self.horario_modal and self.horario_modal.winfo_exists():
             self.horario_modal.destroy()
             self.horario_modal = None
+        if hasattr(self, "horario_campos"):
+            delattr(self, "horario_campos")
+
+    def _formatar_hora_para_entry(self, valor):
+        """Normaliza horário para o formato HH:MM esperado pelo modal.
+
+        Aceita:
+        - datetime.time
+        - datetime.timedelta
+        - string "HH:MM:SS" / "H:MM:SS"
+        - None
+        """
+        if valor is None:
+            return ""
+
+        if hasattr(valor, "total_seconds") and not hasattr(valor, "strftime"):
+            try:
+                total_segundos = int(valor.total_seconds())
+                horas = total_segundos // 3600
+                minutos = (total_segundos % 3600) // 60
+                return f"{horas:02d}:{minutos:02d}"
+            except Exception:
+                pass
+
+        if hasattr(valor, 'strftime'):
+            return valor.strftime("%H:%M")
+
+        if isinstance(valor, str):
+            valor = valor.strip()
+            if not valor:
+                return ""
+
+            partes = valor.split(':')
+            if len(partes) >= 2:
+                try:
+                    hora = int(partes[0])
+                    minuto = int(partes[1])
+                    return f"{hora:02d}:{minuto:02d}"
+                except ValueError:
+                    return ""
+
+        return ""
+
+    def _carregar_horarios_funcionamento(self):
+        """Carrega horários da clínica do banco de dados."""
+        try:
+            from config.database import get_connection
+
+            conn = None
+            cursor = None
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+
+                cursor.execute("""
+                    SELECT
+                        d.id,
+                        d.dia,
+                        h.hora_inicio,
+                        h.hora_fim
+                    FROM odontoPro_diasemanadisponivel d
+                    LEFT JOIN odontoPro_horarioaberto h
+                        ON h.dia_id = d.id
+                    WHERE d.clinica_id = %s
+                    ORDER BY d.id
+                """, (self.clinica_id,))
+
+                resultados = cursor.fetchall()
+                horarios_por_dia = {}
+
+                for dia_id, dia, hora_inicio, hora_fim in resultados:
+                    dia_aberto = hora_inicio is not None and hora_fim is not None
+                    horarios_por_dia[dia] = {
+                        'dia_id': dia_id,
+                        'hora_inicio': self._formatar_hora_para_entry(hora_inicio) if dia_aberto else "",
+                        'hora_fim': self._formatar_hora_para_entry(hora_fim) if dia_aberto else "",
+                        'tem_horario': dia_aberto
+                    }
+
+                return horarios_por_dia
+
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+
+        except Exception as e:
+            print(f"[ERRO] Falha ao carregar horários: {e}")
+            import traceback
+            traceback.print_exc()
+            return {}
+
+    def _salvar_horarios_funcionamento(self):
+        """Salva horários da clínica no banco de dados"""
+        try:
+            from config.database import get_connection
+            from datetime import datetime
+            import traceback
+            
+            # Validar e coletar dados
+            dados_dias = {}
+            erros_validacao = []
+            
+            for dia_label, campo_info in self.horario_campos.items():
+                abertura_entry = campo_info['abertura_entry']
+                fechamento_entry = campo_info['fechamento_entry']
+                fechado_var = campo_info['fechado_var']
+                
+                fechado = fechado_var.get()
+                
+                if fechado:
+                    # Dia fechado - não há validação necessária
+                    dados_dias[dia_label] = {
+                        'fechado': True,
+                        'dia_id': campo_info['dia_id'],
+                        'hora_inicio': None,
+                        'hora_fim': None
+                    }
+                else:
+                    # Dia aberto - validar horários
+                    abertura = abertura_entry.get().strip()
+                    fechamento = fechamento_entry.get().strip()
+                    
+                    # Validar formato HH:MM
+                    if not abertura or abertura == "--":
+                        erros_validacao.append(f"{campo_info['dia_display']}: Horário de abertura inválido")
+                        continue
+                    if not fechamento or fechamento == "--":
+                        erros_validacao.append(f"{campo_info['dia_display']}: Horário de fechamento inválido")
+                        continue
+                    
+                    # Validar formato HH:MM usando regex
+                    import re
+                    if not re.match(r'^\d{2}:\d{2}$', abertura):
+                        erros_validacao.append(f"{campo_info['dia_display']}: Abertura '{abertura}' não está no formato HH:MM")
+                        continue
+                    if not re.match(r'^\d{2}:\d{2}$', fechamento):
+                        erros_validacao.append(f"{campo_info['dia_display']}: Fechamento '{fechamento}' não está no formato HH:MM")
+                        continue
+                    
+                    # Validar intervalo de horas
+                    try:
+                        hora_a = datetime.strptime(abertura, '%H:%M')
+                        hora_f = datetime.strptime(fechamento, '%H:%M')
+                        
+                        if hora_f <= hora_a:
+                            erros_validacao.append(
+                                f"{campo_info['dia_display']}: O horário de fechamento ({fechamento}) "
+                                f"deve ser posterior ao horário de abertura ({abertura})"
+                            )
+                            continue
+                    except ValueError as e:
+                        erros_validacao.append(f"{campo_info['dia_display']}: Horário inválido - {e}")
+                        continue
+                    
+                    dados_dias[dia_label] = {
+                        'fechado': False,
+                        'dia_id': campo_info['dia_id'],
+                        'hora_inicio': abertura,
+                        'hora_fim': fechamento
+                    }
+            
+            # Se houver erros, mostrar e não salvar
+            if erros_validacao:
+                mensagem_erro = "Erros de validação:\n\n" + "\n".join(erros_validacao)
+                messagebox.showerror("Validação", mensagem_erro)
+                return False
+            
+            # Se chegou aqui, todas as validações passaram
+            # Agora salvar no banco de dados com transação
+            conn = None
+            cursor = None
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                
+                # Mapeamento dia_label -> dia_banco para criação se necessário
+                dia_banco_map = {
+                    'segunda': 'segunda',
+                    'terca': 'terca',
+                    'quarta': 'quarta',
+                    'quinta': 'quinta',
+                    'sexta': 'sexta',
+                    'sabado': 'sabado',
+                    'domingo': 'domingo',
+                }
+                
+                # Processar cada dia
+                for dia_label, dados in dados_dias.items():
+                    dia_id = dados['dia_id']
+                    
+                    # Se dia_id é None, precisamos criar DiaSemanaDisponivel
+                    if dia_id is None:
+                        cursor.execute(
+                            """SELECT id FROM odontoPro_diasemanadisponivel
+                               WHERE clinica_id = %s AND dia = %s""",
+                            (self.clinica_id, dia_banco_map[dia_label])
+                        )
+                        resultado = cursor.fetchone()
+                        
+                        if resultado:
+                            dia_id = resultado[0]
+                        else:
+                            # Criar novo DiaSemanaDisponivel
+                            cursor.execute(
+                                """INSERT INTO odontoPro_diasemanadisponivel
+                                   (clinica_id, dia)
+                                   VALUES (%s, %s)""",
+                                (self.clinica_id, dia_banco_map[dia_label])
+                            )
+                            dia_id = cursor.lastrowid
+                    
+                    if dados['fechado']:
+                        # Deletar horários deste dia (marca como fechado)
+                        cursor.execute(
+                            "DELETE FROM odontoPro_horarioaberto WHERE dia_id = %s",
+                            (dia_id,)
+                        )
+                    else:
+                        # Verificar se já existe horário
+                        cursor.execute(
+                            "SELECT id FROM odontoPro_horarioaberto WHERE dia_id = %s LIMIT 1",
+                            (dia_id,)
+                        )
+                        resultado = cursor.fetchone()
+                        
+                        if resultado:
+                            # UPDATE
+                            cursor.execute(
+                                """UPDATE odontoPro_horarioaberto
+                                   SET hora_inicio = %s, hora_fim = %s
+                                   WHERE dia_id = %s""",
+                                (dados['hora_inicio'], dados['hora_fim'], dia_id)
+                            )
+                        else:
+                            # INSERT
+                            cursor.execute(
+                                """INSERT INTO odontoPro_horarioaberto
+                                   (dia_id, hora_inicio, hora_fim)
+                                   VALUES (%s, %s, %s)""",
+                                (dia_id, dados['hora_inicio'], dados['hora_fim'])
+                            )
+                
+                # Commit da transação
+                conn.commit()
+                messagebox.showinfo("Sucesso", "Horários de funcionamento salvos com sucesso!")
+                self._fechar_modal_horario_funcionamento()
+                return True
+                
+            except Exception as e:
+                if conn:
+                    conn.rollback()
+                print(f"[ERRO] Falha ao salvar horários: {e}")
+                traceback.print_exc()
+                messagebox.showerror("Erro", f"Falha ao salvar: {e}")
+                return False
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+                    
+        except Exception as e:
+            print(f"[ERRO] Falha em _salvar_horarios_funcionamento: {e}")
+            import traceback
+            traceback.print_exc()
+            messagebox.showerror("Erro", f"Erro: {e}")
+            return False
 
     def _abrir_modal_horario_funcionamento(self):
         if hasattr(self, "horario_modal") and self.horario_modal and self.horario_modal.winfo_exists():
             self.horario_modal.focus_set()
             return
+
+        # Carregar horários do banco
+        horarios_banco = self._carregar_horarios_funcionamento()
 
         modal = ctk.CTkToplevel(self)
         modal.title("Horário de Funcionamento")
@@ -1169,6 +1441,7 @@ class Configuracoes(BaseScreen):
         modal.resizable(False, False)
         modal.geometry("700x560")
         self.horario_modal = modal
+        self.horario_campos = {}  # Armazenar referências aos widgets
 
         modal.protocol("WM_DELETE_WINDOW", self._fechar_modal_horario_funcionamento)
 
@@ -1199,17 +1472,49 @@ class Configuracoes(BaseScreen):
         )
         body.pack(fill="both", expand=True, padx=22, pady=(6, 14))
 
-        dias = [
-            ("Segunda-feira", "08:00", "18:00", False),
-            ("Terça-feira", "08:00", "18:00", False),
-            ("Quarta-feira", "08:00", "18:00", False),
-            ("Quinta-feira", "08:00", "18:00", False),
-            ("Sexta-feira", "08:00", "18:00", False),
-            ("Sábado", "08:00", "12:00", False),
-            ("Domingo", "", "", True),
+        # Mapeamento dia_label -> dia_semana_banco
+        dias_mapeamento = [
+            ("Segunda-feira", "segunda", 0),
+            ("Terça-feira", "terca", 1),
+            ("Quarta-feira", "quarta", 2),
+            ("Quinta-feira", "quinta", 3),
+            ("Sexta-feira", "sexta", 4),
+            ("Sábado", "sabado", 5),
+            ("Domingo", "domingo", 6),
         ]
 
-        for dia, abertura_padrao, fechamento_padrao, fechado_inicial in dias:
+        # Defaults quando não houver registro no banco
+        defaults = {
+            "segunda": {"abertura": "08:00", "fechamento": "18:00", "fechado": False},
+            "terca": {"abertura": "08:00", "fechamento": "18:00", "fechado": False},
+            "quarta": {"abertura": "08:00", "fechamento": "18:00", "fechado": False},
+            "quinta": {"abertura": "08:00", "fechamento": "18:00", "fechado": False},
+            "sexta": {"abertura": "08:00", "fechamento": "18:00", "fechado": False},
+            "sabado": {"abertura": "08:00", "fechamento": "12:00", "fechado": False},
+            "domingo": {"abertura": None, "fechamento": None, "fechado": True},
+        }
+
+        for dia_display, dia_banco, dia_index in dias_mapeamento:
+            # Obter dados do banco ou usar defaults somente quando não houver configuração alguma
+            if dia_banco in horarios_banco:
+                dados_dia = horarios_banco[dia_banco]
+                dia_id = dados_dia['dia_id']
+                tem_horario = dados_dia['tem_horario']
+                abertura = dados_dia['hora_inicio'] if tem_horario else None
+                fechamento = dados_dia['hora_fim'] if tem_horario else None
+                fechado = not tem_horario
+            elif not horarios_banco:
+                dia_id = None
+                dados_default = defaults[dia_banco]
+                abertura = dados_default["abertura"]
+                fechamento = dados_default["fechamento"]
+                fechado = dados_default["fechado"]
+            else:
+                dia_id = None
+                abertura = None
+                fechamento = None
+                fechado = True
+
             row = ctk.CTkFrame(body, fg_color="transparent")
             row.pack(fill="x", pady=8)
             row.grid_columnconfigure(0, weight=1)
@@ -1220,7 +1525,7 @@ class Configuracoes(BaseScreen):
 
             ctk.CTkLabel(
                 row,
-                text=dia,
+                text=dia_display,
                 font=font("text"),
                 text_color=self.colors["text_primary"],
                 width=18,
@@ -1238,8 +1543,8 @@ class Configuracoes(BaseScreen):
                 text_color=self.colors["text_primary"]
             )
             abertura_entry.grid(row=0, column=1, sticky="w", padx=(0, 8))
-            if not fechado_inicial:
-                abertura_entry.insert(0, abertura_padrao)
+            if not fechado and abertura:
+                abertura_entry.insert(0, str(abertura))
             else:
                 abertura_entry.insert(0, "--")
 
@@ -1263,12 +1568,12 @@ class Configuracoes(BaseScreen):
                 text_color=self.colors["text_primary"]
             )
             fechamento_entry.grid(row=0, column=3, sticky="w", padx=(0, 12))
-            if not fechado_inicial:
-                fechamento_entry.insert(0, fechamento_padrao)
+            if not fechado and fechamento:
+                fechamento_entry.insert(0, str(fechamento))
             else:
                 fechamento_entry.insert(0, "--")
 
-            fechado_var = ctk.BooleanVar(value=fechado_inicial)
+            fechado_var = ctk.BooleanVar(value=fechado)
 
             def toggle_fechado(var=fechado_var, abertura=abertura_entry, fechamento=fechamento_entry):
                 if var.get():
@@ -1286,7 +1591,7 @@ class Configuracoes(BaseScreen):
                     abertura.insert(0, "08:00")
                     fechamento.insert(0, "18:00")
 
-            if fechado_inicial:
+            if fechado:
                 abertura_entry.configure(state="disabled")
                 fechamento_entry.configure(state="disabled")
 
@@ -1302,8 +1607,17 @@ class Configuracoes(BaseScreen):
             )
             check.grid(row=0, column=4, sticky="e")
 
-            if not fechado_inicial:
+            if not fechado:
                 check.deselect()
+
+            # Armazenar referências para poder coletar depois
+            self.horario_campos[dia_banco] = {
+                'dia_id': dia_id,
+                'dia_display': dia_display,
+                'abertura_entry': abertura_entry,
+                'fechamento_entry': fechamento_entry,
+                'fechado_var': fechado_var
+            }
 
         footer = ctk.CTkFrame(modal, fg_color="transparent")
         footer.pack(fill="x", padx=22, pady=(0, 18))
@@ -1330,48 +1644,12 @@ class Configuracoes(BaseScreen):
             fg_color=self.colors["accent"],
             hover_color=self.colors["accent_hover"],
             text_color="white",
-            command=self._fechar_modal_horario_funcionamento
+            command=self._salvar_horarios_funcionamento
         )
         save_btn.pack(side="right")
 
         modal.update_idletasks()
         modal.focus_set()
-
-        # Para cada serviço, criar uma linha com 4 colunas (nome, valor, editar descrição, deletar)
-        for idx, s in enumerate(servicos):
-            row = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
-            # Manter mesma largura mínima que o cabeçalho para alinhar valores
-            row.grid_columnconfigure(0, weight=3, minsize=420)
-            row.grid_columnconfigure(1, weight=1)
-            row.grid_columnconfigure(2, weight=0)
-            row.grid_columnconfigure(3, weight=0)
-            row.pack(fill="x", padx=8, pady=6)
-
-            nome = s.get("nome") if isinstance(s, dict) else s[1]
-            valor = s.get("preco") if isinstance(s, dict) else s[2]
-            serv_id = s.get("id") if isinstance(s, dict) else s[0]
-
-            # Formatar valor para padrão BR (milhares com . e decimais com ,)
-            try:
-                from decimal import Decimal
-                v = Decimal(valor)
-                v_str = f"{v:,.2f}"
-                # trocar 1,234.56 -> 1.234,56
-                v_str = v_str.replace(',', 'X').replace('.', ',').replace('X', '.')
-                valor_text = f"R$ {v_str}"
-            except Exception:
-                valor_text = f"R$ {valor}"
-
-            ctk.CTkLabel(row, text=nome, text_color=self.colors["text_primary"], font=font("text")).grid(row=0, column=0, sticky="w")
-            ctk.CTkLabel(row, text=valor_text, text_color=self.colors["text_secondary"], font=font("text")).grid(row=0, column=1, sticky="w")
-
-            # Botão de editar descrição (caneta)
-            edit_btn = ctk.CTkButton(row, text="✏️", width=36, height=28, fg_color="transparent", hover_color=self.colors.get("row_hover", COLORS.get("hover")), text_color=COLORS.get("primary", "#1f6aa5"), command=lambda sid=serv_id: self._abrir_modal_descricao_servico(sid))
-            edit_btn.grid(row=0, column=2, sticky="e", padx=(4, 0))
-
-            # Botão de deletar (lixeira)
-            del_btn = ctk.CTkButton(row, text="🗑", width=36, height=28, fg_color="transparent", hover_color=self.colors.get("row_hover", COLORS.get("hover")), text_color=COLORS.get("danger"), command=lambda sid=serv_id: self._excluir_servico(sid))
-            del_btn.grid(row=0, column=3, sticky="e")
 
     def _buscar_servicos_no_banco(self):
         try:
