@@ -63,12 +63,16 @@ class ImagePreview:
         ImagePreview._draw_placeholder_circle(canvas, size, placeholder_text)
 
     @staticmethod
-    def create_rectangular_preview(canvas, image_path, width=300, height=150, placeholder_text="IMG", fit_mode="contain"):
+    def create_rectangular_preview(canvas, image_path, width=300, height=150, placeholder_text="IMG", fit_mode="contain", draw_border=True):
         """Cria preview retangular de imagem em um canvas
         
         fit_mode:
             "contain" - ajusta a imagem para caber dentro da área, deixando espaço em branco se necessário (padrão)
             "cover"   - ajusta a imagem para cobrir toda a área, fazendo crop centralizado se necessário
+
+        draw_border:
+            True  - desenha uma borda interna (usado em previews que precisam de contorno)
+            False - não desenha borda interna, usando toda a área de preview
         """
         canvas.delete("all")
 
@@ -129,12 +133,13 @@ class ImagePreview:
                     canvas.create_image(x_offset + new_width // 2, y_offset + new_height // 2, image=photo)
                 
                 canvas.image = photo
-                canvas.create_rectangle(2, 2, width - 2, height - 2, outline=COLORS["border"], width=1)
+                if draw_border:
+                    canvas.create_rectangle(2, 2, width - 2, height - 2, outline=COLORS["border"], width=1)
                 return
             except Exception as e:
                 print(f"Erro ao processar preview de imagem: {e}")
 
-        ImagePreview._draw_placeholder_rectangle(canvas, width, height, placeholder_text)
+        ImagePreview._draw_placeholder_rectangle(canvas, width, height, placeholder_text, draw_border=draw_border)
 
     @staticmethod
     def _draw_placeholder_circle(canvas, size, text):
@@ -143,9 +148,12 @@ class ImagePreview:
         canvas.create_text(size // 2, size // 2, text=text, font=font("subtitle"), fill=colors["text"])
 
     @staticmethod
-    def _draw_placeholder_rectangle(canvas, width, height, text):
+    def _draw_placeholder_rectangle(canvas, width, height, text, draw_border=True):
         colors = {"bg": COLORS["input_bg"], "border": COLORS["border"], "text": COLORS["text_secondary"]}
-        canvas.create_rectangle(2, 2, width - 2, height - 2, fill=colors["bg"], outline=colors["border"], width=1)
+        if draw_border:
+            canvas.create_rectangle(2, 2, width - 2, height - 2, fill=colors["bg"], outline=colors["border"], width=1)
+        else:
+            canvas.create_rectangle(0, 0, width, height, fill=colors["bg"], outline="")
         canvas.create_text(width // 2, height // 2, text=text, font=font("text"), fill=colors["text"])
 
     @staticmethod
@@ -1079,6 +1087,14 @@ class Configuracoes(BaseScreen):
 
         self._secao_titulo(scroll, "Sobre a Clínica", padx=0)
 
+        clinica_data = None
+        if self.tipo_usuario == "clinica" and self.clinica_id:
+            clinica_data = self._load_clinic_data()
+
+        descricao_texto = ""
+        if clinica_data and clinica_data.get("descricao") is not None:
+            descricao_texto = str(clinica_data.get("descricao", ""))
+
         self.description_text = ctk.CTkTextbox(
             scroll,
             height=280,
@@ -1090,7 +1106,7 @@ class Configuracoes(BaseScreen):
             text_color=self.colors["text_primary"]
         )
         self.description_text.pack(fill="both", expand=True, anchor="w", padx=0, pady=(10, 0))
-        self.description_text.insert("1.0", "Bem-vindo à nossa clínica! Somos uma equipe dedicada a proporcionar o melhor cuidado para seu sorriso...")
+        self.description_text.insert("1.0", descricao_texto)
 
     # ==================== SERVIÇOS (Banco) ====================
     def _carregar_servicos(self):
@@ -1419,7 +1435,7 @@ class Configuracoes(BaseScreen):
                 print(f"[DEBUG] Carregando dados da clínica ID: {self.clinica_id}")
 
                 cursor.execute("""
-                    SELECT nome, cnpj, email, telefone, logo, imagem
+                    SELECT nome, cnpj, email, telefone, logo, imagem, descricao
                     FROM odontoPro_clinica
                     WHERE id = %s
                 """, (self.clinica_id,))
@@ -1454,6 +1470,7 @@ class Configuracoes(BaseScreen):
                         "telefone": result[3] or "",
                         "logo": result[4] or "",
                         "imagem": result[5] or "",
+                        "descricao": result[6] if len(result) > 6 else "",
                         "photos": photos
                     }
                     print(f"[DEBUG] Dados carregados: {data}")
@@ -1867,7 +1884,8 @@ class Configuracoes(BaseScreen):
                     260,
                     92,
                     "FOTO",
-                    fit_mode="cover"
+                    fit_mode="cover",
+                    draw_border=False
                 )
             else:
                 # Espaço vazio
@@ -1877,7 +1895,8 @@ class Configuracoes(BaseScreen):
                     260,
                     92,
                     "Sem imagem",
-                    fit_mode="cover"
+                    fit_mode="cover",
+                    draw_border=False
                 )
 
     def _add_gallery_photo(self, index):
@@ -2033,6 +2052,7 @@ class Configuracoes(BaseScreen):
                 cnpj = self.clinic_entries["CNPJ"].get().strip()
                 email = self.clinic_entries["E-mail Clínica"].get().strip()
                 telefone = self.clinic_entries["Telefone"].get().strip()
+                descricao = self.description_text.get("1.0", "end-1c") if hasattr(self, "description_text") else ""
 
                 # Store only digits for CNPJ and Telefone in DB
                 try:
@@ -2047,9 +2067,9 @@ class Configuracoes(BaseScreen):
 
                 cursor.execute("""
                     UPDATE odontoPro_clinica
-                    SET nome = %s, cnpj = %s, email = %s, telefone = %s
+                    SET nome = %s, cnpj = %s, email = %s, telefone = %s, descricao = %s
                     WHERE id = %s
-                """, (nome, cnpj_clean, email, telefone_clean, self.clinica_id))
+                """, (nome, cnpj_clean, email, telefone_clean, descricao, self.clinica_id))
 
                 if hasattr(self, "clinic_banner") and self.clinic_banner:
                     banner_value = str(self.clinic_banner).strip()
