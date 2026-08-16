@@ -1090,7 +1090,9 @@ class Configuracoes(BaseScreen):
         self._carregar_servicos()
 
     def _render_preferences_description(self, parent):
-        scroll = parent
+        content_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        content_frame.pack(fill="both", expand=True)
+        scroll = content_frame
 
         self._secao_titulo(scroll, "Sobre a Clínica", padx=0)
 
@@ -1104,7 +1106,7 @@ class Configuracoes(BaseScreen):
 
         self.description_text = ctk.CTkTextbox(
             scroll,
-            height=280,
+            height=210,
             corner_radius=8,
             border_width=1,
             border_color=self.colors["border"],
@@ -1112,8 +1114,25 @@ class Configuracoes(BaseScreen):
             font=font("text"),
             text_color=self.colors["text_primary"]
         )
-        self.description_text.pack(fill="both", expand=True, anchor="w", padx=0, pady=(10, 0))
+        self.description_text.pack(fill="x", expand=False, anchor="w", padx=0, pady=(10, 16))
         self.description_text.insert("1.0", descricao_texto)
+
+        horario_button = ctk.CTkButton(
+            scroll,
+            text="Horário de Funcionamento",
+            width=220,
+            height=40,
+            corner_radius=8,
+            fg_color=self.colors["accent"],
+            hover_color=self.colors["accent_hover"],
+            font=font("text", "bold"),
+            text_color="white",
+            command=self._abrir_modal_horario_funcionamento
+        )
+        horario_button.pack(anchor="w", pady=(0, 8))
+
+        bottom_spacing = ctk.CTkLabel(scroll, text="", height=12)
+        bottom_spacing.pack(pady=(0, 12))
 
     # ==================== SERVIÇOS (Banco) ====================
     def _carregar_servicos(self):
@@ -1133,10 +1152,190 @@ class Configuracoes(BaseScreen):
         # Buscar serviços no banco
         servicos = self._buscar_servicos_no_banco()
 
-        if not servicos:
-            empty = ctk.CTkLabel(self.services_list_frame, text="Nenhum serviço cadastrado ainda.", text_color=self.colors["text_secondary"], font=font("text"))
-            empty.pack(padx=8, pady=12)
+    def _fechar_modal_horario_funcionamento(self):
+        if hasattr(self, "horario_modal") and self.horario_modal and self.horario_modal.winfo_exists():
+            self.horario_modal.destroy()
+            self.horario_modal = None
+
+    def _abrir_modal_horario_funcionamento(self):
+        if hasattr(self, "horario_modal") and self.horario_modal and self.horario_modal.winfo_exists():
+            self.horario_modal.focus_set()
             return
+
+        modal = ctk.CTkToplevel(self)
+        modal.title("Horário de Funcionamento")
+        modal.transient(self)
+        modal.grab_set()
+        modal.resizable(False, False)
+        modal.geometry("700x560")
+        self.horario_modal = modal
+
+        modal.protocol("WM_DELETE_WINDOW", self._fechar_modal_horario_funcionamento)
+
+        header = ctk.CTkFrame(modal, fg_color="transparent")
+        header.pack(fill="x", padx=22, pady=(18, 8))
+
+        ctk.CTkLabel(
+            header,
+            text="Horário de Funcionamento",
+            font=font("subtitle", "bold"),
+            text_color=self.colors["text_primary"],
+            anchor="w"
+        ).pack(anchor="w")
+
+        ctk.CTkLabel(
+            header,
+            text="Configure os dias e horários de atendimento da clínica",
+            font=font("text"),
+            text_color=self.colors["text_secondary"],
+            anchor="w"
+        ).pack(anchor="w", pady=(4, 0))
+
+        body = ctk.CTkScrollableFrame(
+            modal,
+            fg_color="transparent",
+            corner_radius=8,
+            border_width=0
+        )
+        body.pack(fill="both", expand=True, padx=22, pady=(6, 14))
+
+        dias = [
+            ("Segunda-feira", "08:00", "18:00", False),
+            ("Terça-feira", "08:00", "18:00", False),
+            ("Quarta-feira", "08:00", "18:00", False),
+            ("Quinta-feira", "08:00", "18:00", False),
+            ("Sexta-feira", "08:00", "18:00", False),
+            ("Sábado", "08:00", "12:00", False),
+            ("Domingo", "", "", True),
+        ]
+
+        for dia, abertura_padrao, fechamento_padrao, fechado_inicial in dias:
+            row = ctk.CTkFrame(body, fg_color="transparent")
+            row.pack(fill="x", pady=8)
+            row.grid_columnconfigure(0, weight=1)
+            row.grid_columnconfigure(1, weight=0)
+            row.grid_columnconfigure(2, weight=0)
+            row.grid_columnconfigure(3, weight=0)
+            row.grid_columnconfigure(4, weight=0)
+
+            ctk.CTkLabel(
+                row,
+                text=dia,
+                font=font("text"),
+                text_color=self.colors["text_primary"],
+                width=18,
+                anchor="w"
+            ).grid(row=0, column=0, sticky="w", padx=(0, 10))
+
+            abertura_entry = ctk.CTkEntry(
+                row,
+                width=90,
+                height=28,
+                border_width=1,
+                border_color=self.colors["border"],
+                fg_color=COLORS["input_bg"],
+                font=font("text"),
+                text_color=self.colors["text_primary"]
+            )
+            abertura_entry.grid(row=0, column=1, sticky="w", padx=(0, 8))
+            if not fechado_inicial:
+                abertura_entry.insert(0, abertura_padrao)
+            else:
+                abertura_entry.insert(0, "--")
+
+            ctk.CTkLabel(
+                row,
+                text="até",
+                font=font("text"),
+                text_color=self.colors["text_secondary"],
+                width=4,
+                anchor="w"
+            ).grid(row=0, column=2, sticky="w", padx=(0, 8))
+
+            fechamento_entry = ctk.CTkEntry(
+                row,
+                width=90,
+                height=28,
+                border_width=1,
+                border_color=self.colors["border"],
+                fg_color=COLORS["input_bg"],
+                font=font("text"),
+                text_color=self.colors["text_primary"]
+            )
+            fechamento_entry.grid(row=0, column=3, sticky="w", padx=(0, 12))
+            if not fechado_inicial:
+                fechamento_entry.insert(0, fechamento_padrao)
+            else:
+                fechamento_entry.insert(0, "--")
+
+            fechado_var = ctk.BooleanVar(value=fechado_inicial)
+
+            def toggle_fechado(var=fechado_var, abertura=abertura_entry, fechamento=fechamento_entry):
+                if var.get():
+                    abertura.configure(state="disabled")
+                    fechamento.configure(state="disabled")
+                    abertura.delete(0, "end")
+                    fechamento.delete(0, "end")
+                    abertura.insert(0, "--")
+                    fechamento.insert(0, "--")
+                else:
+                    abertura.configure(state="normal")
+                    fechamento.configure(state="normal")
+                    abertura.delete(0, "end")
+                    fechamento.delete(0, "end")
+                    abertura.insert(0, "08:00")
+                    fechamento.insert(0, "18:00")
+
+            if fechado_inicial:
+                abertura_entry.configure(state="disabled")
+                fechamento_entry.configure(state="disabled")
+
+            check = ctk.CTkCheckBox(
+                row,
+                text="Fechado",
+                variable=fechado_var,
+                command=toggle_fechado,
+                font=font("text"),
+                text_color=self.colors["text_secondary"],
+                checkbox_height=16,
+                checkbox_width=16,
+            )
+            check.grid(row=0, column=4, sticky="e")
+
+            if not fechado_inicial:
+                check.deselect()
+
+        footer = ctk.CTkFrame(modal, fg_color="transparent")
+        footer.pack(fill="x", padx=22, pady=(0, 18))
+
+        cancel_btn = ctk.CTkButton(
+            footer,
+            text="Cancelar",
+            width=110,
+            height=36,
+            fg_color="transparent",
+            border_width=1,
+            border_color=self.colors["border"],
+            text_color=self.colors["text_primary"],
+            hover_color=self.colors["accent_light"],
+            command=self._fechar_modal_horario_funcionamento
+        )
+        cancel_btn.pack(side="right", padx=(0, 10))
+
+        save_btn = ctk.CTkButton(
+            footer,
+            text="Salvar",
+            width=110,
+            height=36,
+            fg_color=self.colors["accent"],
+            hover_color=self.colors["accent_hover"],
+            text_color="white",
+            command=self._fechar_modal_horario_funcionamento
+        )
+        save_btn.pack(side="right")
+
+        modal.update_idletasks()
+        modal.focus_set()
 
         # Para cada serviço, criar uma linha com 4 colunas (nome, valor, editar descrição, deletar)
         for idx, s in enumerate(servicos):
