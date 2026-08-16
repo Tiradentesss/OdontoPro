@@ -1610,7 +1610,7 @@ class Configuracoes(BaseScreen):
         # Frame da galeria (grid 3 colunas)
         gallery_frame = ctk.CTkFrame(main_wrap, fg_color="transparent")
         gallery_frame.pack(fill="x", expand=True, pady=(0, 12))
-        gallery_frame.grid_columnconfigure((0, 1, 2), weight=1)
+        gallery_frame.grid_columnconfigure((0, 1, 2), weight=1, uniform="gallery")
 
         # Criar 3 cards de foto
         self.photo_cards = []
@@ -1626,7 +1626,9 @@ class Configuracoes(BaseScreen):
                 border_color=self.colors["border"]
             )
             card_frame.grid(row=0, column=idx, sticky="nsew", padx=(0 if idx == 0 else 8, 0))
-            card_frame.grid_rowconfigure((0, 1), weight=0)
+            card_frame.grid_rowconfigure(0, weight=0)
+            card_frame.grid_rowconfigure(1, weight=0)
+            card_frame.grid_rowconfigure(2, weight=0)
             card_frame.grid_columnconfigure(0, weight=1)
 
             # Número da foto
@@ -1636,7 +1638,7 @@ class Configuracoes(BaseScreen):
                 font=font("text", "bold"),
                 text_color=self.colors["text_primary"]
             )
-            photo_num_label.grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 8))
+            photo_num_label.grid(row=0, column=0, sticky="ew", padx=12, pady=(10, 6))
 
             # Canvas de preview
             photo_canvas = tk.Canvas(
@@ -1644,9 +1646,9 @@ class Configuracoes(BaseScreen):
                 bg=self.colors["bg_card"],
                 highlightthickness=0,
                 bd=0,
-                height=120
+                height=92
             )
-            photo_canvas.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
+            photo_canvas.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 8))
             photo_canvas.grid_propagate(False)
             
             # Armazenar reference para atualizar depois
@@ -1654,20 +1656,22 @@ class Configuracoes(BaseScreen):
 
             # Frame para botão
             btn_frame = ctk.CTkFrame(card_frame, fg_color="transparent")
-            btn_frame.grid(row=2, column=0, sticky="ew", padx=12, pady=(0, 12))
+            btn_frame.grid(row=2, column=0, sticky="n", padx=12, pady=(0, 10))
+            btn_frame.grid_columnconfigure(0, weight=1)
 
             # Botão de adicionar foto
             add_btn = ctk.CTkButton(
                 btn_frame,
                 text="+ Adicionar foto",
-                height=32,
+                width=150,
+                height=30,
                 font=("Arial", 10, "bold"),
                 fg_color=self.colors["accent"],
                 hover_color=self.colors["accent_hover"],
                 corner_radius=6,
                 command=lambda index=idx: self._add_gallery_photo(index)
             )
-            add_btn.pack(fill="x")
+            add_btn.grid(row=0, column=0, sticky="n")
 
             self.photo_cards.append({
                 "frame": card_frame,
@@ -1800,8 +1804,8 @@ class Configuracoes(BaseScreen):
                 ImagePreview.create_rectangular_preview(
                     canvas,
                     self.clinic_photos[idx],
-                    300,
-                    120,
+                    260,
+                    92,
                     "FOTO"
                 )
             else:
@@ -1809,9 +1813,9 @@ class Configuracoes(BaseScreen):
                 ImagePreview.create_rectangular_preview(
                     canvas,
                     None,
-                    300,
-                    120,
-                    "+ Adicionar foto"
+                    260,
+                    92,
+                    "Sem imagem"
                 )
 
     def _add_gallery_photo(self, index):
