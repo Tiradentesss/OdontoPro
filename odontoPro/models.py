@@ -53,6 +53,7 @@ class Clinica(models.Model):
     # 🔹 EXISTENTE (mantido para compatibilidade)
     imagem = models.ImageField(
         upload_to='clinicas/',
+        max_length=1024,
         null=True,
         blank=True
     )
