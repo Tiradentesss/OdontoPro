@@ -868,6 +868,9 @@ class Configuracoes(BaseScreen):
         if clinica_data and clinica_data.get("photos"):
             self.clinic_photos = clinica_data["photos"]
 
+        if clinica_data and clinica_data.get("imagem"):
+            self.clinic_banner = clinica_data["imagem"]
+
         self._setup_clinic_photos_ui()
 
         # CARD ENDEREÇO
@@ -1376,7 +1379,7 @@ class Configuracoes(BaseScreen):
                 print(f"[DEBUG] Carregando dados da clínica ID: {self.clinica_id}")
 
                 cursor.execute("""
-                    SELECT nome, cnpj, email, telefone, logo
+                    SELECT nome, cnpj, email, telefone, logo, imagem
                     FROM odontoPro_clinica
                     WHERE id = %s
                 """, (self.clinica_id,))
@@ -1391,6 +1394,7 @@ class Configuracoes(BaseScreen):
                         "email": result[2] or "",
                         "telefone": result[3] or "",
                         "logo": result[4] or "",
+                        "imagem": result[5] or "",
                         "photos": []
                     }
                     print(f"[DEBUG] Dados carregados: {data}")
@@ -1988,6 +1992,41 @@ class Configuracoes(BaseScreen):
                     SET nome = %s, cnpj = %s, email = %s, telefone = %s
                     WHERE id = %s
                 """, (nome, cnpj_clean, email, telefone_clean, self.clinica_id))
+
+                if hasattr(self, "clinic_banner") and self.clinic_banner:
+                    banner_value = str(self.clinic_banner).strip()
+                    saved_banner = None
+
+                    try:
+                        if banner_value.lower().startswith(("http://", "https://")):
+                            saved_banner = banner_value.replace("http://", "https://", 1) if banner_value.lower().startswith("http://") else banner_value
+                        elif os.path.exists(banner_value):
+                            try:
+                                public_id = f"clinica_{self.clinica_id}_banner_{int(time.time())}"
+                                folder = f"odontopro/clinicas/{self.clinica_id}/banner"
+                                print(f"[BANNER] Iniciando upload Cloudinary para clinica_id={self.clinica_id}")
+                                saved_banner = upload_image_to_cloudinary(banner_value, public_id=public_id, folder=folder)
+                                print(f"[BANNER] Upload concluído, URL recebida: {saved_banner}")
+                            except Exception as e:
+                                print(f"[AVISO] Falha ao enviar banner para Cloudinary: {e}")
+                                messagebox.showerror("Erro", f"Falha ao enviar o banner para o Cloudinary: {str(e)}")
+                                saved_banner = None
+                        else:
+                            print(f"[AVISO] Valor inesperado para self.clinic_banner: {banner_value}")
+                            saved_banner = None
+                    except Exception as e:
+                        print(f"[ERRO] Erro ao processar imagem do banner: {e}")
+                        saved_banner = None
+
+                    if saved_banner and isinstance(saved_banner, str) and saved_banner.lower().startswith("https://"):
+                        cursor.execute("""
+                            UPDATE odontoPro_clinica
+                            SET imagem = %s
+                            WHERE id = %s
+                        """, (saved_banner, self.clinica_id))
+                        print(f"[BANNER] Atualizando clinica_id={self.clinica_id} com URL Cloudinary")
+                    else:
+                        print(f"[BANNER] Nenhuma URL válida para atualizar no banco; mantendo imagem atual para clinica_id={self.clinica_id}")
 
                 if "logo" in self.images:
                     logo_path = self.images["logo"]
