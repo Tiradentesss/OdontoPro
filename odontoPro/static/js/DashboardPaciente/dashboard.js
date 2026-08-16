@@ -1,6 +1,105 @@
 /* ================= VARIÁVEIS GLOBAIS ================= */
 let filtroEstrelasSelecionado = 0;
 
+const ORDEM_DIAS_FUNCIONAMENTO = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+const NOMES_DIAS_FUNCIONAMENTO = {
+    segunda: "Segunda",
+    terca: "Terça",
+    quarta: "Quarta",
+    quinta: "Quinta",
+    sexta: "Sexta",
+    sabado: "Sábado",
+    domingo: "Domingo"
+};
+
+function formatarHoraVisual(hora) {
+    if (!hora) return "";
+
+    const textoHora = String(hora).trim();
+    if (!textoHora || textoHora === "null") return "";
+
+    const [horas, minutos = "00"] = textoHora.split(":");
+    const horaInt = Number.parseInt(horas, 10);
+    if (Number.isNaN(horaInt)) return "";
+
+    const horaFormatada = `${String(horaInt).padStart(2, '0')}h`;
+    if (minutos === "00") return horaFormatada;
+    return `${horaFormatada}${minutos}`;
+}
+
+function formatarHorarioTexto(item) {
+    if (!item || item.fechado || !item.hora_inicio || !item.hora_fim) {
+        return "Fechado";
+    }
+
+    return `${formatarHoraVisual(item.hora_inicio)} às ${formatarHoraVisual(item.hora_fim)}`;
+}
+
+function gerarResumoHorarios(horarios) {
+    const lista = Array.isArray(horarios) ? horarios.filter(Boolean) : [];
+    if (!lista.length) {
+        return "Horário de funcionamento não informado";
+    }
+
+    const diasOrdenados = ORDEM_DIAS_FUNCIONAMENTO.map(dia => {
+        const item = lista.find(horario => String(horario.dia || "").toLowerCase() === dia);
+        if (item) return { ...item, dia: String(item.dia || dia).toLowerCase() };
+        return { dia, hora_inicio: null, hora_fim: null, fechado: true };
+    });
+
+    const grupos = [];
+    let grupoAtual = [];
+
+    diasOrdenados.forEach((item) => {
+        if (!grupoAtual.length) {
+            grupoAtual = [item];
+            return;
+        }
+
+        const anterior = grupoAtual[grupoAtual.length - 1];
+        const mesmoHorario = (
+            anterior.fechado === item.fechado && (
+                anterior.fechado || (
+                    anterior.hora_inicio === item.hora_inicio &&
+                    anterior.hora_fim === item.hora_fim
+                )
+            )
+        );
+
+        if (mesmoHorario) {
+            grupoAtual.push(item);
+            return;
+        }
+
+        grupos.push(grupoAtual);
+        grupoAtual = [item];
+    });
+
+    if (grupoAtual.length) {
+        grupos.push(grupoAtual);
+    }
+
+    const resumo = grupos.map((grupo) => {
+        const primeiro = grupo[0];
+        const ultimo = grupo[grupo.length - 1];
+        const nomeInicio = NOMES_DIAS_FUNCIONAMENTO[primeiro.dia] || primeiro.dia;
+        const nomeFim = NOMES_DIAS_FUNCIONAMENTO[ultimo.dia] || ultimo.dia;
+        const horarioTexto = formatarHorarioTexto(primeiro);
+
+        if (grupo.length === 1) {
+            return `${nomeInicio}: ${horarioTexto}`;
+        }
+
+        if (primeiro.fechado) {
+            return `${nomeInicio} a ${nomeFim}: Fechado`;
+        }
+
+        return `${nomeInicio} a ${nomeFim}: ${horarioTexto}`;
+    });
+
+    return resumo.join(" | ");
+}
+
 function aplicarTema(tema) {
     const body = document.body;
     body.classList.remove('theme-light', 'theme-dark');
@@ -629,6 +728,17 @@ function abrirModalAgendamento(clinicaId) {
 
             document.getElementById("detalheEnderecoClinica").innerText =
                 `${data.rua}, ${data.numero} - ${data.bairro}, ${data.cidade} - ${data.estado}, CEP: ${data.cep}`;
+
+            const detalheHorario = document.getElementById("detalheHorarioFuncionamento");
+            if (detalheHorario) {
+                const spanHorario = detalheHorario.querySelector("span");
+                const resumoHorario = gerarResumoHorarios(data.horarios_funcionamento || []);
+                if (spanHorario) {
+                    spanHorario.textContent = resumoHorario;
+                } else {
+                    detalheHorario.innerHTML = `<i class="fa-solid fa-clock"></i> <span>${resumoHorario}</span>`;
+                }
+            }
 
             const logoImg = document.getElementById("detalheLogoClinica");
             if (logoImg) {

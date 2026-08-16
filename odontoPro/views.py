@@ -1147,6 +1147,43 @@ def clinica_detalhes(request, clinica_id):
     if clinica.logo:
         logo_url = clinica.logo.url if _url_responds(clinica.logo.url) else None
 
+    dias_ordem = [
+        "segunda",
+        "terca",
+        "quarta",
+        "quinta",
+        "sexta",
+        "sabado",
+        "domingo",
+    ]
+    dias_por_chave = {
+        dia_registro.dia: dia_registro
+        for dia_registro in clinica.dias_semana.all().prefetch_related('horarios')
+    }
+    horarios_funcionamento = []
+
+    for dia in dias_ordem:
+        dia_registro = dias_por_chave.get(dia)
+        horarios_do_dia = list(dia_registro.horarios.all()) if dia_registro else []
+
+        if not horarios_do_dia:
+            horarios_funcionamento.append({
+                "dia": dia,
+                "hora_inicio": None,
+                "hora_fim": None,
+                "fechado": True,
+            })
+            continue
+
+        hora_inicio = min(horario.hora_inicio for horario in horarios_do_dia)
+        hora_fim = max(horario.hora_fim for horario in horarios_do_dia)
+        horarios_funcionamento.append({
+            "dia": dia,
+            "hora_inicio": hora_inicio.strftime("%H:%M"),
+            "hora_fim": hora_fim.strftime("%H:%M"),
+            "fechado": False,
+        })
+
     return JsonResponse({
     "nome": clinica.nome,
     "email": clinica.email,
@@ -1164,7 +1201,8 @@ def clinica_detalhes(request, clinica_id):
     "cep": clinica.endereco.cep if clinica.endereco else '',
     "especialidades": list(especialidades),
     "medicos": medicos,
-    "avaliacoes": avaliacoes_json
+    "avaliacoes": avaliacoes_json,
+    "horarios_funcionamento": horarios_funcionamento,
     })
 
 

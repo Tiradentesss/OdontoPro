@@ -6,7 +6,10 @@ from django.core import signing
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from django.templatetags.static import static
-from .models import Paciente, Medico, Clinica, Consulta, Endereco, Especialidade, Gerenciamento, Permissao, Financeiro, ClinicaImagem
+from .models import (
+    Paciente, Medico, Clinica, Consulta, Endereco, Especialidade, Gerenciamento,
+    Permissao, Financeiro, ClinicaImagem, DiaSemanaDisponivel, HorarioAberto
+)
 
 
 class FinanceiroDashboardTests(TestCase):
@@ -102,6 +105,67 @@ class FinanceiroDashboardTests(TestCase):
         self.assertContains(response, 'Centro de Relatórios')
         self.assertContains(response, 'Exportar para Excel (CSV)')
         self.assertContains(response, 'Relatório Gerencial Odontológico')
+
+
+class ClinicBusinessHoursApiTests(TestCase):
+    def setUp(self):
+        self.endereco = Endereco.objects.create(
+            cep="00000000",
+            numero="1",
+            quadra="",
+            rua="Rua X",
+            bairro="Centro",
+            cidade="Belém",
+            estado="PA"
+        )
+        self.clinica = Clinica.objects.create(
+            nome="Clinica Horarios",
+            cnpj="12345678000199",
+            endereco=self.endereco,
+            telefone="999999999",
+            conta_bancaria_juridica="0000-0",
+            email="horarios@example.com",
+            senha=make_password("clinica123")
+        )
+
+    def test_clinica_detalhes_includes_all_week_days_business_hours(self):
+        dias = {
+            'segunda': '08:00',
+            'terca': '08:00',
+            'quarta': '08:00',
+            'quinta': '08:00',
+            'sexta': '08:00',
+            'sabado': '08:00',
+            'domingo': None,
+        }
+
+        for dia, hora_inicio in dias.items():
+            dia_registro = DiaSemanaDisponivel.objects.create(clinica=self.clinica, dia=dia)
+            if hora_inicio:
+                HorarioAberto.objects.create(
+                    dia=dia_registro,
+                    hora_inicio=hora_inicio,
+                    hora_fim='18:00' if dia != 'sabado' else '15:00'
+                )
+
+        resp = self.client.get(reverse('clinica_detalhes', args=[self.clinica.id]))
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertIn('horarios_funcionamento', payload)
+        horarios = payload['horarios_funcionamento']
+        self.assertEqual(len(horarios), 7)
+        self.assertEqual(horarios[0]['dia'], 'segunda')
+        self.assertEqual(horarios[0]['hora_inicio'], '08:00')
+        self.assertEqual(horarios[0]['hora_fim'], '18:00')
+        self.assertFalse(horarios[0]['fechado'])
+        self.assertEqual(horarios[5]['dia'], 'sabado')
+        self.assertEqual(horarios[5]['hora_inicio'], '08:00')
+        self.assertEqual(horarios[5]['hora_fim'], '15:00')
+        self.assertFalse(horarios[5]['fechado'])
+        self.assertEqual(horarios[6]['dia'], 'domingo')
+        self.assertTrue(horarios[6]['fechado'])
+        self.assertIsNone(horarios[6]['hora_inicio'])
+        self.assertIsNone(horarios[6]['hora_fim'])
 
 
 class DashboardHomeImageRegressionTests(TestCase):
