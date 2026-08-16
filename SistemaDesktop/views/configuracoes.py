@@ -622,7 +622,7 @@ class Configuracoes(BaseScreen):
 
     def _secao_titulo(self, parent, texto, padx=15):
         container = ctk.CTkFrame(parent, fg_color="transparent")
-        container.pack(fill="x", padx=padx, pady=(16, 8))
+        container.pack(fill="x", padx=padx, pady=(8, 8))
 
         ctk.CTkLabel(
             container,
@@ -772,7 +772,7 @@ class Configuracoes(BaseScreen):
             self.sub_tab_buttons[tab.lower()] = btn
 
         divider = ctk.CTkFrame(parent, height=1, fg_color=self.colors["border"])
-        divider.pack(fill="x", padx=0, pady=(0, 15))
+        divider.pack(fill="x", padx=0, pady=(0, 8))
 
         self.sub_tab_content = ctk.CTkFrame(parent, fg_color="transparent")
         self.sub_tab_content.pack(fill="both", expand=True)
