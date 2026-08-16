@@ -1131,13 +1131,14 @@ class Configuracoes(BaseScreen):
             empty.pack(padx=8, pady=12)
             return
 
-        # Para cada serviço, criar uma linha com 3 colunas
+        # Para cada serviço, criar uma linha com 4 colunas (nome, valor, editar descrição, deletar)
         for idx, s in enumerate(servicos):
             row = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
             # Manter mesma largura mínima que o cabeçalho para alinhar valores
             row.grid_columnconfigure(0, weight=3, minsize=420)
             row.grid_columnconfigure(1, weight=1)
             row.grid_columnconfigure(2, weight=0)
+            row.grid_columnconfigure(3, weight=0)
             row.pack(fill="x", padx=8, pady=6)
 
             nome = s.get("nome") if isinstance(s, dict) else s[1]
@@ -1158,8 +1159,13 @@ class Configuracoes(BaseScreen):
             ctk.CTkLabel(row, text=nome, text_color=self.colors["text_primary"], font=font("text")).grid(row=0, column=0, sticky="w")
             ctk.CTkLabel(row, text=valor_text, text_color=self.colors["text_secondary"], font=font("text")).grid(row=0, column=1, sticky="w")
 
+            # Botão de editar descrição (caneta)
+            edit_btn = ctk.CTkButton(row, text="✏️", width=36, height=28, fg_color="transparent", hover_color=self.colors.get("row_hover", COLORS.get("hover")), text_color=COLORS.get("primary", "#1f6aa5"), command=lambda sid=serv_id: self._abrir_modal_descricao_servico(sid))
+            edit_btn.grid(row=0, column=2, sticky="e", padx=(4, 0))
+
+            # Botão de deletar (lixeira)
             del_btn = ctk.CTkButton(row, text="🗑", width=36, height=28, fg_color="transparent", hover_color=self.colors.get("row_hover", COLORS.get("hover")), text_color=COLORS.get("danger"), command=lambda sid=serv_id: self._excluir_servico(sid))
-            del_btn.grid(row=0, column=2, sticky="e")
+            del_btn.grid(row=0, column=3, sticky="e")
 
     def _buscar_servicos_no_banco(self):
         try:
@@ -1359,6 +1365,205 @@ class Configuracoes(BaseScreen):
             import traceback
             traceback.print_exc()
 
+    # ==================== DESCRIÇÃO DO SERVIÇO ====================
+    def _abrir_modal_descricao_servico(self, serv_id):
+        """Abre modal para editar a descrição do serviço."""
+        # Carregar dados atuais
+        nome_servico, descricao_atual = self._carregar_descricao_atual(serv_id)
+        
+        if nome_servico is None:
+            messagebox.showerror("Erro", "Serviço não encontrado.")
+            return
+        
+        # Criar modal
+        top = ctk.CTkToplevel(self)
+        top.title("Descrição do Serviço")
+        top.transient(self)
+        top.grab_set()
+        
+        # Tamanho do modal
+        modal_w, modal_h = 550, 400
+        top.geometry(f"{modal_w}x{modal_h}")
+        try:
+            top.resizable(False, False)
+        except Exception:
+            pass
+        
+        # Centralizar
+        try:
+            top.update_idletasks()
+            parent_win = self.winfo_toplevel()
+            parent_win.update_idletasks()
+            px = parent_win.winfo_rootx()
+            py = parent_win.winfo_rooty()
+            pw = parent_win.winfo_width()
+            ph = parent_win.winfo_height()
+            
+            x = px + (pw - modal_w) // 2
+            y = py + (ph - modal_h) // 2
+            
+            screen_w = top.winfo_screenwidth()
+            screen_h = top.winfo_screenheight()
+            x = max(0, min(x, screen_w - modal_w))
+            y = max(0, min(y, screen_h - modal_h))
+            
+            top.geometry(f"{modal_w}x{modal_h}+{x}+{y}")
+        except Exception as e:
+            print(f"[AVISO] Não foi possível centralizar modal: {e}")
+        
+        # Corpo do modal
+        body = ctk.CTkFrame(top, fg_color="transparent")
+        body.pack(fill="both", expand=True, padx=16, pady=12)
+        
+        # Título
+        title_label = ctk.CTkLabel(
+            body, 
+            text="Descrição do Serviço", 
+            font=font("heading3", "bold"), 
+            text_color=self.colors["text_primary"]
+        )
+        title_label.pack(anchor="w", pady=(0, 12))
+        
+        # Nome do serviço (readonly)
+        ctk.CTkLabel(body, text="Serviço:", font=font("text", "bold"), text_color=self.colors["text_primary"]).pack(anchor="w")
+        nome_display = ctk.CTkEntry(
+            body, 
+            placeholder_text=nome_servico,
+            width=480,
+            fg_color=COLORS.get("input_bg")
+        )
+        nome_display.insert(0, nome_servico)
+        nome_display.configure(state="disabled")
+        nome_display.pack(fill="x", pady=(6, 12))
+        
+        # Label de descrição
+        ctk.CTkLabel(body, text="Descrição:", font=font("text", "bold"), text_color=self.colors["text_primary"]).pack(anchor="w")
+        
+        # Textbox para descrição
+        desc_textbox = ctk.CTkTextbox(
+            body,
+            width=480,
+            height=180,
+            fg_color=COLORS.get("input_bg"),
+            border_color=self.colors.get("border", COLORS.get("hover")),
+            text_color=self.colors["text_primary"],
+            font=font("text")
+        )
+        desc_textbox.pack(fill="both", expand=True, pady=(6, 12))
+        
+        if descricao_atual:
+            desc_textbox.insert("1.0", descricao_atual)
+        
+        # Frame de botões
+        btn_frame = ctk.CTkFrame(body, fg_color="transparent")
+        btn_frame.pack(fill="x", pady=(12, 0))
+        
+        def on_save():
+            nova_descricao = desc_textbox.get("1.0", "end-1c").strip()
+            if self._salvar_descricao_no_banco(serv_id, nova_descricao):
+                messagebox.showinfo("Sucesso", "Descrição salva com sucesso!")
+                top.destroy()
+            else:
+                messagebox.showerror("Erro", "Falha ao salvar descrição. Veja o console.")
+        
+        cancel_btn = ctk.CTkButton(
+            btn_frame, 
+            text="Cancelar", 
+            fg_color=COLORS.get("secondary", "#666666"),
+            hover_color=COLORS.get("secondary_hover", "#555555"),
+            command=top.destroy,
+            font=font("text", "bold")
+        )
+        cancel_btn.pack(side="right", padx=(4, 0))
+        
+        save_btn = ctk.CTkButton(
+            btn_frame, 
+            text="Salvar", 
+            fg_color=COLORS.get("primary"),
+            hover_color=COLORS.get("accent_hover", self.colors.get("primary_soft")),
+            command=on_save,
+            font=font("text", "bold")
+        )
+        save_btn.pack(side="right")
+
+    def _carregar_descricao_atual(self, serv_id):
+        """Carrega o nome e descrição atuais do serviço do banco."""
+        try:
+            from config.database import get_connection
+            conn = None
+            cursor = None
+            try:
+                conn = get_connection()
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("""
+                    SELECT nome, descricao
+                    FROM odontoPro_especialidade
+                    WHERE id = %s
+                    AND clinica_id = %s
+                """, (serv_id, self.clinica_id))
+                
+                row = cursor.fetchone()
+                
+                if row:
+                    return row.get("nome"), row.get("descricao") or ""
+                else:
+                    return None, None
+                    
+            except Exception as e:
+                print(f"Erro ao carregar descrição: {e}")
+                return None, None
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        except Exception as e:
+            print(f"Erro ao carregar descrição (import/conn): {e}")
+            return None, None
+
+    def _salvar_descricao_no_banco(self, serv_id, descricao):
+        """Salva a descrição do serviço no banco."""
+        try:
+            from config.database import get_connection
+            import traceback
+            conn = None
+            cursor = None
+            try:
+                print(f"[DEBUG] Salvando descrição - serv_id: {serv_id}, clinica_id: {self.clinica_id}")
+                print(f"[DEBUG] Descrição: {descricao[:50]}..." if len(descricao) > 50 else f"[DEBUG] Descrição: {descricao}")
+                
+                conn = get_connection()
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE odontoPro_especialidade
+                    SET descricao = %s
+                    WHERE id = %s
+                    AND clinica_id = %s
+                """, (descricao if descricao else None, serv_id, self.clinica_id))
+                
+                conn.commit()
+                
+                if cursor.rowcount > 0:
+                    print(f"[INFO] Descrição salva com sucesso para serviço ID: {serv_id}")
+                    return True
+                else:
+                    print(f"[AVISO] Nenhuma linha foi atualizada. Serviço ID: {serv_id} não encontrado.")
+                    return False
+                    
+            except Exception as e:
+                print(f"[ERRO] Falha ao salvar descrição: {e}")
+                traceback.print_exc()
+                return False
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        except Exception as e:
+            print(f"[ERRO] Falha ao salvar descrição (import/conn): {e}")
+            import traceback
+            traceback.print_exc()
+            return False
 
     # ==================== PERFIL ====================
     def _render_profile(self, parent):
