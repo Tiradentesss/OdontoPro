@@ -1,5 +1,11 @@
-import customtkinter as ctk
+import os
+from io import BytesIO
 from datetime import datetime, date
+
+import customtkinter as ctk
+import requests
+from PIL import Image, ImageDraw, ImageFont
+
 # Importações mantidas conforme original
 from .base import BaseScreen
 from .theme import font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
@@ -9,6 +15,7 @@ from controllers.medico_controller import MedicoController
 from controllers.gerenciamento_controller import GerenciamentoController
 from controllers.relatorios_controller import RelatoriosController
 from controllers.clinica_controller import ClinicaController
+from services.cloudinary_service import get_cloudinary_config
 
 class Painel(BaseScreen):
     def __init__(self, parent, clinica_id=None, usuario_id=None, tipo_usuario=None):
@@ -36,6 +43,8 @@ class Painel(BaseScreen):
             'text_muted': COLORS.get('text_muted', '#94A3B8'),
             'bg_app': COLORS.get('bg_soft', '#1E293B')
         }
+        self._proximas_consultas_avatar_cache = {}
+        self._proximas_consultas_image_refs = []
 
         self.scroll = ctk.CTkScrollableFrame(
             self.content_card,
@@ -141,39 +150,148 @@ class Painel(BaseScreen):
 
     def _render_proximas_consultas(self, row, col):
         card = self._criar_card("Próximas Consultas", "Compromissos agendados para hoje", row, col, padx=(0, 10))
-        
+        self._proximas_consultas_avatar_cache = {}
+        self._proximas_consultas_image_refs = []
+
         if not self.dados_consultas_hoje:
             self._render_vazio(card, "Nenhum compromisso agendado para hoje")
             return
 
         for item in self.dados_consultas_hoje[:2]:
-            # Parsing simplificado para exemplo
-            nome = item[1] if isinstance(item, (list, tuple)) else "Paciente"
-            horario = item[2].strftime('%H:%M') if hasattr(item[2], 'strftime') else "00:00"
-            
+            if isinstance(item, dict):
+                nome = item.get('nome') or 'Paciente'
+                foto = item.get('foto')
+                horario = item.get('data_hora')
+            else:
+                nome = item[1] if len(item) > 1 else 'Paciente'
+                foto = item[9] if len(item) > 9 else None
+                horario = item[2] if len(item) > 2 else None
+
+            horario_txt = horario.strftime('%H:%M') if hasattr(horario, 'strftime') else '00:00'
+            avatar_img = self._create_patient_avatar(nome, foto, 38)
+
             row_item = ctk.CTkFrame(card, fg_color="transparent")
             row_item.pack(fill="x", padx=15, pady=5)
 
-            # Avatar Round
             avatar = ctk.CTkLabel(
-                row_item, text=nome[0].upper(), width=38, height=38,
-                corner_radius=19, fg_color=self.colors['primary_soft'],
-                text_color=self.colors['primary'], font=ctk.CTkFont(weight="bold")
+                row_item,
+                image=avatar_img,
+                text='',
+                width=38,
+                height=38,
+                corner_radius=19,
+                fg_color=self.colors['primary_soft'],
+                text_color=self.colors['primary'],
+                font=ctk.CTkFont(weight="bold")
             )
+            avatar.image = avatar_img
             avatar.pack(side="left", padx=(5, 12))
 
             info = ctk.CTkFrame(row_item, fg_color="transparent")
             info.pack(side="left", fill="both", expand=True)
-            
-            ctk.CTkLabel(info, text=nome, font=ctk.CTkFont(size=18, weight="bold"), text_color=self.colors['text']).pack(anchor="w")
-            ctk.CTkLabel(info, text=f"Horário: {horario}h", font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor="w")
 
-            # Badge Status
+            ctk.CTkLabel(info, text=nome, font=ctk.CTkFont(size=18, weight="bold"), text_color=self.colors['text']).pack(anchor="w")
+            ctk.CTkLabel(info, text=f"Horário: {horario_txt}h", font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor="w")
+
             badge = ctk.CTkFrame(row_item, fg_color=self.colors['info_soft'], corner_radius=8)
             badge.pack(side="right", padx=5)
             ctk.CTkLabel(badge, text="Confirmado", text_color=self.colors['info'], font=ctk.CTkFont(size=10, weight="bold")).pack(padx=8, pady=2)
 
         self._criar_botao_ir_para(card, 'agenda')
+
+    def _create_patient_avatar(self, nome, foto, size):
+        if foto and foto in self._proximas_consultas_avatar_cache:
+            return self._proximas_consultas_avatar_cache[foto]
+
+        if foto:
+            print(f"[PAINEL AVATAR] Paciente: {nome or 'Paciente'}")
+            print(f"[PAINEL AVATAR] Foto recebida: {foto}")
+            try:
+                is_http_url = isinstance(foto, str) and foto.lower().startswith(('http://', 'https://'))
+                is_absolute_path = isinstance(foto, str) and os.path.isabs(foto)
+                has_extension = isinstance(foto, str) and '.' in os.path.basename(foto)
+                img = None
+                url_to_load = None
+                classification = "Arquivo local"
+
+                if is_http_url:
+                    classification = "URL remota"
+                    url_to_load = foto
+                    print(f"[PAINEL AVATAR] Classificação: {classification}")
+                elif is_absolute_path:
+                    classification = "Arquivo local (caminho absoluto)"
+                    print(f"[PAINEL AVATAR] Classificação: {classification}")
+                    if os.path.exists(foto):
+                        img = Image.open(foto).convert('RGBA')
+                    else:
+                        raise FileNotFoundError(f"Arquivo não encontrado: {foto}")
+                elif isinstance(foto, str) and '/' in foto and not has_extension:
+                    classification = "Cloudinary public_id"
+                    print(f"[PAINEL AVATAR] Classificação: {classification}")
+                    cloudinary_config = get_cloudinary_config()
+                    if cloudinary_config:
+                        cloud_name = cloudinary_config.get('cloud_name')
+                        print(f"[PAINEL AVATAR] Cloud name: {cloud_name}")
+                        url_to_load = f"https://res.cloudinary.com/{cloud_name}/image/upload/{foto}"
+                        print(f"[PAINEL AVATAR] URL gerada: {url_to_load}")
+                    else:
+                        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                        path = os.path.join(root, foto)
+                        if os.path.exists(path):
+                            img = Image.open(path).convert('RGBA')
+                        else:
+                            raise FileNotFoundError(f"Arquivo não encontrado: {path}")
+                else:
+                    classification = "Arquivo local (relativo)"
+                    print(f"[PAINEL AVATAR] Classificação: {classification}")
+                    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                    if foto.startswith('media/'):
+                        path = os.path.join(root, foto)
+                    else:
+                        path = os.path.join(root, 'media', foto)
+                    if os.path.exists(path):
+                        img = Image.open(path).convert('RGBA')
+                    else:
+                        raise FileNotFoundError(f"Arquivo não encontrado: {path}")
+
+                if url_to_load and img is None:
+                    response = requests.get(url_to_load, timeout=15)
+                    print(f"[PAINEL AVATAR] Status HTTP: {response.status_code}")
+                    response.raise_for_status()
+                    img = Image.open(BytesIO(response.content)).convert('RGBA')
+
+                if img is not None:
+                    min_d = min(img.size)
+                    img = img.crop(((img.width - min_d) // 2, (img.height - min_d) // 2, (img.width + min_d) // 2, (img.height + min_d) // 2))
+                    img = img.resize((size, size), Image.Resampling.LANCZOS)
+                    mask = Image.new('L', (size, size), 0)
+                    draw = ImageDraw.Draw(mask)
+                    draw.ellipse((0, 0, size, size), fill=255)
+                    img.putalpha(mask)
+                    avatar_img = ctk.CTkImage(light_image=img, dark_image=img, size=(size, size))
+                    self._proximas_consultas_avatar_cache[foto] = avatar_img
+                    self._proximas_consultas_image_refs.append(avatar_img)
+                    print(f"[PAINEL AVATAR] Imagem carregada com sucesso")
+                    return avatar_img
+            except Exception as exc:
+                print(f"[PAINEL AVATAR] Erro: {type(exc).__name__} - {str(exc)[:120]}")
+                print(f"[PAINEL AVATAR] Aplicando fallback com inicial")
+
+        inicial = (nome or '?')[0].upper() if nome else '?'
+        color = self.colors['primary_soft']
+        img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        draw.ellipse((0, 0, size, size), fill=color)
+        try:
+            fonte = ImageFont.truetype('arial.ttf', int(size * 0.50))
+        except Exception:
+            fonte = ImageFont.load_default()
+        draw.text((size / 2, size / 2), inicial, fill=self.colors['primary'], font=fonte, anchor='mm')
+        avatar_img = ctk.CTkImage(light_image=img, dark_image=img, size=(size, size))
+        if foto:
+            self._proximas_consultas_avatar_cache[foto] = avatar_img
+        self._proximas_consultas_image_refs.append(avatar_img)
+        return avatar_img
 
     def _render_resumo_relatorios(self, row, col):
         card = self._criar_card("📊 Resumo dos Relatórios", "", row, col, padx=(10, 0))
