@@ -1024,7 +1024,6 @@ class Agenda(BaseScreen):
             table_container.grid_columnconfigure(0, weight=1)
             table_container.grid_rowconfigure(0, weight=1)
 
-            # LISTA APENAS - SEM CABEÇALHO
             list_area = ctk.CTkFrame(
                 table_container,
                 fg_color='transparent',
@@ -1032,10 +1031,12 @@ class Agenda(BaseScreen):
             list_area.grid(row=0, column=0, sticky='nsew')
             list_area.grid_columnconfigure(0, weight=1)
 
+            self._render_table_header(list_area)
+
             if not consultas:
                 print(f"[AGENDA] _render_after_load: sem consultas, exibindo empty state")
                 empty_box = ctk.CTkFrame(list_area, fg_color='transparent')
-                empty_box.grid(row=0, column=0, sticky='nsew', pady=50)
+                empty_box.grid(row=1, column=0, sticky='nsew', pady=50)
 
                 ctk.CTkLabel(
                     empty_box,
@@ -1218,6 +1219,66 @@ class Agenda(BaseScreen):
             text_color=self.colors['text_secondary']
         ).pack(anchor='w', padx=4)
 
+    def _render_table_header(self, container):
+        header_frame = ctk.CTkFrame(container, fg_color='transparent', height=34)
+        header_frame.grid(row=0, column=0, sticky='ew', pady=(0, 6))
+        header_frame.grid_propagate(False)
+
+        for col_idx, conf in enumerate(self.col_config):
+            header_frame.grid_columnconfigure(col_idx, minsize=conf['minsize'], weight=conf['weight'])
+
+        for col_idx, conf in enumerate(self.col_config):
+            padx_left = conf.get('padx_left', 8)
+            padx_right = conf.get('padx_right', 8)
+            text = ''
+
+            if col_idx == 1:
+                text = 'Nome'
+            elif col_idx == 2:
+                text = 'Especialidade'
+            elif col_idx == 3:
+                text = 'Médico'
+            elif col_idx == 4:
+                text = 'Data'
+            elif col_idx == 5:
+                text = 'Horário'
+            elif col_idx == 6:
+                text = 'Status'
+
+            if col_idx == 0:
+                ctk.CTkLabel(
+                    header_frame,
+                    text='',
+                    anchor='center',
+                    justify='center',
+                    text_color=self.colors['text_secondary'],
+                    font=ctk.CTkFont(size=11, weight='bold')
+                ).grid(row=0, column=0, sticky='nsew', padx=(padx_left, padx_right), pady=0)
+                continue
+
+            if col_idx == 6:
+                status_header_wrap = ctk.CTkFrame(header_frame, fg_color='transparent')
+                status_header_wrap.grid(row=0, column=6, sticky='ew', padx=(padx_left, padx_right), pady=0)
+                status_header_wrap.grid_columnconfigure(0, weight=1)
+                ctk.CTkLabel(
+                    status_header_wrap,
+                    text=text,
+                    anchor='center',
+                    justify='center',
+                    text_color=self.colors['text_secondary'],
+                    font=ctk.CTkFont(size=11, weight='bold')
+                ).grid(row=0, column=0, padx=(0, 4), pady=6)
+                continue
+
+            ctk.CTkLabel(
+                header_frame,
+                text=text,
+                anchor='center',
+                justify='center',
+                text_color=self.colors['text_secondary'],
+                font=ctk.CTkFont(size=11, weight='bold')
+            ).grid(row=0, column=col_idx, sticky='nsew', padx=(padx_left, padx_right), pady=0)
+
     def _render_rows(self, container, consultas):
         print(f"[AGENDA] _render_rows: consultas_id={id(consultas)} len={len(consultas)}")
         if consultas:
@@ -1244,7 +1305,7 @@ class Agenda(BaseScreen):
                 height=58,
                 border_width=0
             )
-            row.grid(row=idx, column=0, sticky='ew', pady=4)
+            row.grid(row=idx + 1, column=0, sticky='ew', pady=4)
             row.grid_propagate(False)
             row.grid_rowconfigure(0, weight=1)
 
@@ -1373,25 +1434,25 @@ class Agenda(BaseScreen):
             estilo_status = LOCAL_STATUS_COLORS.get(status_key, {'bg': COLORS['border'], 'text': COLORS['text_secondary']})
 
             status_wrap = ctk.CTkFrame(row, fg_color='transparent')
-            status_wrap.grid(row=0, column=6, sticky='nsew', padx=(padx_left, padx_right), pady=0)
+            status_wrap.grid(row=0, column=6, sticky='ew', padx=(padx_left, padx_right), pady=0)
             status_wrap.grid_columnconfigure(0, weight=1)
             status_wrap.grid_rowconfigure(0, weight=1)
 
             badge = ctk.CTkFrame(
                 status_wrap,
                 fg_color=estilo_status['bg'],
-                corner_radius=12,
-                width=110,
-                height=28
+                corner_radius=10,
+                width=128,
+                height=26
             )
-            badge.grid(row=0, column=0, sticky='nsew', padx=6, pady=8)
+            badge.grid(row=0, column=0, padx=(0, 4), pady=6)
             badge.grid_propagate(False)
 
             lbl_badge = ctk.CTkLabel(
                 badge,
                 text=self._truncate_text(status or '-', 18),
                 text_color=estilo_status['text'],
-                font=ctk.CTkFont(size=11, weight='bold'),
+                font=ctk.CTkFont(size=10, weight='bold'),
                 anchor='center',
                 justify='center',
                 wraplength=0
