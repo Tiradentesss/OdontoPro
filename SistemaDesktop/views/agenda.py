@@ -3,10 +3,13 @@ import os
 from datetime import datetime, date
 import time
 import queue
+import requests
+from io import BytesIO
 
 import customtkinter as ctk
 from PIL import Image, ImageDraw, ImageFont
 from config.database import get_connection
+from services.cloudinary_service import get_cloudinary_config
 
 from .base import BaseScreen
 from .theme import font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
@@ -1395,10 +1398,77 @@ class Agenda(BaseScreen):
     def _create_avatar_image(self, nome, foto, size):
         if foto:
             try:
-                root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-                path = os.path.join(root, 'media', foto)
-                if os.path.exists(path):
-                    img = Image.open(path).convert('RGB')
+                # PASSO 1: Detectar tipo de entrada
+                is_http_url = isinstance(foto, str) and foto.lower().startswith(('http://', 'https://'))
+                is_absolute_path = isinstance(foto, str) and os.path.isabs(foto)
+                
+                # Heurística para Cloudinary vs arquivo local relativo:
+                # Cloudinary public_id geralmente NÃO tem extensão de arquivo
+                has_extension = '.' in os.path.basename(foto) if isinstance(foto, str) else False
+                
+                img = None
+                url_to_load = None
+                
+                if is_http_url:
+                    # TIPO 1: URL HTTPS completa
+                    print(f"[AVATAR] Classificação: URL HTTPS")
+                    url_to_load = foto
+                    
+                elif is_absolute_path:
+                    # TIPO 3b: Caminho absoluto local
+                    print(f"[AVATAR] Classificação: Arquivo local (caminho absoluto)")
+                    if os.path.exists(foto):
+                        img = Image.open(foto).convert('RGBA')
+                    else:
+                        raise FileNotFoundError(f"Arquivo não encontrado: {foto}")
+                        
+                elif '/' in foto and not has_extension:
+                    # TIPO 2: Public_ID Cloudinary (ex: media/pacientes/IMG-20260209-WA0005_rsy31t)
+                    # Distingue de arquivo local pois NÃO tem extensão
+                    print(f"[AVATAR] Classificação: Cloudinary public_id")
+                    cloudinary_config = get_cloudinary_config()
+                    if cloudinary_config:
+                        cloud_name = cloudinary_config['cloud_name']
+                        url_to_load = f"https://res.cloudinary.com/{cloud_name}/image/upload/{foto}"
+                        print(f"[AVATAR] Cloudinary: Cloud={cloud_name}, Public_ID={foto[:45]}...")
+                        print(f"[AVATAR] URL gerada: {url_to_load[:85]}...")
+                    else:
+                        # Fallback: tentar como arquivo local se Cloudinary não configurado
+                        print(f"[AVATAR] Aviso: Cloudinary não configurado, tentando como arquivo local")
+                        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                        path = os.path.join(root, foto)
+                        if os.path.exists(path):
+                            img = Image.open(path).convert('RGBA')
+                        else:
+                            raise FileNotFoundError(f"Arquivo não encontrado: {path}")
+                else:
+                    # TIPO 3a: Arquivo local relativo (tem extensão ou é nome simples)
+                    print(f"[AVATAR] Classificação: Arquivo local (relativo)")
+                    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+                    # Se já começa com 'media/', não acrescentar outra
+                    if foto.startswith('media/'):
+                        path = os.path.join(root, foto)
+                    else:
+                        path = os.path.join(root, 'media', foto)
+                    if os.path.exists(path):
+                        img = Image.open(path).convert('RGBA')
+                    else:
+                        raise FileNotFoundError(f"Arquivo não encontrado: {path}")
+                
+                # PASSO 2: Se precisar carregar URL, fazer requisição HTTP
+                if url_to_load and img is None:
+                    try:
+                        response = requests.get(url_to_load, timeout=15)
+                        print(f"[AVATAR] Status HTTP: {response.status_code}")
+                        response.raise_for_status()
+                        img = Image.open(BytesIO(response.content)).convert('RGBA')
+                    except Exception as e:
+                        print(f"[AVATAR] Erro HTTP ({url_to_load[:60]}...): {type(e).__name__}")
+                        raise
+                
+                # PASSO 3: Se temos imagem, processar (circular, resize)
+                if img:
+                    # Corte centralizado + forma circular
                     min_d = min(img.size)
                     img = img.crop((
                         (img.width - min_d) // 2,
@@ -1408,14 +1478,16 @@ class Agenda(BaseScreen):
                     ))
                     img = img.resize((size, size), Image.Resampling.LANCZOS)
 
+                    # Máscara circular com alpha
                     mask = Image.new('L', (size, size), 0)
                     draw = ImageDraw.Draw(mask)
                     draw.ellipse((0, 0, size, size), fill=255)
                     img.putalpha(mask)
 
                     return ctk.CTkImage(light_image=img, size=(size, size))
-            except Exception:
-                pass
+                    
+            except Exception as e:
+                print(f"[AVATAR] Erro ao processar avatar (foto={foto}): {type(e).__name__}: {str(e)[:50]}")
 
         inicial = (nome or '?')[0].upper() if nome else '?'
         color = self.colors['avatar_colors'][hash(nome) % len(self.colors['avatar_colors'])] if nome else self.colors['avatar_colors'][0]
