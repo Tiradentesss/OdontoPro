@@ -16,7 +16,7 @@ from matplotlib.ticker import MaxNLocator
 
 from config.database import get_connection
 from .base import BaseScreen
-from .theme import FONT_FAMILY, font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
+from .theme import FONT_FAMILY, font, COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS, get_dark_mode
 from controllers.consulta_controller import ConsultaController
 from controllers.relatorios_controller import RelatoriosController
 
@@ -1180,14 +1180,51 @@ class Relatorios(BaseScreen):
             ).pack()
             return
 
-        fig = Figure(figsize=(9, 3.2), dpi=100, facecolor="white")
-        ax = fig.add_subplot(111)
-        ax.set_facecolor("white")
+        is_dark = get_dark_mode()
+        if is_dark:
+            fig_bg = COLORS["card"]
+            ax_bg = COLORS["card"]
+            bar_color = COLORS.get("primary", "#06B6D4")
+            text_color = COLORS.get("text", "#F8FAFC")
+            label_color = COLORS.get("text_secondary", "#CBD5E1")
+            border_color = COLORS.get("border", "#30363D")
+            grid_color = COLORS.get("border", "#30363D")
+            tick_color = COLORS.get("text_secondary", "#CBD5E1")
+            annotation_color = COLORS.get("text", "#F8FAFC")
+            tooltip_bg = COLORS.get("bg_soft", "#161B22")
+            tooltip_text = COLORS.get("text", "#F8FAFC")
+            tooltip_edge = COLORS.get("border", "#30363D")
+            x_rotation = 0
+            x_ha = "center"
+            grid_alpha = 0.28
+            bar_alpha = 0.95
+            text_size = 9
+            xlabel = "Período"
+            ylabel = "Consultas"
+        else:
+            fig_bg = "#FFFFFF"
+            ax_bg = "#FFFFFF"
+            bar_color = COLORS.get("primary", "#06B6D4")
+            text_color = COLORS.get("text", "#1F2937")
+            label_color = COLORS.get("text", "#1F2937")
+            border_color = COLORS.get("border", "#E5E7EB")
+            grid_color = COLORS.get("border", "#E5E7EB")
+            tick_color = COLORS.get("text", "#1F2937")
+            annotation_color = COLORS.get("text", "#1F2937")
+            tooltip_bg = "#FFFFFF"
+            tooltip_text = COLORS.get("text", "#1F2937")
+            tooltip_edge = COLORS.get("border", "#E5E7EB")
+            x_rotation = 35
+            x_ha = "right"
+            grid_alpha = 0.12
+            bar_alpha = 0.95
+            text_size = 9
+            xlabel = ""
+            ylabel = "Consultas"
 
-        bar_color = COLORS.get("primary", "#4f8cff")
-        text_color = COLORS.get("text", "#000000")
-        border_color = COLORS.get("border", "#cccccc")
-        grid_color = COLORS.get("border", "#cccccc")
+        fig = Figure(figsize=(9, 3.2), dpi=100, facecolor=fig_bg)
+        ax = fig.add_subplot(111)
+        ax.set_facecolor(ax_bg)
 
         positions = list(range(len(labels)))
         bar_width = 0.45
@@ -1203,7 +1240,7 @@ class Relatorios(BaseScreen):
             color=bar_color,
             edgecolor=bar_color,
             linewidth=1.0,
-            alpha=0.95,
+            alpha=bar_alpha,
             zorder=3,
         )
 
@@ -1244,9 +1281,9 @@ class Relatorios(BaseScreen):
         ax.set_xlim(-0.5, len(labels) - 0.5)
         ax.set_ylim(0, y_limit)
         ax.set_xticks(tick_positions)
-        ax.set_xticklabels(tick_labels, fontsize=10, color=text_color, rotation=0, ha="center")
-        ax.tick_params(axis="y", colors=text_color, labelsize=10)
-        ax.tick_params(axis="x", length=0)
+        ax.set_xticklabels(tick_labels, fontsize=10, color=tick_color, rotation=x_rotation, ha=x_ha)
+        ax.tick_params(axis="y", colors=tick_color, labelsize=10)
+        ax.tick_params(axis="x", colors=tick_color, labelsize=10, length=0)
 
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
@@ -1254,10 +1291,13 @@ class Relatorios(BaseScreen):
         ax.spines["bottom"].set_color(border_color)
         ax.spines["left"].set_linewidth(1.0)
         ax.spines["bottom"].set_linewidth(1.0)
-        ax.yaxis.grid(True, color=grid_color, alpha=0.12, linestyle="--", zorder=0)
+        ax.yaxis.grid(True, color=grid_color, alpha=grid_alpha, linestyle="--", zorder=0)
         ax.xaxis.grid(False)
-        ax.set_ylabel("Consultas", color=text_color, fontsize=10, labelpad=12)
+        ax.set_ylabel(ylabel, color=label_color, fontsize=10, labelpad=12)
+        if xlabel:
+            ax.set_xlabel(xlabel, color=label_color, fontsize=10, labelpad=10)
         ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.title.set_color(text_color)
 
         for patch, value in zip(bar_container.patches, values):
             if value <= 0:
@@ -1269,14 +1309,15 @@ class Relatorios(BaseScreen):
                 textcoords="offset points",
                 ha="center",
                 va="bottom",
-                fontsize=9,
-                color=text_color,
+                fontsize=text_size,
+                color=annotation_color,
             )
 
         fig.tight_layout(pad=1.0)
 
         canvas = FigureCanvasTkAgg(fig, master=self._chart_canvas_container)
         canvas.draw()
+        canvas.get_tk_widget().configure(bg=fig_bg)
         canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
         self._chart_canvas = canvas
 
@@ -1291,9 +1332,9 @@ class Relatorios(BaseScreen):
             xy=(0, 0),
             xytext=(10, 10),
             textcoords="offset points",
-            bbox={"boxstyle": "round,pad=0.4", "fc": "white", "ec": border_color, "alpha": 0.95},
+            bbox={"boxstyle": "round,pad=0.4", "fc": tooltip_bg, "ec": tooltip_edge, "alpha": 0.96},
             fontsize=9,
-            color=text_color,
+            color=tooltip_text,
             visible=False,
         )
 
