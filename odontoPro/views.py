@@ -1666,16 +1666,16 @@ def home(request):
         .select_related("endereco")
         .prefetch_related("imagens")
         .annotate(
-            avaliacao_media=Avg('avaliacoes_clinica__nota'),
-            num_avaliacoes=Count('avaliacoes_clinica', distinct=True),
+            avaliacao_media_real=Avg('avaliacoes_clinica__nota'),
+            num_avaliacoes_real=Count('avaliacoes_clinica', distinct=True),
         )
-        .filter(avaliacao_media__gte=4.0)
-        .order_by("-avaliacao_media", "-num_avaliacoes", "nome")
+        .filter(avaliacao_media_real__gte=4.0)
+        .order_by("-avaliacao_media_real", "-num_avaliacoes_real", "nome")
     )
 
     for clinica in featured_clinics:
-        clinica.avaliacao = float(clinica.avaliacao_media or 0.0)
-        clinica.num_avaliacoes = clinica.num_avaliacoes or 0
+        clinica.avaliacao = float(clinica.avaliacao_media_real or 0.0)
+        clinica.num_avaliacoes = clinica.num_avaliacoes_real or 0
         clinica.display_image = _get_clinica_display_image(clinica)
 
         if clinica.endereco:
