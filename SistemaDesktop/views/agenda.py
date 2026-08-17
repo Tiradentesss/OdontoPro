@@ -467,16 +467,25 @@ class Agenda(BaseScreen):
 
         # Configuração das colunas
         self.col_config = [
-            {'key': 'avatar',        'minsize': 52,  'weight': 0, 'title': '',               'anchor': 'center', 'padx_left': 12, 'padx_right': 4},
-            {'key': 'nome',          'minsize': 0, 'weight': 1, 'title': 'Nome',           'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
-            {'key': 'especialidade', 'minsize': 0, 'weight': 1, 'title': 'Especialidade', 'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
-            {'key': 'medico',        'minsize': 0, 'weight': 1, 'title': 'Médico',         'anchor': 'w',      'padx_left': 12, 'padx_right': 8},
-            {'key': 'data',          'minsize': 0, 'weight': 1, 'title': 'Data',           'anchor': 'center', 'padx_left': 12, 'padx_right': 8},
-            {'key': 'hora',          'minsize': 0, 'weight': 1, 'title': 'Hora',           'anchor': 'center', 'padx_left': 12, 'padx_right': 8},
-            {'key': 'status',        'minsize': 0, 'weight': 1, 'title': 'Status',         'anchor': 'center', 'padx_left': 12, 'padx_right': 12},
+            {'key': 'avatar',        'minsize': 52,  'weight': 0, 'title': '',               'anchor': 'center', 'padx_left': 10, 'padx_right': 6},
+            {'key': 'nome',          'minsize': 210, 'weight': 3, 'title': 'Nome',           'anchor': 'w',      'padx_left': 10, 'padx_right': 8},
+            {'key': 'especialidade', 'minsize': 150, 'weight': 2, 'title': 'Especialidade', 'anchor': 'center', 'padx_left': 8, 'padx_right': 8},
+            {'key': 'medico',        'minsize': 190, 'weight': 3, 'title': 'Médico',         'anchor': 'center', 'padx_left': 8, 'padx_right': 8},
+            {'key': 'data',          'minsize': 110, 'weight': 1, 'title': 'Data',           'anchor': 'center', 'padx_left': 8, 'padx_right': 8},
+            {'key': 'hora',          'minsize': 80,  'weight': 1, 'title': 'Hora',           'anchor': 'center', 'padx_left': 8, 'padx_right': 8},
+            {'key': 'status',        'minsize': 140, 'weight': 2, 'title': 'Status',         'anchor': 'center', 'padx_left': 8, 'padx_right': 12},
         ]
 
         self.col_widths = {conf['key']: conf['minsize'] for conf in self.col_config}
+
+    @staticmethod
+    def _truncate_text(value, max_chars):
+        text = str(value or '')
+        if len(text) <= max_chars:
+            return text
+        if max_chars <= 3:
+            return text[:max_chars]
+        return text[:max_chars - 3].rstrip() + '...'
 
         print(f"[Agenda] __init__ concluído.")
         self._trace_enabled = True
@@ -1238,7 +1247,7 @@ class Agenda(BaseScreen):
             row.grid(row=idx, column=0, sticky='ew', pady=4)
             row.grid_propagate(False)
             row.grid_rowconfigure(0, weight=1)
-            
+
             for col_idx, conf in enumerate(self.col_config):
                 row.grid_columnconfigure(col_idx, minsize=conf['minsize'], weight=conf['weight'])
 
@@ -1251,7 +1260,7 @@ class Agenda(BaseScreen):
             avatar_conf = self.col_config[0]
             padx_left = avatar_conf.get('padx_left', 8)
             padx_right = avatar_conf.get('padx_right', 8)
-            
+
             avatar = ctk.CTkLabel(
                 row,
                 width=36,
@@ -1261,7 +1270,7 @@ class Agenda(BaseScreen):
                 text='',
                 compound='center'
             )
-            avatar.grid(row=0, column=0, sticky='nsew', padx=(padx_left, padx_right), pady=0)
+            avatar.grid(row=0, column=0, sticky='nsew', padx=(padx_left, padx_right), pady=4)
 
             avatar_img = self._create_avatar_image(nome, foto, 36)
             avatar.configure(image=avatar_img)
@@ -1277,12 +1286,14 @@ class Agenda(BaseScreen):
             padx_right = nome_conf.get('padx_right', 8)
             nome_label = ctk.CTkLabel(
                 row,
-                text=(nome or 'Não informado'),
+                text=self._truncate_text(nome or 'Não informado', 28),
                 font=ctk.CTkFont(size=13, weight='bold'),
                 text_color=self.colors['text_primary'],
-                anchor=nome_conf['anchor']
+                anchor=nome_conf['anchor'],
+                justify='left',
+                wraplength=0
             )
-            nome_label.grid(row=0, column=1, sticky='ew', padx=(padx_left, padx_right), pady=0)
+            nome_label.grid(row=0, column=1, sticky='nsew', padx=(padx_left, padx_right), pady=0)
             nome_label.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
             nome_label.bind('<Enter>', lambda e, r=row, cid=consulta_id: self._on_row_enter(r, cid))
             nome_label.bind('<Leave>', lambda e, r=row, cid=consulta_id: self._on_row_leave(r, cid))
@@ -1292,12 +1303,14 @@ class Agenda(BaseScreen):
             padx_right = espec_conf.get('padx_right', 8)
             espec_label = ctk.CTkLabel(
                 row,
-                text=(especialidade or '-'),
+                text=self._truncate_text(especialidade or '-', 24),
                 font=ctk.CTkFont(size=13),
                 text_color=self.colors['text_secondary'],
-                anchor=espec_conf['anchor']
+                anchor=espec_conf['anchor'],
+                justify='center',
+                wraplength=0
             )
-            espec_label.grid(row=0, column=2, sticky='ew', padx=(padx_left, padx_right), pady=0)
+            espec_label.grid(row=0, column=2, sticky='nsew', padx=(padx_left, padx_right), pady=0)
             espec_label.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
             espec_label.bind('<Enter>', lambda e, r=row, cid=consulta_id: self._on_row_enter(r, cid))
             espec_label.bind('<Leave>', lambda e, r=row, cid=consulta_id: self._on_row_leave(r, cid))
@@ -1307,12 +1320,14 @@ class Agenda(BaseScreen):
             padx_right = med_conf.get('padx_right', 8)
             med_label = ctk.CTkLabel(
                 row,
-                text=(medico_nome or '-'),
+                text=self._truncate_text(medico_nome or '-', 28),
                 font=ctk.CTkFont(size=13),
                 text_color=self.colors['text_secondary'],
-                anchor=med_conf['anchor']
+                anchor=med_conf['anchor'],
+                justify='center',
+                wraplength=0
             )
-            med_label.grid(row=0, column=3, sticky='ew', padx=(padx_left, padx_right), pady=0)
+            med_label.grid(row=0, column=3, sticky='nsew', padx=(padx_left, padx_right), pady=0)
             med_label.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
             med_label.bind('<Enter>', lambda e, r=row, cid=consulta_id: self._on_row_enter(r, cid))
             med_label.bind('<Leave>', lambda e, r=row, cid=consulta_id: self._on_row_leave(r, cid))
@@ -1322,12 +1337,14 @@ class Agenda(BaseScreen):
             padx_right = data_conf.get('padx_right', 8)
             data_label = ctk.CTkLabel(
                 row,
-                text=data_hora.strftime('%d/%m/%Y') if data_hora else '-',
+                text=self._truncate_text(data_hora.strftime('%d/%m/%Y') if data_hora else '-', 14),
                 font=ctk.CTkFont(size=13),
                 text_color=self.colors['text_secondary'],
-                anchor=data_conf['anchor']
+                anchor=data_conf['anchor'],
+                justify='center',
+                wraplength=0
             )
-            data_label.grid(row=0, column=4, sticky='ew', padx=(padx_left, padx_right), pady=0)
+            data_label.grid(row=0, column=4, sticky='nsew', padx=(padx_left, padx_right), pady=0)
             data_label.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
             data_label.bind('<Enter>', lambda e, r=row, cid=consulta_id: self._on_row_enter(r, cid))
             data_label.bind('<Leave>', lambda e, r=row, cid=consulta_id: self._on_row_leave(r, cid))
@@ -1337,12 +1354,14 @@ class Agenda(BaseScreen):
             padx_right = hora_conf.get('padx_right', 8)
             hora_label = ctk.CTkLabel(
                 row,
-                text=data_hora.strftime('%H:%M') if data_hora else '-',
+                text=self._truncate_text(data_hora.strftime('%H:%M') if data_hora else '-', 8),
                 font=ctk.CTkFont(size=13),
                 text_color=self.colors['text_secondary'],
-                anchor=hora_conf['anchor']
+                anchor=hora_conf['anchor'],
+                justify='center',
+                wraplength=0
             )
-            hora_label.grid(row=0, column=5, sticky='ew', padx=(padx_left, padx_right), pady=0)
+            hora_label.grid(row=0, column=5, sticky='nsew', padx=(padx_left, padx_right), pady=0)
             hora_label.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
             hora_label.bind('<Enter>', lambda e, r=row, cid=consulta_id: self._on_row_enter(r, cid))
             hora_label.bind('<Leave>', lambda e, r=row, cid=consulta_id: self._on_row_leave(r, cid))
@@ -1350,34 +1369,35 @@ class Agenda(BaseScreen):
             status_conf = self.col_config[6]
             padx_left = status_conf.get('padx_left', 8)
             padx_right = status_conf.get('padx_right', 8)
-            
+
             estilo_status = LOCAL_STATUS_COLORS.get(status_key, {'bg': COLORS['border'], 'text': COLORS['text_secondary']})
 
-            status_wrap = ctk.CTkFrame(row, fg_color="transparent")
-            status_wrap.grid(row=0, column=6, sticky='ew', padx=(padx_left, padx_right), pady=0)
+            status_wrap = ctk.CTkFrame(row, fg_color='transparent')
+            status_wrap.grid(row=0, column=6, sticky='nsew', padx=(padx_left, padx_right), pady=0)
+            status_wrap.grid_columnconfigure(0, weight=1)
+            status_wrap.grid_rowconfigure(0, weight=1)
 
             badge = ctk.CTkFrame(
                 status_wrap,
                 fg_color=estilo_status['bg'],
                 corner_radius=12,
-                height=30
+                width=110,
+                height=28
             )
-            
-            if status_conf['anchor'] == 'center':
-                badge.pack(expand=True, pady=14)
-            else:
-                badge.pack(side='left', pady=14)
-
-            badge.pack_propagate(False)
+            badge.grid(row=0, column=0, sticky='nsew', padx=6, pady=8)
+            badge.grid_propagate(False)
 
             lbl_badge = ctk.CTkLabel(
                 badge,
-                text=status or '-',
+                text=self._truncate_text(status or '-', 18),
                 text_color=estilo_status['text'],
-                font=ctk.CTkFont(size=11, weight='bold')
+                font=ctk.CTkFont(size=11, weight='bold'),
+                anchor='center',
+                justify='center',
+                wraplength=0
             )
-            lbl_badge.pack(padx=12, pady=6)
-            
+            lbl_badge.place(relx=0.5, rely=0.5, anchor='center')
+
             lbl_badge.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
             badge.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
             badge.bind('<Enter>', lambda e, r=row, cid=consulta_id: self._on_row_enter(r, cid))
