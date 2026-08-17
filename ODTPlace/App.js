@@ -17,6 +17,7 @@ import ScheduleScreen from './src/screens/ScheduleScreen';
 import ProfessionalsScreen from './src/screens/ProfessionalsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
+import SplashScreen from './src/screens/SplashScreen';
 import PreLogin from './src/screens/PreLogin';
 import ForgotPassword from './src/screens/ForgotPassword';
 import CheckEmail from './src/screens/CheckEmail';
@@ -85,6 +86,7 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
 
+            <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="PreLogin" component={PreLogin} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="LoginProfissional" component={LoginProfissional} />
