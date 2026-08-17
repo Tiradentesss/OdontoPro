@@ -168,23 +168,50 @@ class Painel(BaseScreen):
                 horario = item[2] if len(item) > 2 else None
 
             horario_txt = horario.strftime('%H:%M') if hasattr(horario, 'strftime') else '00:00'
-            avatar_img = self._create_patient_avatar(nome, foto, 38)
+            avatar_size = 38
+            avatar_img, has_photo = self._create_patient_avatar(nome, foto, avatar_size)
 
             row_item = ctk.CTkFrame(card, fg_color="transparent")
             row_item.pack(fill="x", padx=15, pady=5)
 
             avatar = ctk.CTkLabel(
                 row_item,
-                image=avatar_img,
                 text='',
-                width=38,
-                height=38,
-                corner_radius=19,
-                fg_color=self.colors['primary_soft'],
+                image=None,
+                width=avatar_size,
+                height=avatar_size,
+                corner_radius=avatar_size // 2,
+                fg_color="transparent",
                 text_color=self.colors['primary'],
                 font=ctk.CTkFont(weight="bold")
             )
-            avatar.image = avatar_img
+
+            if has_photo:
+                avatar.configure(
+                    text='',
+                    image=avatar_img,
+                    fg_color='transparent',
+                    width=avatar_size,
+                    height=avatar_size,
+                    corner_radius=avatar_size // 2,
+                    compound='center'
+                )
+                avatar.image = avatar_img
+                print(f"[PAINEL AVATAR] {nome}: exibindo foto, widget transparente e tamanho {avatar_size}x{avatar_size}")
+            else:
+                inicial = (nome or '?')[0].upper() if nome else '?'
+                avatar.configure(
+                    text=inicial,
+                    image=None,
+                    fg_color=self.colors['primary_soft'],
+                    width=avatar_size,
+                    height=avatar_size,
+                    corner_radius=avatar_size // 2,
+                    compound='center'
+                )
+                avatar.image = None
+                print(f"[PAINEL AVATAR] {nome}: exibindo inicial como fallback")
+
             avatar.pack(side="left", padx=(5, 12))
 
             info = ctk.CTkFrame(row_item, fg_color="transparent")
@@ -201,7 +228,7 @@ class Painel(BaseScreen):
 
     def _create_patient_avatar(self, nome, foto, size):
         if foto and foto in self._proximas_consultas_avatar_cache:
-            return self._proximas_consultas_avatar_cache[foto]
+            return self._proximas_consultas_avatar_cache[foto], True
 
         if foto:
             print(f"[PAINEL AVATAR] Paciente: {nome or 'Paciente'}")
@@ -272,7 +299,7 @@ class Painel(BaseScreen):
                     self._proximas_consultas_avatar_cache[foto] = avatar_img
                     self._proximas_consultas_image_refs.append(avatar_img)
                     print(f"[PAINEL AVATAR] Imagem carregada com sucesso")
-                    return avatar_img
+                    return avatar_img, True
             except Exception as exc:
                 print(f"[PAINEL AVATAR] Erro: {type(exc).__name__} - {str(exc)[:120]}")
                 print(f"[PAINEL AVATAR] Aplicando fallback com inicial")
@@ -291,7 +318,7 @@ class Painel(BaseScreen):
         if foto:
             self._proximas_consultas_avatar_cache[foto] = avatar_img
         self._proximas_consultas_image_refs.append(avatar_img)
-        return avatar_img
+        return avatar_img, False
 
     def _render_resumo_relatorios(self, row, col):
         card = self._criar_card("📊 Resumo dos Relatórios", "", row, col, padx=(10, 0))
