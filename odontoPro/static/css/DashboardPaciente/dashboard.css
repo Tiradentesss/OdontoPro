@@ -789,8 +789,13 @@ body.theme-dark .tag-online {
     padding: 40px 0;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border-right: 1px solid var(--cor-borda);
-    position: relative;
-    z-index: 100;
+    /* fix sidebar so it stays in place while content scrolls */
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+    overflow: auto;
 }
 
 .menu-lateral.aberto {
@@ -804,6 +809,7 @@ body.theme-dark .tag-online {
 }
 
 .menu-lateral.aberto {
+    width: 260px;
     flex: 0 0 260px; /* fixed expanded width */
 }
 
@@ -1003,9 +1009,16 @@ body.theme-dark .item-menu.ativo {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    /* default left offset to make space for fixed sidebar */
+    margin-left: 90px;
+    transition: margin-left 0.3s ease;
 }
 
 .barra-topo {
+    position: fixed;
+    top: 0;
+    left: 90px;
+    right: 0;
     min-height: 100px;
     height: auto;
     background: var(--branco);
@@ -1016,7 +1029,19 @@ body.theme-dark .item-menu.ativo {
     border-bottom: 1px solid var(--cor-borda);
     flex-wrap: wrap;
     gap: 18px;
+    z-index: 900;
+    transition: left 0.3s ease;
 }
+
+/* when sidebar is expanded, shift content and topbar to match expanded width */
+body.sidebar-aberto .container-principal {
+    margin-left: 260px;
+}
+
+body.sidebar-aberto .barra-topo {
+    left: 260px;
+}
+
 
 .topbar-left {
     display: flex;
@@ -1179,6 +1204,8 @@ body.theme-dark .item-menu.ativo {
    ========================================== */
 .area-conteudo {
     padding: 25px 40px;
+    /* account for fixed topbar so content doesn't go under it */
+    padding-top: calc(100px + 25px);
     overflow-y: auto;
     flex-grow: 1;
     overflow-x: hidden;

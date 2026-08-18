@@ -183,6 +183,7 @@ function alternarMenu() {
     if (!menu) return;
 
     menu.classList.toggle("aberto");
+    document.body.classList.toggle('sidebar-aberto');
     atualizarLogoMenu();
 }
 
@@ -231,6 +232,14 @@ function mostrarTela(id, btn) {
 document.addEventListener("DOMContentLoaded", () => {
     atualizarLogoMenu();
     atualizarTituloPaginaAtiva();
+
+    // keep body class in sync with sidebar state (in case server rendered it open)
+    const _menu = document.getElementById("menuLateral");
+    if (_menu && _menu.classList.contains('aberto')) {
+        document.body.classList.add('sidebar-aberto');
+    } else {
+        document.body.classList.remove('sidebar-aberto');
+    }
 
     const inputBusca = document.getElementById("inputBuscaClinica");
 

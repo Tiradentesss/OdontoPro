@@ -26,14 +26,11 @@
                 {% else %}
                     <a href="{% url 'login_clinica' %}" class="btn-nav">Minha Clínica</a>
                 {% endif %}
-                <a href="#" class="btn-nav">Download Desktop</a>
-                <a href="#" class="btn-nav">Mobile</a>
                 {% if logged_in %}
                     <a href="/dashboard-paciente/" class="btn-outline">Painel</a>
                 {% else %}
                     <a href="/login/" class="btn-outline">Entrar</a>
                 {% endif %}
-                <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Alternar tema">Tema claro</button>
             </nav>
         </div>
     </header>
