@@ -304,16 +304,28 @@ class Relatorios(BaseScreen):
         ).pack(anchor="w", padx=20, pady=(20, 10))
 
         table_header = ctk.CTkFrame(self.productivity_card, fg_color=COLORS["card_soft"], corner_radius=12)
-        table_header.pack(fill="x", padx=20, pady=(0, 4))
-        table_header.columnconfigure((0, 1, 2, 3), weight=1, uniform="prod_cols")
+        table_header.pack(fill="x", padx=(20, 16), pady=(0, 8))
+        table_header.grid_columnconfigure(0, weight=1)
+        table_header.grid_columnconfigure(1, weight=4)
+        table_header.grid_columnconfigure(2, weight=3)
+        table_header.grid_columnconfigure(3, weight=1)
+        table_header.grid_rowconfigure(0, weight=1)
 
-        ctk.CTkLabel(table_header, text="Posição", font=font("small", "bold"), text_color=COLORS["text_secondary"]).grid(row=0, column=0, sticky="w", padx=12, pady=12)
-        ctk.CTkLabel(table_header, text="Nome", font=font("small", "bold"), text_color=COLORS["text_secondary"]).grid(row=0, column=1, sticky="w", padx=12, pady=12)
-        ctk.CTkLabel(table_header, text="Especialidade", font=font("small", "bold"), text_color=COLORS["text_secondary"]).grid(row=0, column=2, sticky="w", padx=12, pady=12)
-        ctk.CTkLabel(table_header, text="Consultas", font=font("small", "bold"), text_color=COLORS["text_secondary"]).grid(row=0, column=3, sticky="e", padx=12, pady=12)
+        ctk.CTkLabel(table_header, text="Posição", font=font("small", "bold"), text_color=COLORS["text_secondary"], anchor="center").grid(row=0, column=0, sticky="nsew", padx=(12, 8), pady=(12, 10))
+        ctk.CTkLabel(table_header, text="Nome", font=font("small", "bold"), text_color=COLORS["text_secondary"], anchor="w").grid(row=0, column=1, sticky="nsew", padx=(0, 8), pady=(12, 10))
+
+        specialty_header_cell = ctk.CTkFrame(table_header, fg_color="transparent")
+        specialty_header_cell.grid(row=0, column=2, sticky="nsew", padx=(0, 8), pady=(12, 10))
+        specialty_header_cell.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(specialty_header_cell, text="Especialidade", font=font("small", "bold"), text_color=COLORS["text_secondary"], anchor="center", justify="center").grid(row=0, column=0, sticky="nsew")
+
+        consult_header_cell = ctk.CTkFrame(table_header, fg_color="transparent")
+        consult_header_cell.grid(row=0, column=3, sticky="nsew", padx=(0, 12), pady=(12, 10))
+        consult_header_cell.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(consult_header_cell, text="Consultas", font=font("small", "bold"), text_color=COLORS["text_secondary"], anchor="center", justify="center").grid(row=0, column=0, sticky="nsew")
 
         self._productivity_rows_frame = ctk.CTkFrame(self.productivity_card, fg_color="transparent")
-        self._productivity_rows_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        self._productivity_rows_frame.pack(fill="both", expand=True, padx=(20, 16), pady=(0, 20))
 
         stats_frame = ctk.CTkFrame(
             self.scroll_frame,
@@ -1448,42 +1460,32 @@ class Relatorios(BaseScreen):
             empty_label.pack(anchor="w", pady=12)
             return
 
-        max_value = max(int(row[2] or 0) for row in productivity_rows) if productivity_rows else 1
-
         for index, row_data in enumerate(productivity_rows):
             medico, especialidade, consultas = row_data
             consultas_value = int(consultas or 0)
             row_bg = COLORS["bg_soft"] if index % 2 == 0 else COLORS["card"]
+
             row = ctk.CTkFrame(self._productivity_rows_frame, fg_color=row_bg, corner_radius=12)
-            row.pack(fill="x", padx=0, pady=4)
-            row.columnconfigure(0, weight=0)
-            row.columnconfigure(1, weight=1)
-            row.columnconfigure(2, weight=0)
-            row.columnconfigure(3, weight=0)
+            row.pack(fill="x", padx=0, pady=8)
+            row.grid_columnconfigure(0, weight=1)
+            row.grid_columnconfigure(1, weight=4)
+            row.grid_columnconfigure(2, weight=3)
+            row.grid_columnconfigure(3, weight=1)
+            row.grid_rowconfigure(0, weight=1)
 
             medal = ["🥇", "🥈", "🥉"][index] if index < 3 else f"#{index + 1}"
-            ctk.CTkLabel(row, text=medal, font=font("text", "bold"), text_color=COLORS["text"], anchor="w").grid(row=0, column=0, sticky="w", padx=(12, 8), pady=12)
+            ctk.CTkLabel(row, text=medal, font=font("text", "bold"), text_color=COLORS["text"], anchor="center").grid(row=0, column=0, sticky="nsew", padx=(12, 8), pady=(10, 10))
+            ctk.CTkLabel(row, text=medico or "-", font=font("text", "bold"), text_color=COLORS["text"], anchor="w").grid(row=0, column=1, sticky="nsew", padx=(0, 8), pady=(10, 10))
 
-            name_frame = ctk.CTkFrame(row, fg_color="transparent")
-            name_frame.grid(row=0, column=1, sticky="ew", padx=(0, 8), pady=12)
-            name_frame.columnconfigure(0, weight=1)
+            specialty_cell = ctk.CTkFrame(row, fg_color="transparent")
+            specialty_cell.grid(row=0, column=2, sticky="nsew", padx=(0, 8), pady=(10, 10))
+            specialty_cell.grid_columnconfigure(0, weight=1)
+            ctk.CTkLabel(specialty_cell, text=especialidade or "-", font=font("text", "bold"), text_color=COLORS["text_secondary"], anchor="w", justify="left").grid(row=0, column=0, sticky="nsew")
 
-            ctk.CTkLabel(name_frame, text=medico or "-", font=font("text", "bold"), text_color=COLORS["text"], anchor="w").grid(row=0, column=0, sticky="w")
-            if especialidade:
-                ctk.CTkLabel(name_frame, text=especialidade, font=font("small"), text_color=COLORS["text_secondary"], anchor="w").grid(row=1, column=0, sticky="w")
-
-            bar_container = ctk.CTkFrame(row, fg_color="transparent")
-            bar_container.grid(row=0, column=2, sticky="ew", padx=(0, 10), pady=12)
-            bar_container.columnconfigure(0, weight=1)
-            bar_container.columnconfigure(1, weight=0)
-
-            bar_width = max(0.08, (consultas_value / max_value) if max_value else 0.0)
-            bar_fill = ctk.CTkFrame(bar_container, height=8, fg_color=COLORS["primary"], corner_radius=999)
-            bar_fill.grid(row=0, column=0, sticky="ew")
-            bar_fill.configure(width=max(20, int(140 * bar_width)))
-            ctk.CTkFrame(bar_container, height=8, fg_color=COLORS["bg_soft"], corner_radius=999).grid(row=0, column=0, sticky="ew")
-
-            ctk.CTkLabel(row, text=str(consultas_value), font=font("text", "bold"), text_color=COLORS["text"], anchor="e").grid(row=0, column=3, sticky="e", padx=(0, 12), pady=12)
+            consult_cell = ctk.CTkFrame(row, fg_color="transparent")
+            consult_cell.grid(row=0, column=3, sticky="nsew", padx=(0, 12), pady=(10, 10))
+            consult_cell.grid_columnconfigure(0, weight=1)
+            ctk.CTkLabel(consult_cell, text=str(consultas_value), font=font("text", "bold"), text_color=COLORS["text"], anchor="center", justify="center").grid(row=0, column=0, sticky="nsew")
 
     def _update_filter_options(self, medicos, especialidades):
         if medicos:
