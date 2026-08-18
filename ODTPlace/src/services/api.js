@@ -31,6 +31,11 @@ const resolveApiBaseUrl = () => {
 
 const API_BASE_URL = resolveApiBaseUrl();
 
+// Helpful debug log so the running app prints which backend URL it will call
+if (typeof console !== 'undefined' && console.log) {
+  console.log('Resolved API_BASE_URL:', API_BASE_URL, 'Platform:', Platform.OS);
+}
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
