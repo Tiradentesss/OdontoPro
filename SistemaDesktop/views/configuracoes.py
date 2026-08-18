@@ -1137,20 +1137,78 @@ class Configuracoes(BaseScreen):
     # ==================== SERVIÇOS (Banco) ====================
     def _carregar_servicos(self):
         """Carrega e renderiza a lista de serviços da clínica atual."""
-        # Limpa linhas anteriores (mantém apenas o cabeçalho)
-        for w in list(self.services_list_frame.winfo_children()):
-            # keep header label frames (we treat first child as header)
-            # header was packed first, so remove all except the first header frame
-            pass
-
-        # Remove all except first (header)
+        # Limpa linhas anteriores, mantendo o cabeçalho da lista.
         children = self.services_list_frame.winfo_children()
         if len(children) > 1:
             for ch in children[1:]:
                 ch.destroy()
 
-        # Buscar serviços no banco
+        # Buscar somente os serviços da clínica atual.
         servicos = self._buscar_servicos_no_banco()
+
+        if not servicos:
+            ctk.CTkLabel(
+                self.services_list_frame,
+                text="Nenhum serviço cadastrado ainda.",
+                text_color=self.colors["text_secondary"],
+                font=font("text")
+            ).pack(padx=8, pady=12)
+            return
+
+        for servico in servicos:
+            row = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
+            row.grid_columnconfigure(0, weight=3)
+            row.grid_columnconfigure(1, weight=1)
+            row.grid_columnconfigure(2, weight=0)
+            row.pack(fill="x", padx=8, pady=6)
+
+            nome = servico.get("nome", "")
+            preco = servico.get("preco")
+            servico_id = servico.get("id")
+
+            try:
+                from decimal import Decimal
+                preco_formatado = f"{Decimal(str(preco)):,.2f}"
+                preco_formatado = preco_formatado.replace(",", "X").replace(".", ",").replace("X", ".")
+                valor_texto = f"R$ {preco_formatado}"
+            except (TypeError, ValueError, ArithmeticError):
+                valor_texto = f"R$ {preco or '0,00'}"
+
+            ctk.CTkLabel(
+                row,
+                text=nome,
+                text_color=self.colors["text_primary"],
+                font=font("text")
+            ).grid(row=0, column=0, sticky="w")
+            ctk.CTkLabel(
+                row,
+                text=valor_texto,
+                text_color=self.colors["text_secondary"],
+                font=font("text")
+            ).grid(row=0, column=1, sticky="w")
+
+            actions = ctk.CTkFrame(row, fg_color="transparent")
+            actions.grid(row=0, column=2, sticky="e")
+            ctk.CTkButton(
+                actions,
+                text="✎",
+                width=36,
+                height=28,
+                fg_color="transparent",
+                hover_color=self.colors.get("accent_light", COLORS["accent_light"]),
+                text_color=self.colors["accent"],
+                command=lambda sid=servico_id: self._abrir_modal_descricao_servico(sid)
+            ).pack(side="left", padx=(0, 4))
+            ctk.CTkButton(
+                actions,
+                text="🗑",
+                width=36,
+                height=28,
+                fg_color="transparent",
+                hover_color=self.colors.get("row_hover", COLORS.get("hover")),
+                text_color=COLORS["danger"],
+                command=lambda sid=servico_id: self._excluir_servico(sid)
+            ).pack(side="left")
 
     def _fechar_modal_horario_funcionamento(self):
         if hasattr(self, "horario_modal") and self.horario_modal and self.horario_modal.winfo_exists():
@@ -1660,7 +1718,7 @@ class Configuracoes(BaseScreen):
                 conn = get_connection()
                 cursor = conn.cursor(dictionary=True)
                 cursor.execute("""
-                    SELECT id, nome, preco
+                    SELECT id, nome, preco, descricao
                     FROM odontoPro_especialidade
                     WHERE clinica_id = %s
                     ORDER BY nome ASC
@@ -1814,7 +1872,11 @@ class Configuracoes(BaseScreen):
             try:
                 conn = get_connection()
                 cursor = conn.cursor()
-                cursor.execute("DELETE FROM odontoPro_especialidade WHERE id = %s", (servico_id,))
+                cursor.execute(
+                    """DELETE FROM odontoPro_especialidade
+                       WHERE id = %s AND clinica_id = %s""",
+                    (servico_id, self.clinica_id)
+                )
                 conn.commit()
                 
                 if cursor.rowcount > 0:
