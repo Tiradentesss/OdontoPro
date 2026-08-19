@@ -325,23 +325,6 @@ body.theme-dark #modal-calendario .btn-close-modal:hover {
 }
 
 /* Available and unavailable dates */
-.day-cell.available {
-  background-color: var(--col-lightgrey);
-  color: var(--col-black);
-  font-weight: 500;
-  border: 1px solid transparent;
-}
-
-.day-cell.available::after {
-  content: '';
-  position: absolute;
-  bottom: 5px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: #1BC3EA;
-}
-
 .day-cell.unavailable {
   /* Make unavailable dates visually darker / more muted than normal days */
   background-color: #d9d9d9;
@@ -355,20 +338,6 @@ body.theme-dark #modal-calendario .btn-close-modal:hover {
   background-color: #d9d9d9;
   transform: none;
   cursor: not-allowed;
-}
-
-body.theme-dark .day-cell.available {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: var(--texto-principal);
-  border-color: transparent;
-}
-
-body.theme-dark .day-cell.available::after {
-  background-color: #1bc3ea;
-}
-
-.day-cell.selected::after {
-  display: none;
 }
 
 body.theme-dark .day-cell.unavailable {
