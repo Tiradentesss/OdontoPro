@@ -783,6 +783,13 @@ class Configuracoes(BaseScreen):
         for name, btn in self.sub_tab_buttons.items():
             btn.configure(text_color=self.colors["accent"] if name == tab_name else self.colors["text_secondary"])
 
+        external_scrollbar = getattr(self.scroll_frame, "_scrollbar", None)
+        if external_scrollbar:
+            if tab_name == "serviços":
+                external_scrollbar.grid_remove()
+            else:
+                external_scrollbar.grid()
+
         for widget in self.sub_tab_content.winfo_children():
             widget.destroy()
 
