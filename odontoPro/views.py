@@ -411,13 +411,12 @@ def _get_clinica_imagem_url(clinica):
     if clinica.imagem:
         raw_imagem = str(clinica.imagem).strip()
         if raw_imagem.startswith(("http://", "https://")):
-            if _url_responds(raw_imagem):
-                return raw_imagem
+            return raw_imagem
 
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
         try:
             url = clinica.imagem.url
-            if _url_responds(url):
+            if url:
                 return url
         except Exception:
             pass
@@ -425,7 +424,7 @@ def _get_clinica_imagem_url(clinica):
     if clinica.logo and getattr(clinica.logo, 'name', None):
         try:
             url = clinica.logo.url
-            if _url_responds(url):
+            if url:
                 return url
         except Exception:
             pass
@@ -434,7 +433,7 @@ def _get_clinica_imagem_url(clinica):
     if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
         try:
             url = primeira.imagem.url
-            if _url_responds(url):
+            if url:
                 return url
         except Exception:
             pass
@@ -451,7 +450,7 @@ def _get_clinica_logo_url(clinica):
         if getattr(clinica.logo, 'name', None):
             try:
                 url = clinica.logo.url
-                if _url_responds(url):
+                if url:
                     return url
             except Exception:
                 pass
@@ -459,7 +458,7 @@ def _get_clinica_logo_url(clinica):
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
         try:
             url = clinica.imagem.url
-            if _url_responds(url):
+            if url:
                 return url
         except Exception:
             pass
@@ -468,7 +467,7 @@ def _get_clinica_logo_url(clinica):
     if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
         try:
             url = primeira.imagem.url
-            if _url_responds(url):
+            if url:
                 return url
         except Exception:
             pass
@@ -1151,20 +1150,22 @@ def clinica_detalhes(request, clinica_id):
 
             raw_image = str(img.imagem).strip()
             if raw_image.startswith(("http://", "https://")):
-                if _url_responds(raw_image):
-                    imagens.append(raw_image)
+                imagens.append(raw_image)
                 continue
 
             try:
                 url = img.imagem.url
-                if _url_responds(url):
+                if url:
                     imagens.append(url)
             except Exception:
                 pass
 
     logo_url = None
     if clinica.logo:
-        logo_url = clinica.logo.url if _url_responds(clinica.logo.url) else None
+        try:
+            logo_url = clinica.logo.url
+        except Exception:
+            logo_url = None
 
     dias_ordem = [
         "segunda",
@@ -1209,7 +1210,7 @@ def clinica_detalhes(request, clinica_id):
     "telefone": clinica.telefone,
     "descricao": clinica.descricao,
     "logo_url": logo_url,
-    "imagem_url": clinica.imagem.url if clinica.imagem and _url_responds(clinica.imagem.url) else None,
+    "imagem_url": _get_clinica_imagem_url(clinica) if clinica.imagem else None,
     "banner_url": banner_url,
     "images": imagens,
     "rua": clinica.endereco.rua if clinica.endereco else '',
