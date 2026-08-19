@@ -27,7 +27,7 @@
             <div class="conteudo-login">
 
                 <header class="logo-container">
-                    <img src="{% static 'img/Icon Transparente.png' %}" alt="OdontoHub Icon" class="logo-icone">
+                    <img src="{% static 'img/Logo Transparente 1.png' %}" alt="OdontoHub" class="logo-icone">
                 </header>
 
                 <div class="login-home-link" style="margin-bottom: 20px;">
@@ -70,34 +70,34 @@
 
                 <!-- ================= CADASTRO ================= -->
                 <section id="secao-cadastro" class="hidden">
-                    <div class="boas-vindas">
+                    <div class="boas-vindas boas-vindas-cadastro">
+                        <span class="cadastro-eyebrow">NOVA CONTA</span>
                         <h2>Cadastre sua Clínica</h2>
-                        <p>Crie sua conta administrativa</p>
+                        <p>Crie seu acesso administrativo em poucos passos.</p>
                     </div>
 
                     <form id="form-cadastro" class="form-cadastro-clinica" method="post" action="{% url 'cadastrar_clinica' %}">
                         {% csrf_token %}
 
                         <div class="cadastro-clinica-grid">
-                        <div class="campo-input campo-input-full">
-                            <label>CNPJ</label>
-                            <input type="text" name="cnpj" id="cad-cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj" required>
-                        </div>
+                            <div class="campo-input campo-input-full">
+                                <label for="cad-cnpj">CNPJ</label>
+                                <input type="text" name="cnpj" id="cad-cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj" required>
+                            </div>
 
-                        <div class="campo-input campo-input-full">
-                            <label>E-mail</label>
-                            <input type="email" name="email" id="cad-email" placeholder="contato@clinica.com" required>
-                        </div>
+                            <div class="campo-input campo-input-full">
+                                <label for="cad-email">E-mail administrativo</label>
+                                <input type="email" name="email" id="cad-email" placeholder="contato@clinica.com" autocomplete="email" required>
+                            </div>
 
-                        <div class="campo-input">
-                            <label>Senha</label>
-                            <input type="password" name="senha" id="cad-senha" placeholder="Crie uma senha forte"
-                                required>
-                        </div>
-                        <div class="campo-input">
-                            <label>Confirmar senha</label>
-                            <input type="password" name="confirmar_senha" id="cad-confirmar-senha" placeholder="Repita sua senha" required>
-                        </div>
+                            <div class="campo-input">
+                                <label for="cad-senha">Senha</label>
+                                <input type="password" name="senha" id="cad-senha" placeholder="Crie uma senha forte" autocomplete="new-password" required>
+                            </div>
+                            <div class="campo-input">
+                                <label for="cad-confirmar-senha">Confirmar senha</label>
+                                <input type="password" name="confirmar_senha" id="cad-confirmar-senha" placeholder="Repita sua senha" autocomplete="new-password" required>
+                            </div>
                         </div>
 
                         <p class="cadastro-clinica-note"><i class="fa-solid fa-shield-halved"></i> Seus dados serão usados para configurar o acesso administrativo da clínica.</p>

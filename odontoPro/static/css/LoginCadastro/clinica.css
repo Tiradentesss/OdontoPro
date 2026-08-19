@@ -57,8 +57,11 @@ html {
 }
 
 .logo-icone {
-    height: 48px;
-    width: auto;
+    display: block;
+    width: min(250px, 100%);
+    height: auto;
+    max-height: 58px;
+    object-fit: contain;
 }
 
 .brand-text {
@@ -89,6 +92,31 @@ html {
     font-weight: 600;
     margin-bottom: 30px;
     color: #222;
+}
+
+.boas-vindas-cadastro {
+    margin-bottom: 22px;
+}
+
+.boas-vindas-cadastro h2 {
+    margin: 8px 0 6px;
+}
+
+.boas-vindas-cadastro p {
+    color: #718096;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.cadastro-eyebrow {
+    display: inline-flex;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(27, 195, 234, 0.12);
+    color: #008fb4;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
 }
 
 /* Campos de Input */
@@ -454,7 +482,7 @@ button {
 }
 
 .form-cadastro-clinica {
-    padding: 26px 24px 22px;
+    padding: 30px 28px 26px;
     border: 1px solid #edf2f7;
     border-radius: 20px;
     background: #ffffff;
@@ -479,6 +507,11 @@ button {
     min-height: 48px;
 }
 
+.form-cadastro-clinica .campo-input label {
+    color: #334155;
+    font-weight: 600;
+}
+
 .form-cadastro-clinica .botao-acessar {
     margin-top: 4px;
 }
@@ -495,6 +528,10 @@ button {
     .form-cadastro-clinica {
         padding: 20px 16px 18px;
         border-radius: 16px;
+    }
+
+    .logo-icone {
+        width: min(220px, 100%);
     }
 
     .form-cadastro-clinica .cadastro-clinica-grid {
