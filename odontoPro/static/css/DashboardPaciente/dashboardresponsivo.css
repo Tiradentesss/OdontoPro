@@ -107,12 +107,31 @@ body.theme-dark .btn-agendar-green {
         position: fixed;
         bottom: 0;
         left: 0;
+        right: 0;
+        top: auto !important;
         padding: 0;
         justify-content: space-around;
         border-right: none;
         border-top: 1px solid #eee;
         z-index: 1000;
         background: white;
+    }
+
+    /* Ensure the sidebar no longer influences layout offset on mobile */
+    .container-principal {
+        margin-left: 0 !important;
+        margin-bottom: 80px; /* leave space for bottom navbar */
+    }
+
+    /* Topbar should span full width on mobile and not be offset by sidebar */
+    .barra-topo {
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        padding-right: 16px !important;
+        padding-left: 16px !important;
+        box-sizing: border-box;
+        z-index: 900;
     }
 
     .seccao-logo, .botao-seta, .email-usuario, .info-usuario {

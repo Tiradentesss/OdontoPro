@@ -2072,6 +2072,27 @@ body.sidebar-aberto .barra-topo {
     margin-top: 8px;
 }
 
+/* Ensure all clinic cards have equal height and buttons align to the card bottom */
+.grid-clinicas {
+    align-items: stretch; /* make grid items stretch vertically */
+}
+
+.card-clinica {
+    height: 100%; /* allow card to stretch to fill grid cell */
+}
+
+.card-clinica .info-card {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto; /* make info area take remaining space */
+}
+
+.card-clinica .info-card .btn-saiba-mais,
+.card-clinica .info-card .btn-detalhes {
+    margin-top: auto; /* push button to the bottom */
+    align-self: stretch;
+}
+
 .btn-saiba-mais:hover {
     transform: translateY(-1px);
 }
