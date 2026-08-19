@@ -585,7 +585,7 @@ body {
 
 .download-hero {
     display: grid;
-    grid-template-columns: 1.45fr 0.85fr;
+    grid-template-columns: 1fr 1fr;
     gap: 22px;
     align-items: center;
 }
@@ -943,7 +943,7 @@ body {
 
 .download-grid {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: 1fr 1fr;
     gap: 18px;
 }
 
@@ -1286,7 +1286,7 @@ body {
 
 .platform-card {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: 1fr 1fr;
     gap: 28px;
     align-items: center;
     background: rgba(255, 255, 255, 0.92);
@@ -1458,7 +1458,7 @@ body {
 }
 
 .platform-desktop {
-    grid-template-columns: 0.95fr 1.05fr;
+    grid-template-columns: 1fr 1fr;
 }
 
 .desktop-frame {
