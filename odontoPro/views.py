@@ -26,6 +26,7 @@ from django.utils.timezone import make_aware
 from django.utils.dateparse import parse_datetime as django_parse_datetime
 from .models import MedicoHorario
 from PIL import Image
+from functools import lru_cache
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -389,12 +390,13 @@ def login_paciente(request):
 
 
 # ---------- DASHBOARD PACIENTE ----------
+@lru_cache(maxsize=512)
 def _url_responds(url):
     if not url:
         return False
     try:
         req = Request(url, method='HEAD', headers={'User-Agent': 'Mozilla/5.0'})
-        with urlopen(req, timeout=4) as resp:
+        with urlopen(req, timeout=1.5) as resp:
             return resp.status in (200, 204, 301, 302, 304)
     except (HTTPError, URLError, TimeoutError, Exception):
         return False
@@ -475,22 +477,21 @@ def _get_clinica_logo_url(clinica):
 
 
 def _get_valid_banner_images(clinica):
-    """Return only image URLs that the server can confirm over HTTP HEAD."""
+    """Return image URLs without blocking page rendering on remote HEAD requests."""
     urls = []
 
     for img in clinica.imagens.all():
         url = getattr(img.imagem, 'url', None)
-        if url and _url_responds(url):
+        if url:
             urls.append(url)
 
     if not urls and clinica.imagem:
         raw_imagem = str(clinica.imagem).strip()
         if raw_imagem.startswith(("http://", "https://")):
-            if _url_responds(raw_imagem):
-                urls.append(raw_imagem)
+            urls.append(raw_imagem)
         else:
             url = getattr(clinica.imagem, 'url', None)
-            if url and _url_responds(url):
+            if url:
                 urls.append(url)
 
     return urls
@@ -1671,6 +1672,7 @@ def home(request):
         )
         .filter(avaliacao_media_real__gte=4.0)
         .order_by("-avaliacao_media_real", "-num_avaliacoes_real", "nome")
+        [:5]
     )
 
     for clinica in featured_clinics:
