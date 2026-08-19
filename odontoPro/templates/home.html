@@ -5,9 +5,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OdontoHub — Home</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
     <link rel="shortcut icon" href="{% static 'img/Icon Transparente.png' %}" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -60,7 +57,7 @@
             <div class="floating-cards-scroll">
                 {% for clinica in featured_clinics %}
                     <article class="clinic-card" data-rating="{{ clinica.avaliacao|floatformat:1 }}">
-                        <img src="{{ clinica.display_image }}" loading="lazy" decoding="async" data-fallback="{% static 'img/sem-foto.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="{{ clinica.nome }}" />
+                        <img src="{{ clinica.display_image }}" data-fallback="{% static 'img/sem-foto.jpg' %}" onerror="this.onerror=null; this.src=this.dataset.fallback;" alt="{{ clinica.nome }}" />
                         <div class="clinic-info">
                             <strong>{{ clinica.nome }}</strong>
                             <span class="clinic-location">{{ clinica.location }}</span>
@@ -165,20 +162,20 @@
                         <div class="download-links">
                             {% if logged_in %}
                                 <a href="/dashboard-paciente/" id="link-appstore" class="store-badge">
-                                    <img src="{% static 'img/AppStore.png' %}" loading="lazy" decoding="async" alt="App Store" />
+                                    <img src="{% static 'img/AppStore.png' %}" alt="App Store" />
                                     <span>App Store</span>
                                 </a>
                                 <a href="/dashboard-paciente/" id="link-playstore" class="store-badge">
-                                    <img src="{% static 'img/PlayStore.png' %}" loading="lazy" decoding="async" alt="Google Play" />
+                                    <img src="{% static 'img/PlayStore.png' %}" alt="Google Play" />
                                     <span>Google Play</span>
                                 </a>
                             {% else %}
                                 <a href="/login/?next=/dashboard-paciente/" id="link-appstore" class="store-badge">
-                                    <img src="{% static 'img/AppStore.png' %}" loading="lazy" decoding="async" alt="App Store" />
+                                    <img src="{% static 'img/AppStore.png' %}" alt="App Store" />
                                     <span>App Store</span>
                                 </a>
                                 <a href="/login/?next=/dashboard-paciente/" id="link-playstore" class="store-badge">
-                                    <img src="{% static 'img/PlayStore.png' %}" loading="lazy" decoding="async" alt="Google Play" />
+                                    <img src="{% static 'img/PlayStore.png' %}" alt="Google Play" />
                                     <span>Google Play</span>
                                 </a>
                             {% endif %}
@@ -187,7 +184,7 @@
                     <div class="platform-preview mobile-preview">
                         <div class="phone-frame">
                             <div class="phone-notch"></div>
-                            <img src="{% static 'img/dentista tela de login.png' %}" loading="lazy" decoding="async" alt="Preview mobile do app para pacientes e dentistas" />
+                            <img src="{% static 'img/dentista tela de login.png' %}" alt="Preview mobile do app para pacientes e dentistas" />
                         </div>
                         <div class="mini-card mini-card-top">Agendamento em minutos</div>
                         <div class="mini-card mini-card-bottom">Notificações em tempo real</div>
@@ -217,7 +214,7 @@
                 </div>
                 <div class="platform-preview desktop-preview">
                     <div class="desktop-frame">
-                        <img src="{% static 'img/Foto Login Profissional.png' %}" loading="lazy" decoding="async" alt="Preview desktop para clínicas e profissionais" />
+                        <img src="{% static 'img/Foto Login Profissional.png' %}" alt="Preview desktop para clínicas e profissionais" />
                     </div>
                     <div class="mini-card mini-card-top">Gestão de equipe</div>
                     <div class="mini-card mini-card-bottom">Agenda centralizada</div>
