@@ -52,39 +52,18 @@ html {
 .logo-container {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 40px;
+    justify-content: flex-start;
+    width: 100%;
+    margin-bottom: 32px;
 }
 
 .logo-icone {
     display: block;
-    width: min(250px, 100%);
+    width: min(310px, 100%);
     height: auto;
-    max-height: 58px;
+    max-height: 64px;
     object-fit: contain;
 }
-
-.brand-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.logo-text {
-    font-size: 26px;
-    font-weight: 500;
-    color: #1bc3ea;
-    font-family: 'Poppins', sans-serif;
-}
-
-.logo-subtitle {
-    font-size: 11px;
-    font-weight: 500;
-    color: #4D6B93;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
 
 /* Título */
 .boas-vindas h2 {
@@ -531,7 +510,7 @@ button {
     }
 
     .logo-icone {
-        width: min(220px, 100%);
+        width: min(260px, 100%);
     }
 
     .form-cadastro-clinica .cadastro-clinica-grid {
