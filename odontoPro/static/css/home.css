@@ -1174,9 +1174,14 @@ body {
 
 .floating-clinic-cards {
     margin: 14px auto 0;
-    padding: 0 28px;
+    padding: 0;
     max-width: var(--container-max);
     background: none;
+}
+
+/* ensure small adjustment for very small screens if needed */
+@media (max-width: 600px) {
+    .floating-clinic-cards { padding: 0; }
 }
 
 
