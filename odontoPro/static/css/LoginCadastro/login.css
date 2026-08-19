@@ -328,6 +328,77 @@ body {
     animation: modalSlide 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
+.modal-cadastro-paciente {
+    max-width: 650px;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 36px 42px 34px;
+}
+
+.modal-header-cadastro {
+    margin: 0 28px 26px;
+}
+
+.modal-header-cadastro h2 {
+    margin-bottom: 8px;
+    font-size: 26px;
+}
+
+.modal-header-cadastro p {
+    line-height: 1.5;
+}
+
+.cadastro-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 18px;
+}
+
+.cadastro-field-full {
+    grid-column: 1 / -1;
+}
+
+.modal-form .input-group {
+    margin-bottom: 18px;
+}
+
+.modal-form input,
+.modal-form select {
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.modal-form select:focus,
+.modal-form input:focus {
+    border-color: #1bc3ea;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(27, 195, 234, 0.12);
+    outline: none;
+}
+
+.cadastro-form-note,
+.cadastro-clinica-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 2px 0 20px;
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.cadastro-form-note i,
+.cadastro-clinica-note i {
+    color: #1bc3ea;
+    margin-top: 2px;
+}
+
 @keyframes modalSlide {
     from { transform: translateY(30px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
@@ -425,4 +496,31 @@ body {
 @media (max-width: 850px) {
     .login-image-side { display: none; }
     .login-container { max-width: 450px; height: auto; padding-bottom: 20px; }
+}
+
+@media (max-width: 600px) {
+    .modal-cadastro-paciente {
+        width: calc(100% - 24px);
+        max-height: 94vh;
+        padding: 30px 22px 24px;
+        border-radius: 20px;
+    }
+
+    .modal-header-cadastro {
+        margin-left: 8px;
+        margin-right: 8px;
+    }
+
+    .modal-header-cadastro h2 {
+        font-size: 22px;
+    }
+
+    .cadastro-form-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .cadastro-field-full {
+        grid-column: auto;
+    }
 }

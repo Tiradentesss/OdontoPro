@@ -45,7 +45,7 @@ html {
 
 .conteudo-login {
     width: 100%;
-    max-width: 420px;
+    max-width: 500px;
 }
 
 /* Estilização da Logo */
@@ -450,5 +450,58 @@ button {
 
     .coluna-login {
         padding: 20px;
+    }
+}
+
+.form-cadastro-clinica {
+    padding: 26px 24px 22px;
+    border: 1px solid #edf2f7;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 14px 35px rgba(15, 23, 42, 0.06);
+}
+
+.form-cadastro-clinica .cadastro-clinica-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 18px;
+}
+
+.form-cadastro-clinica .campo-input-full {
+    grid-column: 1 / -1;
+}
+
+.form-cadastro-clinica .campo-input {
+    margin-bottom: 18px;
+}
+
+.form-cadastro-clinica .campo-input input {
+    min-height: 48px;
+}
+
+.form-cadastro-clinica .botao-acessar {
+    margin-top: 4px;
+}
+
+.cadastro-clinica-note {
+    margin-top: 2px;
+}
+
+@media (max-width: 560px) {
+    .conteudo-login {
+        max-width: 100%;
+    }
+
+    .form-cadastro-clinica {
+        padding: 20px 16px 18px;
+        border-radius: 16px;
+    }
+
+    .form-cadastro-clinica .cadastro-clinica-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-cadastro-clinica .campo-input-full {
+        grid-column: auto;
     }
 }

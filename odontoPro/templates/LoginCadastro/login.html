@@ -86,46 +86,68 @@
 
   <!-- MODAL CADASTRO PACIENTE -->
   <div id="modalCadastro" class="modal">
-    <div class="modal-content">
+    <div class="modal-content modal-cadastro-paciente">
       <span class="close-btn">&times;</span>
 
-      <div class="modal-header">
+      <div class="modal-header modal-header-cadastro">
         <h2>Criar Conta de Paciente</h2>
-        <p>Escolha como deseja se cadastrar</p>
+        <p>Preencha seus dados para criar uma conta e agendar consultas.</p>
       </div>
 
       <!-- Social login options removed from modal per request -->
 
-      <div class="divider">
-        <span>ou preencha os dados</span>
-      </div>
-
       <form class="modal-form" method="POST" action="{% url 'cadastrar_paciente' %}">
-  {% csrf_token %}
+        {% csrf_token %}
 
-  <div class="input-group">
-    <label>Nome Completo</label>
-    <input type="text" name="nome" required>
-  </div>
+        <div class="cadastro-form-grid">
+          <div class="input-group cadastro-field-full">
+            <label for="cad-paciente-nome">Nome completo</label>
+            <input type="text" id="cad-paciente-nome" name="nome" placeholder="Como devemos chamar você?" autocomplete="name" required>
+          </div>
 
-  <div class="input-group">
-    <label>E-mail</label>
-    <input type="email" name="email" required>
-  </div>
+          <div class="input-group cadastro-field-full">
+            <label for="cad-paciente-email">E-mail</label>
+            <input type="email" id="cad-paciente-email" name="email" placeholder="voce@exemplo.com" autocomplete="email" required>
+          </div>
 
-  <div class="input-row" style="display: flex; gap: 15px;">
-    <div class="input-group" style="flex: 1;">
-      <label>Senha</label>
-      <input type="password" name="senha" required>
-    </div>
-    <div class="input-group" style="flex: 1;">
-      <label>Confirmar</label>
-      <input type="password" name="confirmar_senha" required>
-    </div>
-  </div>
+          <div class="input-group">
+            <label for="cad-paciente-telefone">Telefone</label>
+            <input type="tel" id="cad-paciente-telefone" name="telefone" placeholder="(00) 00000-0000" autocomplete="tel" data-mask="phone" required>
+          </div>
 
-  <button type="submit" class="btn-login">Criar minha conta</button>
-</form>
+          <div class="input-group">
+            <label for="cad-paciente-cpf">CPF</label>
+            <input type="text" id="cad-paciente-cpf" name="cpf" placeholder="000.000.000-00" autocomplete="off" data-mask="cpf">
+          </div>
+
+          <div class="input-group">
+            <label for="cad-paciente-sexo">Sexo</label>
+            <select id="cad-paciente-sexo" name="sexo">
+              <option value="">Selecione</option>
+              <option value="M">Masculino</option>
+              <option value="F">Feminino</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label for="cad-paciente-nascimento">Data de nascimento</label>
+            <input type="date" id="cad-paciente-nascimento" name="data_nascimento" autocomplete="bday">
+          </div>
+
+          <div class="input-group">
+            <label for="cad-paciente-senha">Senha</label>
+            <input type="password" id="cad-paciente-senha" name="senha" placeholder="Crie uma senha forte" autocomplete="new-password" required>
+          </div>
+
+          <div class="input-group">
+            <label for="cad-paciente-confirmar">Confirmar senha</label>
+            <input type="password" id="cad-paciente-confirmar" name="confirmar_senha" placeholder="Repita sua senha" autocomplete="new-password" required>
+          </div>
+        </div>
+
+        <p class="cadastro-form-note"><i class="fa-solid fa-shield-halved"></i> Seus dados ficam protegidos e são usados apenas para facilitar seu atendimento.</p>
+        <button type="submit" class="btn-login">Criar minha conta</button>
+      </form>
     </div>
   </div>
 
@@ -190,6 +212,7 @@
     </div>
   </div>
 
+  <script src="{% static 'js/masks.js' %}"></script>
   <script src="{% static 'js/LoginCadastro/login.js' %}"></script>
   <script src="{% static 'js/logo-theme-switcher.js' %}"></script>
 

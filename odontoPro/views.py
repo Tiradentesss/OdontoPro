@@ -1767,6 +1767,10 @@ def cadastrar_paciente(request):
     email = request.POST.get("email")
     senha = request.POST.get("senha")
     confirmar = request.POST.get("confirmar_senha")
+    telefone = "".join(char for char in request.POST.get("telefone", "") if char.isdigit())
+    cpf = "".join(char for char in request.POST.get("cpf", "") if char.isdigit())
+    sexo = request.POST.get("sexo", "").strip()
+    data_nascimento = request.POST.get("data_nascimento", "").strip() or None
 
     if not all([nome, email, senha, confirmar]):
         messages.error(request, "Preencha todos os campos.")
@@ -1784,7 +1788,10 @@ def cadastrar_paciente(request):
         nome=nome,
         email=email,
         senha=make_password(senha),
-        telefone=""  # pode ajustar depois
+        telefone=telefone,
+        cpf=cpf,
+        sexo=sexo,
+        data_nascimento=data_nascimento,
     )
 
     request.session["paciente_id"] = paciente.id

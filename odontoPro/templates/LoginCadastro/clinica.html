@@ -75,15 +75,16 @@
                         <p>Crie sua conta administrativa</p>
                     </div>
 
-                    <form id="form-cadastro" method="post" action="{% url 'cadastrar_clinica' %}">
+                    <form id="form-cadastro" class="form-cadastro-clinica" method="post" action="{% url 'cadastrar_clinica' %}">
                         {% csrf_token %}
 
-                        <div class="campo-input">
+                        <div class="cadastro-clinica-grid">
+                        <div class="campo-input campo-input-full">
                             <label>CNPJ</label>
                             <input type="text" name="cnpj" id="cad-cnpj" placeholder="00.000.000/0000-00" data-mask="cnpj" required>
                         </div>
 
-                        <div class="campo-input">
+                        <div class="campo-input campo-input-full">
                             <label>E-mail</label>
                             <input type="email" name="email" id="cad-email" placeholder="contato@clinica.com" required>
                         </div>
@@ -93,8 +94,14 @@
                             <input type="password" name="senha" id="cad-senha" placeholder="Crie uma senha forte"
                                 required>
                         </div>
+                        <div class="campo-input">
+                            <label>Confirmar senha</label>
+                            <input type="password" name="confirmar_senha" id="cad-confirmar-senha" placeholder="Repita sua senha" required>
+                        </div>
+                        </div>
 
-                        <button type="submit" class="botao-acessar">Finalizar e Pagar</button>
+                        <p class="cadastro-clinica-note"><i class="fa-solid fa-shield-halved"></i> Seus dados serão usados para configurar o acesso administrativo da clínica.</p>
+                        <button type="submit" class="botao-acessar">Continuar para pagamento</button>
                     </form>
 
                     <footer class="rodape-login">
