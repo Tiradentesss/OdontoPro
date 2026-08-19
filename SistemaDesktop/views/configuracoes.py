@@ -1196,7 +1196,7 @@ class Configuracoes(BaseScreen):
         for servico in servicos:
             row = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
             row.grid_columnconfigure(0, weight=3)
-            row.grid_columnconfigure(1, weight=1)
+            row.grid_columnconfigure(1, weight=0, minsize=118)
             row.grid_columnconfigure(2, weight=0)
             row.pack(fill="x", padx=8, pady=6)
 
@@ -1218,12 +1218,18 @@ class Configuracoes(BaseScreen):
                 text_color=self.colors["text_primary"],
                 font=font("text")
             ).grid(row=0, column=0, sticky="w")
+            price_cell = ctk.CTkFrame(row, fg_color="transparent", width=118, height=28)
+            price_cell.grid(row=0, column=1, sticky="e")
+            price_cell.grid_propagate(False)
+
             ctk.CTkLabel(
-                row,
+                price_cell,
                 text=valor_texto,
                 text_color=self.colors["text_secondary"],
-                font=font("text")
-            ).grid(row=0, column=1, sticky="w")
+                font=font("text"),
+                anchor="e",
+                justify="right"
+            ).pack(fill="both", expand=True, anchor="e")
 
             actions = ctk.CTkFrame(row, fg_color="transparent")
             actions.grid(row=0, column=2, sticky="e")
