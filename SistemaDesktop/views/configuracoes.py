@@ -1071,6 +1071,12 @@ class Configuracoes(BaseScreen):
         )
         self.services_list_frame.grid(row=0, column=0, sticky="nsew")
 
+        if hasattr(self, "_services_resize_bind_id"):
+            self.content_card.unbind("<Configure>", self._services_resize_bind_id)
+        self._services_resize_bind_id = self.content_card.bind(
+            "<Configure>", self._ajustar_altura_servicos, add="+"
+        )
+
         # Cabeçalho da lista (3 colunas)
         header = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
         # Garantir largura mínima da coluna de nome para alinhar a coluna de valores
@@ -1093,6 +1099,26 @@ class Configuracoes(BaseScreen):
 
         # Corpo da lista será preenchido por _carregar_servicos
         self._carregar_servicos()
+        self.after_idle(self._ajustar_altura_servicos)
+
+    def _ajustar_altura_servicos(self, event=None):
+        if not hasattr(self, "services_list_frame") or not self.services_list_frame.winfo_exists():
+            return
+        if not hasattr(self, "footer") or not self.footer.winfo_exists():
+            return
+
+        self.update_idletasks()
+        base_height = 545
+        margin = 20
+        top_of_list = self.services_list_frame.winfo_rooty()
+        top_of_footer = self.footer.winfo_rooty()
+        available_height = top_of_footer - top_of_list - margin
+        if available_height <= 1:
+            return
+
+        target_height = max(base_height, available_height - 30)
+        if abs(self.services_list_frame.winfo_height() - target_height) > 3:
+            self.services_list_frame.configure(height=target_height)
 
     def _render_preferences_description(self, parent):
         content_frame = ctk.CTkFrame(parent, fg_color="transparent")
@@ -2246,6 +2272,7 @@ class Configuracoes(BaseScreen):
     def _build_footer(self, parent):
         footer = ctk.CTkFrame(parent, fg_color="transparent")
         footer.pack(fill="x", side="bottom", padx=20, pady=(0, 20))
+        self.footer = footer
 
         ActionButtons(
             footer,
