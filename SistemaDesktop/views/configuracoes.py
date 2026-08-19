@@ -1055,16 +1055,21 @@ class Configuracoes(BaseScreen):
         )
         add_btn.pack(anchor="w", pady=(8, 12))
 
+        services_area = ctk.CTkFrame(scroll, fg_color="transparent")
+        services_area.pack(fill="x", expand=False, padx=0, pady=(0, 10))
+        services_area.grid_rowconfigure(0, weight=1)
+        services_area.grid_columnconfigure(0, weight=1)
+
         # Frame rolável que conterá a lista de serviços
         self.services_list_frame = ctk.CTkScrollableFrame(
-            scroll,
+            services_area,
             fg_color="transparent",
             border_width=1,
             border_color=self.colors["border"],
             corner_radius=8,
-            height=220
+            height=575
         )
-        self.services_list_frame.pack(fill="both", expand=True, padx=0, pady=(0, 10))
+        self.services_list_frame.grid(row=0, column=0, sticky="nsew")
 
         # Cabeçalho da lista (3 colunas)
         header = ctk.CTkFrame(self.services_list_frame, fg_color="transparent")
