@@ -1270,14 +1270,21 @@ class Agenda(BaseScreen):
                 ).grid(row=0, column=0, padx=(0, 4), pady=6)
                 continue
 
-            ctk.CTkLabel(
+            header_label = ctk.CTkLabel(
                 header_frame,
                 text=text,
                 anchor='center',
                 justify='center',
                 text_color=self.colors['text_secondary'],
                 font=ctk.CTkFont(size=11, weight='bold')
-            ).grid(row=0, column=col_idx, sticky='nsew', padx=(padx_left, padx_right), pady=0)
+            )
+            header_label.grid(
+                row=0,
+                column=col_idx,
+                sticky='nsew',
+                padx=(42, 0) if col_idx == 2 else (padx_left, padx_right),
+                pady=0
+            )
 
     def _render_rows(self, container, consultas):
         print(f"[AGENDA] _render_rows: consultas_id={id(consultas)} len={len(consultas)}")
