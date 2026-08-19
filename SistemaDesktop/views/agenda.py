@@ -1273,8 +1273,8 @@ class Agenda(BaseScreen):
             header_label = ctk.CTkLabel(
                 header_frame,
                 text=text,
-                anchor='center',
-                justify='center',
+                anchor='w' if col_idx == 2 else 'center',
+                justify='left' if col_idx == 2 else 'center',
                 text_color=self.colors['text_secondary'],
                 font=ctk.CTkFont(size=11, weight='bold')
             )
@@ -1282,7 +1282,7 @@ class Agenda(BaseScreen):
                 row=0,
                 column=col_idx,
                 sticky='nsew',
-                padx=(42, 0) if col_idx == 2 else (padx_left, padx_right),
+                padx=(28, 0) if col_idx == 2 else (padx_left, padx_right),
                 pady=0
             )
 
@@ -1374,11 +1374,11 @@ class Agenda(BaseScreen):
                 text=self._truncate_text(especialidade or '-', 24),
                 font=ctk.CTkFont(size=13),
                 text_color=self.colors['text_secondary'],
-                anchor=espec_conf['anchor'],
-                justify='center',
+                anchor='w',
+                justify='left',
                 wraplength=0
             )
-            espec_label.grid(row=0, column=2, sticky='nsew', padx=(padx_left, padx_right), pady=0)
+            espec_label.grid(row=0, column=2, sticky='w', padx=(padx_left, padx_right), pady=0)
             espec_label.bind('<Button-1>', lambda e, cid=consulta_id: self.selecionar_paciente(cid))
             espec_label.bind('<Enter>', lambda e, r=row, cid=consulta_id: self._on_row_enter(r, cid))
             espec_label.bind('<Leave>', lambda e, r=row, cid=consulta_id: self._on_row_leave(r, cid))
