@@ -4597,11 +4597,14 @@ body.sidebar-aberto .barra-topo {
 /* Estilo do modal de detalhes da consulta */
 .modal.modal-consulta {
     background-color: rgba(0, 0, 0, 0.55);
+    overflow: hidden;
 }
 
 .modal.modal-consulta .modal-conteudo {
     width: 100%;
     max-width: 560px;
+    max-height: none;
+    overflow: visible;
     background: var(--branco);
     border-radius: 20px;
     padding: 20px;
@@ -4749,6 +4752,71 @@ body.sidebar-aberto .barra-topo {
     justify-content: center;
     padding-top: 12px;
     border-top: 1px solid #e8eef5;
+}
+
+#modal-reagendar-consulta .modal-content {
+    width: min(480px, 92vw);
+    max-width: 480px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 26px 22px 20px;
+    border-radius: 20px;
+}
+
+#modal-reagendar-consulta .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+#modal-reagendar-consulta .reagendar-form {
+    display: grid;
+    gap: 14px;
+    text-align: left;
+}
+
+#modal-reagendar-consulta .reagendar-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#modal-reagendar-consulta .reagendar-field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texto-principal);
+    margin: 0;
+}
+
+#modal-reagendar-consulta .reagendar-field input {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #dfe6f3;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: var(--texto-principal);
+    box-sizing: border-box;
+}
+
+#modal-reagendar-consulta .reagendar-field input:focus {
+    border-color: var(--azul-claro);
+    outline: 2px solid rgba(27, 195, 234, 0.18);
+    background: #ffffff;
+}
+
+#modal-reagendar-consulta .modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 0;
+}
+
+#modal-reagendar-consulta .modal-footer button {
+    flex: 1;
+    min-width: 120px;
+    max-width: 180px;
 }
 
 /* Ações do modal */

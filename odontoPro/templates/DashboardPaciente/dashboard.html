@@ -1025,16 +1025,21 @@
         </div>
 
         <div class="modal-body">
-            <div style="text-align: center; margin-bottom: 10px;">
-                <label for="reagendar-data" style="display:block; font-weight:600; margin-bottom:6px;">Nova data</label>
-                <input id="reagendar-data" type="date" style="padding:8px; width:60%; margin-bottom:12px;" />
-                <label for="reagendar-hora" style="display:block; font-weight:600; margin-bottom:6px;">Novo horário</label>
-                <input id="reagendar-hora" type="time" style="padding:8px; width:60%;" />
+            <div class="reagendar-form">
+                <div class="reagendar-field">
+                    <label for="reagendar-data">Nova data</label>
+                    <input id="reagendar-data" type="date" />
+                </div>
+
+                <div class="reagendar-field">
+                    <label for="reagendar-hora">Novo horário</label>
+                    <input id="reagendar-hora" type="time" />
+                </div>
             </div>
 
-            <div style="display:flex; justify-content: center; gap:10px; margin-top:20px;">
-                <button class="btn-secundario" style="flex:1; max-width: 160px;" onclick="fecharModalReagendar()">Voltar</button>
-                <button class="btn-principal" style="flex:1; max-width: 160px;" onclick="submitReagendamento()">Confirmar</button>
+            <div class="modal-footer">
+                <button class="btn-secundario" onclick="fecharModalReagendar()">Voltar</button>
+                <button class="btn-principal" onclick="submitReagendamento()">Confirmar</button>
             </div>
         </div>
     </div>

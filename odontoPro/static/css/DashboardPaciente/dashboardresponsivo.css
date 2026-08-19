@@ -134,6 +134,10 @@ body.theme-dark .btn-agendar-green {
         z-index: 900;
     }
 
+    .area-conteudo {
+        padding-top: 100px !important;
+    }
+
     .seccao-logo, .botao-seta, .email-usuario, .info-usuario {
         display: none;
     }
