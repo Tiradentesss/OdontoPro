@@ -214,7 +214,7 @@ body.theme-dark #modal-calendario .btn-close-modal:hover {
 }
 
 .btn-nav:hover {
-  background-color: darken(var(--col-cyan), 10%);
+  background-color: #00a8cf;
   transform: scale(1.1);
 }
 
@@ -239,7 +239,7 @@ body.theme-dark #modal-calendario .btn-close-modal:hover {
 }
 
 .btn-today:hover {
-  background-color: darken(var(--col-green), 10%);
+  background-color: #0bb39c;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(16, 221, 194, 0.3);
 }
@@ -506,7 +506,7 @@ body.theme-dark .day-cell.unavailable {
 }
 
 .btn-confirm:hover {
-  background-color: darken(var(--col-cyan), 10%);
+  background-color: #00a8cf;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
 }

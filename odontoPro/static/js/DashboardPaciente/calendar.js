@@ -187,6 +187,9 @@ class CalendarTimeSelector {
           modal.classList.remove('mostrar');
           modal.style.display = 'none';
         }
+        if (typeof limparSelecaoDataHora === 'function') {
+          limparSelecaoDataHora();
+        }
       };
       btnFechar.addEventListener('click', this.btnFecharHandler);
     }

@@ -780,6 +780,8 @@ function abrirModalAgendamento(clinicaId) {
 
             // ===== ESPECIALIDADES =====
             const selectEspecialidade = document.getElementById("selectEspecialidade");
+            const especialidadeAtual = selectEspecialidade?.value || '';
+            const profissionalAtual = document.getElementById('selectProfissional')?.value || '';
             if (selectEspecialidade) {
                 selectEspecialidade.innerHTML = "<option value=''>Selecione</option>";
 
@@ -789,6 +791,10 @@ function abrirModalAgendamento(clinicaId) {
                     option.textContent = esp[1];
                     selectEspecialidade.appendChild(option);
                 });
+
+                if (especialidadeAtual && selectEspecialidade.querySelector(`option[value="${especialidadeAtual}"]`)) {
+                    selectEspecialidade.value = especialidadeAtual;
+                }
 
                 selectEspecialidade.removeEventListener('change', atualizarMedicosPorEspecialidade);
                 selectEspecialidade.addEventListener('change', atualizarMedicosPorEspecialidade);
@@ -860,6 +866,9 @@ function abrirModalAgendamento(clinicaId) {
             window.medicosClinica = data.medicos || [];
             window.especialidadesClinica = data.especialidades || [];
             atualizarMedicosPorEspecialidade();
+            if (profissionalAtual && document.getElementById('selectProfissional')?.querySelector(`option[value="${profissionalAtual}"]`)) {
+                document.getElementById('selectProfissional').value = profissionalAtual;
+            }
 
             // ===== LISTA DE MÉDICOS (ABA PERFIL) =====
             const listaMedicos = document.getElementById("lista-medicos");
@@ -1884,6 +1893,8 @@ function carregarEspecialidadesEMedicos(clinicaId) {
 
             // Preencher especialidades
             const selectEspecialidade = document.getElementById('selectEspecialidade');
+            const especialidadeAtual = selectEspecialidade?.value || '';
+            const profissionalAtual = document.getElementById('selectProfissional')?.value || '';
             if (selectEspecialidade && data.especialidades) {
                 selectEspecialidade.innerHTML = '<option value="">Selecione uma Especialidade</option>';
                 data.especialidades.forEach(esp => {
@@ -1894,6 +1905,10 @@ function carregarEspecialidadesEMedicos(clinicaId) {
                     option.textContent = `${esp[1]}${precoFormatado}`; // Nome + Preço
                     selectEspecialidade.appendChild(option);
                 });
+
+                if (especialidadeAtual && selectEspecialidade.querySelector(`option[value="${especialidadeAtual}"]`)) {
+                    selectEspecialidade.value = especialidadeAtual;
+                }
                 
                 // Remover listener anterior para evitar duplicação
                 selectEspecialidade.removeEventListener('change', atualizarMedicosPorEspecialidade);
@@ -1905,6 +1920,12 @@ function carregarEspecialidadesEMedicos(clinicaId) {
             const selectProfissional = document.getElementById('selectProfissional');
             if (selectProfissional) {
                 selectProfissional.innerHTML = '<option value="">Escolha uma especialidade primeiro</option>';
+            }
+
+            window.especialidadesClinica = data.especialidades || [];
+            atualizarMedicosPorEspecialidade();
+            if (profissionalAtual && selectProfissional?.querySelector(`option[value="${profissionalAtual}"]`)) {
+                selectProfissional.value = profissionalAtual;
             }
         })
         .catch(error => {
@@ -1919,6 +1940,7 @@ function atualizarMedicosPorEspecialidade() {
     if (!selectEspecialidade || !selectProfissional) return;
 
     const selectedEspecialidadeId = selectEspecialidade.value;
+    const profissionalAtual = selectProfissional.value;
     const medicos = Array.isArray(window.medicosClinica) ? window.medicosClinica : [];
     
     console.log('[atualizarMedicosporEspecialidade] selectedId:', selectedEspecialidadeId, 'medicos:', medicos);
@@ -1948,6 +1970,10 @@ function atualizarMedicosPorEspecialidade() {
         selectProfissional.appendChild(option);
     }
 
+    if (profissionalAtual && filtrados.some(medico => String(medico.id) === String(profissionalAtual))) {
+        selectProfissional.value = profissionalAtual;
+    }
+
     const precoDisplay = document.getElementById('valorEspecialidadeSelecionada');
     if (precoDisplay) {
         const especialidadeSelecionada = window.especialidadesClinica
@@ -1962,7 +1988,7 @@ function carregarHorarios(clinicaId, data, medicoId) {
     // Prevenir múltiplas requisições simultâneas
     if (carregarHorarios.isLoading) {
         console.log('[dashboard] Requisição já em andamento, ignorando...');
-        return Promise.resolve([]);
+        return carregarHorarios.currentRequest || Promise.resolve([]);
     }
     carregarHorarios.isLoading = true;
 
@@ -1982,7 +2008,7 @@ function carregarHorarios(clinicaId, data, medicoId) {
         window.calendarSelector.renderTimeSlots();
     }
 
-    return fetch(`/clinica/${clinicaId}/horarios/?${params.toString()}`)
+    carregarHorarios.currentRequest = fetch(`/clinica/${clinicaId}/horarios/?${params.toString()}`)
         .then(response => response.json())
         .then(data => {
             if (selectHorario) {
@@ -2030,6 +2056,8 @@ function carregarHorarios(clinicaId, data, medicoId) {
             carregarHorarios.isLoading = false;
             return Promise.reject(error);
         });
+
+    return carregarHorarios.currentRequest;
 }
 
 function trocarAbaClinica(event, abaId) {
@@ -2196,6 +2224,35 @@ function fecharModalCalendario() {
         modal.classList.remove('mostrar');
         modal.style.display = 'none';
     }
+    limparSelecaoDataHora();
+}
+
+function limparSelecaoDataHora() {
+    const inputData = document.getElementById('inputData');
+    const selectHorario = document.getElementById('selectHorario');
+    const dataDisplay = document.getElementById('dataSelecionadaDisplay');
+    const horaDisplay = document.getElementById('horaSelecionadaDisplay');
+
+    if (inputData) inputData.value = '';
+    if (selectHorario) {
+        selectHorario.innerHTML = '<option value="">Selecione o Horário</option>';
+        selectHorario.value = '';
+        selectHorario.disabled = false;
+    }
+    if (dataDisplay) {
+        dataDisplay.innerHTML = '<option value="">Selecione a Data</option>';
+        dataDisplay.value = '';
+    }
+    if (horaDisplay) {
+        horaDisplay.innerHTML = '<option value="">Selecione a Hora</option>';
+        horaDisplay.value = '';
+    }
+    if (window.calendarSelector) {
+        window.calendarSelector.selectedDate = null;
+        window.calendarSelector.pendingDate = null;
+        window.calendarSelector.selectedTime = null;
+        window.calendarSelector.availableTimes = [];
+    }
 }
 
 function abrirModalHorario() {
@@ -2219,6 +2276,7 @@ function fecharModalHorario() {
         modal.classList.remove('mostrar');
         modal.style.display = 'none';
     }
+    limparSelecaoDataHora();
 }
 
 function vincularConfirmarDataBotao() {
@@ -2372,6 +2430,20 @@ function limparFormularioAgendamento() {
         const campo = document.getElementById(id);
         if (campo) campo.value = '';
     });
+
+    limparSelecaoDataHora();
+
+    const selectEspecialidade = document.getElementById('selectEspecialidade');
+    const selectProfissional = document.getElementById('selectProfissional');
+    if (selectEspecialidade) {
+        selectEspecialidade.innerHTML = '<option value="">Selecione uma Especialidade</option>';
+    }
+    if (selectProfissional) {
+        selectProfissional.innerHTML = '<option value="">Escolha um Profissional</option>';
+    }
+
+    const precoDisplay = document.getElementById('valorEspecialidadeSelecionada');
+    if (precoDisplay) precoDisplay.textContent = 'R$ 0,00';
     
     // Recarregar informações do paciente para manter preenchimento automático
     preencherFormularioAgendamentoComDadosUsuario();
