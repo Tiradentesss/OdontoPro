@@ -507,13 +507,6 @@ def _get_clinica_display_image(clinica):
 
     return static('img/sem-foto.jpg')
 
-    if not urls and clinica.logo and getattr(clinica.logo, 'url', None):
-        url = clinica.logo.url
-        if _url_responds(url):
-            urls.append(url)
-
-    return urls
-
 
 def dashboard_paciente(request):
     paciente_id = request.session.get("paciente_id")
