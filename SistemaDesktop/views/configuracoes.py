@@ -1781,6 +1781,49 @@ class Configuracoes(BaseScreen):
             print(f"Erro ao buscar serviços (import/conn): {e}")
             return []
 
+    def _normalizar_nome_servico(self, nome):
+        if nome is None:
+            return ""
+        return " ".join(str(nome).strip().split())
+
+    def _existe_servico_duplicado(self, nome, servico_id_excluir=None):
+        nome_normalizado = self._normalizar_nome_servico(nome)
+        if not nome_normalizado:
+            return False
+
+        try:
+            from config.database import get_connection
+            conn = None
+            cursor = None
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                sql = """
+                    SELECT id
+                    FROM odontoPro_especialidade
+                    WHERE clinica_id = %s
+                      AND LOWER(TRIM(nome)) = LOWER(TRIM(%s))
+                """
+                params = [self.clinica_id, nome_normalizado]
+
+                if servico_id_excluir is not None:
+                    sql += " AND id <> %s"
+                    params.append(servico_id_excluir)
+
+                sql += " LIMIT 1"
+                cursor.execute(sql, tuple(params))
+                return cursor.fetchone() is not None
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+        except Exception as e:
+            print(f"[ERRO] Falha ao verificar duplicidade de serviço: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
     def _abrir_modal_adicionar_servico(self):
         top = ctk.CTkToplevel(self)
         top.title("Adicionar Serviço e Valor")
@@ -1839,9 +1882,7 @@ class Configuracoes(BaseScreen):
         error_label.pack(anchor="w", pady=(0, 8))
 
         def on_save():
-            nome = nome_entry.get().strip()
-            # normalizar espaços internos
-            nome = " ".join(nome.split())
+            nome = self._normalizar_nome_servico(nome_entry.get())
             raw_val = valor_entry.get().strip()
             raw_val = raw_val.replace(',', '.')
             if not nome:
@@ -1861,6 +1902,9 @@ class Configuracoes(BaseScreen):
             if saved:
                 top.destroy()
                 self._carregar_servicos()
+            elif getattr(self, "_ultimo_erro_servico", None) == "duplicado":
+                self._ultimo_erro_servico = None
+                return
             else:
                 error_label.configure(text="Erro ao salvar serviço. Veja o console.")
 
@@ -1868,17 +1912,26 @@ class Configuracoes(BaseScreen):
         save_btn.pack(anchor="e", pady=(6, 0))
 
     def _salvar_servico_no_banco(self, nome, valor):
+        nome = self._normalizar_nome_servico(nome)
+        if not nome:
+            return False
+
+        if self._existe_servico_duplicado(nome):
+            self._ultimo_erro_servico = "duplicado"
+            messagebox.showwarning("Serviço duplicado", "Já existe um serviço com esse nome nesta clínica.")
+            return False
+
+        self._ultimo_erro_servico = None
         try:
             from config.database import get_connection
             import traceback
             conn = None
             cursor = None
             try:
-                # Debug: mostrar valores sendo salvos
                 print(f"[DEBUG] clinica_id: {self.clinica_id} (tipo: {type(self.clinica_id)})")
                 print(f"[DEBUG] nome: {nome} (tipo: {type(nome)})")
                 print(f"[DEBUG] valor: {valor} (tipo: {type(valor)})")
-                
+
                 conn = get_connection()
                 cursor = conn.cursor()
                 cursor.execute("""
@@ -2080,13 +2133,16 @@ class Configuracoes(BaseScreen):
         btn_frame.pack(fill="x", pady=(12, 0))
 
         def on_save():
-            nome = nome_entry.get().strip()
-            nome = " ".join(nome.split())
+            nome = self._normalizar_nome_servico(nome_entry.get())
             valor_raw = valor_entry.get().strip()
             descricao = desc_textbox.get("1.0", "end-1c").strip()
 
             if not nome:
                 messagebox.showerror("Erro", "O nome do serviço é obrigatório.")
+                return
+
+            if self._existe_servico_duplicado(nome, servico_id_excluir=serv_id):
+                messagebox.showwarning("Serviço duplicado", "Já existe um serviço com esse nome nesta clínica.")
                 return
 
             valor_decimal = converter_preco_para_decimal(valor_raw)
