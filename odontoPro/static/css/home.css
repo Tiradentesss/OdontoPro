@@ -14,7 +14,7 @@
     --fundo-claro: #F8FAFC;
     --fundo-cinza: #F1F5F9;
     --perigo: #EF4444;
-    --container-max: 1100px;
+    --container-max: 1360px;
 }
 
 .theme-dark {
@@ -78,7 +78,7 @@ body {
 .container {
     max-width: var(--container-max);
     margin: 0 auto;
-    padding: 28px;
+    padding: 28px 32px;
 }
 
 /* Header */
@@ -1147,7 +1147,7 @@ body {
 .floating-cards-scroll {
     display: flex;
     justify-content: center;
-    gap: 36px;
+    gap: 20px;
     padding: 24px 0 32px 0;
     flex-wrap: nowrap;
     overflow: hidden;
@@ -1172,9 +1172,9 @@ body {
 
 .floating-clinic-cards .clinic-card {
     display: flex;
-    min-width: 220px;
-    max-width: 220px;
-    flex: 0 0 220px;
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 0;
     background: rgba(255, 255, 255, 0.88);
     border-radius: 14px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);

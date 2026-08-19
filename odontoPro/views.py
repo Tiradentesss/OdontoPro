@@ -1686,9 +1686,9 @@ def home(request):
 
     display_featured_clinics = []
     if featured_clinics:
-        while len(display_featured_clinics) < 4:
+        while len(display_featured_clinics) < 5:
             display_featured_clinics.extend(featured_clinics)
-        display_featured_clinics = display_featured_clinics[:4]
+        display_featured_clinics = display_featured_clinics[:5]
 
     return render(request, "home.html", {
         "logged_in": logged_in,
