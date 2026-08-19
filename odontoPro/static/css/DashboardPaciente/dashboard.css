@@ -794,8 +794,9 @@ body.theme-dark .tag-online {
     top: 0;
     left: 0;
     height: 100vh;
-    z-index: 1000;
-    overflow: auto;
+    z-index: 2000;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .menu-lateral.aberto {
@@ -814,8 +815,8 @@ body.theme-dark .tag-online {
 }
 
 .botao-seta {
-    position: absolute;
-    right: -15px;
+    position: fixed;
+    left: 75px;
     top: 25px;
     width: 30px;
     height: 30px;
@@ -832,6 +833,7 @@ body.theme-dark .tag-online {
 }
 
 .menu-lateral.aberto .botao-seta {
+    left: 245px;
     transform: rotate(180deg);
 }
 
