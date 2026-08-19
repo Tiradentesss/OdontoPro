@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "cloudinary": "^2.10.0",
+    "expo": "^57.0.9",
+    "expo-clipboard": "^57.0.1",
+    "expo-image-picker": "~57.0.11",
+    "react": "19.2.3",
+    "react-native": "0.86.2"
+  }
+}
