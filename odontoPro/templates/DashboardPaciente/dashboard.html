@@ -799,7 +799,8 @@
         <!-- FOTO -->
             <form id="formConfiguracao" method="POST"
                 action="{% url 'configuracoes_conta' %}"
-                enctype="multipart/form-data">
+                enctype="multipart/form-data"
+                class="configuracao-form">
                 {% csrf_token %}
                 <input type="hidden" name="uid" value="{{ uid_signed }}">
                 <div class="foto-wrapper">
