@@ -340,6 +340,50 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 24px;
     align-items: stretch;
+    width: 100%;
+}
+
+/* Ensure main content cards match the hero width and are box-sized consistently */
+.about-copy,
+.about-panel,
+.platform-card,
+.feature,
+.download-shell,
+.download-card,
+.gerenciar-shell,
+.gerenciar-hero,
+.clinica-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Use consistent horizontal padding so cards visually align with the hero */
+.platform-card,
+.about-copy,
+.about-panel {
+    padding-left: 28px;
+    padding-right: 28px;
+}
+
+/* Responsive container and card padding adjustments for medium screens */
+@media (max-width: 1200px) {
+    .container { padding-left: 20px; padding-right: 20px; }
+}
+
+/* Stack and tighten gaps on smaller screens (mobile/tablet) without changing the clinics carousel behavior */
+@media (max-width: 900px) {
+    .about-showcase {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+    .platform-card { padding: 20px; }
+    .about-copy, .about-panel { padding: 18px; }
+    .feature { padding: 18px; }
+}
+
+@media (max-width: 600px) {
+    .container { padding-left: 16px; padding-right: 16px; }
+    .floating-clinic-cards { padding-left: 8px; padding-right: 8px; }
 }
 
 .about-copy,
@@ -585,7 +629,7 @@ body {
 
 .download-hero {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.45fr 0.85fr;
     gap: 22px;
     align-items: center;
 }
@@ -943,7 +987,7 @@ body {
 
 .download-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.1fr 0.9fr;
     gap: 18px;
 }
 
@@ -1286,7 +1330,7 @@ body {
 
 .platform-card {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.1fr 0.9fr;
     gap: 28px;
     align-items: center;
     background: rgba(255, 255, 255, 0.92);
@@ -1458,7 +1502,7 @@ body {
 }
 
 .platform-desktop {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 0.95fr 1.05fr;
 }
 
 .desktop-frame {
