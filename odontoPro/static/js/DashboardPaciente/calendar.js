@@ -24,7 +24,7 @@ class CalendarTimeSelector {
     this.attachEventListeners();
   }
 
-  renderCalendar() {
+  renderCalendar(loadAvailability = true) {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
     
@@ -110,7 +110,9 @@ class CalendarTimeSelector {
     });
     
     // Carregar disponibilidade de datas para a clínica selecionada
-    this.loadDateAvailability(year, month);
+    if (loadAvailability) {
+      this.loadDateAvailability(year, month);
+    }
   }
   
   loadDateAvailability(year, month) {
@@ -134,7 +136,6 @@ class CalendarTimeSelector {
       daysToCheck.forEach(dateString => {
         this.dateAvailability[dateString] = false;
       });
-      this.renderCalendar();
       return;
     }
 
@@ -155,7 +156,7 @@ class CalendarTimeSelector {
         this.dateAvailability[result.date] = result.hasHorarios;
       });
       // Re-renderizar calendário com dados de disponibilidade
-      this.renderCalendar();
+      this.renderCalendar(false);
     });
   }
 

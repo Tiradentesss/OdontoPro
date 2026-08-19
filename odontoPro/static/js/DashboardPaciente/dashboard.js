@@ -718,14 +718,25 @@ function abrirModalAgendamento(clinicaId) {
 
     console.log("CLINICA CLICADA:", clinicaId);
     clinicaSelecionada = clinicaId;
+    window.clinicaSelecionada = clinicaId;
 
     // Vai para tela perfil da clínica
     mostrarTela('perfil-clinica', null);
 
     // Carrega dados da clínica via Django
-    fetch(`/clinica/${clinicaId}/detalhes/`)
+    const detalhesRequest = fetch(`/clinica/${clinicaId}/detalhes/`);
+    window.detalhesClinicaRequest = {
+        clinicaId: String(clinicaId),
+        promise: detalhesRequest
+    };
+
+    detalhesRequest
         .then(response => response.json())
         .then(data => {
+
+            if (String(clinicaSelecionada) !== String(clinicaId)) {
+                return;
+            }
 
             if (data.error) {
                 alert(data.error);
@@ -966,6 +977,9 @@ function abrirModalAgendamento(clinicaId) {
         })
         .catch(error => {
             console.error("Erro ao carregar clínica:", error);
+            if (window.detalhesClinicaRequest?.clinicaId === String(clinicaId)) {
+                window.detalhesClinicaRequest = null;
+            }
         });
 }
 
@@ -2171,8 +2185,12 @@ function proximaEtapa() {
         }, 300);
     }
     
-    // Carregar especialidades e médicos da clínica selecionada
-    carregarEspecialidadesEMedicos(clinicaSelecionada);
+    // A abertura da clínica já iniciou esta requisição; reutilizá-la evita
+    // que uma segunda resposta reconstrua os selects e apague as escolhas.
+    const detalhesRequest = window.detalhesClinicaRequest;
+    if (!detalhesRequest || detalhesRequest.clinicaId !== String(clinicaSelecionada)) {
+        carregarEspecialidadesEMedicos(clinicaSelecionada);
+    }
 }
 
 function voltarAoFormulario() {
