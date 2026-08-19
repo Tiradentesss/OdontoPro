@@ -2750,7 +2750,7 @@ body.sidebar-aberto .barra-topo {
 .container-config {
     background: #FFFFFF;
     border-radius: 20px;
-    padding: 40px 48px;
+    padding: 56px 68px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
 }
 
@@ -2961,7 +2961,7 @@ body.sidebar-aberto .barra-topo {
 
 @media (max-width: 768px) {
     .container-config {
-        padding: 28px 20px;
+        padding: 32px 28px;
         border-radius: 16px;
     }
 
