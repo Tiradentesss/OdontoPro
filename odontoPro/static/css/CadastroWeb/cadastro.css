@@ -85,18 +85,15 @@ a {
 .topbar-brand {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    justify-content: flex-end;
+    min-width: 250px;
 }
 
 .topbar-logo {
-        width: 52px;
-        height: 52px;
-    }
-
-.topbar-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--primary);
+    width: min(250px, 100%);
+    height: auto;
+    max-height: 58px;
+    object-fit: contain;
 }
 
 .main-content {
@@ -372,6 +369,16 @@ select:focus {
     .topbar-inner {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .topbar-brand {
+        width: 100%;
+        min-width: 0;
+        justify-content: flex-start;
+    }
+
+    .topbar-logo {
+        width: min(230px, 100%);
     }
 
     .section-card {
