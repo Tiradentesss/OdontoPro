@@ -326,16 +326,20 @@ body.theme-dark #modal-calendario .btn-close-modal:hover {
 
 /* Available and unavailable dates */
 .day-cell.available {
-  background-color: #d4f5f5;
+  background-color: var(--col-lightgrey);
   color: var(--col-black);
-  font-weight: 600;
-  border: 2px solid #1BC3EA;
+  font-weight: 500;
+  border: 1px solid transparent;
 }
 
-.day-cell.available:hover {
-  background-color: #a8e6e0;
-  transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(27, 195, 234, 0.3);
+.day-cell.available::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #1BC3EA;
 }
 
 .day-cell.unavailable {
@@ -354,13 +358,17 @@ body.theme-dark #modal-calendario .btn-close-modal:hover {
 }
 
 body.theme-dark .day-cell.available {
-  background-color: rgba(27, 195, 234, 0.2);
+  background-color: rgba(255, 255, 255, 0.08);
   color: var(--texto-principal);
-  border-color: #1BC3EA;
+  border-color: transparent;
 }
 
-body.theme-dark .day-cell.available:hover {
-  background-color: rgba(27, 195, 234, 0.3);
+body.theme-dark .day-cell.available::after {
+  background-color: #1bc3ea;
+}
+
+.day-cell.selected::after {
+  display: none;
 }
 
 body.theme-dark .day-cell.unavailable {
