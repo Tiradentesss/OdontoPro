@@ -15,21 +15,21 @@ document.addEventListener('DOMContentLoaded', function(){
             if (themeToggle) themeToggle.textContent = 'Tema escuro';
         } else {
             document.body.classList.remove('theme-dark');
+            document.body.classList.remove('dark');
             if (themeToggle) themeToggle.textContent = 'Tema claro';
         }
     };
 
-    // Initialize theme from localStorage (default light)
-    const stored = localStorage.getItem('odontopro_theme') || 'light';
-    applyTheme(stored);
-
+    // Force light mode on Home: override any stored/system preference and hide toggle on this page
+    try {
+        localStorage.setItem('odontopro_theme', 'light');
+    } catch (e) {
+        // ignore storage errors
+    }
+    applyTheme('light');
     if (themeToggle) {
-        themeToggle.addEventListener('click', (e) => {
-            const current = document.body.classList.contains('theme-dark') ? 'dark' : 'light';
-            const next = current === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('odontopro_theme', next);
-            applyTheme(next);
-        });
+        // hide or disable the toggle on the home page so it always remains light
+        try { themeToggle.style.display = 'none'; } catch (e) {}
     }
 
     const previewCards = Array.from(document.querySelectorAll('.clinic-cards-preview .clinic-card'));
