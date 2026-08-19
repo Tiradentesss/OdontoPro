@@ -78,7 +78,6 @@ body {
 .container {
     max-width: var(--container-max);
     margin: 0 auto;
-    padding: 0px 32px;
 }
 
 /* Header */
