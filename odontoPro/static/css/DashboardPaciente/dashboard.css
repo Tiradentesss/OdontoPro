@@ -4381,7 +4381,10 @@ body.sidebar-aberto .barra-topo {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 12px 20px;
+    width: 100%;
+    min-height: 56px;
+    box-sizing: border-box;
+    padding: 16px 24px;
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -4399,6 +4402,7 @@ body.sidebar-aberto .barra-topo {
     border: none;
     color: white;
     width: 100%;
+    font-size: 15px;
     outline: none;
 }
 
