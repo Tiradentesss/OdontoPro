@@ -850,19 +850,22 @@ body.theme-dark .tag-online {
     width: 48px;
     height: 48px;
     object-fit: contain;
-    transition: width 0.3s ease, height 0.3s ease;
-    }
-
-.menu-lateral.aberto .logo-somente-icone {
-    width: 192px;
-    height: auto;
-    max-height: 58px;
 }
 
-.logo-somente-icone.logo-expandida {
+.menu-lateral.aberto .logo-somente-icone {
+    display: none;
+}
+
+.logo-completa {
+    display: none;
     width: 192px;
     height: auto;
     max-height: 58px;
+    object-fit: contain;
+}
+
+.menu-lateral.aberto .logo-completa {
+    display: block;
 }
 
 .brand-text {

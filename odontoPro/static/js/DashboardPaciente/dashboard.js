@@ -151,33 +151,20 @@ function escapeHtml(unsafe) {
 /* ================= MENU LATERAL ================= */
 function atualizarLogoMenu() {
     const menu = document.getElementById("menuLateral");
-    const logo = document.querySelector(".logo-somente-icone");
+    const logoIcone = document.querySelector(".logo-recolhida");
+    const logoCompleta = document.querySelector(".logo-completa");
 
-    if (!menu || !logo) return;
+    if (!menu || !logoIcone || !logoCompleta) return;
 
     const isAberto = menu.classList.contains("aberto");
-    let src = isAberto ? logo.dataset.expandedSrc : logo.dataset.collapsedSrc;
     const isDark = document.body.classList.contains('theme-dark');
 
-    logo.classList.toggle('logo-expandida', isAberto);
-
-    if (isDark) {
-        // prefer explicit dark variants if provided
-        if (isAberto && logo.dataset.expandedDarkSrc) {
-            src = logo.dataset.expandedDarkSrc;
-        } else if (!isAberto && logo.dataset.collapsedDarkSrc) {
-            src = logo.dataset.collapsedDarkSrc;
-        } else if (src) {
-            // fallback: swap known light filenames to their white/dark counterparts
-            src = src.replace('Logo%20Transparente%201.png', 'Logo%20Transparente%20white.png')
-                     .replace('Logo Transparente 1.png', 'Logo Transparente white.png')
-                     .replace('logo icon.png', 'Logo%20Transparente%20white.png');
-        }
-    }
-
-    if (src) {
-        logo.src = src;
-    }
+    logoIcone.src = isDark
+        ? logoIcone.dataset.collapsedDarkSrc
+        : logoIcone.dataset.collapsedSrc;
+    logoCompleta.src = isDark
+        ? logoCompleta.dataset.darkSrc
+        : logoCompleta.dataset.lightSrc;
 }
 
 function alternarMenu() {
