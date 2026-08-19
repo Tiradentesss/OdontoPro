@@ -1219,7 +1219,7 @@ class Configuracoes(BaseScreen):
                 font=font("text")
             ).grid(row=0, column=0, sticky="w")
             price_cell = ctk.CTkFrame(row, fg_color="transparent", width=118, height=28)
-            price_cell.grid(row=0, column=1, sticky="e")
+            price_cell.grid(row=0, column=1, sticky="e", padx=(0, 235))
             price_cell.grid_propagate(False)
 
             ctk.CTkLabel(
