@@ -26,7 +26,6 @@ from django.utils.timezone import make_aware
 from django.utils.dateparse import parse_datetime as django_parse_datetime
 from .models import MedicoHorario
 from PIL import Image
-from functools import lru_cache
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -390,13 +389,12 @@ def login_paciente(request):
 
 
 # ---------- DASHBOARD PACIENTE ----------
-@lru_cache(maxsize=512)
 def _url_responds(url):
     if not url:
         return False
     try:
         req = Request(url, method='HEAD', headers={'User-Agent': 'Mozilla/5.0'})
-        with urlopen(req, timeout=1.5) as resp:
+        with urlopen(req, timeout=4) as resp:
             return resp.status in (200, 204, 301, 302, 304)
     except (HTTPError, URLError, TimeoutError, Exception):
         return False
@@ -411,12 +409,13 @@ def _get_clinica_imagem_url(clinica):
     if clinica.imagem:
         raw_imagem = str(clinica.imagem).strip()
         if raw_imagem.startswith(("http://", "https://")):
-            return raw_imagem
+            if _url_responds(raw_imagem):
+                return raw_imagem
 
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
         try:
             url = clinica.imagem.url
-            if url:
+            if _url_responds(url):
                 return url
         except Exception:
             pass
@@ -424,7 +423,7 @@ def _get_clinica_imagem_url(clinica):
     if clinica.logo and getattr(clinica.logo, 'name', None):
         try:
             url = clinica.logo.url
-            if url:
+            if _url_responds(url):
                 return url
         except Exception:
             pass
@@ -433,7 +432,7 @@ def _get_clinica_imagem_url(clinica):
     if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
         try:
             url = primeira.imagem.url
-            if url:
+            if _url_responds(url):
                 return url
         except Exception:
             pass
@@ -450,7 +449,7 @@ def _get_clinica_logo_url(clinica):
         if getattr(clinica.logo, 'name', None):
             try:
                 url = clinica.logo.url
-                if url:
+                if _url_responds(url):
                     return url
             except Exception:
                 pass
@@ -458,7 +457,7 @@ def _get_clinica_logo_url(clinica):
     if clinica.imagem and getattr(clinica.imagem, 'name', None):
         try:
             url = clinica.imagem.url
-            if url:
+            if _url_responds(url):
                 return url
         except Exception:
             pass
@@ -467,7 +466,7 @@ def _get_clinica_logo_url(clinica):
     if primeira and primeira.imagem and getattr(primeira.imagem, 'name', None):
         try:
             url = primeira.imagem.url
-            if url:
+            if _url_responds(url):
                 return url
         except Exception:
             pass
@@ -476,21 +475,22 @@ def _get_clinica_logo_url(clinica):
 
 
 def _get_valid_banner_images(clinica):
-    """Return image URLs without blocking page rendering on remote HEAD requests."""
+    """Return only image URLs that the server can confirm over HTTP HEAD."""
     urls = []
 
     for img in clinica.imagens.all():
         url = getattr(img.imagem, 'url', None)
-        if url:
+        if url and _url_responds(url):
             urls.append(url)
 
     if not urls and clinica.imagem:
         raw_imagem = str(clinica.imagem).strip()
         if raw_imagem.startswith(("http://", "https://")):
-            urls.append(raw_imagem)
+            if _url_responds(raw_imagem):
+                urls.append(raw_imagem)
         else:
             url = getattr(clinica.imagem, 'url', None)
-            if url:
+            if url and _url_responds(url):
                 urls.append(url)
 
     return urls
@@ -506,6 +506,13 @@ def _get_clinica_display_image(clinica):
         return logo
 
     return static('img/sem-foto.jpg')
+
+    if not urls and clinica.logo and getattr(clinica.logo, 'url', None):
+        url = clinica.logo.url
+        if _url_responds(url):
+            urls.append(url)
+
+    return urls
 
 
 def dashboard_paciente(request):
@@ -1143,22 +1150,20 @@ def clinica_detalhes(request, clinica_id):
 
             raw_image = str(img.imagem).strip()
             if raw_image.startswith(("http://", "https://")):
-                imagens.append(raw_image)
+                if _url_responds(raw_image):
+                    imagens.append(raw_image)
                 continue
 
             try:
                 url = img.imagem.url
-                if url:
+                if _url_responds(url):
                     imagens.append(url)
             except Exception:
                 pass
 
     logo_url = None
     if clinica.logo:
-        try:
-            logo_url = clinica.logo.url
-        except Exception:
-            logo_url = None
+        logo_url = clinica.logo.url if _url_responds(clinica.logo.url) else None
 
     dias_ordem = [
         "segunda",
@@ -1203,7 +1208,7 @@ def clinica_detalhes(request, clinica_id):
     "telefone": clinica.telefone,
     "descricao": clinica.descricao,
     "logo_url": logo_url,
-    "imagem_url": _get_clinica_imagem_url(clinica) if clinica.imagem else None,
+    "imagem_url": clinica.imagem.url if clinica.imagem and _url_responds(clinica.imagem.url) else None,
     "banner_url": banner_url,
     "images": imagens,
     "rua": clinica.endereco.rua if clinica.endereco else '',
@@ -1666,7 +1671,6 @@ def home(request):
         )
         .filter(avaliacao_media_real__gte=4.0)
         .order_by("-avaliacao_media_real", "-num_avaliacoes_real", "nome")
-        [:5]
     )
 
     for clinica in featured_clinics:
