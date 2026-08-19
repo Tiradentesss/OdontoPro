@@ -847,14 +847,22 @@ body.theme-dark .tag-online {
 }
 
 .logo-somente-icone {
-        width: 48px;
-        height: auto;
-        object-fit: contain;
-        transition: width 0.3s ease;
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    transition: width 0.3s ease, height 0.3s ease;
     }
 
 .menu-lateral.aberto .logo-somente-icone {
     width: 192px;
+    height: auto;
+    max-height: 58px;
+}
+
+.logo-somente-icone.logo-expandida {
+    width: 192px;
+    height: auto;
+    max-height: 58px;
 }
 
 .brand-text {

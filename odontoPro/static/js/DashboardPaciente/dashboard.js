@@ -159,6 +159,8 @@ function atualizarLogoMenu() {
     let src = isAberto ? logo.dataset.expandedSrc : logo.dataset.collapsedSrc;
     const isDark = document.body.classList.contains('theme-dark');
 
+    logo.classList.toggle('logo-expandida', isAberto);
+
     if (isDark) {
         // prefer explicit dark variants if provided
         if (isAberto && logo.dataset.expandedDarkSrc) {
