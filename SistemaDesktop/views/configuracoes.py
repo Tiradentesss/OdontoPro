@@ -471,6 +471,7 @@ class Configuracoes(BaseScreen):
         self.clinic_entries = {}
         self.profile_entries = {}
         self.address_entries = {}
+        self.current_sub_tab = None
         
         # Determinar aba inicial baseada no tipo de usuário
         if self.tipo_usuario == "clinica":
@@ -780,6 +781,8 @@ class Configuracoes(BaseScreen):
         self._switch_sub_tab(parent, "geral")
 
     def _switch_sub_tab(self, parent, tab_name):
+        self.current_sub_tab = tab_name
+
         for name, btn in self.sub_tab_buttons.items():
             btn.configure(text_color=self.colors["accent"] if name == tab_name else self.colors["text_secondary"])
 
@@ -2950,6 +2953,10 @@ class Configuracoes(BaseScreen):
 
     def _save_clinic(self):
         """Valida e salva dados da clínica"""
+        if self.current_sub_tab == "descrição":
+            self._save_clinic_description()
+            return
+
         all_valid = True
         
         if self.clinic_entries:
@@ -2964,6 +2971,42 @@ class Configuracoes(BaseScreen):
                 messagebox.showinfo("Sucesso", "✓ Configurações da clínica salvas com sucesso!")
         else:
             messagebox.showerror("Erro", "Por favor, preencha todos os campos obrigatórios.")
+
+    def _save_clinic_description(self):
+        """Salva somente a descrição quando a subaba Descrição está ativa."""
+        if not hasattr(self, "description_text") or not self.description_text.winfo_exists():
+            messagebox.showerror("Erro", "Campo de descrição indisponível.")
+            return
+
+        descricao = self.description_text.get("1.0", "end-1c").strip()
+        conn = None
+        cursor = None
+
+        try:
+            from config.database import get_connection
+
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE odontoPro_clinica
+                SET descricao = %s
+                WHERE id = %s
+                """,
+                (descricao, self.clinica_id)
+            )
+            conn.commit()
+            messagebox.showinfo("Sucesso", "✓ Descrição da clínica atualizada com sucesso!")
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            print(f"[ERRO] Falha ao salvar descrição da clínica: {e}")
+            messagebox.showerror("Erro", f"Erro ao salvar a descrição da clínica: {str(e)}")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     def _save_clinic_data(self):
         """Salva dados da clínica e endereço no banco de dados"""
@@ -2984,7 +3027,7 @@ class Configuracoes(BaseScreen):
                 cnpj = self.clinic_entries["CNPJ"].get().strip()
                 email = self.clinic_entries["E-mail Clínica"].get().strip()
                 telefone = self.clinic_entries["Telefone"].get().strip()
-                descricao = self.description_text.get("1.0", "end-1c") if hasattr(self, "description_text") else ""
+                descricao = self.description_text.get("1.0", "end-1c").strip() if hasattr(self, "description_text") else ""
 
                 # Store only digits for CNPJ and Telefone in DB
                 try:
