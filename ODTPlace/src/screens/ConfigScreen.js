@@ -130,9 +130,6 @@ export default function ConfigScreen({ navigation }) {
             activeOpacity={0.6}
             onPress={() => navigation?.navigate('NotificationSetting')}
           >
-            <View style={[styles.iconWrapper, { backgroundColor: '#FFF7ED' }]}>
-              <Feather name="bell" size={18} color="#EA580C" />
-            </View>
             <View style={styles.menuItemTextContainer}>
               <Text style={[styles.menuItemTitle, { color: colors.text }]}>Notificações e Alertas</Text>
               <Text style={styles.menuItemDescription}>Gerencie avisos de no-show, confirmações e novos relatórios.</Text>

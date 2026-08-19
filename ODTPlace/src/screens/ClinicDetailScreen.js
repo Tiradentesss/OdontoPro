@@ -54,6 +54,18 @@ const resolveClinicAddress = (clinicInfo) => {
     return addressParts.length ? addressParts.join(', ') : 'Endereço não informado';
 };
 
+const resolveClinicRating = (clinicInfo) => {
+    const value = clinicInfo?.avaliacao ?? clinicInfo?.rating ?? clinicInfo?.media_avaliacao ?? clinicInfo?.avaliacao_media;
+    const rating = Number(value);
+    return Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : '—';
+};
+
+const resolveClinicReviewCount = (clinicInfo) => {
+    const value = clinicInfo?.num_avaliacoes ?? clinicInfo?.avaliacoes ?? clinicInfo?.total_avaliacoes ?? clinicInfo?.review_count;
+    const count = Number(value);
+    return Number.isFinite(count) && count >= 0 ? count : 0;
+};
+
 export default function ClinicDetailScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
     const user = route?.params?.user;
@@ -201,7 +213,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
             resizeMode="cover"
         >
             <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : 'transparent' }]}> 
-                <ScheduleHeader title="Perfil da Clínica" onBack={() => navigation.goBack()} iconName="heart" />
+                <ScheduleHeader title="Perfil da Clínica" onBack={() => navigation.goBack()} />
 
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <View style={[styles.clinicCard, isDarkMode && { backgroundColor: '#0F172A', borderWidth: 1, borderColor: '#334155' }]}> 
@@ -210,7 +222,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                 <Image
                                     source={{ uri: clinic.logo || clinic.imagem }}
                                     style={styles.clinicImage}
-                                    resizeMode="cover"
+                                    resizeMode="contain"
                                 />
                             ) : (
                                 <View style={[styles.clinicImagePlaceholder, isDarkMode && { backgroundColor: '#1E293B' }]}> 
@@ -246,9 +258,9 @@ export default function ClinicDetailScreen({ route, navigation }) {
 
                         <View style={styles.ratingRow}>
                             <View style={[styles.ratingPill, isDarkMode && { backgroundColor: '#1E293B' }]}> 
-                                <Text style={[styles.ratingValue, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{clinic.avaliacao ?? clinic.avaliacao === 0 ? clinic.avaliacao : '—'} ★</Text>
+                                <Text style={[styles.ratingValue, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{resolveClinicRating(clinic)} ★</Text>
                             </View>
-                            <Text style={[styles.ratingCount, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{(clinic.num_avaliacoes ?? clinic.avaliacoes ?? 0)} avaliações</Text>
+                            <Text style={[styles.ratingCount, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{resolveClinicReviewCount(clinic)} avaliações</Text>
                         </View>
                     </View>
 
@@ -424,7 +436,7 @@ const styles = StyleSheet.create({
     },
     content: {
         paddingHorizontal: 20,
-        paddingVertical: 24,
+        paddingTop: 40,
         paddingBottom: 80,
     },
     clinicCard: {
@@ -664,6 +676,7 @@ const styles = StyleSheet.create({
     },
     bannerCarousel: {
         height: 180,
+        width: '100%',
         borderRadius: 24,
         overflow: 'hidden',
         marginBottom: 20,
@@ -671,12 +684,13 @@ const styles = StyleSheet.create({
         borderColor: '#dfeaf5',
     },
     bannerCarouselContent: {
-        alignItems: 'stretch',
+        alignItems: 'center',
     },
     bannerImage: {
         width: 330,
         height: 180,
         borderRadius: 24,
+        alignSelf: 'center',
     },
     bannerPlaceholder: {
         height: 180,

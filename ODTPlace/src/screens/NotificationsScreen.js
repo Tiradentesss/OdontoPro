@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-    paddingTop: 120,
+    paddingTop: 136,
   },
   content: {
     paddingHorizontal: 20,

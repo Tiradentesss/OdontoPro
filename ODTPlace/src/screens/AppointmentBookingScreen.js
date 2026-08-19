@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-    paddingTop: statusBarHeight + 120,
+    paddingTop: statusBarHeight + 136,
   },
   content: {
     paddingHorizontal: 20,

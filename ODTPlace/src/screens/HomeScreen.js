@@ -6,6 +6,18 @@ import { getClinics } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../components/ThemeContext';
 
+const resolveClinicRating = (clinic) => {
+    const value = clinic?.avaliacao ?? clinic?.rating ?? clinic?.media_avaliacao ?? clinic?.avaliacao_media;
+    const rating = Number(value);
+    return Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : '—';
+};
+
+const resolveClinicReviewCount = (clinic) => {
+    const value = clinic?.num_avaliacoes ?? clinic?.avaliacoes ?? clinic?.total_avaliacoes ?? clinic?.review_count;
+    const count = Number(value);
+    return Number.isFinite(count) && count >= 0 ? count : 0;
+};
+
 export default function HomeScreen({ route, navigation, showBottomNav = true }) {
     const { user } = useAuth();
     const { isDarkMode, colors } = useTheme();
@@ -88,8 +100,8 @@ export default function HomeScreen({ route, navigation, showBottomNav = true }) 
                                     </View>
 
                                     <View style={styles.ratingBox}>
-                                        <Text style={[styles.ratingValue, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>{item.avaliacao ?? '4.9'} ★</Text>
-                                        <Text style={[styles.ratingCount, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>{item.num_avaliacoes ?? item.avaliacoes ?? '0'} avaliações</Text>
+                                        <Text style={[styles.ratingValue, { color: isDarkMode ? '#F8FAFC' : '#0F172A' }]}>{resolveClinicRating(item)} ★</Text>
+                                        <Text style={[styles.ratingCount, { color: isDarkMode ? '#94A3B8' : '#64748B' }]}>{resolveClinicReviewCount(item)} avaliações</Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>
