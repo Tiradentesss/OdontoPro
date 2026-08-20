@@ -302,6 +302,44 @@ class ConsultaController:
         return dado
 
     @staticmethod
+    def atualizar_status_atendimento(consulta_id, clinica_id, status_atual, novo_status):
+        transicoes = {
+            ('agendada', 'confirmada'),
+            ('confirmada', 'realizada'),
+        }
+        status_atual = (status_atual or '').strip().lower()
+        novo_status = (novo_status or '').strip().lower()
+
+        if (status_atual, novo_status) not in transicoes:
+            return False
+
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE odontoPro_consulta
+                SET status = %s
+                WHERE id = %s
+                  AND clinica_id = %s
+                  AND DATE(data_hora) = CURDATE()
+                  AND LOWER(TRIM(status)) = %s
+            """, (novo_status, consulta_id, clinica_id, status_atual))
+            conn.commit()
+            return cursor.rowcount == 1
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            print(f"[ConsultaController] Erro ao atualizar status de atendimento: {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
     def snapshot_por_clinica(clinica_id, data=None, status=None, medico=None, especialidade=None, medico_id=None, especialidade_id=None):
         conn = None
         cursor = None

@@ -1748,6 +1748,37 @@ class Agenda(BaseScreen):
         obs.insert('1.0', observacoes or 'Sem observações registradas.')
         obs.configure(state='disabled')
 
+        data_consulta = data_hora.date() if hasattr(data_hora, 'date') else data_hora
+        if data_consulta == date.today() and status_key in ('agendada', 'confirmada'):
+            novo_status = 'confirmada' if status_key == 'agendada' else 'realizada'
+            texto_botao = 'Confirmar chegada' if status_key == 'agendada' else 'Marcar como realizada'
+            cor_botao = COLORS['primary'] if status_key == 'agendada' else COLORS['success']
+            cor_hover = COLORS['primary_dark'] if status_key == 'agendada' else COLORS['success_dark']
+
+            ctk.CTkButton(
+                card,
+                text=texto_botao,
+                fg_color=cor_botao,
+                hover_color=cor_hover,
+                text_color='white',
+                height=38,
+                command=lambda: self._atualizar_status_atendimento(
+                    consulta_id,
+                    status_key,
+                    novo_status,
+                )
+            ).pack(fill='x', padx=18, pady=(0, 18))
+
+    def _atualizar_status_atendimento(self, consulta_id, status_atual, novo_status):
+        atualizado = ConsultaController.atualizar_status_atendimento(
+            consulta_id,
+            self.clinica_id,
+            status_atual,
+            novo_status,
+        )
+        if atualizado:
+            self.refresh_data()
+
     def _detail_item(self, parent, text):
         row = ctk.CTkFrame(parent, fg_color=COLORS['bg_soft'], corner_radius=12)
         row.pack(fill='x', pady=4)
