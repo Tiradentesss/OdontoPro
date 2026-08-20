@@ -71,12 +71,20 @@ const upload = multer({
   },
 });
 
-// Support both Django PBKDF2 hashes and bcrypt hashes for backward compatibility.
+// Support multiple legacy hash formats used by older OdontoPlace records.
+// This keeps compatibility with Django PBKDF2 hashes, bcrypt, legacy SHA-256
+// based hashes (sometimes prefixed with a leading '$'), and older plain-text values.
 async function verifyPassword(inputPassword, storedHash) {
-  if (!storedHash) return false;
+  if (!storedHash || typeof storedHash !== 'string') return false;
 
-  if (storedHash.startsWith('pbkdf2_sha256')) {
-    const parts = storedHash.split('$');
+  const normalizedHash = storedHash.trim();
+
+  if (normalizedHash === inputPassword) {
+    return true;
+  }
+
+  if (normalizedHash.startsWith('pbkdf2_sha256')) {
+    const parts = normalizedHash.split('$');
     if (parts.length !== 4) return false;
     const iterations = parseInt(parts[1], 10);
     const salt = parts[2];
@@ -86,8 +94,19 @@ async function verifyPassword(inputPassword, storedHash) {
     return computedHash === expectedHash;
   }
 
-  if (storedHash.startsWith('$2') && storedHash.length >= 60) {
-    return bcrypt.compare(inputPassword, storedHash);
+  if (normalizedHash.startsWith('$2') && normalizedHash.length >= 60) {
+    return bcrypt.compare(inputPassword, normalizedHash);
+  }
+
+  const legacyHash = normalizedHash.replace(/^\$/, '');
+  if (/^[A-Za-z0-9+/]+={0,2}$/.test(legacyHash) && legacyHash.length >= 20) {
+    const computedHash = crypto.createHash('sha256').update(String(inputPassword)).digest('base64');
+    return computedHash === legacyHash;
+  }
+
+  if (/^[a-fA-F0-9]{64}$/.test(normalizedHash)) {
+    const computedHash = crypto.createHash('sha256').update(String(inputPassword)).digest('hex');
+    return computedHash === normalizedHash;
   }
 
   return false;
