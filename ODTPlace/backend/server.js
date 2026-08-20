@@ -490,14 +490,15 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/login/profissional', (req, res) => {
   const { email, senha } = req.body;
+  const identifier = typeof email === 'string' ? email.trim() : '';
   if (useMockData()) {
-    if (email && senha) {
-      return res.json({ id: 1, nome: 'Dr. Usuário Teste', email, telefone: '(91) 99999-0000', crm_cro: 'CRO-12345' });
+    if (identifier && senha) {
+      return res.json({ id: 1, nome: 'Dr. Usuário Teste', email: identifier, telefone: '(91) 99999-0000', crm_cro: 'CRO-12345' });
     }
     return res.status(401).json({ error: 'Invalid credentials' });
   }
-  const query = 'SELECT id, nome, email, telefone, crm_cro, foto, senha FROM odontoPro_medico WHERE (email = ? OR crm_cro = ?) AND ativo = 1';
-  db.query(query, [email, email], async (err, results) => {
+  const query = 'SELECT id, nome, email, telefone, crm_cro, foto, senha FROM odontoPro_medico WHERE (LOWER(TRIM(email)) = LOWER(?) OR LOWER(TRIM(crm_cro)) = LOWER(?)) AND ativo = 1';
+  db.query(query, [identifier, identifier], async (err, results) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: err.message });

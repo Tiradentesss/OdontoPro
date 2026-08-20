@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 
 const normalizeBaseUrl = (value) => {
   if (!value) return null;
@@ -11,21 +12,30 @@ const ensureApiSuffix = (value) => {
   return value.endsWith('/api') ? value : `${value}/api`;
 };
 
+const getExpoHost = () => {
+  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoClient?.hostUri;
+  return hostUri?.split(':')[0] || null;
+};
+
 const resolveApiBaseUrl = () => {
   const configuredUrl = normalizeBaseUrl(process.env.EXPO_PUBLIC_API_URL);
   if (configuredUrl) {
     return ensureApiSuffix(configuredUrl);
   }
 
+  const expoHost = getExpoHost();
+
   if (Platform.OS === "android") {
-    return "http://10.0.2.2:3001/api";
+    const host = Constants.isDevice ? expoHost : "10.0.2.2";
+    return `http://${host || "10.0.2.2"}:3001/api`;
   }
 
   if (Platform.OS === "ios") {
-    return "http://127.0.0.1:3001/api";
+    const host = Constants.isDevice ? expoHost : "127.0.0.1";
+    return `http://${host || "127.0.0.1"}:3001/api`;
   }
 
-  const fallbackHost = "192.168.61.104";
+  const fallbackHost = expoHost || "192.168.61.104";
   return `http://${fallbackHost}:3001/api`;
 };
 
