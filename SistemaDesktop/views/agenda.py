@@ -2186,6 +2186,7 @@ class Agenda(BaseScreen):
             corner_radius=8,
             command=ao_selecionar_paciente
         )
+        paciente_combo.configure(height=40)
         paciente_combo.pack(fill='x', padx=15, pady=(0, 15))
         
         # ===================== CAMPO ESPECIALIDADE (SELETOR) =====================
