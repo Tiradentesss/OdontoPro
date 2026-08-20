@@ -1799,6 +1799,9 @@ class Agenda(BaseScreen):
             novo_status,
         )
         if atualizado:
+            self.paciente_selecionado = consulta_id
+            if self.details_panel and self.details_panel.winfo_exists():
+                self.render_details_panel(self.details_panel)
             self.refresh_data()
 
     def _abrir_dialogo_reagendamento(self, consulta_id):
