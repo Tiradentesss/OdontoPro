@@ -8,12 +8,13 @@
 
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
-import { Platform } from 'react-native';
 
 const normalizeBaseUrl = (value) => {
   if (!value) return null;
   return value.trim().replace(/\/+$/, '');
 };
+
+const ONLINE_API_BASE_URL = "https://odontohubbackend.onrender.com/api";
 
 const ensureApiSuffix = (value) => {
   if (!value) return value;
@@ -26,17 +27,7 @@ const resolveApiBaseUrl = () => {
     return ensureApiSuffix(configuredUrl);
   }
 
-  // Try to get from environment
-  if (Platform.OS === "android") {
-    return "http://10.0.2.2:3001/api";
-  }
-
-  if (Platform.OS === "ios") {
-    return "http://127.0.0.1:3001/api";
-  }
-
-  const fallbackHost = "192.168.61.104";
-  return `http://${fallbackHost}:3001/api`;
+  return ONLINE_API_BASE_URL;
 };
 
 const API_BASE_URL = resolveApiBaseUrl();

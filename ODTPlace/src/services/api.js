@@ -1,20 +1,15 @@
 import axios from "axios";
-import { Platform } from "react-native";
-import Constants from "expo-constants";
 
 const normalizeBaseUrl = (value) => {
   if (!value) return null;
   return value.trim().replace(/\/+$/, "");
 };
 
+const ONLINE_API_BASE_URL = "https://odontohubbackend.onrender.com/api";
+
 const ensureApiSuffix = (value) => {
   if (!value) return value;
   return value.endsWith('/api') ? value : `${value}/api`;
-};
-
-const getExpoHost = () => {
-  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest2?.extra?.expoClient?.hostUri;
-  return hostUri?.split(':')[0] || null;
 };
 
 const resolveApiBaseUrl = () => {
@@ -23,27 +18,14 @@ const resolveApiBaseUrl = () => {
     return ensureApiSuffix(configuredUrl);
   }
 
-  const expoHost = getExpoHost();
-
-  if (Platform.OS === "android") {
-    const host = Constants.isDevice ? expoHost : "10.0.2.2";
-    return `http://${host || "10.0.2.2"}:3001/api`;
-  }
-
-  if (Platform.OS === "ios") {
-    const host = Constants.isDevice ? expoHost : "127.0.0.1";
-    return `http://${host || "127.0.0.1"}:3001/api`;
-  }
-
-  const fallbackHost = expoHost || "192.168.61.104";
-  return `http://${fallbackHost}:3001/api`;
+  return ONLINE_API_BASE_URL;
 };
 
 const API_BASE_URL = resolveApiBaseUrl();
 
 // Helpful debug log so the running app prints which backend URL it will call
 if (typeof console !== 'undefined' && console.log) {
-  console.log('Resolved API_BASE_URL:', API_BASE_URL, 'Platform:', Platform.OS);
+  console.log('Resolved API_BASE_URL:', API_BASE_URL);
 }
 
 const api = axios.create({
