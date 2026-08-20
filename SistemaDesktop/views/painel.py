@@ -326,7 +326,6 @@ class Painel(BaseScreen):
         # e apresenta 4 indicadores internos com destaque no valor.
         container = ctk.CTkFrame(card, fg_color="transparent")
         container.pack(fill="x", padx=20, pady=10)
-        container.grid_columnconfigure((0, 1, 2, 3), weight=1)
 
         f = self.dados_relatorios or {}
         # Indicadores preferenciais vindos da lógica de Relatórios
