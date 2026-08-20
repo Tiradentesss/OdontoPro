@@ -17,6 +17,7 @@ from views.configuracoes import Configuracoes
 from views.gerenciamento import Gerenciamento
 from views.permissao import Permissoes
 from controllers.gerenciamento_controller import GerenciamentoController
+from controllers.consulta_controller import ConsultaController
 from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode, font, ASSETS_DIR, get_brand_logo_path
 
 
@@ -166,6 +167,14 @@ class App(ctk.CTkToplevel):
         self._on_initialization_error = on_initialization_error
         self._initialization_error = None
         self._initialization_notified = False
+
+        if self.clinica_id:
+            try:
+                print(f"[APP] Atualizando consultas pendentes como falta para clínica {self.clinica_id}")
+                ConsultaController.marcar_consultas_pendentes_como_falta(self.clinica_id)
+            except Exception as e:
+                print(f"[APP] Falha ao atualizar faltas para clínica {self.clinica_id}: {e}")
+
         print("[SPLASH] App criado; cargas assíncronas não críticas não bloqueiam a prontidão")
         
         if parent is None:
