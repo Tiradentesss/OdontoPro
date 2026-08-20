@@ -581,6 +581,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         for day_num in range(1, last_day + 1):
             current_date = datetime(self.current_year, self.current_month, day_num).date()
             is_today = current_date == datetime.now().date()
+            is_past = current_date < datetime.now().date()
             is_selected = current_date in self.selected_dates
             has_availability = current_date.weekday() in self.saved_slots_by_weekday
             is_sunday = current_date.weekday() == 6
@@ -591,17 +592,17 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 width=40,
                 height=36,
                 corner_radius=10,
-                fg_color=self._get_date_button_color(is_selected, is_today, is_sunday),
-                text_color=self._get_date_text_color(is_selected, is_sunday),
+                fg_color=self.colors["card_soft"] if is_past else self._get_date_button_color(is_selected, is_today, is_sunday),
+                text_color=self.colors["muted"] if is_past else self._get_date_text_color(is_selected, is_sunday),
                 border_width=1,
                 border_color=self.colors["primary"] if is_selected else self.colors["success"] if has_availability else self.colors["border"],
                 hover_color=self.colors["primary_dark"] if not is_sunday else self.colors["card_soft"],
                 font=ctk.CTkFont(size=13),
-                state="disabled" if is_sunday else "normal"
+                state="disabled" if is_sunday and not is_past else "normal"
             )
             btn.grid(row=row, column=col, padx=4, pady=4, sticky="nsew")
             
-            if not is_sunday:
+            if not is_sunday or is_past:
                 btn.bind("<Button-1>", lambda e, d=current_date: self._on_date_clicked(e, d))
             
             self.date_buttons[current_date] = btn
@@ -683,8 +684,11 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
     def _on_date_clicked(self, event, selected_date):
         shift_pressed = (event.state & 0x1) != 0
-        
-        if shift_pressed and self.last_selected_date:
+
+        if selected_date < datetime.now().date():
+            self.selected_dates.clear()
+            self.last_selected_date = None
+        elif shift_pressed and self.last_selected_date:
             self._toggle_date_range(self.last_selected_date, selected_date)
         else:
             if selected_date in self.selected_dates:
@@ -720,14 +724,15 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         for date, btn in self.date_buttons.items():
             is_selected = date in self.selected_dates
             is_today = date == datetime.now().date()
+            is_past = date < datetime.now().date()
             has_availability = date.weekday() in self.saved_slots_by_weekday
             is_sunday = date.weekday() == 6
             
             btn.configure(
-                fg_color=self._get_date_button_color(is_selected, is_today, is_sunday),
-                text_color=self._get_date_text_color(is_selected, is_sunday),
+                fg_color=self.colors["card_soft"] if is_past else self._get_date_button_color(is_selected, is_today, is_sunday),
+                text_color=self.colors["muted"] if is_past else self._get_date_text_color(is_selected, is_sunday),
                 border_color=self.colors["primary"] if is_selected else self.colors["success"] if has_availability else self.colors["border"],
-                state="disabled" if is_sunday else "normal"
+                state="disabled" if is_sunday and not is_past else "normal"
             )
 
     def _update_date_info(self):
@@ -825,7 +830,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             messagebox.showwarning("Aviso", "Selecione um médico primeiro.")
             return
         
-        if not self.selected_dates:
+        datas_para_salvar = {
+            data for data in self.selected_dates
+            if data >= datetime.now().date()
+        }
+
+        if not datas_para_salvar:
             messagebox.showwarning("Aviso", "Selecione pelo menos uma data.")
             return
         
@@ -834,7 +844,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             return
 
         disponibilidade_por_dia = {}
-        for data in self.selected_dates:
+        for data in datas_para_salvar:
             weekday = data.weekday()
             disponibilidade_por_dia.setdefault(weekday, set()).update(self.selected_slots)
 
@@ -851,7 +861,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
         if resultado.get('sucesso'):
             horarios = ", ".join(sorted(self.selected_slots))
-            datas_sorted = sorted(list(self.selected_dates))
+            datas_sorted = sorted(list(datas_para_salvar))
             if len(datas_sorted) == 1:
                 datas_str = datas_sorted[0].strftime("%d/%m/%Y")
             else:
