@@ -1035,7 +1035,11 @@ class Relatorios(BaseScreen):
             # Consultas por especialidade para gráfico de pizza
             cursor.execute(f"""
                 SELECT COALESCE(e.nome, 'Sem Especialidade') AS especialidade,
-                       COUNT(*) AS total
+                      COUNT(*) AS total,
+                      SUM(CASE WHEN LOWER(TRIM(c.status)) IN ('agendada', 'confirmada', 'reagendada') THEN 1 ELSE 0 END) AS agendadas,
+                      SUM(CASE WHEN LOWER(TRIM(c.status)) = 'realizada' THEN 1 ELSE 0 END) AS realizadas,
+                      SUM(CASE WHEN LOWER(TRIM(c.status)) = 'cancelada' THEN 1 ELSE 0 END) AS canceladas,
+                      SUM(CASE WHEN LOWER(TRIM(c.status)) = 'falta' THEN 1 ELSE 0 END) AS faltas
                 FROM odontoPro_consulta c
                 LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
                 LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id
@@ -1467,6 +1471,47 @@ class Relatorios(BaseScreen):
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True, padx=0, pady=0)
         self._specialty_canvas = canvas
+
+        specialty_tooltip = ax.annotate(
+            "",
+            xy=(0, 0),
+            xytext=(10, 10),
+            textcoords="offset points",
+            bbox={"boxstyle": "round,pad=0.4", "fc": COLORS["card"], "ec": COLORS["border"], "alpha": 0.96},
+            fontsize=9,
+            color=COLORS["text"],
+            visible=False,
+        )
+
+        def _on_specialty_hover(event):
+            if event.inaxes != ax:
+                specialty_tooltip.set_visible(False)
+                canvas.draw_idle()
+                return
+
+            for index, (wedge, row) in enumerate(zip(wedges, specialty_data)):
+                contains, _ = wedge.contains(event)
+                if contains:
+                    total_value = int(row[1] or 0)
+                    participation = int(round((total_value / total) * 100))
+                    specialty_tooltip.set_text(
+                        f"{labels[index]}\n"
+                        f"Total: {total_value}\n"
+                        f"Agendadas: {int(row[2] or 0)}\n"
+                        f"Realizadas: {int(row[3] or 0)}\n"
+                        f"Canceladas: {int(row[4] or 0)}\n"
+                        f"Faltas: {int(row[5] or 0)}\n"
+                        f"Participação: {participation}%"
+                    )
+                    specialty_tooltip.xy = (event.xdata, event.ydata)
+                    specialty_tooltip.set_visible(True)
+                    canvas.draw_idle()
+                    return
+
+            specialty_tooltip.set_visible(False)
+            canvas.draw_idle()
+
+        canvas.mpl_connect("motion_notify_event", _on_specialty_hover)
 
     def _render_productivity(self, productivity_rows):
         for child in self._productivity_rows_frame.winfo_children():
