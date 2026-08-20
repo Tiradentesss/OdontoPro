@@ -302,6 +302,29 @@ class ConsultaController:
         return dado
 
     @staticmethod
+    def obter_medico_consulta(consulta_id, clinica_id):
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT medico_id
+                FROM odontoPro_consulta
+                WHERE id = %s AND clinica_id = %s
+            """, (consulta_id, clinica_id))
+            resultado = cursor.fetchone()
+            return resultado[0] if resultado else None
+        except Exception as e:
+            print(f"[ConsultaController] Erro ao obter médico da consulta: {e}")
+            return None
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
     def atualizar_status_atendimento(consulta_id, clinica_id, status_atual, novo_status):
         transicoes = {
             ('agendada', 'confirmada'),
@@ -350,12 +373,36 @@ class ConsultaController:
             conn = get_connection()
             cursor = conn.cursor()
             cursor.execute("""
+                SELECT medico_id, status
+                FROM odontoPro_consulta
+                WHERE id = %s AND clinica_id = %s
+            """, (consulta_id, clinica_id))
+            consulta = cursor.fetchone()
+            if not consulta or (consulta[1] or '').strip().lower() != 'agendada':
+                return False
+
+            if data_hora.date() < datetime.now().date():
+                return False
+
+            medico_id = consulta[0]
+            horarios = ConsultaService.carregar_horarios_disponiveis(
+                medico_id,
+                data_hora.date(),
+                clinica_id,
+                conn=conn,
+                excluir_consulta_id=consulta_id,
+            )
+            if data_hora.strftime('%H:%M') not in horarios:
+                return False
+
+            cursor.execute("""
                 UPDATE odontoPro_consulta
                 SET data_hora = %s
                 WHERE id = %s
                   AND clinica_id = %s
+                  AND medico_id = %s
                   AND LOWER(TRIM(status)) = 'agendada'
-            """, (data_hora, consulta_id, clinica_id))
+            """, (data_hora, consulta_id, clinica_id, medico_id))
             conn.commit()
             return cursor.rowcount == 1
         except Exception as e:
@@ -747,16 +794,28 @@ class ConsultaController:
         return ConsultaService.carregar_datas_disponiveis(medico_id, clinica_id, conn=conn)
 
     @staticmethod
-    def carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id=None, conn=None):
-        return ConsultaService.carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id, conn=conn)
+    def carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id=None, conn=None, excluir_consulta_id=None):
+        return ConsultaService.carregar_horarios_disponiveis(
+            medico_id,
+            data_consulta,
+            clinica_id,
+            conn=conn,
+            excluir_consulta_id=excluir_consulta_id,
+        )
 
     @staticmethod
     def carregar_disponibilidade_medico(medico_id, clinica_id=None, conn=None):
         return ConsultaService.carregar_disponibilidade_medico(medico_id, clinica_id, conn=conn)
 
     @staticmethod
-    def carregar_agenda_disponivel(medico_id, clinica_id=None, dias_ahead=60, conn=None):
-        return ConsultaService.carregar_agenda_disponivel(medico_id, clinica_id=clinica_id, dias_ahead=dias_ahead, conn=conn)
+    def carregar_agenda_disponivel(medico_id, clinica_id=None, dias_ahead=60, conn=None, excluir_consulta_id=None):
+        return ConsultaService.carregar_agenda_disponivel(
+            medico_id,
+            clinica_id=clinica_id,
+            dias_ahead=dias_ahead,
+            conn=conn,
+            excluir_consulta_id=excluir_consulta_id,
+        )
 
     @staticmethod
     def marcar_consultas_pendentes_como_falta(clinica_id):

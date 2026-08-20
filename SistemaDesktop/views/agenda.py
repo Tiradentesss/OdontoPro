@@ -1812,6 +1812,16 @@ class Agenda(BaseScreen):
             return
 
         data_hora = consulta[2]
+        medico_id = ConsultaController.obter_medico_consulta(consulta_id, self.clinica_id)
+        agenda_disponivel = ConsultaController.carregar_agenda_disponivel(
+            medico_id,
+            self.clinica_id,
+            dias_ahead=60,
+            excluir_consulta_id=consulta_id,
+        )
+        datas_disponiveis = agenda_disponivel.get('datas', [])
+        horarios_por_data = agenda_disponivel.get('horarios_por_data', {})
+
         dialogo = ctk.CTkToplevel(self.master)
         dialogo.title('Reagendar consulta')
         dialogo.geometry('360x220')
@@ -1821,13 +1831,109 @@ class Agenda(BaseScreen):
         frame = ctk.CTkFrame(dialogo, fg_color=COLORS['card'])
         frame.pack(fill='both', expand=True, padx=18, pady=18)
 
-        ctk.CTkLabel(frame, text='Nova data (DD/MM/AAAA)', text_color=COLORS['text_primary']).pack(anchor='w')
-        data_var = ctk.StringVar(value=data_hora.strftime('%d/%m/%Y'))
-        ctk.CTkEntry(frame, textvariable=data_var).pack(fill='x', pady=(4, 10))
+        ctk.CTkLabel(frame, text='Nova data', text_color=COLORS['text_primary']).pack(anchor='w')
+        data_var = ctk.StringVar(value=datas_disponiveis[0] if datas_disponiveis else '')
+        data_field_frame = ctk.CTkFrame(frame, fg_color='transparent')
+        data_field_frame.pack(fill='x', pady=(4, 10))
+        data_entry = ctk.CTkEntry(
+            data_field_frame,
+            textvariable=data_var,
+            state='readonly',
+            fg_color=COLORS['input_bg'],
+            border_color=COLORS['border'],
+            text_color=COLORS['text_primary'],
+            corner_radius=8,
+        )
+        data_entry.pack(side='left', fill='x', expand=True)
 
-        ctk.CTkLabel(frame, text='Novo horário (HH:MM)', text_color=COLORS['text_primary']).pack(anchor='w')
-        hora_var = ctk.StringVar(value=data_hora.strftime('%H:%M'))
-        ctk.CTkEntry(frame, textvariable=hora_var).pack(fill='x', pady=(4, 14))
+        data_popup = {'window': None}
+
+        def fechar_popup_data():
+            popup = data_popup['window']
+            if popup is not None and popup.winfo_exists():
+                popup.destroy()
+            data_popup['window'] = None
+
+        def selecionar_data(data_selecionada):
+            data_var.set(data_selecionada)
+            fechar_popup_data()
+            atualizar_horarios(data_selecionada)
+
+        def abrir_popup_data():
+            fechar_popup_data()
+            if not datas_disponiveis:
+                return
+
+            popup = ctk.CTkToplevel(dialogo)
+            data_popup['window'] = popup
+            popup.title('')
+            popup.resizable(False, False)
+            popup.transient(dialogo)
+            popup.configure(fg_color=COLORS['card'])
+            popup.protocol('WM_DELETE_WINDOW', fechar_popup_data)
+            popup.bind('<Escape>', lambda _event: fechar_popup_data())
+
+            datas_frame = ctk.CTkScrollableFrame(
+                popup,
+                width=292,
+                height=132,
+                fg_color=COLORS['card'],
+                corner_radius=10,
+            )
+            datas_frame.pack(fill='both', expand=True, padx=6, pady=6)
+            datas_frame.grid_columnconfigure((0, 1), weight=1)
+
+            for index, data in enumerate(datas_disponiveis):
+                selecionada = data == data_var.get()
+                ctk.CTkButton(
+                    datas_frame,
+                    text=data,
+                    height=32,
+                    corner_radius=8,
+                    fg_color=COLORS['primary'] if selecionada else COLORS['bg_soft'],
+                    hover_color=COLORS['primary_dark'] if selecionada else COLORS['primary_soft'],
+                    text_color='white' if selecionada else COLORS['text_primary'],
+                    command=lambda value=data: selecionar_data(value),
+                ).grid(row=index // 2, column=index % 2, sticky='ew', padx=4, pady=4)
+
+            popup.update_idletasks()
+            x = data_entry.winfo_rootx()
+            y = data_entry.winfo_rooty() + data_entry.winfo_height()
+            popup.geometry(f'+{x}+{y}')
+
+        ctk.CTkButton(
+            data_field_frame,
+            text='▼',
+            width=34,
+            height=32,
+            corner_radius=8,
+            fg_color=COLORS['input_bg'],
+            hover_color=COLORS['primary_soft'],
+            text_color=COLORS['text_primary'],
+            border_width=1,
+            border_color=COLORS['border'],
+            command=abrir_popup_data,
+        ).pack(side='right', padx=(4, 0))
+        data_entry.bind('<Button-1>', lambda _event: abrir_popup_data())
+
+        ctk.CTkLabel(frame, text='Novo horário', text_color=COLORS['text_primary']).pack(anchor='w')
+        horarios_iniciais = horarios_por_data.get(data_var.get(), [])
+        hora_var = ctk.StringVar(value=horarios_iniciais[0] if horarios_iniciais else '')
+        hora_combo = ctk.CTkComboBox(
+            frame,
+            variable=hora_var,
+            values=horarios_iniciais,
+            state='readonly' if horarios_iniciais else 'disabled',
+        )
+        hora_combo.pack(fill='x', pady=(4, 14))
+
+        def atualizar_horarios(data_selecionada):
+            horarios = horarios_por_data.get(data_selecionada, [])
+            hora_var.set(horarios[0] if horarios else '')
+            hora_combo.configure(
+                values=horarios,
+                state='readonly' if horarios else 'disabled',
+            )
 
         def salvar():
             valido_data, msg_data, data_obj = ConsultaController.validar_data_consulta(data_var.get().strip())

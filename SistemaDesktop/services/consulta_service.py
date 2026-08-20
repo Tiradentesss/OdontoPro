@@ -114,7 +114,7 @@ class ConsultaService:
                 conn.close()
 
     @staticmethod
-    def listar_horarios_ocupados_no_dia(medico_id, data_consulta, conn=None):
+    def listar_horarios_ocupados_no_dia(medico_id, data_consulta, conn=None, excluir_consulta_id=None):
         """
         Lista todos os horários ocupados de um médico em um dia específico.
         
@@ -147,8 +147,14 @@ class ConsultaService:
                 ORDER BY hora ASC
             """
 
+            if excluir_consulta_id is not None:
+                query = query.replace("                ORDER BY hora ASC", "                AND id != %s\n                ORDER BY hora ASC")
+
             def _exec():
-                cursor.execute(query, (medico_id, data_consulta, medico_id))
+                params = (medico_id, data_consulta, medico_id)
+                if excluir_consulta_id is not None:
+                    params += (excluir_consulta_id,)
+                cursor.execute(query, params)
                 return cursor.fetchall()
 
             resultados = timed_sql("listar_horarios_ocupados_no_dia", _exec, sql=query) or []
@@ -471,7 +477,7 @@ class ConsultaService:
                 conn.close()
 
     @staticmethod
-    def carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id=None, conn=None):
+    def carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id=None, conn=None, excluir_consulta_id=None):
         if not medico_id or not data_consulta:
             return []
 
@@ -500,7 +506,12 @@ class ConsultaService:
             horarios.extend(ConsultaService._gerar_horarios_por_intervalo(inicio_obj, fim_obj))
 
         horarios = sorted(set(horarios))
-        horarios_ocupados = ConsultaService.listar_horarios_ocupados_no_dia(medico_id, data_consulta, conn=conn)
+        horarios_ocupados = ConsultaService.listar_horarios_ocupados_no_dia(
+            medico_id,
+            data_consulta,
+            conn=conn,
+            excluir_consulta_id=excluir_consulta_id,
+        )
 
         if data_consulta == date.today():
             agora = datetime.now().time()
@@ -538,7 +549,7 @@ class ConsultaService:
         return datas_disponiveis
 
     @staticmethod
-    def carregar_agenda_disponivel(medico_id, clinica_id=None, dias_ahead=60, conn=None):
+    def carregar_agenda_disponivel(medico_id, clinica_id=None, dias_ahead=60, conn=None, excluir_consulta_id=None):
         """
         Carrega a agenda disponível do médico pelos próximos dias sem consultar a cada troca de data.
         Retorna todas as datas e horários disponíveis em memória.
@@ -568,22 +579,28 @@ class ConsultaService:
             def _exec():
                 # aplicar filtro de clínica quando disponível no escopo (clinica_id)
                 if clinica_id is not None:
-                    cursor.execute('''
+                    query = '''
                         SELECT DATE(data_hora), TIME(data_hora)
                         FROM odontoPro_consulta
                         WHERE medico_id = %s
                           AND clinica_id = %s
                           AND status != 'cancelada'
                           AND DATE(data_hora) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
-                    ''', (medico_id, clinica_id, dias_ahead))
+                    '''
+                    params = (medico_id, clinica_id, dias_ahead)
                 else:
-                    cursor.execute('''
+                    query = '''
                         SELECT DATE(data_hora), TIME(data_hora)
                         FROM odontoPro_consulta
                         WHERE medico_id = %s
                           AND status != 'cancelada'
                           AND DATE(data_hora) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL %s DAY)
-                    ''', (medico_id, dias_ahead))
+                    '''
+                    params = (medico_id, dias_ahead)
+                if excluir_consulta_id is not None:
+                    query += ' AND id != %s'
+                    params += (excluir_consulta_id,)
+                cursor.execute(query, params)
                 return cursor.fetchall()
 
             ocupados_rows = timed_sql("carregar_agenda_disponivel - buscar ocupados", _exec, sql="SELECT DATE(data_hora), TIME(data_hora) FROM odontoPro_consulta WHERE medico_id = %s AND DATE(data_hora) BETWEEN ...") or []
