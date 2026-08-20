@@ -321,7 +321,7 @@ class Painel(BaseScreen):
         return avatar_img, False
 
     def _render_resumo_relatorios(self, row, col):
-        card = self._criar_card("📊 Resumo dos Relatórios", "", row, col, padx=(10, 0))
+        card = self._criar_card("Resumo dos Relatórios", "", row, col, padx=(10, 0))
         # Reutiliza os dados reais carregados em self.dados_relatorios
         # e apresenta 4 indicadores internos com destaque no valor.
         container = ctk.CTkFrame(card, fg_color="transparent")
