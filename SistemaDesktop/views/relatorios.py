@@ -169,7 +169,7 @@ class Relatorios(BaseScreen):
         ctk.CTkLabel(status_label_frame, text="Status", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.status_combo = ctk.CTkComboBox(
             status_frame,
-            values=["Todos", "Agendada", "Realizada", "Cancelada"],
+            values=["Todos", "Agendada", "Realizada", "Cancelada", "Falta"],
             height=34,
             corner_radius=8,
             fg_color=COLORS["input_bg"],
