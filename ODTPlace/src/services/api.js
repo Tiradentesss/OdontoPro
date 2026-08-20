@@ -6,6 +6,7 @@ const normalizeBaseUrl = (value) => {
 };
 
 const ONLINE_API_BASE_URL = "https://odontohubbackend.onrender.com/api";
+const LOGIN_TIMEOUT_MS = 60000;
 
 const ensureApiSuffix = (value) => {
   if (!value) return value;
@@ -110,7 +111,7 @@ export const getDoctorById = async (doctorId) => {
 
 export const loginPatient = async (email, senha) => {
   try {
-    const response = await api.post('/login', { email, senha });
+    const response = await api.post('/login', { email, senha }, { timeout: LOGIN_TIMEOUT_MS });
     return response.data;
   } catch (error) {
     console.error('Login API Error:', error.message);
@@ -139,7 +140,7 @@ export const loginPatient = async (email, senha) => {
 
 export const loginProfessional = async (email, senha) => {
   try {
-    const response = await api.post('/login/profissional', { email, senha });
+    const response = await api.post('/login/profissional', { email, senha }, { timeout: LOGIN_TIMEOUT_MS });
     return response.data;
   } catch (error) {
     console.error('Professional Login API Error:', error.message);
