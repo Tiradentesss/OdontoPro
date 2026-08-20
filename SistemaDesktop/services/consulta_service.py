@@ -643,6 +643,34 @@ class ConsultaService:
                 conn.close()
 
     @staticmethod
+    def marcar_consultas_pendentes_como_falta(clinica_id):
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE odontoPro_consulta
+                SET status = 'falta'
+                WHERE clinica_id = %s
+                  AND DATE(data_hora) < CURDATE()
+                  AND LOWER(TRIM(status)) IN ('agendada', 'confirmada', 'reagendada')
+            """, (clinica_id,))
+            atualizadas = cursor.rowcount
+            conn.commit()
+            return atualizadas
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            print(f"[ConsultaService] Erro ao atualizar faltas: {e}")
+            return 0
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
     def criar_consulta(clinica_id, paciente_id, medico_id, data_hora, especialidade, 
                        status='agendada', observacoes='', especialidade_id=None):
         """

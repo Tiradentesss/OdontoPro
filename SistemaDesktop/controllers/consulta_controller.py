@@ -686,6 +686,10 @@ class ConsultaController:
         return ConsultaService.carregar_agenda_disponivel(medico_id, clinica_id=clinica_id, dias_ahead=dias_ahead, conn=conn)
 
     @staticmethod
+    def marcar_consultas_pendentes_como_falta(clinica_id):
+        return ConsultaService.marcar_consultas_pendentes_como_falta(clinica_id)
+
+    @staticmethod
     def obter_medico_formatado(medico_tupla):
         """
         Formata um médico para exibição.

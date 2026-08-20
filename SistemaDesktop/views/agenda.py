@@ -721,6 +721,7 @@ class Agenda(BaseScreen):
         error_msg = None
         
         try:
+            ConsultaController.marcar_consultas_pendentes_como_falta(self.clinica_id)
             print(f"[AGENDA] _load_data_thread: analisando filtros")
             print(f"[AGENDA]   - data={self.filtro_data}")
             print(f"[AGENDA]   - medico={self.filtro_medico}")
