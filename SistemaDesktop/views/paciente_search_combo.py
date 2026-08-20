@@ -22,7 +22,12 @@ class PacienteSearchComboBox(ctk.CTkFrame):
         
         # StringVar para monitorar alterações
         self.search_var = ctk.StringVar()
-        self.search_var.trace("w", self._ao_alterar_search)
+        try:
+            # tkinter moderno: usa trace_add
+            self.search_var.trace_add('write', self._ao_alterar_search)
+        except AttributeError:
+            # fallback para versões antigas do Tk
+            self.search_var.trace('w', self._ao_alterar_search)
         
         # Entry principal
         self.entry = ctk.CTkEntry(self, **kwargs)
