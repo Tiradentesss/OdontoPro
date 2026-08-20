@@ -1505,7 +1505,9 @@ class Relatorios(BaseScreen):
                         f"Participação: {participation}%"
                     )
                     offset_x = -155 if event.x > ax.bbox.x1 - 170 else 18
-                    offset_y = -78 if event.y > ax.bbox.y1 - 105 else 18
+                    is_upper_region = event.y > ax.bbox.y1 - 105
+                    offset_y = -10 if is_upper_region else 10
+                    specialty_tooltip.set_verticalalignment("top" if is_upper_region else "bottom")
                     specialty_tooltip.xytext = (offset_x, offset_y)
                     specialty_tooltip.xy = (event.xdata, event.ydata)
                     specialty_tooltip.set_visible(True)
