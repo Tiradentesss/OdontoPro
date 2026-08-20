@@ -19,6 +19,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.last_selected_date = None
         self.selected_slots = set()
         self.last_selected_slot = None
+        self.saved_slots_by_weekday = {}
         self.current_month = self.selected_date.month
         self.current_year = self.selected_date.year
         self.date_buttons = {}
@@ -581,6 +582,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             current_date = datetime(self.current_year, self.current_month, day_num).date()
             is_today = current_date == datetime.now().date()
             is_selected = current_date in self.selected_dates
+            has_availability = current_date.weekday() in self.saved_slots_by_weekday
             is_sunday = current_date.weekday() == 6
             
             btn = ctk.CTkButton(
@@ -592,7 +594,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 fg_color=self._get_date_button_color(is_selected, is_today, is_sunday),
                 text_color=self._get_date_text_color(is_selected, is_sunday),
                 border_width=1,
-                border_color=self.colors["primary"] if is_selected else self.colors["border"],
+                border_color=self.colors["primary"] if is_selected else self.colors["success"] if has_availability else self.colors["border"],
                 hover_color=self.colors["primary_dark"] if not is_sunday else self.colors["card_soft"],
                 font=ctk.CTkFont(size=13),
                 state="disabled" if is_sunday else "normal"
@@ -691,6 +693,10 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 self.selected_dates.add(selected_date)
         
         self.last_selected_date = selected_date
+        self.selected_date = selected_date
+        self.selected_slots = set(self.saved_slots_by_weekday.get(selected_date.weekday(), []))
+        self.last_selected_slot = None
+        self._update_slots_display()
         self._update_calendar_display()
         self._update_date_info()
 
@@ -714,12 +720,13 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         for date, btn in self.date_buttons.items():
             is_selected = date in self.selected_dates
             is_today = date == datetime.now().date()
+            has_availability = date.weekday() in self.saved_slots_by_weekday
             is_sunday = date.weekday() == 6
             
             btn.configure(
                 fg_color=self._get_date_button_color(is_selected, is_today, is_sunday),
                 text_color=self._get_date_text_color(is_selected, is_sunday),
-                border_color=self.colors["primary"] if is_selected else self.colors["border"],
+                border_color=self.colors["primary"] if is_selected else self.colors["success"] if has_availability else self.colors["border"],
                 state="disabled" if is_sunday else "normal"
             )
 
@@ -800,9 +807,17 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
     def _select_medico(self, medico):
         self.selected_medico = medico
+        self.selected_slots.clear()
+        self.last_selected_slot = None
+        self.saved_slots_by_weekday = ConsultaController.carregar_disponibilidade_medico(
+            medico["id"],
+            clinica_id=self.clinica_id
+        )
         self.right_subtitle.configure(
             text=f"Configurando agenda de {medico['nome']}."
         )
+        self._build_calendar()
+        self._update_slots_display()
         self._render_medicos()
 
     def _save_disponibilidade(self):

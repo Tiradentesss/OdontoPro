@@ -678,6 +678,10 @@ class ConsultaController:
         return ConsultaService.carregar_horarios_disponiveis(medico_id, data_consulta, clinica_id, conn=conn)
 
     @staticmethod
+    def carregar_disponibilidade_medico(medico_id, clinica_id=None, conn=None):
+        return ConsultaService.carregar_disponibilidade_medico(medico_id, clinica_id, conn=conn)
+
+    @staticmethod
     def carregar_agenda_disponivel(medico_id, clinica_id=None, dias_ahead=60, conn=None):
         return ConsultaService.carregar_agenda_disponivel(medico_id, clinica_id=clinica_id, dias_ahead=dias_ahead, conn=conn)
 

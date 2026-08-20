@@ -305,6 +305,28 @@ class ConsultaService:
                 conn.close()
 
     @staticmethod
+    def carregar_disponibilidade_medico(medico_id, clinica_id=None, conn=None):
+        """Retorna os horários cadastrados do médico agrupados por dia da semana."""
+        if not medico_id:
+            return {}
+
+        horarios_por_dia = ConsultaService._listar_horarios_abertos_do_medico(
+            medico_id,
+            conn=conn
+        )
+        disponibilidade = {}
+        for weekday, intervalos in horarios_por_dia.items():
+            horarios = []
+            for inicio, fim in intervalos:
+                inicio_obj = ConsultaService._parse_hora(inicio)
+                fim_obj = ConsultaService._parse_hora(fim)
+                horarios.extend(
+                    ConsultaService._gerar_horarios_por_intervalo(inicio_obj, fim_obj)
+                )
+            disponibilidade[weekday] = sorted(set(horarios))
+        return disponibilidade
+
+    @staticmethod
     def _converter_weekday_para_dia(weekday):
         mapping = {
             0: 'Segunda',
