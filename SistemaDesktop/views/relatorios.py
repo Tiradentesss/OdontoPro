@@ -337,10 +337,10 @@ class Relatorios(BaseScreen):
 
         self._stat_value_labels = {}
         stats = [
-            ("Comparecimento", "0%"),
-            ("Cancelamentos", "0"),
+            ("Pacientes Únicos Atendidos", "0"),
+            ("Faltas", "0"),
             ("Novos Pacientes", "0"),
-            ("Retornos", "0"),
+            ("Consultas Agendadas", "0"),
         ]
 
         for index, (label_text, value) in enumerate(stats):
@@ -993,6 +993,22 @@ class Relatorios(BaseScreen):
             row_new = cursor.fetchone()
             novos_pacientes = int(row_new[0] or 0) if row_new else 0
 
+            cursor.execute(f"""
+                SELECT
+                    COUNT(DISTINCT CASE WHEN LOWER(TRIM(c.status)) = 'realizada' THEN c.paciente_id END) AS pacientes_unicos_atendidos,
+                    SUM(CASE WHEN LOWER(TRIM(c.status)) = 'falta' THEN 1 ELSE 0 END) AS faltas,
+                    SUM(CASE WHEN LOWER(TRIM(c.status)) IN ('agendada', 'confirmada', 'reagendada') THEN 1 ELSE 0 END) AS consultas_agendadas
+                FROM odontoPro_consulta c
+                LEFT JOIN odontoPro_medico m ON c.medico_id = m.id
+                LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id
+                WHERE {filtro_base}
+                  AND c.data_hora BETWEEN %s AND %s
+            """, tuple(filtro_params + [inicio, fim]))
+            row_status_cards = cursor.fetchone()
+            pacientes_unicos_atendidos = int(row_status_cards[0] or 0) if row_status_cards else 0
+            faltas = int(row_status_cards[1] or 0) if row_status_cards else 0
+            consultas_agendadas = int(row_status_cards[2] or 0) if row_status_cards else 0
+
             # Retornos: paciente com consulta no período e primeira consulta antes do início
             retorno_params = [self.clinica_id, self.clinica_id, inicio, fim, inicio]
             # Reuse the same filters for the period query
@@ -1077,6 +1093,9 @@ class Relatorios(BaseScreen):
                     "comparecimento": int(comparecimento),
                     "novos_pacientes": int(novos_pacientes or 0),
                     "retornos": int(retornos or 0),
+                    "pacientes_unicos_atendidos": pacientes_unicos_atendidos,
+                    "faltas": faltas,
+                    "consultas_agendadas": consultas_agendadas,
                 },
                 chart_period,
                 specialty_data,
@@ -1583,10 +1602,10 @@ class Relatorios(BaseScreen):
         if summary is None:
             return
 
-        self._stat_value_labels["Comparecimento"].configure(text=f"{summary['comparecimento']}%")
-        self._stat_value_labels["Cancelamentos"].configure(text=str(summary["cancelamentos"]))
+        self._stat_value_labels["Pacientes Únicos Atendidos"].configure(text=str(summary["pacientes_unicos_atendidos"]))
+        self._stat_value_labels["Faltas"].configure(text=str(summary["faltas"]))
         self._stat_value_labels["Novos Pacientes"].configure(text=str(summary["novos_pacientes"]))
-        self._stat_value_labels["Retornos"].configure(text=str(summary["retornos"]))
+        self._stat_value_labels["Consultas Agendadas"].configure(text=str(summary["consultas_agendadas"]))
 
         self._current_report_data = self._build_export_payload(summary, chart_period, specialty_data, productivity_rows)
         if self.export_button is not None:
