@@ -191,6 +191,9 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                 })
                 .map(apt => ({
                     id: String(apt.id),
+                    paciente_id: apt.paciente_id,
+                    avaliacao: apt.avaliacao,
+                    avaliacao_comentario: apt.avaliacao_comentario,
                     data_hora: apt.data_hora,
                     nome: usuario,
                     time: new Date(apt.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),

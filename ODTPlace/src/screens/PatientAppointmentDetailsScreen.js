@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { submitAppointmentRating, updateAppointment } from '../services/api';
 
 const getStatusInfo = (statusValue, isDarkMode) => {
@@ -57,9 +58,10 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
   const [appointment, setAppointment] = useState(routeAppointment || null);
   const [status, setStatus] = useState(routeAppointment?.status || 'pendente');
   const [ratingOpen, setRatingOpen] = useState(false);
-  const [selectedRating, setSelectedRating] = useState(routeAppointment?.avaliacao_nota || 0);
+  const [selectedRating, setSelectedRating] = useState(routeAppointment?.avaliacao ?? routeAppointment?.avaliacao_nota ?? 0);
   const [ratingComment, setRatingComment] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
+  const { user } = useAuth();
   const { isDarkMode, colors } = useTheme();
   const patientBlue = isDarkMode ? '#38BDF8' : '#0EA5E9';
   const headerBg = isDarkMode ? colors.container : patientBlue;
@@ -86,8 +88,9 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
   const statusInfo = getStatusInfo(status, isDarkMode);
   const canReschedule = normalizedStatus === 'agendada';
   const canCancel = !['realizada', 'completa', 'cancelada', 'perdida'].includes(normalizedStatus);
-  const isCompleted = normalizedStatus === 'realizada';
-  const hasRating = appointment?.avaliacao_nota !== null && appointment?.avaliacao_nota !== undefined;
+  const isCompleted = ['realizada', 'completa'].includes(normalizedStatus);
+  const ratingValue = appointment?.avaliacao ?? appointment?.avaliacao_nota;
+  const hasRating = ratingValue !== null && ratingValue !== undefined && ratingValue !== '' && Number(ratingValue) > 0;
 
   const handleReschedule = () => {
     navigation.navigate('PatientRescheduleScreen', { patientName: patientName || 'Paciente', appointment });
@@ -111,7 +114,8 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
       return;
     }
 
-    if (!appointment?.id || !appointment?.paciente_id) {
+    const patientId = user?.id ?? appointment?.paciente_id;
+    if (!appointment?.id || !patientId) {
       Alert.alert('Erro', 'Não foi possível identificar o paciente desta consulta.');
       return;
     }
@@ -119,11 +123,11 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
     setSubmittingRating(true);
     try {
       await submitAppointmentRating(appointment.id, {
-        patient_id: appointment.paciente_id,
+        patient_id: patientId,
         nota: selectedRating,
         comentario: ratingComment,
       });
-      setAppointment((current) => ({ ...current, avaliacao_nota: selectedRating, avaliacao_comentario: ratingComment }));
+      setAppointment((current) => ({ ...current, avaliacao: selectedRating, avaliacao_comentario: ratingComment }));
       setRatingOpen(false);
       Alert.alert('Sucesso', 'Avaliação enviada com sucesso.');
     } catch (error) {
@@ -269,7 +273,7 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
           {isCompleted && hasRating && (
             <View style={[styles.ratedButton, { backgroundColor: isDarkMode ? '#064E3B' : '#DCFCE7' }]}>
               <Feather name="check" size={16} color={isDarkMode ? '#86EFAC' : '#047857'} style={{ marginRight: 8 }} />
-              <Text style={[styles.ratedButtonText, { color: isDarkMode ? '#86EFAC' : '#047857' }]}>Avaliado</Text>
+              <Text style={[styles.ratedButtonText, { color: isDarkMode ? '#86EFAC' : '#047857' }]}>Já avaliado</Text>
             </View>
           )}
 
