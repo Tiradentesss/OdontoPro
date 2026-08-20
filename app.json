@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "755b8bdd-b632-4a8b-a9fd-e9c9d2598887"
+      }
+    },
+    "owner": "tiradentesss-team",
+    "slug": "odontohub",
+    "android": {
+      "package": "com.tiradentesssteam.odontohub"
+    },
+    "ios": {
+      "bundleIdentifier": "com.tiradentesssteam.odontohub",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}
