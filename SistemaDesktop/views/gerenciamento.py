@@ -684,10 +684,22 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
     def _on_date_clicked(self, event, selected_date):
         shift_pressed = (event.state & 0x1) != 0
+        has_availability = selected_date.weekday() in self.saved_slots_by_weekday
 
         if selected_date < datetime.now().date():
             self.selected_dates.clear()
             self.last_selected_date = None
+        elif has_availability:
+            self.selected_dates = {selected_date}
+            self.last_selected_date = None
+        elif any(
+            date.weekday() in self.saved_slots_by_weekday
+            for date in self.selected_dates
+        ):
+            self.selected_dates.clear()
+            self.last_selected_date = None
+
+            self.selected_dates.add(selected_date)
         elif shift_pressed and self.last_selected_date:
             self._toggle_date_range(self.last_selected_date, selected_date)
         else:
