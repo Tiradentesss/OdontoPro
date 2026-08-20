@@ -111,11 +111,16 @@ class ConsultaController:
             conn = get_connection()
             cursor = conn.cursor()
 
-            where_clause = "c.clinica_id = %s AND c.data_hora >= %s"
+            where_clause = """
+                c.clinica_id = %s
+                AND DATE(c.data_hora) = CURDATE()
+                AND c.data_hora >= %s
+                AND LOWER(TRIM(c.status)) IN ('agendada', 'confirmada', 'reagendada')
+            """
             params = [clinica_id, datetime.now()]
 
             if excluir_canceladas:
-                where_clause += " AND LOWER(TRIM(c.status)) != 'cancelada'"
+                where_clause += " AND LOWER(TRIM(c.status)) IN ('agendada', 'confirmada', 'reagendada')"
 
             query = f"""
                 SELECT

@@ -157,7 +157,7 @@ class Painel(BaseScreen):
             self._render_vazio(card, "Nenhum compromisso agendado para hoje")
             return
 
-        for item in self.dados_consultas_hoje[:2]:
+        for item in self.dados_consultas_hoje[:3]:
             if isinstance(item, dict):
                 nome = item.get('nome') or 'Paciente'
                 foto = item.get('foto')
@@ -565,7 +565,7 @@ class Painel(BaseScreen):
 
             consultas = ConsultaController.listar_proximas_por_clinica(
                 self.clinica_id,
-                limite=5
+                limite=3
             )
             return consultas if consultas else []
         except Exception as e:
