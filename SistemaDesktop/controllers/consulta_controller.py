@@ -318,13 +318,16 @@ class ConsultaController:
         try:
             conn = get_connection()
             cursor = conn.cursor()
-            cursor.execute("""
+            date_condition = """
+                AND DATE(data_hora) = CURDATE()
+            """ if (status_atual, novo_status) == ('confirmada', 'realizada') else ""
+            cursor.execute(f"""
                 UPDATE odontoPro_consulta
                 SET status = %s
                 WHERE id = %s
                   AND clinica_id = %s
-                  AND DATE(data_hora) = CURDATE()
                   AND LOWER(TRIM(status)) = %s
+                {date_condition}
             """, (novo_status, consulta_id, clinica_id, status_atual))
             conn.commit()
             return cursor.rowcount == 1
@@ -332,6 +335,33 @@ class ConsultaController:
             if conn:
                 conn.rollback()
             print(f"[ConsultaController] Erro ao atualizar status de atendimento: {e}")
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
+    def reagendar_consulta(consulta_id, clinica_id, data_hora):
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE odontoPro_consulta
+                SET data_hora = %s
+                WHERE id = %s
+                  AND clinica_id = %s
+                  AND LOWER(TRIM(status)) = 'agendada'
+            """, (data_hora, consulta_id, clinica_id))
+            conn.commit()
+            return cursor.rowcount == 1
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            print(f"[ConsultaController] Erro ao reagendar consulta: {e}")
             return False
         finally:
             if cursor:

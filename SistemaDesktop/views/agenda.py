@@ -1749,23 +1749,45 @@ class Agenda(BaseScreen):
         obs.configure(state='disabled')
 
         data_consulta = data_hora.date() if hasattr(data_hora, 'date') else data_hora
-        if data_consulta == date.today() and status_key in ('agendada', 'confirmada'):
-            novo_status = 'confirmada' if status_key == 'agendada' else 'realizada'
-            texto_botao = 'Confirmar chegada' if status_key == 'agendada' else 'Marcar como realizada'
-            cor_botao = COLORS['primary'] if status_key == 'agendada' else COLORS['success']
-            cor_hover = COLORS['primary_dark'] if status_key == 'agendada' else COLORS['success_dark']
+        if status_key == 'agendada':
+            action_frame = ctk.CTkFrame(card, fg_color='transparent')
+            action_frame.pack(fill='x', padx=18, pady=(0, 18))
 
             ctk.CTkButton(
-                card,
-                text=texto_botao,
-                fg_color=cor_botao,
-                hover_color=cor_hover,
+                action_frame,
+                text='Confirmar consulta',
+                fg_color=COLORS['primary'],
+                hover_color=COLORS['primary_dark'],
                 text_color='white',
                 height=38,
                 command=lambda: self._atualizar_status_atendimento(
                     consulta_id,
                     status_key,
-                    novo_status,
+                    'confirmada',
+                )
+            ).pack(side='left', fill='x', expand=True, padx=(0, 5))
+
+            ctk.CTkButton(
+                action_frame,
+                text='Reagendar',
+                fg_color=COLORS['secondary'],
+                hover_color=COLORS.get('secondary_dark', COLORS['secondary']),
+                text_color='white',
+                height=38,
+                command=lambda: self._abrir_dialogo_reagendamento(consulta_id)
+            ).pack(side='left', fill='x', expand=True, padx=(5, 0))
+        elif status_key == 'confirmada' and data_consulta == date.today():
+            ctk.CTkButton(
+                card,
+                text='Marcar como realizada',
+                fg_color=COLORS['success'],
+                hover_color=COLORS['success_dark'],
+                text_color='white',
+                height=38,
+                command=lambda: self._atualizar_status_atendimento(
+                    consulta_id,
+                    status_key,
+                    'realizada',
                 )
             ).pack(fill='x', padx=18, pady=(0, 18))
 
@@ -1778,6 +1800,56 @@ class Agenda(BaseScreen):
         )
         if atualizado:
             self.refresh_data()
+
+    def _abrir_dialogo_reagendamento(self, consulta_id):
+        from tkinter import messagebox
+
+        consulta = ConsultaController.buscar_por_id(consulta_id, self.clinica_id)
+        if not consulta or (consulta[3] or '').strip().lower() != 'agendada':
+            return
+
+        data_hora = consulta[2]
+        dialogo = ctk.CTkToplevel(self.master)
+        dialogo.title('Reagendar consulta')
+        dialogo.geometry('360x220')
+        dialogo.resizable(False, False)
+        dialogo.grab_set()
+
+        frame = ctk.CTkFrame(dialogo, fg_color=COLORS['card'])
+        frame.pack(fill='both', expand=True, padx=18, pady=18)
+
+        ctk.CTkLabel(frame, text='Nova data (DD/MM/AAAA)', text_color=COLORS['text_primary']).pack(anchor='w')
+        data_var = ctk.StringVar(value=data_hora.strftime('%d/%m/%Y'))
+        ctk.CTkEntry(frame, textvariable=data_var).pack(fill='x', pady=(4, 10))
+
+        ctk.CTkLabel(frame, text='Novo horário (HH:MM)', text_color=COLORS['text_primary']).pack(anchor='w')
+        hora_var = ctk.StringVar(value=data_hora.strftime('%H:%M'))
+        ctk.CTkEntry(frame, textvariable=hora_var).pack(fill='x', pady=(4, 14))
+
+        def salvar():
+            valido_data, msg_data, data_obj = ConsultaController.validar_data_consulta(data_var.get().strip())
+            if not valido_data:
+                messagebox.showerror('Validação', msg_data, parent=dialogo)
+                return
+            valido_hora, msg_hora, hora_obj = ConsultaController.validar_hora_consulta(hora_var.get().strip())
+            if not valido_hora:
+                messagebox.showerror('Validação', msg_hora, parent=dialogo)
+                return
+
+            novo_data_hora = datetime.combine(data_obj.date(), hora_obj)
+            if ConsultaController.reagendar_consulta(consulta_id, self.clinica_id, novo_data_hora):
+                dialogo.destroy()
+                self.refresh_data()
+            else:
+                messagebox.showerror('Erro', 'Não foi possível reagendar a consulta.', parent=dialogo)
+
+        ctk.CTkButton(
+            frame,
+            text='Salvar',
+            fg_color=COLORS['primary'],
+            hover_color=COLORS['primary_dark'],
+            command=salvar,
+        ).pack(fill='x')
 
     def _detail_item(self, parent, text):
         row = ctk.CTkFrame(parent, fg_color=COLORS['bg_soft'], corner_radius=12)
