@@ -343,7 +343,7 @@ app.get(['/api/appointments', '/appointments'], (req, res) => {
   }
 
   const { medico_id, clinica_id } = req.query;
-  let query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE 1=1`;
+  let query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, av.nota as avaliacao_nota, av.comentario as avaliacao_comentario FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id LEFT JOIN odontoPro_avaliacao av ON av.consulta_id = c.id WHERE 1=1`;
   const params = [];
 
   if (medico_id) {
@@ -382,10 +382,10 @@ app.get(['/api/appointments/:patientEmail', '/appointments/:patientEmail'], (req
   let query, params;
   
   if (isNumericId) {
-    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE c.paciente_id = ? ORDER BY c.data_hora DESC`;
+    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, av.nota as avaliacao_nota, av.comentario as avaliacao_comentario FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id LEFT JOIN odontoPro_avaliacao av ON av.consulta_id = c.id WHERE c.paciente_id = ? ORDER BY c.data_hora DESC`;
     params = [parseInt(patientEmail)];
   } else {
-    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE c.email = ? ORDER BY c.data_hora DESC`;
+    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, av.nota as avaliacao_nota, av.comentario as avaliacao_comentario FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id LEFT JOIN odontoPro_avaliacao av ON av.consulta_id = c.id WHERE c.email = ? ORDER BY c.data_hora DESC`;
     params = [patientEmail];
   }
   
@@ -445,6 +445,116 @@ app.put(['/api/appointments/:id', '/appointments/:id'], (req, res) => {
       return res.status(500).json({ error: err.message });
     }
     res.json({ message: 'Appointment updated successfully', affectedRows: result.affectedRows });
+  });
+});
+
+app.post(['/api/appointments/:id/rating', '/appointments/:id/rating'], (req, res) => {
+  const appointmentId = req.params.id;
+  const { patient_id, nota, comentario = '' } = req.body;
+  const rating = Number(nota);
+
+  if (!patient_id || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ error: 'Selecione uma nota entre 1 e 5.' });
+  }
+
+  if (useMockData()) {
+    return res.json({ success: true, message: 'Avaliação salva com sucesso.' });
+  }
+
+  const appointmentQuery = 'SELECT id, paciente_id, clinica_id, medico_id, status FROM odontoPro_consulta WHERE id = ? LIMIT 1';
+  db.query(appointmentQuery, [appointmentId], (appointmentError, appointments) => {
+    if (appointmentError) {
+      return res.status(500).json({ error: appointmentError.message });
+    }
+    if (appointments.length === 0) {
+      return res.status(404).json({ error: 'Consulta não encontrada.' });
+    }
+
+    const appointment = appointments[0];
+    if (String(appointment.paciente_id) !== String(patient_id)) {
+      return res.status(403).json({ error: 'Você não pode avaliar esta consulta.' });
+    }
+    if (appointment.status !== 'realizada') {
+      return res.status(400).json({ error: 'Só é possível avaliar consultas realizadas.' });
+    }
+
+    db.getConnection((connectionError, connection) => {
+      if (connectionError) {
+        return res.status(500).json({ error: connectionError.message });
+      }
+
+      connection.beginTransaction((transactionError) => {
+        if (transactionError) {
+          connection.release();
+          return res.status(500).json({ error: transactionError.message });
+        }
+
+        const saveQuery = `INSERT INTO odontoPro_avaliacao (nota, comentario, paciente_id, medico_id, clinica_id, consulta_id, data_postagem)
+          VALUES (?, ?, ?, ?, ?, ?, NOW())
+          ON DUPLICATE KEY UPDATE nota = VALUES(nota), comentario = VALUES(comentario)`;
+
+        connection.query(saveQuery, [rating, String(comentario).trim(), appointment.paciente_id, appointment.medico_id, appointment.clinica_id, appointment.id], (saveError) => {
+          if (saveError) {
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ error: saveError.message });
+            });
+          }
+
+          const doctorStatsQuery = 'SELECT COUNT(*) as count, COALESCE(AVG(nota), 5.0) as average FROM odontoPro_avaliacao WHERE medico_id = ?';
+          connection.query(doctorStatsQuery, [appointment.medico_id], (doctorStatsError, doctorStatsRows) => {
+            if (doctorStatsError) {
+              return connection.rollback(() => {
+                connection.release();
+                res.status(500).json({ error: doctorStatsError.message });
+              });
+            }
+
+            const doctorStats = doctorStatsRows[0];
+            const updateDoctorQuery = 'UPDATE odontoPro_medico SET num_avaliacoes = ?, avaliacao = ? WHERE id = ?';
+            connection.query(updateDoctorQuery, [doctorStats.count, doctorStats.average, appointment.medico_id], (doctorError) => {
+            if (doctorError) {
+              return connection.rollback(() => {
+                connection.release();
+                res.status(500).json({ error: doctorError.message });
+              });
+            }
+
+            const clinicStatsQuery = 'SELECT COUNT(*) as count, COALESCE(AVG(nota), 5.0) as average FROM odontoPro_avaliacao WHERE clinica_id = ?';
+            connection.query(clinicStatsQuery, [appointment.clinica_id], (clinicStatsError, clinicStatsRows) => {
+              if (clinicStatsError) {
+                return connection.rollback(() => {
+                  connection.release();
+                  res.status(500).json({ error: clinicStatsError.message });
+                });
+              }
+
+              const clinicStats = clinicStatsRows[0];
+              const updateClinicQuery = 'UPDATE odontoPro_clinica SET num_avaliacoes = ?, avaliacao = ? WHERE id = ?';
+              connection.query(updateClinicQuery, [clinicStats.count, clinicStats.average, appointment.clinica_id], (clinicError) => {
+                if (clinicError) {
+                  return connection.rollback(() => {
+                    connection.release();
+                    res.status(500).json({ error: clinicError.message });
+                  });
+                }
+
+                connection.commit((commitError) => {
+                  if (commitError) {
+                    return connection.rollback(() => {
+                      connection.release();
+                      res.status(500).json({ error: commitError.message });
+                    });
+                  }
+                  connection.release();
+                  res.json({ success: true, message: 'Avaliação salva com sucesso.' });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
   });
 });
 

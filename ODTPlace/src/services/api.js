@@ -224,6 +224,17 @@ export const updateAppointment = async (appointmentId, payload) => {
   }
 };
 
+export const submitAppointmentRating = async (appointmentId, ratingData) => {
+  try {
+    const response = await api.post(`/appointments/${appointmentId}/rating`, ratingData);
+    return response.data;
+  } catch (error) {
+    console.error('Appointment rating API error:', error);
+    const message = error.response?.data?.error || 'Não foi possível enviar a avaliação.';
+    throw new Error(message);
+  }
+};
+
 export const getPatientProfile = async (patientId) => {
   try {
     const response = await api.get(`/patients/${patientId}`);

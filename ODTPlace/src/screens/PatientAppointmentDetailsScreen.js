@@ -5,13 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  TextInput,
   Platform,
   StatusBar,
   Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext';
-import { updateAppointment } from '../services/api';
+import { submitAppointmentRating, updateAppointment } from '../services/api';
 
 const getStatusInfo = (statusValue, isDarkMode) => {
   const normalized = (statusValue || '').toString().toLowerCase();
@@ -54,6 +55,10 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
   const { patientName, allowReschedule = true, appointment: routeAppointment } = route.params || {};
   const [appointment, setAppointment] = useState(routeAppointment || null);
   const [status, setStatus] = useState(routeAppointment?.status || 'pendente');
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [selectedRating, setSelectedRating] = useState(routeAppointment?.avaliacao_nota || 0);
+  const [ratingComment, setRatingComment] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
   const { isDarkMode, colors } = useTheme();
   const patientBlue = isDarkMode ? '#38BDF8' : '#0EA5E9';
   const headerBg = isDarkMode ? colors.container : patientBlue;
@@ -80,6 +85,8 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
   const statusInfo = getStatusInfo(status, isDarkMode);
   const canReschedule = normalizedStatus === 'agendada';
   const canCancel = !['realizada', 'completa', 'cancelada', 'perdida'].includes(normalizedStatus);
+  const isCompleted = normalizedStatus === 'realizada';
+  const hasRating = appointment?.avaliacao_nota !== null && appointment?.avaliacao_nota !== undefined;
 
   const handleReschedule = () => {
     navigation.navigate('PatientRescheduleScreen', { patientName: patientName || 'Paciente', appointment });
@@ -94,6 +101,34 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
       Alert.alert('Sucesso', 'A consulta foi cancelada.');
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível cancelar a consulta.');
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    if (!selectedRating) {
+      Alert.alert('Atenção', 'Selecione uma classificação em estrelas.');
+      return;
+    }
+
+    if (!appointment?.id || !appointment?.paciente_id) {
+      Alert.alert('Erro', 'Não foi possível identificar o paciente desta consulta.');
+      return;
+    }
+
+    setSubmittingRating(true);
+    try {
+      await submitAppointmentRating(appointment.id, {
+        patient_id: appointment.paciente_id,
+        nota: selectedRating,
+        comentario: ratingComment,
+      });
+      setAppointment((current) => ({ ...current, avaliacao_nota: selectedRating, avaliacao_comentario: ratingComment }));
+      setRatingOpen(false);
+      Alert.alert('Sucesso', 'Avaliação enviada com sucesso.');
+    } catch (error) {
+      Alert.alert('Erro', error.message || 'Não foi possível enviar a avaliação.');
+    } finally {
+      setSubmittingRating(false);
     }
   };
 
@@ -181,9 +216,58 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
           <Text style={[styles.reasonText, { color: colors.text }]}>{appointmentReason}</Text>
         </View>
 
+        {isCompleted && !hasRating && ratingOpen && (
+          <View style={[styles.ratingCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.ratingTitle, { color: colors.text }]}>Avaliar Consulta</Text>
+            <View style={styles.ratingStars}>
+              {[1, 2, 3, 4, 5].map((value) => (
+                <TouchableOpacity
+                  key={value}
+                  onPress={() => setSelectedRating(value)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Selecionar ${value} estrela${value === 1 ? '' : 's'}`}
+                >
+                  <Text style={[styles.ratingStar, { color: value <= selectedRating ? '#F59E0B' : colors.border }]}>★</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              style={[styles.ratingInput, { color: colors.text, borderColor: colors.border, backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC' }]}
+              placeholder="Deixe um comentário (opcional)"
+              placeholderTextColor={isDarkMode ? '#94A3B8' : '#64748B'}
+              value={ratingComment}
+              onChangeText={setRatingComment}
+              multiline
+              maxLength={500}
+            />
+            <View style={styles.ratingActions}>
+              <TouchableOpacity style={[styles.ratingSubmitButton, { backgroundColor: patientBlue }]} onPress={handleSubmitRating} disabled={submittingRating}>
+                <Text style={styles.ratingSubmitText}>{submittingRating ? 'Enviando...' : 'Enviar Avaliação'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.ratingCancelButton} onPress={() => setRatingOpen(false)} disabled={submittingRating}>
+                <Text style={[styles.ratingCancelText, { color: colors.mutedText }]}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         <View style={styles.spacer} />
 
         <View style={styles.footerActions}>
+          {isCompleted && !hasRating && !ratingOpen && (
+            <TouchableOpacity style={[styles.rateButton, { backgroundColor: patientBlue }]} activeOpacity={0.85} onPress={() => setRatingOpen(true)}>
+              <Feather name="star" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.rateButtonText}>Avaliar Consulta</Text>
+            </TouchableOpacity>
+          )}
+
+          {isCompleted && hasRating && (
+            <View style={[styles.ratedButton, { backgroundColor: isDarkMode ? '#064E3B' : '#DCFCE7' }]}>
+              <Feather name="check" size={16} color={isDarkMode ? '#86EFAC' : '#047857'} style={{ marginRight: 8 }} />
+              <Text style={[styles.ratedButtonText, { color: isDarkMode ? '#86EFAC' : '#047857' }]}>Avaliado</Text>
+            </View>
+          )}
+
           {allowReschedule && canReschedule && (
             <TouchableOpacity style={[styles.rescheduleButton, { backgroundColor: patientBlue }]} activeOpacity={0.85} onPress={handleReschedule}>
               <Feather name="calendar" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
@@ -314,6 +398,59 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 22,
   },
+  ratingCard: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  ratingTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  ratingStars: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  ratingStar: {
+    fontSize: 34,
+  },
+  ratingInput: {
+    minHeight: 88,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    textAlignVertical: 'top',
+    fontSize: 14,
+  },
+  ratingActions: {
+    marginTop: 12,
+    gap: 10,
+  },
+  ratingSubmitButton: {
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ratingSubmitText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  ratingCancelButton: {
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ratingCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
   spacer: {
     flex: 1,
   },
@@ -335,6 +472,31 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   rescheduleButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  rateButton: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    height: 54,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  rateButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  ratedButton: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    height: 54,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  ratedButtonText: {
     fontSize: 15,
     fontWeight: '700',
   },
