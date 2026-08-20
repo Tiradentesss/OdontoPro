@@ -738,8 +738,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             )
 
     def _on_slot_clicked(self, event, horario):
-        shift_pressed = (event.state & 0x1) != 0
-        
         horarios_list = [
             "08:00", "08:30", "09:00", "09:30",
             "10:00", "10:30", "11:00", "11:30",
@@ -748,15 +746,19 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             "16:00", "16:30", "17:00", "17:30"
         ]
         
-        if shift_pressed and self.last_selected_slot and self.last_selected_slot in horarios_list:
-            self._toggle_slot_range(self.last_selected_slot, horario)
+        if self.last_selected_slot is None:
+            if self.selected_slots:
+                self.selected_slots.clear()
+            self.selected_slots.add(horario)
+            self.last_selected_slot = horario
         else:
-            if horario in self.selected_slots:
-                self.selected_slots.remove(horario)
-            else:
-                self.selected_slots.add(horario)
-        
-        self.last_selected_slot = horario
+            inicio_idx = horarios_list.index(self.last_selected_slot)
+            fim_idx = horarios_list.index(horario)
+            if inicio_idx > fim_idx:
+                inicio_idx, fim_idx = fim_idx, inicio_idx
+            self.selected_slots = set(horarios_list[inicio_idx:fim_idx + 1])
+            self.last_selected_slot = None
+
         self._update_slots_display()
 
     def _update_slots_display(self):
