@@ -1480,6 +1480,7 @@ class Relatorios(BaseScreen):
             bbox={"boxstyle": "round,pad=0.4", "fc": COLORS["card"], "ec": COLORS["border"], "alpha": 0.96},
             fontsize=9,
             color=COLORS["text"],
+            zorder=10,
             visible=False,
         )
 
@@ -1503,6 +1504,9 @@ class Relatorios(BaseScreen):
                         f"Faltas: {int(row[5] or 0)}\n"
                         f"Participação: {participation}%"
                     )
+                    offset_x = -155 if event.x > ax.bbox.x1 - 170 else 18
+                    offset_y = -78 if event.y > ax.bbox.y1 - 105 else 18
+                    specialty_tooltip.xytext = (offset_x, offset_y)
                     specialty_tooltip.xy = (event.xdata, event.ydata)
                     specialty_tooltip.set_visible(True)
                     canvas.draw_idle()
