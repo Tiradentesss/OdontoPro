@@ -187,6 +187,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
     const services = specialties.length > 0
         ? specialties.map((specialty) => ({
             name: specialty.nome,
+            description: specialty.descricao,
             price: clinic.preco ?? 'R$ 250,00',
             availability: clinic.horarios ?? ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
         }))

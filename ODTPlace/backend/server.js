@@ -153,7 +153,7 @@ app.get('/api/clinics/:id', (req, res) => {
 
 app.get('/api/clinics/:clinicId/specialties', (req, res) => {
   const clinicId = req.params.clinicId;
-  const query = 'SELECT id, nome, preco FROM odontoPro_especialidade WHERE clinica_id = ?';
+  const query = 'SELECT id, nome, descricao, preco FROM odontoPro_especialidade WHERE clinica_id = ?';
   db.query(query, [clinicId], (err, results) => {
     if (err) {
       return res.status(500).json({ error: err.message });

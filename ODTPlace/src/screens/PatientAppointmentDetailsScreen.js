@@ -126,7 +126,7 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
               <Feather name="map-pin" size={18} color={isDarkMode ? '#60A5FA' : '#163783'} />
             </View>
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Clínica</Text>
+              <Text style={[styles.infoLabel, { color: colors.text }]}>Clínica</Text>
               <Text style={[styles.infoValue, { color: colors.text }]}>{appointmentClinic}</Text>
             </View>
           </View>
@@ -138,7 +138,7 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
               <Feather name="user" size={18} color={isDarkMode ? '#94A3B8' : '#475569'} />
             </View>
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Especialidade</Text>
+              <Text style={[styles.infoLabel, { color: colors.text }]}>Especialidade</Text>
               <Text style={[styles.infoValue, { color: colors.text }]}>{appointmentSpecialty}</Text>
             </View>
           </View>
@@ -150,7 +150,7 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
               <Feather name="user-check" size={18} color={isDarkMode ? '#A7F3D0' : '#166534'} />
             </View>
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Profissional</Text>
+              <Text style={[styles.infoLabel, { color: colors.text }]}>Profissional</Text>
               <Text style={[styles.infoValue, { color: colors.text }]}>{appointmentDoctor}</Text>
             </View>
           </View>
@@ -162,7 +162,7 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
               <Feather name="clock" size={18} color={statusInfo.text} />
             </View>
             <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Data e Hora</Text>
+              <Text style={[styles.infoLabel, { color: colors.text }]}>Data e Hora</Text>
               <Text style={[styles.infoValue, { color: colors.text }]}>{`${appointmentDateLabel} • ${appointmentTimeLabel}`}</Text>
             </View>
           </View>
