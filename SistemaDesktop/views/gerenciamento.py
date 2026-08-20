@@ -111,7 +111,6 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             border_color=INNER_CARD_BORDER
         )
         left_card.grid(row=0, column=0, sticky="nsew", padx=(0, 12), pady=10)
-        left_card.grid_rowconfigure(2, weight=1)
         left_card.grid_columnconfigure(0, weight=1)
 
         title_frame = ctk.CTkFrame(left_card, fg_color="transparent")
