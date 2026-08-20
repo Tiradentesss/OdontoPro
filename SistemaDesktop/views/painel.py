@@ -376,6 +376,7 @@ class Painel(BaseScreen):
             ("Confirmadas", contagem.get('confirmada', 0), self.colors['info']),
             ("Realizadas", contagem.get('realizada', 0), self.colors['success']),
             ("Canceladas", contagem.get('cancelada', 0), self.colors['danger']),
+            ("Faltas", contagem.get('falta', 0), self.colors['text_muted']),
         ]
 
         for label, valor, cor in status_data:
@@ -539,7 +540,7 @@ class Painel(BaseScreen):
     @staticmethod
     def _resumir_status_consultas(consultas):
         """Resume os status a partir da mesma lista de consultas usada pela agenda."""
-        contagem = {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
+        contagem = {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'falta': 0, 'total': 0}
 
         for item in consultas or []:
             status = None
@@ -576,7 +577,7 @@ class Painel(BaseScreen):
         try:
             if not self.clinica_id:
                 print("[PAINEL] Clínica não informada; retornando zeros")
-                return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
+                return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'falta': 0, 'total': 0}
 
             print(f"[PAINEL] Clínica: {self.clinica_id}")
             print("[PAINEL] Reutilizando ConsultaController.listar_por_clinica() para resumir status")
@@ -593,7 +594,7 @@ class Painel(BaseScreen):
             contagem = self._resumir_status_consultas(consultas)
             print(f"[PAINEL] Total de consultas encontradas: {contagem.get('total', 0)}")
             print("[PAINEL] Status encontrados:")
-            for status_key in ['agendada', 'confirmada', 'realizada', 'cancelada']:
+            for status_key in ['agendada', 'confirmada', 'realizada', 'cancelada', 'falta']:
                 print(f"[PAINEL] {status_key} = {contagem.get(status_key, 0)}")
 
             return contagem
@@ -601,7 +602,7 @@ class Painel(BaseScreen):
             print(f"[PAINEL] Erro ao carregar contagem de consultas: {e}")
             import traceback
             traceback.print_exc()
-            return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'total': 0}
+            return {'agendada': 0, 'confirmada': 0, 'realizada': 0, 'cancelada': 0, 'falta': 0, 'total': 0}
 
     def _carregar_resumo_cadastros(self):
         """Carrega resumo de usuários cadastrados"""
