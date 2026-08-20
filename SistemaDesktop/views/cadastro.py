@@ -604,7 +604,7 @@ class Cadastro(BaseScreen):
         
         self.tipo_profissional = ctk.CTkOptionMenu(
             tipo_container,
-            values=["Médico", "Gerente"],
+            values=["Médico", "Gestor"],
             height=44,
             fg_color=COLORS["input_bg"], 
             button_color=COLORS["border"], 
@@ -1392,7 +1392,7 @@ class Cadastro(BaseScreen):
             )
             
             if resultado["sucesso"]:
-                self._mostrar_modal_sucesso("Gerente cadastrado com sucesso")
+                self._mostrar_modal_sucesso("Gestor cadastrado com sucesso")
                 self.after_idle(lambda: self._limpar_formulario_profissional(entries))
 
                 app = self.winfo_toplevel()
@@ -1402,7 +1402,7 @@ class Cadastro(BaseScreen):
             else:
                 self._mostrar_mensagem(resultado["mensagem"], sucesso=False)
         except Exception as e:
-            self._mostrar_mensagem(f"Erro ao salvar gerente: {str(e)}", sucesso=False)
+            self._mostrar_mensagem(f"Erro ao salvar gestor: {str(e)}", sucesso=False)
 
     def _limpar_campos(self, entries):
         """Limpa os campos de entrada"""
@@ -1545,6 +1545,10 @@ class Cadastro(BaseScreen):
 
     def _mostrar_mensagem(self, mensagem, sucesso=True):
         """Exibe uma mensagem de feedback ao usuário"""
+        mensagem = (str(mensagem)
+                    .replace("GERENTE", "GESTOR")
+                    .replace("Gerente", "Gestor")
+                    .replace("gerente", "gestor"))
         cor = COLORS["success"] if sucesso else COLORS["danger"]
         msg_label = ctk.CTkLabel(
             self.content_card,

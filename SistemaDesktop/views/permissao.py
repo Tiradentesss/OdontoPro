@@ -235,7 +235,7 @@ class AdminListFrame(ctk.CTkFrame):
         if not admin_list:
             self.no_results_label = ctk.CTkLabel(
                 self.scroll_list,
-                text="Nenhum gerente cadastrado.",
+                text="Nenhum gestor cadastrado.",
                 font=font("text", "bold"),
                 text_color=COLORS["muted"]
             )
@@ -558,7 +558,7 @@ class Permissoes(BaseScreen):
                 status = "Ativo" if gerente['ativo'] == 1 else "Inativo"
                 admins[gerente['nome']] = {
                     "id": gerente_id,
-                    "level": "Gerente",
+                    "level": "Gestor",
                     "email": gerente['email'],
                     "status": status,
                     "perms": perms_dict
@@ -739,7 +739,7 @@ class Permissoes(BaseScreen):
 
         ctk.CTkLabel(
             dialog,
-            text=f'Deseja excluir o gerente "{gerente["nome"]}"?',
+            text=f'Deseja excluir o gestor "{gerente["nome"]}"?',
             font=ctk.CTkFont(size=14),
             text_color=COLORS["text"],
             justify="center"
@@ -782,7 +782,12 @@ class Permissoes(BaseScreen):
         dialog.destroy()
 
         if not resultado.get("sucesso"):
-            messagebox.showerror("Erro", resultado.get("mensagem", "Não foi possível excluir o gerente."))
+            mensagem = resultado.get("mensagem", "Não foi possível excluir o gestor.")
+            mensagem = (str(mensagem)
+                        .replace("GERENTE", "GESTOR")
+                        .replace("Gerente", "Gestor")
+                        .replace("gerente", "gestor"))
+            messagebox.showerror("Erro", mensagem)
             return
 
         if self.selected_admin_id == gerente["id"]:
