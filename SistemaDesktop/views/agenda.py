@@ -2742,6 +2742,15 @@ class Agenda(BaseScreen):
             command=dialogo.destroy
         )
         btn_cancelar.pack(side='left', fill='x', expand=True, padx=(5, 0))
+
+        dialogo.update_idletasks()
+        janela_principal = self.winfo_toplevel()
+        janela_principal.update_idletasks()
+        largura_modal = dialogo.winfo_width()
+        altura_modal = dialogo.winfo_height()
+        x = janela_principal.winfo_x() + (janela_principal.winfo_width() - largura_modal) // 2
+        y = janela_principal.winfo_y() + (janela_principal.winfo_height() - altura_modal) // 2
+        dialogo.geometry(f'{largura_modal}x{altura_modal}+{x}+{y}')
     
     def _atualizar_especialidade_auto(self, medico_display_text, medico_display_dict, especialidade_var):
         """Atualiza automaticamente a especialidade quando médico é selecionado"""
