@@ -102,7 +102,7 @@ class Relatorios(BaseScreen):
         ctk.CTkLabel(periodo_label_frame, text="Período", font=ctk.CTkFont(size=14, weight='normal'), text_color=COLORS["text_primary"]).pack(side="left")
         self.periodo_combo = ctk.CTkComboBox(
             periodo_frame,
-            values=["Hoje", "Semana", "Mês", "Ano", "Personalizado"],
+            values=["Hoje", "Semana", "Mensal", "Ano", "Personalizado"],
             height=34,
             corner_radius=8,
             fg_color=COLORS["input_bg"],
@@ -789,6 +789,8 @@ class Relatorios(BaseScreen):
         self._start_loading_animation()
 
         snapshot = self._capture_filter_snapshot()
+        if snapshot["periodo"] == "Mensal":
+            snapshot["periodo"] = "Mês"
         medico_id = self._medicos_map.get(snapshot["medico_name"])
         especialidade_id = self._especialidades_map.get(snapshot["especialidade_name"])
 
@@ -1265,6 +1267,8 @@ class Relatorios(BaseScreen):
         )
 
         periodo_atual = self.periodo_combo.get() if hasattr(self, "periodo_combo") and self.periodo_combo is not None else (self.periodo_var.get() if hasattr(self, "periodo_var") else "")
+        if periodo_atual == "Mensal":
+            periodo_atual = "Mês"
 
         tick_positions = list(positions)
         tick_labels = list(labels)
