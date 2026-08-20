@@ -703,7 +703,10 @@ class Painel(BaseScreen):
                     'comparecimento': 0,
                 }
 
-            resumo = RelatoriosController.obter_resumo_consultas(self.clinica_id)
+            resumo = RelatoriosController.obter_resumo_consultas(
+                self.clinica_id,
+                usar_desfechos_comparecimento=True,
+            )
             return resumo if resumo else {
                 'total_consultas': 0,
                 'total_pacientes': 0,

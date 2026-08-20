@@ -17,6 +17,7 @@ class RelatoriosController:
         especialidade_id=None,
         medico_name=None,
         especialidade_name=None,
+        usar_desfechos_comparecimento=False,
     ):
         """
         Retorna o resumo compartilhado de indicadores usados pela tela de
@@ -65,6 +66,7 @@ class RelatoriosController:
                     COUNT(DISTINCT c.medico_id) AS total_medicos,
                     SUM(LOWER(TRIM(c.status)) = 'cancelada') AS cancelamentos,
                     SUM(LOWER(TRIM(c.status)) = 'realizada') AS realizadas,
+                    SUM(LOWER(TRIM(c.status)) = 'falta') AS faltas,
                     COUNT(DISTINCT CASE
                         WHEN LOWER(TRIM(c.status)) = 'realizada' THEN c.paciente_id
                     END) AS atendidos
@@ -75,13 +77,20 @@ class RelatoriosController:
                   AND c.data_hora BETWEEN %s AND %s
             """, tuple(params + [data_inicio, data_fim]))
 
-            row = cursor.fetchone() or (0, 0, 0, 0, 0, 0)
-            total_consultas, total_pacientes, total_medicos, cancelamentos, realizadas, atendidos = row
+            row = cursor.fetchone() or (0, 0, 0, 0, 0, 0, 0)
+            total_consultas, total_pacientes, total_medicos, cancelamentos, realizadas, faltas, atendidos = row
 
-            if total_consultas:
-                comparecimento = int(round((realizadas or 0) / total_consultas * 100))
+            if usar_desfechos_comparecimento:
+                base_comparecimento = (realizadas or 0) + (faltas or 0)
+                if base_comparecimento > 0:
+                    comparecimento = int(round((realizadas or 0) / base_comparecimento * 100))
+                else:
+                    comparecimento = 0
             else:
-                comparecimento = 0
+                if total_consultas:
+                    comparecimento = int(round((realizadas or 0) / total_consultas * 100))
+                else:
+                    comparecimento = 0
 
             return {
                 'total_consultas': int(total_consultas or 0),
