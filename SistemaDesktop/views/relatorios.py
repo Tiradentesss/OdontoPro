@@ -1138,22 +1138,30 @@ class Relatorios(BaseScreen):
             if periodo_value not in details:
                 details[periodo_value] = {
                     "total": 0,
+                    "agendadas": 0,
                     "realizadas": 0,
                     "canceladas": 0,
+                    "faltas": 0,
                 }
             details[periodo_value]["total"] += total
-            if status_value == "realizada":
+            if status_value in {"agendada", "confirmada", "reagendada"}:
+                details[periodo_value]["agendadas"] += total
+            elif status_value == "realizada":
                 details[periodo_value]["realizadas"] = total
             elif status_value == "cancelada":
                 details[periodo_value]["canceladas"] = total
+            elif status_value == "falta":
+                details[periodo_value]["faltas"] = total
 
         values = [details.get(key, {}).get("total", 0) for key in label_keys]
         detail_rows = [
             {
                 "label": label,
                 "total": details.get(key, {}).get("total", 0),
+                "agendadas": details.get(key, {}).get("agendadas", 0),
                 "realizadas": details.get(key, {}).get("realizadas", 0),
                 "canceladas": details.get(key, {}).get("canceladas", 0),
+                "faltas": details.get(key, {}).get("faltas", 0),
             }
             for key, label in zip(label_keys, labels)
         ]
@@ -1362,9 +1370,11 @@ class Relatorios(BaseScreen):
                 if contains:
                     tooltip_text = (
                         f"{details['label']}\n"
-                        f"{details['total']} consultas\n"
-                        f"{details['canceladas']} canceladas\n"
-                        f"{details['realizadas']} concluídas"
+                        f"Total: {details['total']}\n"
+                        f"Agendadas: {details['agendadas']}\n"
+                        f"Realizadas: {details['realizadas']}\n"
+                        f"Canceladas: {details['canceladas']}\n"
+                        f"Faltas: {details['faltas']}"
                     )
                     self._chart_bar_tooltip.set_text(tooltip_text)
                     self._chart_bar_tooltip.xy = (event.xdata, event.ydata)
