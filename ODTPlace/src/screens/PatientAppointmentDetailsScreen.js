@@ -9,6 +9,7 @@ import {
   Platform,
   StatusBar,
   Alert,
+  Modal,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext';
@@ -216,40 +217,44 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
           <Text style={[styles.reasonText, { color: colors.text }]}>{appointmentReason}</Text>
         </View>
 
-        {isCompleted && !hasRating && ratingOpen && (
-          <View style={[styles.ratingCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.ratingTitle, { color: colors.text }]}>Avaliar Consulta</Text>
-            <View style={styles.ratingStars}>
-              {[1, 2, 3, 4, 5].map((value) => (
-                <TouchableOpacity
-                  key={value}
-                  onPress={() => setSelectedRating(value)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Selecionar ${value} estrela${value === 1 ? '' : 's'}`}
-                >
-                  <Text style={[styles.ratingStar, { color: value <= selectedRating ? '#F59E0B' : colors.border }]}>★</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TextInput
-              style={[styles.ratingInput, { color: colors.text, borderColor: colors.border, backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC' }]}
-              placeholder="Deixe um comentário (opcional)"
-              placeholderTextColor={isDarkMode ? '#94A3B8' : '#64748B'}
-              value={ratingComment}
-              onChangeText={setRatingComment}
-              multiline
-              maxLength={500}
-            />
-            <View style={styles.ratingActions}>
-              <TouchableOpacity style={[styles.ratingSubmitButton, { backgroundColor: patientBlue }]} onPress={handleSubmitRating} disabled={submittingRating}>
-                <Text style={styles.ratingSubmitText}>{submittingRating ? 'Enviando...' : 'Enviar Avaliação'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.ratingCancelButton} onPress={() => setRatingOpen(false)} disabled={submittingRating}>
-                <Text style={[styles.ratingCancelText, { color: colors.mutedText }]}>Cancelar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+        {isCompleted && !hasRating && (
+                  <Modal visible={ratingOpen} transparent animationType="fade" onRequestClose={() => setRatingOpen(false)}>
+                    <View style={styles.modalOverlay}>
+                      <View style={[styles.ratingCard, { backgroundColor: colors.card, borderColor: colors.border, width: '90%' }]}>
+                        <Text style={[styles.ratingTitle, { color: colors.text }]}>Avaliar Consulta</Text>
+                        <View style={styles.ratingStars}>
+                          {[1, 2, 3, 4, 5].map((value) => (
+                            <TouchableOpacity
+                              key={value}
+                              onPress={() => setSelectedRating(value)}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Selecionar ${value} estrela${value === 1 ? '' : 's'}`}
+                            >
+                              <Text style={[styles.ratingStar, { color: value <= selectedRating ? '#F59E0B' : colors.border }]}>★</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                        <TextInput
+                          style={[styles.ratingInput, { color: colors.text, borderColor: colors.border, backgroundColor: isDarkMode ? '#0F172A' : '#F8FAFC' }]}
+                          placeholder="Deixe um comentário (opcional)"
+                          placeholderTextColor={isDarkMode ? '#94A3B8' : '#64748B'}
+                          value={ratingComment}
+                          onChangeText={setRatingComment}
+                          multiline
+                          maxLength={500}
+                        />
+                        <View style={styles.ratingActions}>
+                          <TouchableOpacity style={[styles.ratingSubmitButton, { backgroundColor: patientBlue }]} onPress={handleSubmitRating} disabled={submittingRating}>
+                            <Text style={styles.ratingSubmitText}>{submittingRating ? 'Enviando...' : 'Enviar Avaliação'}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.ratingCancelButton} onPress={() => setRatingOpen(false)} disabled={submittingRating}>
+                            <Text style={[styles.ratingCancelText, { color: colors.mutedText }]}>Cancelar</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  </Modal>
+                )}
 
         <View style={styles.spacer} />
 
@@ -517,5 +522,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
 });

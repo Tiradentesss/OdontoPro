@@ -12,6 +12,25 @@ const cloudinary = require('cloudinary').v2;
 const db = require('./config/database');
 const { normalizeAppointmentDateValue, normalizeAppointmentRows } = require('./utils/appointmentTime');
 
+// Helper to check if a column exists in the current database/schema
+function hasColumn(table, column, cb) {
+  const q = "SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?";
+  db.query(q, [table, column], (err, results) => {
+    if (err) return cb(err);
+    const exists = !!(results && results[0] && results[0].cnt > 0);
+    cb(null, exists);
+  });
+}
+
+function hasColumnAsync(table, column) {
+  return new Promise((resolve, reject) => {
+    hasColumn(table, column, (err, exists) => {
+      if (err) return reject(err);
+      resolve(exists);
+    });
+  });
+}
+
 // Configure Cloudinary
 if (process.env.CLOUDINARY_URL) {
   cloudinary.config({ cloudinary_url: process.env.CLOUDINARY_URL });
@@ -153,12 +172,20 @@ app.get('/api/clinics/:id', (req, res) => {
 
 app.get('/api/clinics/:clinicId/specialties', (req, res) => {
   const clinicId = req.params.clinicId;
-  const query = 'SELECT id, nome, preco FROM odontoPro_especialidade WHERE clinica_id = ?';
-  db.query(query, [clinicId], (err, results) => {
+  // Include descricao when present in schema
+  hasColumn('odontoPro_especialidade', 'descricao', (err, hasDesc) => {
     if (err) {
+      console.error('Error checking columns for especialidade:', err);
       return res.status(500).json({ error: err.message });
     }
-    res.json(results);
+    const cols = hasDesc ? 'id, nome, descricao, preco' : 'id, nome, preco';
+    const query = `SELECT ${cols} FROM odontoPro_especialidade WHERE clinica_id = ?`;
+    db.query(query, [clinicId], (err2, results) => {
+      if (err2) {
+        return res.status(500).json({ error: err2.message });
+      }
+      res.json(results);
+    });
   });
 });
 
@@ -343,7 +370,11 @@ app.get(['/api/appointments', '/appointments'], (req, res) => {
   }
 
   const { medico_id, clinica_id } = req.query;
-  let query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE 1=1`;
+
+  // Select includes rating fields and specialty description (if present in DB schema)
+  const select = 'c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, c.avaliacao, c.avaliacao_comentario, e.descricao as especialidade_descricao';
+
+  let query = `SELECT ${select} FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE 1=1`;
   const params = [];
 
   if (medico_id) {
@@ -359,6 +390,25 @@ app.get(['/api/appointments', '/appointments'], (req, res) => {
   query += ' ORDER BY c.data_hora ASC';
 
   db.query(query, params, (err, results) => {
+    if (err && err.message && err.message.includes('Unknown column')) {
+      // Retry without rating fields / specialty description if schema doesn't have them
+      console.warn('Primary appointments query failed with unknown column, retrying without rating/description columns');
+      const fallbackSelect = 'c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome';
+      const fallbackQuery = `SELECT ${fallbackSelect} FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE 1=1` + (medico_id ? ' AND c.medico_id = ?' : '') + (clinica_id ? ' AND c.clinica_id = ?' : '') + ' ORDER BY c.data_hora ASC';
+      db.query(fallbackQuery, params, (err2, results2) => {
+        if (err2) {
+          console.error('Fallback appointments query failed, returning mock data:', err2.message);
+          return res.json(mockAppointments);
+        }
+        const normalized2 = (normalizeAppointmentRows(results2) || []).map((row) => ({
+          ...row,
+          paciente_foto: resolveImageField(row?.paciente_foto),
+        }));
+        return res.json(normalized2);
+      });
+      return;
+    }
+
     if (err) {
       console.error('Appointments query failed, returning mock data:', err.message);
       return res.json(mockAppointments);
@@ -379,17 +429,37 @@ app.get(['/api/appointments/:patientEmail', '/appointments/:patientEmail'], (req
   const patientEmail = req.params.patientEmail;
   // Tentar buscar por paciente_id primeiro (número), depois por email
   const isNumericId = /^\d+$/.test(patientEmail);
+
+  const select = 'c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, c.avaliacao, c.avaliacao_comentario, e.descricao as especialidade_descricao';
+
   let query, params;
-  
+
   if (isNumericId) {
-    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE c.paciente_id = ? ORDER BY c.data_hora DESC`;
+    query = `SELECT ${select} FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE c.paciente_id = ? ORDER BY c.data_hora DESC`;
     params = [parseInt(patientEmail)];
   } else {
-    query = `SELECT c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE c.email = ? ORDER BY c.data_hora DESC`;
+    query = `SELECT ${select} FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE c.email = ? ORDER BY c.data_hora DESC`;
     params = [patientEmail];
   }
-  
+
   db.query(query, params, (err, results) => {
+    if (err && err.message && err.message.includes('Unknown column')) {
+      console.warn('Primary appointment-by-patient query failed with unknown column, retrying without rating/description columns');
+      const fallbackSelect = 'c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome';
+      const fallbackQuery = `SELECT ${fallbackSelect} FROM odontoPro_consulta c LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id` + (isNumericId ? ' WHERE c.paciente_id = ? ORDER BY c.data_hora DESC' : ' WHERE c.email = ? ORDER BY c.data_hora DESC');
+      db.query(fallbackQuery, params, (err2, results2) => {
+        if (err2) {
+          return res.status(500).json({ error: err2.message });
+        }
+        const normalized2 = (normalizeAppointmentRows(results2) || []).map((row) => ({
+          ...row,
+          paciente_foto: resolveImageField(row?.paciente_foto),
+        }));
+        return res.json(normalized2);
+      });
+      return;
+    }
+
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -458,6 +528,58 @@ app.post(['/api/appointments', '/appointments'], (req, res) => {
     }
     res.json({ id: result.insertId, message: 'Appointment created successfully' });
   });
+});
+
+// POST /api/appointments/:id/rate and /api/appointments/:id/rating
+// Accepts JSON: { avaliacao: number, comentario: string }
+app.post(['/api/appointments/:id/rating','/api/appointments/:id/rate'], async (req, res) => {
+  const appointmentId = req.params.id;
+  // accept either 'avaliacao' or 'nota' from the mobile client
+  const ratingValue = req.body.avaliacao !== undefined ? req.body.avaliacao : (req.body.nota !== undefined ? req.body.nota : undefined);
+  const comentario = req.body.comentario !== undefined ? req.body.comentario : (req.body.comment !== undefined ? req.body.comment : undefined);
+
+  if (useMockData()) {
+    const idNum = Number(appointmentId);
+    const appt = mockAppointments.find(a => a.id === idNum);
+    if (!appt) return res.status(404).json({ error: 'Appointment not found (mock)' });
+    if (ratingValue !== undefined) appt.avaliacao = ratingValue;
+    if (comentario !== undefined) appt.avaliacao_comentario = comentario;
+    return res.json({ message: 'Rating saved (mock)', appointment: appt });
+  }
+
+  try {
+    const updates = [];
+    const params = [];
+
+    if (ratingValue !== undefined) {
+      updates.push('avaliacao = ?');
+      params.push(ratingValue);
+    }
+    if (comentario !== undefined) {
+      updates.push('avaliacao_comentario = ?');
+      params.push(comentario);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No rating data provided' });
+    }
+
+    params.push(appointmentId);
+    const q = `UPDATE odontoPro_consulta SET ${updates.join(', ')} WHERE id = ?`;
+    db.query(q, params, (err, result) => {
+      if (err) {
+        // Friendly message if the DB lacks the rating columns
+        if (err.code === 'ER_BAD_FIELD_ERROR' || (err.message && err.message.includes('Unknown column'))) {
+          return res.status(500).json({ error: 'Database schema missing rating columns. Please add avaliacao and avaliacao_comentario to odontoPro_consulta.' });
+        }
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ message: 'Rating saved', affectedRows: result.affectedRows });
+    });
+  } catch (e) {
+    console.error('Error saving rating:', e && e.stack ? e.stack : e);
+    return res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.post('/api/login', (req, res) => {
