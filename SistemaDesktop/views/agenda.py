@@ -2095,7 +2095,11 @@ class Agenda(BaseScreen):
         
         dialogo = ctk.CTkToplevel(self.master)
         dialogo.title("Marcar Consulta")
-        dialogo.geometry("650x800")
+        largura_padrao = 650
+        altura_padrao = 800
+        largura_modal = min(largura_padrao, int(dialogo.winfo_screenwidth() * 0.90))
+        altura_modal = min(altura_padrao, int(dialogo.winfo_screenheight() * 0.88))
+        dialogo.geometry(f"{largura_modal}x{altura_modal}")
         dialogo.resizable(False, False)
         dialogo.grab_set()
 
