@@ -1919,21 +1919,96 @@ class Agenda(BaseScreen):
         ctk.CTkLabel(frame, text='Novo horário', text_color=COLORS['text_primary']).pack(anchor='w')
         horarios_iniciais = horarios_por_data.get(data_var.get(), [])
         hora_var = ctk.StringVar(value=horarios_iniciais[0] if horarios_iniciais else '')
-        hora_combo = ctk.CTkComboBox(
-            frame,
-            variable=hora_var,
-            values=horarios_iniciais,
+        hora_field_frame = ctk.CTkFrame(frame, fg_color='transparent')
+        hora_field_frame.pack(fill='x', pady=(4, 14))
+        hora_entry = ctk.CTkEntry(
+            hora_field_frame,
+            textvariable=hora_var,
             state='readonly' if horarios_iniciais else 'disabled',
+            fg_color=COLORS['input_bg'],
+            border_color=COLORS['border'],
+            text_color=COLORS['text_primary'],
+            corner_radius=8,
         )
-        hora_combo.pack(fill='x', pady=(4, 14))
+        hora_entry.pack(side='left', fill='x', expand=True)
+
+        hora_popup = {'window': None}
+        horarios_popup = {'values': horarios_iniciais}
+
+        def fechar_popup_horario():
+            popup = hora_popup['window']
+            if popup is not None and popup.winfo_exists():
+                popup.destroy()
+            hora_popup['window'] = None
+
+        def selecionar_horario(horario):
+            hora_var.set(horario)
+            fechar_popup_horario()
+
+        def abrir_popup_horario():
+            fechar_popup_horario()
+            if not horarios_popup['values']:
+                return
+
+            popup = ctk.CTkToplevel(dialogo)
+            hora_popup['window'] = popup
+            popup.title('')
+            popup.resizable(False, False)
+            popup.transient(dialogo)
+            popup.configure(fg_color=COLORS['card'])
+            popup.protocol('WM_DELETE_WINDOW', fechar_popup_horario)
+            popup.bind('<Escape>', lambda _event: fechar_popup_horario())
+
+            horarios_frame = ctk.CTkScrollableFrame(
+                popup,
+                width=292,
+                height=132,
+                fg_color=COLORS['card'],
+                corner_radius=10,
+            )
+            horarios_frame.pack(fill='both', expand=True, padx=6, pady=6)
+            horarios_frame.grid_columnconfigure((0, 1), weight=1)
+
+            for index, horario in enumerate(horarios_popup['values']):
+                selecionado = horario == hora_var.get()
+                ctk.CTkButton(
+                    horarios_frame,
+                    text=horario,
+                    height=32,
+                    corner_radius=8,
+                    fg_color=COLORS['primary'] if selecionado else COLORS['bg_soft'],
+                    hover_color=COLORS['primary_dark'] if selecionado else COLORS['primary_soft'],
+                    text_color='white' if selecionado else COLORS['text_primary'],
+                    command=lambda value=horario: selecionar_horario(value),
+                ).grid(row=index // 2, column=index % 2, sticky='ew', padx=4, pady=4)
+
+            popup.update_idletasks()
+            x = hora_entry.winfo_rootx()
+            y = hora_entry.winfo_rooty() + hora_entry.winfo_height()
+            popup.geometry(f'+{x}+{y}')
+
+        hora_button = ctk.CTkButton(
+            hora_field_frame,
+            text='▼',
+            width=34,
+            height=32,
+            corner_radius=8,
+            fg_color=COLORS['input_bg'],
+            hover_color=COLORS['primary_soft'],
+            text_color=COLORS['text_primary'],
+            border_width=1,
+            border_color=COLORS['border'],
+            state='normal' if horarios_popup['values'] else 'disabled',
+            command=abrir_popup_horario,
+        ).pack(side='right', padx=(4, 0))
+        hora_entry.bind('<Button-1>', lambda _event: abrir_popup_horario())
 
         def atualizar_horarios(data_selecionada):
             horarios = horarios_por_data.get(data_selecionada, [])
+            horarios_popup['values'] = horarios
             hora_var.set(horarios[0] if horarios else '')
-            hora_combo.configure(
-                values=horarios,
-                state='readonly' if horarios else 'disabled',
-            )
+            hora_entry.configure(state='readonly' if horarios else 'disabled')
+            hora_button.configure(state='normal' if horarios else 'disabled')
 
         def salvar():
             valido_data, msg_data, data_obj = ConsultaController.validar_data_consulta(data_var.get().strip())
