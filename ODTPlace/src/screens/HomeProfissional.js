@@ -6,6 +6,7 @@ import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook glob
 import { getDoctorById, getProfessionalAppointments, getDoctorStats } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getPatientAvatarSource } from '../utils/patientAvatar';
+import { formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 
 const { width } = Dimensions.get('window');
 
@@ -58,13 +59,13 @@ export default function HomeScreen({ navigation }) {
     const next = [...appointments]
       .filter((item) => item && item.data_hora)
       .filter((item) => {
-        const appointmentDate = new Date(item.data_hora);
+        const appointmentDate = parseAppointmentDate(item.data_hora);
         const status = (item?.status || '').toString().toLowerCase();
         const isCancelled = ['cancelada', 'cancelado', 'não confirmado', 'nao confirmado'].includes(status);
         const isCompleted = ['realizada', 'realizado', 'concluida', 'concluido', 'confirmada', 'confirmado', 'completa'].includes(status);
         return !isCancelled && !isCompleted && appointmentDate > now;
       })
-      .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora))[0];
+      .sort((a, b) => parseAppointmentDate(a.data_hora) - parseAppointmentDate(b.data_hora))[0];
 
     if (!next) {
       return {
@@ -77,12 +78,12 @@ export default function HomeScreen({ navigation }) {
       };
     }
 
-    const appointmentDate = new Date(next.data_hora);
+    const appointmentDate = parseAppointmentDate(next.data_hora);
     return {
       patient: next.nome,
       patientPhoto: getPatientAvatarSource(next),
       procedure: next.observacoes || next.especialidade_nome || 'Consulta',
-      time: appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      time: formatAppointmentTime(appointmentDate),
       date: appointmentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' }),
       dateKey: `${appointmentDate.getFullYear()}-${String(appointmentDate.getMonth() + 1).padStart(2, '0')}-${String(appointmentDate.getDate()).padStart(2, '0')}`,
       avatarColor: isDarkMode ? '#1E3A8A' : '#EFF6FF',
@@ -99,7 +100,7 @@ export default function HomeScreen({ navigation }) {
     appointments.forEach((item) => {
       if (!item) return;
       if (period !== 'all' && item?.data_hora) {
-        const d = new Date(item.data_hora);
+        const d = parseAppointmentDate(item.data_hora);
         if (d < cutoff) return;
       }
       if (item?.paciente_id) {
@@ -118,7 +119,7 @@ export default function HomeScreen({ navigation }) {
       const pid = a?.paciente_id || a?.email || a?.nome;
       if (!pid) return;
       const prev = map.get(String(pid));
-      const dt = a?.data_hora ? new Date(a.data_hora) : null;
+      const dt = a?.data_hora ? parseAppointmentDate(a.data_hora) : null;
       if (!prev || (dt && dt > prev)) map.set(String(pid), dt);
     });
     const cutoff = new Date();
@@ -134,7 +135,7 @@ export default function HomeScreen({ navigation }) {
     return appointments.filter((item) => {
       if (!item) return false;
       if (period !== 'all' && item?.data_hora) {
-        const d = new Date(item.data_hora);
+        const d = parseAppointmentDate(item.data_hora);
         if (d < cutoff) return false;
       }
       const status = (item?.status || '').toString().toLowerCase();
@@ -149,7 +150,7 @@ export default function HomeScreen({ navigation }) {
     return appointments.filter((item) => {
       if (!item) return false;
       if (period !== 'all' && item?.data_hora) {
-        const d = new Date(item.data_hora);
+        const d = parseAppointmentDate(item.data_hora);
         if (d < cutoff) return false;
       }
       const status = (item?.status || '').toString().toLowerCase();
@@ -164,7 +165,7 @@ export default function HomeScreen({ navigation }) {
     return appointments.filter((item) => {
       if (!item) return false;
       if (period !== 'all' && item?.data_hora) {
-        const d = new Date(item.data_hora);
+        const d = parseAppointmentDate(item.data_hora);
         if (d < cutoff) return false;
       }
       const status = (item?.status || '').toString().toLowerCase();

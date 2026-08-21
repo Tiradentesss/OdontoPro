@@ -16,6 +16,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext'; // Importação do tema global
 import { updateAppointment } from '../services/api';
+import { formatAppointmentDateTime, formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 
 const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -57,12 +58,12 @@ export default function RescheduleScreen({ route, navigation }) {
 
   useEffect(() => {
     if (appointment?.data_hora) {
-      const appointmentDate = new Date(appointment.data_hora);
+      const appointmentDate = parseAppointmentDate(appointment.data_hora);
       const isoDate = `${appointmentDate.getFullYear()}-${String(appointmentDate.getMonth() + 1).padStart(2, '0')}-${String(appointmentDate.getDate()).padStart(2, '0')}`;
       setSelectedDate(isoDate);
       setSelectedDateLabel(formatDateLabel(isoDate));
       setCurrentMonth({ year: appointmentDate.getFullYear(), month: appointmentDate.getMonth() + 1 });
-      setSelectedTime(appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+      setSelectedTime(formatAppointmentTime(appointmentDate));
     }
   }, [appointment]);
 
@@ -89,8 +90,7 @@ export default function RescheduleScreen({ route, navigation }) {
       const [year, month, day] = selectedDate.split('-').map(Number);
       const [hours, minutes] = selectedTime.split(':').map((value) => Number(value));
       if (appointment?.id) {
-        const newDate = new Date(year, month - 1, day, hours, minutes);
-        await updateAppointment(appointment.id, { data_hora: newDate.toISOString() });
+        await updateAppointment(appointment.id, { data_hora: formatAppointmentDateTime(selectedDate, `${hours}:${minutes}`) });
       }
 
       setIsModalVisible(false);

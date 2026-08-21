@@ -16,6 +16,7 @@ import BottomNavBar from '../components/BottomNavBar';
 import { getPatientAppointments, updateAppointment } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../components/ThemeContext';
+import { formatAppointmentDateKey, formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 
 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const weekdays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -90,7 +91,7 @@ const getUpcomingAppointmentDate = (appointmentsData = []) => {
     // Se tiver dados reais, usa eles
     if (appointmentsData.length > 0) {
         const futureDates = appointmentsData
-            .map(apt => ({ id: new Date(apt.data_hora).toISOString().split('T')[0], date: new Date(apt.data_hora) }))
+            .map(apt => ({ id: formatAppointmentDateKey(apt.data_hora), date: parseAppointmentDate(apt.data_hora) }))
             .filter(({ date }) => date >= todayStart)
             .sort((a, b) => a.date - b.date)
             .map(({ id }) => id);
@@ -144,7 +145,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
 
     // Datas que têm consultas (para marcar no calendário) - deve vir antes do monthDays
     const appointmentDatesSet = new Set(
-        appointmentsData.map(apt => new Date(apt.data_hora).toISOString().split('T')[0])
+        appointmentsData.map(apt => formatAppointmentDateKey(apt.data_hora)).filter(Boolean)
     );
 
     const monthDays = getMonthDays(currentMonth.year, currentMonth.month, appointmentDatesSet);
@@ -186,7 +187,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
         if (appointmentsData.length > 0) {
             return appointmentsData
                 .filter(apt => {
-                    const aptDate = new Date(apt.data_hora).toISOString().split('T')[0];
+                    const aptDate = formatAppointmentDateKey(apt.data_hora);
                     return aptDate === dateId;
                 })
                 .map(apt => ({
@@ -196,9 +197,9 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                     avaliacao_comentario: apt.avaliacao_comentario,
                     data_hora: apt.data_hora,
                     nome: usuario,
-                    time: new Date(apt.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                    endTime: new Date(apt.data_hora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                    date: new Date(apt.data_hora).toLocaleDateString('pt-BR'),
+                    time: formatAppointmentTime(apt.data_hora),
+                    endTime: formatAppointmentTime(apt.data_hora),
+                    date: formatAppointmentDateKey(apt.data_hora),
                     clinic: apt.clinica_nome || 'Clínica',
                     specialty: apt.especialidade_nome || 'Especialidade',
                     doctor: apt.medico_nome || 'Dr. Médico',

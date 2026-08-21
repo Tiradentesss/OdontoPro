@@ -1,32 +1,13 @@
-const BRAZIL_TIMEZONE = 'America/Sao_Paulo';
-
-const formatBrazilDateTime = (value) => {
-  const parts = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: BRAZIL_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).formatToParts(value);
-
-  const formatted = {};
-  parts.forEach((part) => {
-    if (part.type !== 'literal') {
-      formatted[part.type] = part.value;
-    }
-  });
-
-  return `${formatted.year}-${formatted.month}-${formatted.day} ${formatted.hour}:${formatted.minute}:${formatted.second}`;
+const formatDateTime = (value) => {
+  const pad = (part) => String(part).padStart(2, '0');
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())} ${pad(value.getHours())}:${pad(value.getMinutes())}:${pad(value.getSeconds())}`;
 };
 
 const normalizeAppointmentDateValue = (value) => {
   if (!value) return value;
 
   if (value instanceof Date) {
-    return formatBrazilDateTime(value);
+    return formatDateTime(value);
   }
 
   if (typeof value !== 'string') {
@@ -41,12 +22,18 @@ const normalizeAppointmentDateValue = (value) => {
     return trimmedValue.replace(/\.\d+$/, '');
   }
 
+  const components = trimmedValue.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (components) {
+    const [, year, month, day, hour, minute, second = '0'] = components;
+    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+  }
+
   const date = new Date(trimmedValue);
   if (Number.isNaN(date.getTime())) {
     return trimmedValue;
   }
 
-  return formatBrazilDateTime(date);
+  return formatDateTime(date);
 };
 
 const normalizeAppointmentRow = (row) => {

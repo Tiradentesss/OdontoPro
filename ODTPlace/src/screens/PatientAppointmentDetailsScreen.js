@@ -15,6 +15,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { submitAppointmentRating, updateAppointment } from '../services/api';
+import { formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 
 const getStatusInfo = (statusValue, isDarkMode) => {
   const normalized = (statusValue || '').toString().toLowerCase();
@@ -70,10 +71,7 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
   const headerButtonBg = isDarkMode ? colors.card : colors.backButtonBg;
 
   const parseDateString = (value) => {
-    if (!value) return null;
-    const text = typeof value === 'string' ? value.replace(' ', 'T') : value;
-    const parsed = new Date(text);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
+    return parseAppointmentDate(value);
   };
 
   const appointmentClinic = appointment?.clinica_nome || appointment?.clinic || appointment?.clinicName || 'Clínica';
@@ -82,7 +80,7 @@ export default function PatientAppointmentDetailsScreen({ route, navigation }) {
   const appointmentReason = appointment?.observacoes || appointment?.observations || route.params?.motivo || 'Consulta';
   const appointmentDate = parseDateString(appointment?.data_hora) || parseDateString(appointment?.date);
   const appointmentDateLabel = appointmentDate ? appointmentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Data a definir';
-  const appointmentTimeLabel = appointmentDate ? appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Horário a definir';
+  const appointmentTimeLabel = appointmentDate ? formatAppointmentTime(appointmentDate) : 'Horário a definir';
 
   const normalizedStatus = (status || '').toString().toLowerCase();
   const statusInfo = getStatusInfo(status, isDarkMode);

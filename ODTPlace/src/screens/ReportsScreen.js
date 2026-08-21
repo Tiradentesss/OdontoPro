@@ -11,6 +11,7 @@ import {
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getDoctorById, getDoctorStats, getProfessionalAppointments } from '../services/api';
+import { parseAppointmentDate } from '../utils/appointmentTime';
 
 export default function ReportsScreen() {
   const { colors } = useTheme();
@@ -61,11 +62,11 @@ export default function ReportsScreen() {
 
     return appointments.filter((appointment) => {
       if (!appointment?.data_hora) return false;
-      return new Date(appointment.data_hora) >= cutoff;
+      return parseAppointmentDate(appointment.data_hora) >= cutoff;
     });
   }, [appointments, period]);
 
-  const upcomingCount = filteredAppointments.filter((appointment) => new Date(appointment.data_hora) > new Date()).length;
+  const upcomingCount = filteredAppointments.filter((appointment) => parseAppointmentDate(appointment.data_hora) > new Date()).length;
   const cancelledCount = filteredAppointments.filter((appointment) =>
     (appointment.status || '').toString().toLowerCase().includes('cancel')
   ).length;

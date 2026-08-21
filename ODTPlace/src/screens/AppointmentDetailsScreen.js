@@ -13,6 +13,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 
 import { useTheme } from '../components/ThemeContext';
+import { addAppointmentMinutes, formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 import {
   getProfessionalAppointments,
   updateAppointment,
@@ -208,7 +209,7 @@ export default function AppointmentDetailsScreen({
   // =========================================================
 
   const appointmentDate = appointment?.data_hora
-    ? new Date(appointment.data_hora)
+    ? parseAppointmentDate(appointment.data_hora)
     : null;
 
   const appointmentDateLabel =
@@ -219,18 +220,10 @@ export default function AppointmentDetailsScreen({
     });
 
   const appointmentTimeLabel =
-    appointmentDate?.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    formatAppointmentTime(appointmentDate);
 
   const appointmentEndTimeLabel = appointmentDate
-    ? new Date(
-        appointmentDate.getTime() + 30 * 60000
-      ).toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+    ? formatAppointmentTime(addAppointmentMinutes(appointmentDate, 30))
     : null;
 
   const appointmentReason =

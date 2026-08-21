@@ -47,8 +47,8 @@ const resolveClinicAddress = (clinicInfo) => {
         clinicInfo?.cep,
     ].filter(Boolean);
 
-    if (clinicInfo?.endereco) {
-        return clinicInfo.endereco;
+    if (typeof clinicInfo?.endereco === 'string' && clinicInfo.endereco.trim()) {
+        return clinicInfo.endereco.trim();
     }
 
     return addressParts.length ? addressParts.join(', ') : 'Endereço não informado';
@@ -69,6 +69,9 @@ const resolveClinicReviewCount = (clinicInfo) => {
 export default function ClinicDetailScreen({ route, navigation }) {
     const clinic = route?.params?.clinic ?? {};
     const user = route?.params?.user;
+    const clinicName = String(clinic?.nome ?? 'Clínica');
+    const clinicDescription = typeof clinic?.descricao === 'string' ? clinic.descricao : '';
+    const clinicPhone = typeof clinic?.telefone === 'string' ? clinic.telefone : '';
     const { isDarkMode, colors } = useTheme();
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -158,6 +161,9 @@ export default function ClinicDetailScreen({ route, navigation }) {
                 }
 
                 const firstMatch = results[0];
+                if (!firstMatch || typeof firstMatch !== 'object') {
+                    return;
+                }
                 const latitude = Number(firstMatch.lat);
                 const longitude = Number(firstMatch.lon);
 
@@ -234,21 +240,21 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                 </View>
                             )}
                             <View style={styles.clinicHeaderInfo}>
-                                <Text style={[styles.clinicTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]} numberOfLines={2}>{clinic.nome}</Text>
+                                <Text style={[styles.clinicTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]} numberOfLines={2}>{clinicName}</Text>
                                 {clinic.especialidade ? (
                                     <Text style={[styles.clinicSubtitle, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]} numberOfLines={1}>{clinic.especialidade}</Text>
                                 ) : null}
                                 <Text style={[styles.clinicInfoText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Atendimento: {clinic.modalidades}</Text>
                             </View>
                         </View>
-                        {clinic.descricao ? (
+                        {clinicDescription ? (
                             <View style={styles.clinicDescriptionContainer}>
                                 <Text style={[styles.description, { color: isDarkMode ? '#E2E8F0' : '#0f172a' }]}> 
-                                    {showFullDescription || clinic.descricao.length <= 120
-                                        ? clinic.descricao
-                                        : `${clinic.descricao.slice(0, 120).trim()}...`}
+                                    {showFullDescription || clinicDescription.length <= 120
+                                        ? clinicDescription
+                                        : `${clinicDescription.slice(0, 120).trim()}...`}
                                 </Text>
-                                {clinic.descricao.length > 120 ? (
+                                {clinicDescription.length > 120 ? (
                                     <TouchableOpacity
                                         onPress={() => setShowFullDescription(prev => !prev)}
                                     >
@@ -349,7 +355,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                 style={[styles.contactButton, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}
                                 activeOpacity={0.85}
                                 onPress={async () => {
-                                        const phone = clinic.telefone ?? '(91) 98132-2686';
+                                        const phone = clinicPhone || '(91) 98132-2686';
                                         try {
                                             await Clipboard.setStringAsync(phone);
                                             Alert.alert('Número copiado', `Número copiado para a área de transferência: ${phone}`);
@@ -360,10 +366,10 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                     }}
                             >
                                 <Text style={[styles.contactButtonTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Telefone</Text>
-                                <Text style={[styles.contactButtonText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{clinic.telefone ?? '(91) 98132-2686'}</Text>
+                                <Text style={[styles.contactButtonText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{clinicPhone || '(91) 98132-2686'}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={[styles.contactButton, styles.contactButtonLast, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]} activeOpacity={0.85} onPress={() => {
-                                const wa = clinic.telefone ? `https://wa.me/${clinic.telefone.replace(/[^0-9]/g, '')}` : null;
+                                const wa = clinicPhone ? `https://wa.me/${clinicPhone.replace(/[^0-9]/g, '')}` : null;
                                 if (wa) Linking.openURL(wa);
                             }}>
                                 <Text style={[styles.contactButtonTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>WhatsApp</Text>
@@ -382,7 +388,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
                         >
                             <Marker
                                 coordinate={{ latitude: mapRegion.latitude, longitude: mapRegion.longitude }}
-                                title={clinic.nome}
+                                title={clinicName}
                                 description={clinicAddress}
                             />
                         </MapView>

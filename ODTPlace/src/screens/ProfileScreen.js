@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, Image, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { getPatientAppointments } from '../services/api';
+import { parseAppointmentDate } from '../utils/appointmentTime';
 
 // Tela de perfil
 export default function ProfileScreen({ navigation, route }) {
@@ -89,7 +90,7 @@ export default function ProfileScreen({ navigation, route }) {
               <View key={apt.id} style={styles.specialtyItem}>
                 <Text style={styles.specialtyText}>{apt.medico_nome || 'Médico'}</Text>
                 <Text style={styles.appointmentDate}>
-                  {new Date(apt.data_hora).toLocaleDateString('pt-BR')}
+                  {parseAppointmentDate(apt.data_hora)?.toLocaleDateString('pt-BR')}
                 </Text>
                 <Text style={styles.appointmentStatus}>{apt.status}</Text>
               </View>

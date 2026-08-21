@@ -14,6 +14,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext'; // 1. Importa o hook global de tema
 import { getProfessionalAppointments } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 
 export default function PatientProfileScreen({ route, navigation }) {
   const params = route.params || {};
@@ -69,8 +70,8 @@ export default function PatientProfileScreen({ route, navigation }) {
       : fallbackPatient;
 
   const appointmentMotivo = appointment?.observacoes || params?.motivo || 'Consulta';
-  const appointmentDate = appointment?.data_hora ? new Date(appointment.data_hora) : null;
-  const appointmentTime = appointmentDate?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const appointmentDate = appointment?.data_hora ? parseAppointmentDate(appointment.data_hora) : null;
+  const appointmentTime = formatAppointmentTime(appointmentDate);
   const appointmentDateLabel = appointmentDate?.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
   const appointmentStatus = appointment?.status === 'confirmada' ? 'Confirmada' : appointment?.status === 'cancelada' ? 'Cancelada' : 'Pendente';
 
@@ -83,7 +84,7 @@ export default function PatientProfileScreen({ route, navigation }) {
         id: params?.id,
         nome: currentPatient?.name,
         observacoes: appointmentMotivo,
-        data_hora: appointmentDate?.toISOString?.() || null,
+        data_hora: appointment?.data_hora || null,
         status: appointment?.status || 'pendente',
       },
     });

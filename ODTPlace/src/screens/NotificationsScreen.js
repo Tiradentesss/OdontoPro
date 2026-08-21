@@ -5,6 +5,7 @@ import BottomNavBar from '../components/BottomNavBar';
 import { getPatientAppointments } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../components/ThemeContext';
+import { formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 
 const NOTIFICATION_TYPES = {
   UPCOMING: 'upcoming',       // 1 dia antes
@@ -54,9 +55,9 @@ export default function NotificationsScreen({ navigation, showBottomNav = true }
     const result = [];
 
     appointmentsData.forEach((apt) => {
-      const aptDate = new Date(apt.data_hora);
+      const aptDate = parseAppointmentDate(apt.data_hora);
       const aptDay = new Date(aptDate.getFullYear(), aptDate.getMonth(), aptDate.getDate());
-      const aptTimeStr = aptDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const aptTimeStr = formatAppointmentTime(aptDate);
       
       // Converter hora da consulta para minutos desde meia-noite
       const aptMinutes = aptDate.getHours() * 60 + aptDate.getMinutes();

@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react';
-import { Image, StyleSheet, ImageBackground, View, Animated, Easing } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
+import * as ExpoSplashScreen from 'expo-splash-screen';
+import { Image, StyleSheet, View, Animated, Easing } from 'react-native';
 
 export default function SplashScreen({ onFinish }) {
 
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    ExpoSplashScreen.hideAsync().catch(() => {});
+
     const animation = Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
@@ -32,28 +33,13 @@ export default function SplashScreen({ onFinish }) {
 
 
   return (
-    <ImageBackground
-      source={require('../../assets/imagem background.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <View style={styles.card}>
-        <BlurView intensity={35} tint="light" style={styles.blur}>
-          <LinearGradient
-            colors={['#f8f8f8', '#e1e6ee', '#fff']}
-            start={{ x: 1, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.gradient}
-          >
-            <Image
-              source={require('../../assets/OdontoHub.png')}
-              style={styles.logo}
-            />
-            <Animated.View style={[styles.loader, { transform: [{ rotate }] }]} />
-          </LinearGradient>
-        </BlurView>
-      </View>
-    </ImageBackground>
+    <View style={styles.container}>
+      <Image
+        source={require('../../assets/LogoOdontoHubApp.png')}
+        style={styles.logo}
+      />
+      <Animated.View style={[styles.loader, { transform: [{ rotate }] }]} />
+    </View>
   );
 }
 
@@ -62,35 +48,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-  },
-  card: {
-    width: '92%',
-    maxWidth: 420,
-    borderRadius: 28,
-    overflow: 'hidden',
-    borderWidth: 1.2,
-    borderColor: 'rgba(257, 255, 255, 0.76)',
-    transform: [{ translateY: -18 }],
-    shadowColor: '#1BC3EA',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
-    shadowRadius: 25,
-    elevation: 12,
-  },
-  blur: {
-    borderRadius: 28,
-    overflow: 'hidden',
-  },
-  gradient: {
-    paddingVertical: 45,
-    paddingHorizontal: 25,
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   logo: {
-    width: 280,
-    height: 280,
-    marginBottom: -40,
+    width: 180,
+    height: 180,
+    marginBottom: 24,
     resizeMode: 'contain',
   },
   loader: {

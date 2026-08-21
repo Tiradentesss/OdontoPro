@@ -86,10 +86,6 @@ function TabNavigator() {
 export default function App() {
   const [isSplashVisible, setIsSplashVisible] = useState(true);
 
-  useEffect(() => {
-    ExpoSplashScreen.hideAsync().catch(() => {});
-  }, []);
-
   const finishSplash = useCallback(() => {
     setIsSplashVisible(false);
   }, []);

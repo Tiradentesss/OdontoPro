@@ -17,6 +17,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getProfessionalAppointments } from '../services/api';
+import { formatAppointmentDateKey, formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 
 const normalizeStatus = (status) => (status || '').toString().toLowerCase();
 
@@ -120,7 +121,7 @@ export default function PatientsScreen({ navigation }) {
     return appointments.filter((item) => {
       if (!item) return false;
 
-      const appointmentDate = item.data_hora ? new Date(item.data_hora) : null;
+      const appointmentDate = item.data_hora ? parseAppointmentDate(item.data_hora) : null;
       const matchesQuery = !normalizedQuery || [
         item.nome,
         item.observacoes,
@@ -148,8 +149,8 @@ export default function PatientsScreen({ navigation }) {
 
   const groupedAppointments = useMemo(() => {
     const groups = filteredAppointments.reduce((acc, item) => {
-      const appointmentDate = item.data_hora ? new Date(item.data_hora) : null;
-      const groupKey = appointmentDate ? appointmentDate.toISOString().slice(0, 10) : 'sem-data';
+      const appointmentDate = item.data_hora ? parseAppointmentDate(item.data_hora) : null;
+      const groupKey = appointmentDate ? formatAppointmentDateKey(appointmentDate) : 'sem-data';
 
       if (!acc[groupKey]) {
         acc[groupKey] = {
@@ -172,9 +173,9 @@ export default function PatientsScreen({ navigation }) {
   }, [filteredAppointments]);
 
   const renderPatientCard = (item) => {
-    const appointmentDate = item.data_hora ? new Date(item.data_hora) : null;
+    const appointmentDate = item.data_hora ? parseAppointmentDate(item.data_hora) : null;
     const timeText = appointmentDate
-      ? appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      ? formatAppointmentTime(appointmentDate)
       : '--:--';
     const status = item.status || 'pendente';
     const statusColor = getStatusColor(status, isDarkMode);

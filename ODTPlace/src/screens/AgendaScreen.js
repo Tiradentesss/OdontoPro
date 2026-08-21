@@ -15,6 +15,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from '../components/ThemeContext';
+import { addAppointmentMinutes, formatAppointmentDateKey, formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 import { useAuth } from '../context/AuthContext';
 import { getProfessionalAppointments } from '../services/api';
 import { getPatientAvatarSource } from '../utils/patientAvatar';
@@ -160,23 +161,23 @@ export default function AgendaScreen({ navigation, route }) {
   const appointmentDates = new Set(
     appointments
       .filter((item) => item?.data_hora)
-      .map((item) => formatDateKey(new Date(item.data_hora)))
+      .map((item) => formatAppointmentDateKey(item.data_hora))
   );
 
   const displayedAppointments = appointments
     .filter((item) => {
-      const appointmentDate = item?.data_hora ? formatDateKey(new Date(item.data_hora)) : null;
+      const appointmentDate = item?.data_hora ? formatAppointmentDateKey(item.data_hora) : null;
       return appointmentDate === selectedDate;
     })
     .map((item) => {
-      const appointmentDate = item?.data_hora ? new Date(item.data_hora) : null;
+      const appointmentDate = item?.data_hora ? parseAppointmentDate(item.data_hora) : null;
       const status = getDisplayStatus(item?.status);
       const config = STATUS_CONFIG[status] || STATUS_CONFIG['Não Confirmado'];
       const startTime = appointmentDate
-        ? appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        ? formatAppointmentTime(appointmentDate)
         : '--:--';
       const endTime = appointmentDate
-        ? new Date(appointmentDate.getTime() + 30 * 60000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        ? formatAppointmentTime(addAppointmentMinutes(appointmentDate, 30))
         : '--:--';
 
       return {

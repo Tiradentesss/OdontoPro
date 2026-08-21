@@ -16,6 +16,7 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext';
 import { updateAppointment } from '../services/api';
+import { formatAppointmentDateTime, formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 
 const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -44,10 +45,7 @@ export default function PatientRescheduleScreen({ route, navigation }) {
   const headerIconColor = isDarkMode ? colors.text : patientBlue;
   const headerButtonBg = isDarkMode ? colors.card : colors.backButtonBg;
   const parseDateString = (value) => {
-    if (!value) return null;
-    const text = typeof value === 'string' ? value.replace(' ', 'T') : value;
-    const parsed = new Date(text);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
+    return parseAppointmentDate(value);
   };
 
   const getIsoLabel = (isoDate) => {
@@ -70,7 +68,7 @@ export default function PatientRescheduleScreen({ route, navigation }) {
       setSelectedDate(isoDate);
       setSelectedDateLabel(getIsoLabel(isoDate));
       setCurrentMonth({ year: appointmentDate.getFullYear(), month: appointmentDate.getMonth() + 1 });
-      setSelectedTime(appointmentDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+      setSelectedTime(formatAppointmentTime(appointmentDate));
     }
   }, [appointment]);
 
@@ -95,8 +93,7 @@ export default function PatientRescheduleScreen({ route, navigation }) {
       const [year, month, day] = selectedDate.split('-').map(Number);
       const [hours, minutes] = selectedTime.split(':').map(Number);
       if (appointment?.id) {
-        const newDate = new Date(year, month - 1, day, hours, minutes);
-        await updateAppointment(appointment.id, { data_hora: newDate.toISOString() });
+        await updateAppointment(appointment.id, { data_hora: formatAppointmentDateTime(selectedDate, `${hours}:${minutes}`) });
       }
       setIsModalVisible(false);
       navigation.navigate('SuccessScreen', { returnRoute: 'Home' });
