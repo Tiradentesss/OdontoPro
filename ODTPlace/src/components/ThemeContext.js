@@ -1,11 +1,36 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ThemeContext = createContext();
+const THEME_STORAGE_KEY = '@odontopro:isDarkMode';
 
 export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const toggleTheme = () => setIsDarkMode(prev => !prev);
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const storedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+        if (storedTheme !== null) {
+          setIsDarkMode(storedTheme === 'true');
+        }
+      } catch (error) {
+        console.warn('Could not load saved theme:', error);
+      }
+    };
+
+    loadTheme();
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkMode((previousValue) => {
+      const nextValue = !previousValue;
+      AsyncStorage.setItem(THEME_STORAGE_KEY, String(nextValue)).catch((error) => {
+        console.warn('Could not save theme:', error);
+      });
+      return nextValue;
+    });
+  };
 
   // Centraliza as paletas de cores de todo o ecossistema OdontoPro
   const theme = {
