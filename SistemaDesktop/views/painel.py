@@ -330,7 +330,7 @@ class Painel(BaseScreen):
         f = self.dados_relatorios or {}
         # Indicadores preferenciais vindos da lógica de Relatórios
         metrics = [
-            ("👥", "Pacientes atendidos", str(f.get('atendidos', 0)), self.colors['info']),
+            ("👥", "Pacientes a serem atendidos", str(self.dados_contagem_consultas.get('confirmadas_hoje', 0)), self.colors['info']),
             ("✅", "Consultas realizadas", str(f.get('realizadas', 0)), self.colors['success']),
             ("❌", "Cancelamentos", str(f.get('cancelamentos', 0)), self.colors['danger']),
             ("📊", "Comparecimento", f"{f.get('comparecimento', 0)}%", self.colors['warning']),
@@ -593,6 +593,17 @@ class Painel(BaseScreen):
             )
 
             contagem = self._resumir_status_consultas(consultas)
+            hoje = date.today()
+            contagem['confirmadas_hoje'] = sum(
+                1
+                for consulta in consultas or []
+                if isinstance(consulta, (list, tuple))
+                and len(consulta) > 3
+                and str(consulta[3]).strip().lower() == 'confirmada'
+                and len(consulta) > 2
+                and hasattr(consulta[2], 'date')
+                and consulta[2].date() == hoje
+            )
             print(f"[PAINEL] Total de consultas encontradas: {contagem.get('total', 0)}")
             print("[PAINEL] Status encontrados:")
             for status_key in ['agendada', 'confirmada', 'realizada', 'cancelada', 'falta']:
