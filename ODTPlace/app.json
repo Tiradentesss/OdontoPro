@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/OdontoHub.png",
+      "image": "./assets/LogoOdontoHubApp.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -30,8 +30,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/OdontoHub.png",
-          "imageWidth": 280,
+          "image": "./assets/LogoOdontoHubApp.png",
+          "imageWidth": 180,
           "resizeMode": "contain",
           "backgroundColor": "#FFFFFF"
         }
