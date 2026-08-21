@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import * as ExpoSplashScreen from 'expo-splash-screen';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -6,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { ThemeProvider } from './src/components/ThemeContext';
 import { AuthProvider } from './src/context/AuthContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import HomeScreen from './src/screens/HomeScreen';
 import HomeProfissional from './src/screens/HomeProfissional';
@@ -42,8 +44,11 @@ import AppointmentBookingScreen from './src/screens/AppointmentBookingScreen';
 import PersonalInfoScreen from './src/screens/PersonalInfoScreen';
 import SystemScreen from './src/screens/SystemScreen';
 import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
+import AppSplashScreen from './src/screens/SplashScreen';
 
 import CustomTabBar from './src/components/CustomTabBar';
+
+ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -79,10 +84,25 @@ function TabNavigator() {
 }
 
 export default function App() {
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
+
+  useEffect(() => {
+    ExpoSplashScreen.hideAsync().catch(() => {});
+  }, []);
+
+  const finishSplash = useCallback(() => {
+    setIsSplashVisible(false);
+  }, []);
+
+  if (isSplashVisible) {
+    return <AppSplashScreen onFinish={finishSplash} />;
+  }
+
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <NavigationContainer>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
 
             <Stack.Screen name="PreLogin" component={PreLogin} />
@@ -167,8 +187,9 @@ export default function App() {
             />
 
           </Stack.Navigator>
-        </NavigationContainer>
-      </AuthProvider>
-    </ThemeProvider>
+          </NavigationContainer>
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../components/ThemeContext'; 
 
 const { width } = Dimensions.get('window');
@@ -14,9 +15,12 @@ const TAB_CONFIG = {
 
 export default function CustomTabBar({ state, descriptors, navigation }) {
   const { isDarkMode, colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {
+      bottom: Platform.OS === 'ios' ? Math.max(insets.bottom + 8, 24) : insets.bottom + 12,
+    }]}>
       {/* Barra flutuante com blur/sombra extremamente suave e bordas cirúrgicas */}
       <View style={[
         styles.tabBar, 
@@ -93,7 +97,6 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 24 : 16, 
     left: 0,
     right: 0,
     alignItems: 'center',
