@@ -593,6 +593,7 @@ class Painel(BaseScreen):
             )
 
             contagem = self._resumir_status_consultas(consultas)
+            agora = datetime.now()
             hoje = date.today()
             contagem['confirmadas_hoje'] = sum(
                 1
@@ -603,6 +604,7 @@ class Painel(BaseScreen):
                 and len(consulta) > 2
                 and hasattr(consulta[2], 'date')
                 and consulta[2].date() == hoje
+                and consulta[2] > agora
             )
             print(f"[PAINEL] Total de consultas encontradas: {contagem.get('total', 0)}")
             print("[PAINEL] Status encontrados:")

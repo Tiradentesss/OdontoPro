@@ -670,7 +670,7 @@ class ConsultaService:
                 UPDATE odontoPro_consulta
                 SET status = 'falta'
                 WHERE clinica_id = %s
-                  AND DATE(data_hora) < CURDATE()
+                  AND DATE_ADD(data_hora, INTERVAL 1 HOUR) < NOW()
                   AND LOWER(TRIM(status)) IN ('agendada', 'confirmada', 'reagendada')
             """, (clinica_id,))
             atualizadas = cursor.rowcount
