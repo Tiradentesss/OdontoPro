@@ -372,20 +372,6 @@ class Relatorios(BaseScreen):
         footer = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
         footer.pack(fill="x", padx=20, pady=(0, 20))
 
-        self.export_button = ctk.CTkButton(
-            footer,
-            text="⬇ Exportar",
-            width=110,
-            height=34,
-            fg_color=COLORS["primary"],
-            hover_color=COLORS["primary_dark"],
-            text_color="white",
-            corner_radius=8,
-            state="disabled",
-            command=self._show_export_menu
-        )
-        self.export_button.pack(side="right")
-
     def _handle_period_change(self, value):
         if value == "Personalizado":
             self._open_custom_period_modal()
