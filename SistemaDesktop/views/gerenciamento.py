@@ -689,8 +689,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             self.selected_dates.clear()
             self.last_selected_date = None
         elif has_availability:
-            self.selected_dates = {selected_date}
-            self.last_selected_date = None
+            if not shift_pressed:
+                self.selected_dates = {selected_date}
+                self.last_selected_date = None
         elif any(
             date.weekday() in self.saved_slots_by_weekday
             for date in self.selected_dates
@@ -707,9 +708,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             else:
                 self.selected_dates.add(selected_date)
         
-        self.last_selected_date = selected_date
+        self.last_selected_date = None if has_availability else selected_date
         self.selected_date = selected_date
-        self.selected_slots = set(self.saved_slots_by_weekday.get(selected_date.weekday(), []))
+        self.selected_slots = set() if shift_pressed and has_availability else set(self.saved_slots_by_weekday.get(selected_date.weekday(), []))
         self.last_selected_slot = None
         self._update_slots_display()
         self._update_calendar_display()
@@ -722,7 +723,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         interval_dates = set()
         current = start_date
         while current <= end_date:
-            if current.weekday() != 6:
+            if current.weekday() != 6 and current.weekday() not in self.saved_slots_by_weekday:
                 interval_dates.add(current)
             current += timedelta(days=1)
         
