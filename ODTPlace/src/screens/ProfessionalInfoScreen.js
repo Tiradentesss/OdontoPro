@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ImageBackground, ScrollView, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ImageBackground, ScrollView, Platform, StatusBar } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getDoctorById, getDoctorStats, getProfessionalAppointments } from '../services/api';
 import { useTheme } from '../components/ThemeContext';
+import { getProfessionalAvatarSource } from '../utils/professionalAvatar';
 
 const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
@@ -15,6 +16,7 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [completedConsultations, setCompletedConsultations] = useState(null);
   const [doctorProfile, setDoctorProfile] = useState(null);
+  const avatarSource = getProfessionalAvatarSource({ ...professional, ...doctorProfile });
 
   useEffect(() => {
     const loadStats = async () => {
@@ -75,7 +77,11 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.profileHeader}>
             <View style={[styles.profileImage, isDarkMode && { backgroundColor: '#1E293B', borderColor: '#334155' }]}> 
-              <Text style={[styles.profileInitial, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{professional.name ? professional.name.charAt(0) : 'P'}</Text>
+              {avatarSource ? (
+                <Image source={avatarSource} style={styles.profileImageContent} resizeMode="cover" />
+              ) : (
+                <Text style={[styles.profileInitial, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{(professional.nome ?? professional.name ?? 'P').charAt(0)}</Text>
+              )}
             </View>
             <Text style={[styles.professionalName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{professional.nome ?? professional.name ?? 'Nome do Profissional'}</Text>
             <Text style={[styles.professionalSpecialty, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
@@ -167,6 +173,10 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: '800',
     color: '#0ea5e9',
+  },
+  profileImageContent: {
+    width: '100%',
+    height: '100%',
   },
   professionalName: {
     fontSize: 22,

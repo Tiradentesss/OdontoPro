@@ -5,6 +5,7 @@ import BottomNavBar from '../components/BottomNavBar';
 import { getClinicDoctors } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../components/ThemeContext';
+import { getProfessionalAvatarSource } from '../utils/professionalAvatar';
 
 const sampleProfessionals = [
     { id: '1', name: 'Lucas Castro', specialty: 'Ortodontista', rating: 5, reviews: 120 },
@@ -202,6 +203,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                         renderItem={({ item }) => {
                             const name = String(item?.nome ?? item?.name ?? 'Profissional');
                             const specialty = String(item?.specialty ?? item?.especialidades?.[0] ?? 'Especialista');
+                            const avatarSource = getProfessionalAvatarSource(item);
                             return (
                                 <TouchableOpacity
                                     style={[styles.professionalCard, isDarkMode && { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
@@ -209,7 +211,11 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                     onPress={() => navigation.navigate('ProfessionalInfo', { professional: item, clinic, user, selectedSpecialty: activeSpecialty })}
                                 >
                                     <View style={styles.avatarPlaceholder}>
-                                        <Text style={styles.avatarText}>{name.charAt(0)}</Text>
+                                        {avatarSource ? (
+                                            <Image source={avatarSource} style={styles.avatarImage} resizeMode="cover" />
+                                        ) : (
+                                            <Text style={styles.avatarText}>{name.charAt(0)}</Text>
+                                        )}
                                     </View>
                                     <View style={styles.professionalInfo}>
                                         <Text style={[styles.professionalName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{name}</Text>
@@ -448,6 +454,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 14,
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
     },
     avatarText: {
         color: '#0ea5e9',
