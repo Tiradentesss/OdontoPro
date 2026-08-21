@@ -452,23 +452,23 @@ class AdminListFrame(ctk.CTkFrame):
 
         status_badge.bind("<Button-1>", on_row_click)
 
-        gerente_para_excluir = {**info, "nome": nome}
-
-        excluir = ctk.CTkButton(
-            row_frame,
-            text="X",
-            width=24,
-            height=24,
-            fg_color="transparent",
-            bg_color="transparent",
-            hover_color=COLORS["primary_soft"],
-            text_color=COLORS["primary"],
-            corner_radius=12,
-            border_width=0,
-            font=ctk.CTkFont(size=13, weight="bold"),
-            command=partial(self._handle_delete_click, gerente_para_excluir)
-        )
-        excluir.place(relx=1.0, rely=0.0, anchor="ne", x=2, y=-5)
+        if self.on_delete_callback is not None:
+            gerente_para_excluir = {**info, "nome": nome}
+            excluir = ctk.CTkButton(
+                row_frame,
+                text="X",
+                width=24,
+                height=24,
+                fg_color="transparent",
+                bg_color="transparent",
+                hover_color=COLORS["primary_soft"],
+                text_color=COLORS["primary"],
+                corner_radius=12,
+                border_width=0,
+                font=ctk.CTkFont(size=13, weight="bold"),
+                command=partial(self._handle_delete_click, gerente_para_excluir)
+            )
+            excluir.place(relx=1.0, rely=0.0, anchor="ne", x=2, y=-5)
 
     def _handle_delete_click(self, gerente):
         self.on_delete_callback(gerente)
@@ -515,10 +515,12 @@ class AdminListFrame(ctk.CTkFrame):
 
 
 class Permissoes(BaseScreen):
-    def __init__(self, parent, clinica_id=None, usuario_id=None):
+    def __init__(self, parent, clinica_id=None, usuario_id=None, tipo_usuario=None):
         super().__init__(parent, "Permissões")
         self.clinica_id = clinica_id
         self.usuario_logado_id = usuario_id
+        self.tipo_usuario = tipo_usuario
+        self.usuario_e_master = self.tipo_usuario == "clinica"
 
         resultado_perms = GerenciamentoController.inicializar_permissoes_padrao()
         if not resultado_perms.get("sucesso"):
@@ -582,7 +584,7 @@ class Permissoes(BaseScreen):
         self.admin_list_panel = AdminListFrame(
             self.content_card, admins_data=self.admins_data,
             on_click_callback=self.on_admin_click,
-            on_delete_callback=self._confirmar_exclusao_gerente,
+            on_delete_callback=self._confirmar_exclusao_gerente if self.usuario_e_master else None,
             fg_color=COLORS["card"], corner_radius=INNER_CARD_RADIUS, border_width=1, border_color=INNER_CARD_BORDER
         )
         self.admin_list_panel.grid(row=0, column=0, sticky="nsew", padx=(20, 10), pady=20)
@@ -716,7 +718,7 @@ class Permissoes(BaseScreen):
         self.selected_admin_name = admin_name
         self.selected_admin_id = self.admins_data[admin_name].get("id")
         self.selected_admin_label.configure(text=f"Configurando: {admin_name}")
-        self.toggle_switches_state("normal")
+        self.toggle_switches_state("normal" if self.usuario_e_master else "disabled")
         admin_perms = self.admins_data[admin_name].get("perms", {})
         for p_name in self.permissions_list:
             if admin_perms.get(p_name, False):
@@ -733,6 +735,10 @@ class Permissoes(BaseScreen):
             self.account_status_switch.configure(state="disabled")
 
     def _confirmar_exclusao_gerente(self, gerente):
+        if not self.usuario_e_master:
+            messagebox.showerror("Acesso negado", "Somente a conta principal da clínica pode excluir gestores.")
+            return
+
         dialog = ctk.CTkToplevel(self)
         dialog.title("Confirmar exclusão")
         dialog.resizable(False, False)
@@ -870,10 +876,16 @@ class Permissoes(BaseScreen):
         senha_entry.focus_set()
 
     def _excluir_gerente_confirmado(self, gerente, dialog):
+        if not self.usuario_e_master:
+            dialog.destroy()
+            messagebox.showerror("Acesso negado", "Somente a conta principal da clínica pode excluir gestores.")
+            return
+
         resultado = GerenciamentoController.excluir_gerente(
             gerente["id"],
             current_user_id=self.usuario_logado_id,
-            clinica_id=self.clinica_id
+            clinica_id=self.clinica_id,
+            current_user_type=self.tipo_usuario
         )
         dialog.destroy()
 
@@ -898,6 +910,8 @@ class Permissoes(BaseScreen):
         self.admin_list_panel.refresh_list()
 
     def sync_account_status(self):
+        if not self.usuario_e_master:
+            return
         if self.selected_admin_name:
             if self._is_self_account_selected():
                 current_status = self.admins_data[self.selected_admin_name].get("status", "Ativo")
@@ -911,6 +925,8 @@ class Permissoes(BaseScreen):
             self.admins_data[self.selected_admin_name]["status"] = "Ativo" if is_active else "Inativo"
 
     def sync_permission(self, perm_name):
+        if not self.usuario_e_master:
+            return
         if self.selected_admin_name:
             new_state = self.switch_widgets[perm_name].get()
             self.admins_data[self.selected_admin_name]["perms"][perm_name] = new_state
@@ -925,6 +941,10 @@ class Permissoes(BaseScreen):
             self.account_status_switch.configure(state=state)
 
     def save_to_database(self):
+        if not self.usuario_e_master:
+            messagebox.showerror("Acesso negado", "Somente a conta principal da clínica pode salvar permissões.")
+            return
+
         if not self.selected_admin_id:
             messagebox.showwarning("Aviso", "Selecione um administrador para salvar permissões")
             return
@@ -939,21 +959,44 @@ class Permissoes(BaseScreen):
 
         try:
             gerente_id = self.selected_admin_id
-            GerenciamentoController.remover_todas_permissoes_gerente(gerente_id)
+            resultado_permissoes = GerenciamentoController.remover_todas_permissoes_gerente(
+                gerente_id,
+                clinica_id=self.clinica_id,
+                current_user_type=self.tipo_usuario
+            )
+            if not resultado_permissoes.get("sucesso"):
+                messagebox.showerror("Erro", resultado_permissoes.get("mensagem", "Erro ao salvar permissões"))
+                return
             todas_permissoes = GerenciamentoController.listar_permissoes_disponiveis()
             permissao_map = {p['codigo']: p['id'] for p in todas_permissoes}
             for perm_nome in self.permissions_list:
                 if self.switch_widgets[perm_nome].get():
                     permissao_id = permissao_map.get(perm_nome)
                     if permissao_id:
-                        GerenciamentoController.adicionar_permissao_gerente(gerente_id, permissao_id)
+                        resultado_permissao = GerenciamentoController.adicionar_permissao_gerente(
+                            gerente_id,
+                            permissao_id,
+                            clinica_id=self.clinica_id,
+                            current_user_type=self.tipo_usuario
+                        )
+                        if not resultado_permissao.get("sucesso"):
+                            messagebox.showerror("Erro", resultado_permissao.get("mensagem", "Erro ao salvar permissões"))
+                            return
             if self.account_status_switch.get():
-                GerenciamentoController.ativar_gerente(gerente_id, clinica_id=self.clinica_id)
+                resultado_status = GerenciamentoController.ativar_gerente(
+                    gerente_id,
+                    clinica_id=self.clinica_id,
+                    current_user_type=self.tipo_usuario
+                )
+                if not resultado_status.get("sucesso"):
+                    messagebox.showerror("Erro", resultado_status.get("mensagem", "Erro ao salvar permissões"))
+                    return
             else:
                 resultado = GerenciamentoController.desativar_gerente(
                     gerente_id,
                     current_user_id=self.usuario_logado_id,
-                    clinica_id=self.clinica_id
+                    clinica_id=self.clinica_id,
+                    current_user_type=self.tipo_usuario
                 )
                 if not resultado.get("sucesso"):
                     messagebox.showerror("Erro", resultado.get("mensagem", "Erro ao salvar permissões"))

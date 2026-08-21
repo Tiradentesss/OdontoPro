@@ -5,6 +5,29 @@ from services.email_uniqueness_service import EmailUniquenessService
 
 
 class GerenciamentoController:
+
+    @staticmethod
+    def _autorizar_master_gerente(gerente_id, clinica_id, current_user_type):
+        if current_user_type != "clinica" or clinica_id is None:
+            return False
+
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT 1 FROM odontoPro_gerenciamento WHERE id = %s AND clinica_id = %s",
+                (gerente_id, clinica_id)
+            )
+            return cursor.fetchone() is not None
+        except Exception:
+            return False
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
     
     @staticmethod
     def criar_gerente(nome, email, clinica_id, senha=None, permissoes=None):
@@ -238,11 +261,14 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def desativar_gerente(gerente_id, current_user_id=None, clinica_id=None):
+    def desativar_gerente(gerente_id, current_user_id=None, clinica_id=None, current_user_type=None):
         """
         Desativa um gerente (soft delete)
         """
-        if current_user_id is not None and current_user_id == gerente_id:
+        if not GerenciamentoController._autorizar_master_gerente(gerente_id, clinica_id, current_user_type):
+            return {"sucesso": False, "mensagem": "Somente a conta principal da clínica pode alterar gestores."}
+
+        if current_user_type != "clinica" and current_user_id is not None and current_user_id == gerente_id:
             return {
                 "sucesso": False,
                 "mensagem": "Não é permitido desativar a própria conta."
@@ -277,11 +303,14 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def excluir_gerente(gerente_id, current_user_id=None, clinica_id=None):
+    def excluir_gerente(gerente_id, current_user_id=None, clinica_id=None, current_user_type=None):
         """
         Exclui definitivamente um gerente e suas relações de permissões.
         """
-        if current_user_id is not None and current_user_id == gerente_id:
+        if not GerenciamentoController._autorizar_master_gerente(gerente_id, clinica_id, current_user_type):
+            return {"sucesso": False, "mensagem": "Somente a conta principal da clínica pode excluir gestores."}
+
+        if current_user_type != "clinica" and current_user_id is not None and current_user_id == gerente_id:
             return {
                 "sucesso": False,
                 "mensagem": "Não é permitido excluir a própria conta."
@@ -324,10 +353,13 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def adicionar_permissao_gerente(gerente_id, permissao_id):
+    def adicionar_permissao_gerente(gerente_id, permissao_id, clinica_id=None, current_user_type=None):
         """
         Adiciona uma permissão a um gerente existente
         """
+        if not GerenciamentoController._autorizar_master_gerente(gerente_id, clinica_id, current_user_type):
+            return {"sucesso": False, "mensagem": "Somente a conta principal da clínica pode alterar permissões."}
+
         conn = None
         cursor = None
         try:
@@ -363,10 +395,13 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def remover_permissao_gerente(gerente_id, permissao_id):
+    def remover_permissao_gerente(gerente_id, permissao_id, clinica_id=None, current_user_type=None):
         """
         Remove uma permissão de um gerente
         """
+        if not GerenciamentoController._autorizar_master_gerente(gerente_id, clinica_id, current_user_type):
+            return {"sucesso": False, "mensagem": "Somente a conta principal da clínica pode alterar permissões."}
+
         conn = None
         cursor = None
         try:
@@ -393,10 +428,13 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def ativar_gerente(gerente_id, clinica_id=None):
+    def ativar_gerente(gerente_id, clinica_id=None, current_user_type=None):
         """
         Ativa um gerente (após configuração de permissões)
         """
+        if not GerenciamentoController._autorizar_master_gerente(gerente_id, clinica_id, current_user_type):
+            return {"sucesso": False, "mensagem": "Somente a conta principal da clínica pode alterar gestores."}
+
         conn = None
         cursor = None
         try:
@@ -456,11 +494,14 @@ class GerenciamentoController:
                 conn.close()
 
     @staticmethod
-    def remover_todas_permissoes_gerente(gerente_id):
+    def remover_todas_permissoes_gerente(gerente_id, clinica_id=None, current_user_type=None):
         """
         Remove TODAS as permissões de um gerente
         Usado na tela de permissões antes de salvar novas permissões
         """
+        if not GerenciamentoController._autorizar_master_gerente(gerente_id, clinica_id, current_user_type):
+            return {"sucesso": False, "mensagem": "Somente a conta principal da clínica pode alterar permissões."}
+
         conn = None
         cursor = None
         try:
