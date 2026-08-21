@@ -10,8 +10,9 @@
     },
     "preview": {
       "distribution": "internal",
+      "node": "24.3.0",
       "android": {
-        "buildType": "apk"
+      "buildType": "apk"
       }
     },
     "production": {
@@ -21,4 +22,5 @@
   "submit": {
     "production": {}
   }
+  
 }
