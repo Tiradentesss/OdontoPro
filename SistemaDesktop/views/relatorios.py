@@ -194,7 +194,7 @@ class Relatorios(BaseScreen):
             hover_color=COLORS["primary_dark"],
             text_color="white",
             corner_radius=12,
-            command=self._load_data_async
+            command=lambda: self._load_data_async(manual_update=True)
         )
         self.update_button.pack(side="right")
 
@@ -219,7 +219,7 @@ class Relatorios(BaseScreen):
             ("\uE73E", "Taxa de Comparecimento", "taxa_comparecimento", "Consultas realizadas"),
             ("\uE711", "Taxa de Cancelamento", "taxa_cancelamento", "Consultas canceladas"),
             ("\uE7C1", "Mais Atendimentos", "medico_mais_produtivo", "Nenhuma consulta encontrada"),
-            ("\uE735", "Mais Avaliado", "medico_mais_avaliado", "Nenhuma avaliação encontrada"),
+            ("\uE735", "Mais Avaliado", "medico_mais_avaliado", "No período selecionado"),
         ]
 
         for index, (glyph, title, key, description) in enumerate(kpi_cards):
@@ -375,9 +375,6 @@ class Relatorios(BaseScreen):
             )
             value_label.pack(anchor="w", padx=16, pady=(0, 16))
             self._stat_value_labels[label_text] = value_label
-
-        footer = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
-        footer.pack(fill="x", padx=20, pady=(0, 20))
 
     def _reflow_kpi_cards(self, event=None):
         if not self._kpi_cards:
@@ -797,7 +794,7 @@ class Relatorios(BaseScreen):
         with open(path, "w", encoding="utf-8") as handle:
             handle.write(pdf)
 
-    def _load_data_async(self):
+    def _load_data_async(self, manual_update=False):
         if self._loading:
             return
 
@@ -830,6 +827,7 @@ class Relatorios(BaseScreen):
                     snapshot["especialidade_name"],
                     medico_id,
                     especialidade_id,
+                    manual_update,
                 )
             except Exception as e:
                 print(f"[RELATÓRIOS] _load_data_thread error: {e}")
@@ -954,7 +952,7 @@ class Relatorios(BaseScreen):
 
         return inicio, fim, tipo
 
-    def _load_data_thread(self, thread_id, periodo, status, medico_name, especialidade_name, medico_id, especialidade_id):
+    def _load_data_thread(self, thread_id, periodo, status, medico_name, especialidade_name, medico_id, especialidade_id, manual_update=False):
         inicio, fim, periodo_tipo = self._get_date_range(periodo)
         filtro_base, filtro_params = self._build_filter_conditions(
             medico_id,
@@ -1102,41 +1100,45 @@ class Relatorios(BaseScreen):
             """, tuple(filtro_params + [inicio, fim]))
             productivity_rows = cursor.fetchall() or []
 
-            cursor.execute("""
-                SELECT m.nome AS medico,
-                       AVG(a.nota) AS media_avaliacao,
-                       COUNT(a.id) AS quantidade_avaliacoes
-                FROM odontoPro_medico m
-                INNER JOIN odontoPro_avaliacao a ON a.medico_id = m.id
-                WHERE m.clinica_id = %s
-                GROUP BY m.id, m.nome
-                ORDER BY media_avaliacao DESC, quantidade_avaliacoes DESC, m.nome ASC
-                LIMIT 1
-            """, (self.clinica_id,))
-            best_rated_row = cursor.fetchone()
             mais_avaliado = None
-            if best_rated_row:
-                mais_avaliado = {
-                    "nome": best_rated_row[0] or "Nenhum",
-                    "media": float(best_rated_row[1] or 0),
-                    "quantidade": int(best_rated_row[2] or 0),
-                }
+            if manual_update:
+                cursor.execute("""
+                    SELECT m.nome AS medico,
+                           AVG(a.nota) AS media_avaliacao,
+                           COUNT(a.id) AS quantidade_avaliacoes
+                    FROM odontoPro_medico m
+                    INNER JOIN odontoPro_avaliacao a ON a.medico_id = m.id
+                    WHERE m.clinica_id = %s
+                    GROUP BY m.id, m.nome
+                    ORDER BY media_avaliacao DESC, quantidade_avaliacoes DESC, m.nome ASC
+                    LIMIT 1
+                """, (self.clinica_id,))
+                best_rated_row = cursor.fetchone()
+                if best_rated_row:
+                    mais_avaliado = {
+                        "nome": best_rated_row[0] or "Nenhum",
+                        "media": float(best_rated_row[1] or 0),
+                        "quantidade": int(best_rated_row[2] or 0),
+                    }
+
+            summary_data = {
+                "total_consultas": int(total_consultas or 0),
+                "total_pacientes": int(total_pacientes or 0),
+                "total_medicos": int(total_medicos or 0),
+                "cancelamentos": int(cancelamentos or 0),
+                "comparecimento": int(comparecimento),
+                "novos_pacientes": int(novos_pacientes or 0),
+                "retornos": int(retornos or 0),
+                "pacientes_unicos_atendidos": pacientes_unicos_atendidos,
+                "faltas": faltas,
+                "consultas_agendadas": consultas_agendadas,
+            }
+            if manual_update:
+                summary_data["mais_avaliado"] = mais_avaliado
 
             self._load_queue.put((
                 thread_id,
-                {
-                    "total_consultas": int(total_consultas or 0),
-                    "total_pacientes": int(total_pacientes or 0),
-                    "total_medicos": int(total_medicos or 0),
-                    "cancelamentos": int(cancelamentos or 0),
-                    "comparecimento": int(comparecimento),
-                    "novos_pacientes": int(novos_pacientes or 0),
-                    "retornos": int(retornos or 0),
-                    "pacientes_unicos_atendidos": pacientes_unicos_atendidos,
-                    "faltas": faltas,
-                    "consultas_agendadas": consultas_agendadas,
-                    "mais_avaliado": mais_avaliado,
-                },
+                summary_data,
                 chart_period,
                 specialty_data,
                 productivity_rows,
@@ -1692,7 +1694,7 @@ class Relatorios(BaseScreen):
                 self._kpi_card_labels["medico_mais_produtivo"]["value"].configure(text="Nenhum")
                 self._kpi_card_labels["medico_mais_produtivo"]["description"].configure(text="Nenhuma consulta encontrada")
 
-        if self._kpi_card_labels.get("medico_mais_avaliado"):
+        if "mais_avaliado" in summary and self._kpi_card_labels.get("medico_mais_avaliado"):
             mais_avaliado = summary.get("mais_avaliado")
             if mais_avaliado:
                 self._kpi_card_labels["medico_mais_avaliado"]["value"].configure(text=mais_avaliado["nome"])
