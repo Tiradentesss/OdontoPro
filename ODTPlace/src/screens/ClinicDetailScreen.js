@@ -12,12 +12,13 @@ import {
     Alert,
     Image,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
 import * as Clipboard from 'expo-clipboard';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
 import { getClinicSpecialties } from '../services/api';
 import { useTheme } from '../components/ThemeContext';
+
+const hasGoogleMapsApiKey = Boolean(process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY);
 
 const resolveBannerImages = (clinicInfo) => {
     const sourceFromClinic = clinicInfo?.banner || clinicInfo?.banners || clinicInfo?.imagens || clinicInfo?.imagem || clinicInfo?.logo;
@@ -111,6 +112,11 @@ export default function ClinicDetailScreen({ route, navigation }) {
         let isMounted = true;
 
         const geocodeClinic = async () => {
+            if (!hasGoogleMapsApiKey) {
+                setMapRegion(null);
+                return;
+            }
+
             const addressValue = clinic?.endereco || [clinic?.rua, clinic?.numero, clinic?.bairro, clinic?.cidade, clinic?.estado, clinic?.cep].filter(Boolean).join(', ');
             const queryCep = clinic?.cep?.toString().replace(/[^0-9]/g, '');
 
@@ -378,25 +384,9 @@ export default function ClinicDetailScreen({ route, navigation }) {
                         </View>
                     </View>
 
-                    {mapRegion ? (
-                        <MapView
-                            style={styles.map}
-                            initialRegion={mapRegion}
-                            region={mapRegion}
-                            showsUserLocation={false}
-                            showsMyLocationButton={false}
-                        >
-                            <Marker
-                                coordinate={{ latitude: mapRegion.latitude, longitude: mapRegion.longitude }}
-                                title={clinicName}
-                                description={clinicAddress}
-                            />
-                        </MapView>
-                    ) : (
-                        <View style={[styles.mapPlaceholder, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}> 
-                            <Text style={[styles.mapPlaceholderText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Mapa da Clínica</Text>
-                        </View>
-                    )}
+                    <View style={[styles.mapPlaceholder, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}> 
+                        <Text style={[styles.mapPlaceholderText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{hasGoogleMapsApiKey && mapRegion ? 'Mapa da Clínica' : 'Mapa indisponível no momento'}</Text>
+                    </View>
                 </ScrollView>
                 <BottomNavBar
                     activeTab="home"
