@@ -851,8 +851,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             messagebox.showwarning("Aviso", "Selecione pelo menos uma data.")
             return
         
-        if not self.selected_slots:
-            messagebox.showwarning("Aviso", "Selecione pelo menos um horário.")
+        if len(self.selected_slots) < 2:
+            messagebox.showwarning("Aviso", "Selecione pelo menos dois horários para definir o período de disponibilidade.")
             return
 
         disponibilidade_por_dia = {}
