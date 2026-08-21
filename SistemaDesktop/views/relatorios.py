@@ -65,7 +65,7 @@ class Relatorios(BaseScreen):
         self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
         self._build_structure()
-        self._load_data_async()
+        self._load_data_async(manual_update=True)
 
     def _build_structure(self):
         self._export_menu = Menu(self.scroll_frame, tearoff=0)
@@ -134,7 +134,8 @@ class Relatorios(BaseScreen):
             button_hover_color=COLORS["primary_dark"],
             text_color=COLORS["text"],
             dropdown_fg_color=COLORS["card"],
-            width=1
+            width=1,
+            command=self._reset_more_rated_card
         )
         self.medico_combo.set(self.medico_var.get())
         self.medico_combo.pack(fill="x", padx=10, pady=(6, 10))
@@ -156,7 +157,8 @@ class Relatorios(BaseScreen):
             button_hover_color=COLORS["primary_dark"],
             text_color=COLORS["text"],
             dropdown_fg_color=COLORS["card"],
-            width=1
+            width=1,
+            command=self._reset_more_rated_card
         )
         self.especialidade_combo.set(self.especialidade_var.get())
         self.especialidade_combo.pack(fill="x", padx=10, pady=(6, 10))
@@ -178,7 +180,8 @@ class Relatorios(BaseScreen):
             button_hover_color=COLORS["primary_dark"],
             text_color=COLORS["text"],
             dropdown_fg_color=COLORS["card"],
-            width=1
+            width=1,
+            command=self._reset_more_rated_card
         )
         self.status_combo.set(self.status_var.get())
         self.status_combo.pack(fill="x", padx=10, pady=(6, 10))
@@ -402,7 +405,14 @@ class Relatorios(BaseScreen):
                 padx=(0, 10) if column < column_count - 1 else 0
             )
 
+    def _reset_more_rated_card(self, *_):
+        labels = self._kpi_card_labels.get("medico_mais_avaliado")
+        if labels:
+            labels["value"].configure(text="--")
+            labels["description"].configure(text="No período selecionado")
+
     def _handle_period_change(self, value):
+        self._reset_more_rated_card()
         if value == "Personalizado":
             self._open_custom_period_modal()
             return
@@ -1109,10 +1119,11 @@ class Relatorios(BaseScreen):
                     FROM odontoPro_medico m
                     INNER JOIN odontoPro_avaliacao a ON a.medico_id = m.id
                     WHERE m.clinica_id = %s
+                        AND a.data_postagem BETWEEN %s AND %s
                     GROUP BY m.id, m.nome
                     ORDER BY media_avaliacao DESC, quantidade_avaliacoes DESC, m.nome ASC
                     LIMIT 1
-                """, (self.clinica_id,))
+                """, (self.clinica_id, inicio, fim))
                 best_rated_row = cursor.fetchone()
                 if best_rated_row:
                     mais_avaliado = {
