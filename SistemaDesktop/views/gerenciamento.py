@@ -333,22 +333,23 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         dialog.resizable(False, False)
         dialog.transient(self.winfo_toplevel())
         dialog.grab_set()
+        dialog.geometry("360x260")
 
         ctk.CTkLabel(
             dialog,
             text="Confirme sua senha",
             font=ctk.CTkFont(size=14, weight="bold"),
             text_color=self.colors["text"]
-        ).pack(padx=28, pady=(24, 8))
+        ).pack(padx=40, pady=(32, 12))
 
-        senha_entry = ctk.CTkEntry(dialog, width=240, show="*")
-        senha_entry.pack(padx=28, pady=(0, 8))
+        senha_entry = ctk.CTkEntry(dialog, width=260, show="*")
+        senha_entry.pack(padx=40, pady=(0, 14))
 
         erro_label = ctk.CTkLabel(dialog, text="", text_color=self.colors["danger"])
-        erro_label.pack(padx=28, pady=(0, 8))
+        erro_label.pack(padx=40, pady=(0, 12))
 
         botoes = ctk.CTkFrame(dialog, fg_color="transparent")
-        botoes.pack(pady=(0, 20))
+        botoes.pack(pady=(0, 28))
 
         def cancelar():
             self._password_dialog = None
@@ -401,8 +402,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         dialog.bind("<Return>", lambda event: confirmar())
         dialog.update_idletasks()
         janela_principal = self.winfo_toplevel()
-        largura = dialog.winfo_width()
-        altura = dialog.winfo_height()
+        largura = 360
+        altura = 260
         moldura_x = dialog.winfo_rootx() - dialog.winfo_x()
         moldura_y = dialog.winfo_rooty() - dialog.winfo_y()
         pos_x = janela_principal.winfo_rootx() + (janela_principal.winfo_width() - largura) // 2 - moldura_x
