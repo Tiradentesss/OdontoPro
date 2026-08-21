@@ -1491,6 +1491,8 @@ class Cadastro(BaseScreen):
         modal.transient(janela_principal)
         modal.protocol("WM_DELETE_WINDOW", lambda: None)
 
+        modal_sucesso_profissional = mensagem == "Profissional cadastrado com sucesso"
+
         card = ctk.CTkFrame(
             modal,
             fg_color=COLORS["card"],
@@ -1505,7 +1507,10 @@ class Cadastro(BaseScreen):
             text=mensagem,
             font=font("subtitle", "bold"),
             text_color=COLORS["text"]
-        ).pack(padx=28, pady=(28, 20))
+        ).pack(
+            padx=36 if modal_sucesso_profissional else 28,
+            pady=(34, 24) if modal_sucesso_profissional else (28, 20)
+        )
 
         ctk.CTkButton(
             card,
@@ -1517,11 +1522,11 @@ class Cadastro(BaseScreen):
             hover_color=COLORS["primary_dark"],
             font=font("button_large", "bold"),
             command=self._fechar_modal_sucesso
-        ).pack(pady=(0, 24))
+        ).pack(pady=(0, 30) if modal_sucesso_profissional else (0, 24))
 
         modal.update_idletasks()
-        largura = modal.winfo_width()
-        altura = modal.winfo_height()
+        largura = 420 if modal_sucesso_profissional else modal.winfo_width()
+        altura = 210 if modal_sucesso_profissional else modal.winfo_height()
         x = janela_principal.winfo_rootx() + (janela_principal.winfo_width() - largura) // 2
         y = janela_principal.winfo_rooty() + (janela_principal.winfo_height() - altura) // 2
         modal.geometry(f"{largura}x{altura}+{x}+{y}")

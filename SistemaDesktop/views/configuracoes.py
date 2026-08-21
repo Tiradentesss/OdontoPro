@@ -491,20 +491,20 @@ class Configuracoes(BaseScreen):
         self.tab_bar = ctk.CTkFrame(header_container, fg_color="transparent")
         self.tab_bar.pack(side="left", fill="x", expand=True)
 
-        # Botão de tema à direita
-        theme_btn = ctk.CTkButton(
-            header_container,
-            text="Modo Escuro" if not get_dark_mode() else "Modo Claro",
-            width=120,
-            height=40,
-            font=ctk.CTkFont(size=12),
-            fg_color=COLORS["primary"],
-            hover_color=COLORS["primary_dark"],
-            corner_radius=8,
-            command=self._toggle_theme_global
-        )
-        theme_btn.pack(side="right", padx=(10, 0))
-        self.theme_btn = theme_btn
+        # Botão de tema à direita desativado apenas visualmente.
+        # theme_btn = ctk.CTkButton(
+        #     header_container,
+        #     text="Modo Escuro" if not get_dark_mode() else "Modo Claro",
+        #     width=120,
+        #     height=40,
+        #     font=ctk.CTkFont(size=12),
+        #     fg_color=COLORS["primary"],
+        #     hover_color=COLORS["primary_dark"],
+        #     corner_radius=8,
+        #     command=self._toggle_theme_global
+        # )
+        # theme_btn.pack(side="right", padx=(10, 0))
+        # self.theme_btn = theme_btn
 
         self._build_tabs()
 
