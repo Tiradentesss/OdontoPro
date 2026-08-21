@@ -5,7 +5,9 @@ from functools import partial
 from tkinter import messagebox, filedialog
 from .base import BaseScreen
 from .theme import COLORS, font, ICON_SIZE, INNER_CARD_BORDER, INNER_CARD_RADIUS
+from config.database import get_connection
 from controllers.gerenciamento_controller import GerenciamentoController
+from models.auth import verificar_senha
 
 
 class ImagePreview:
@@ -753,7 +755,7 @@ class Permissoes(BaseScreen):
             text="Excluir",
             width=80,
             height=32,
-            command=lambda: self._excluir_gerente_confirmado(gerente, dialog)
+            command=lambda: self._abrir_modal_senha_exclusao(gerente, dialog)
         ).pack(side="left", padx=6)
         ctk.CTkButton(
             botoes,
@@ -772,6 +774,100 @@ class Permissoes(BaseScreen):
         pos_x = janela_principal.winfo_rootx() + (janela_principal.winfo_width() - dialog.winfo_width()) // 2
         pos_y = janela_principal.winfo_rooty() + (janela_principal.winfo_height() - dialog.winfo_height()) // 2
         dialog.geometry(f"+{pos_x}+{pos_y}")
+
+    def _abrir_modal_senha_exclusao(self, gerente, confirm_dialog):
+        confirm_dialog.destroy()
+        if hasattr(self, "_password_dialog") and self._password_dialog is not None:
+            try:
+                if self._password_dialog.winfo_exists():
+                    self._password_dialog.focus_set()
+                    return
+            except Exception:
+                pass
+
+        dialog = ctk.CTkToplevel(self)
+        self._password_dialog = dialog
+        dialog.title("Confirmar senha")
+        dialog.resizable(False, False)
+        dialog.transient(self.winfo_toplevel())
+        dialog.grab_set()
+        dialog.geometry("360x260")
+
+        ctk.CTkLabel(
+            dialog,
+            text="Confirme sua senha",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color=COLORS["text"]
+        ).pack(padx=40, pady=(32, 12))
+
+        senha_entry = ctk.CTkEntry(dialog, width=260, show="*")
+        senha_entry.pack(padx=40, pady=(0, 14))
+
+        erro_label = ctk.CTkLabel(dialog, text="", text_color=COLORS["danger"])
+        erro_label.pack(padx=40, pady=(0, 12))
+
+        botoes = ctk.CTkFrame(dialog, fg_color="transparent")
+        botoes.pack(pady=(0, 28))
+
+        def cancelar():
+            self._password_dialog = None
+            dialog.destroy()
+
+        def confirmar():
+            senha = senha_entry.get()
+            if not senha:
+                erro_label.configure(text="Informe a senha.")
+                return
+
+            conn = None
+            cursor = None
+            try:
+                conn = get_connection()
+                cursor = conn.cursor()
+                cursor.execute("SELECT senha FROM odontoPro_clinica WHERE id = %s", (self.clinica_id,))
+                row = cursor.fetchone()
+                senha_valida = verificar_senha(senha, row[0]) if row and row[0] else False
+            except Exception:
+                senha_valida = False
+            finally:
+                if cursor:
+                    cursor.close()
+                if conn:
+                    conn.close()
+
+            if not senha_valida:
+                erro_label.configure(text="Senha incorreta.")
+                senha_entry.delete(0, "end")
+                senha_entry.focus_set()
+                return
+
+            self._password_dialog = None
+            self._excluir_gerente_confirmado(gerente, dialog)
+
+        ctk.CTkButton(botoes, text="Confirmar", width=90, height=32, command=confirmar).pack(side="left", padx=6)
+        ctk.CTkButton(
+            botoes,
+            text="Cancelar",
+            width=90,
+            height=32,
+            fg_color=COLORS["card_soft"],
+            text_color=COLORS["text"],
+            hover_color=COLORS["hover"],
+            command=cancelar
+        ).pack(side="left", padx=6)
+
+        dialog.protocol("WM_DELETE_WINDOW", cancelar)
+        dialog.bind("<Return>", lambda event: confirmar())
+        dialog.update_idletasks()
+        janela_principal = self.winfo_toplevel()
+        largura = 360
+        altura = 260
+        moldura_x = dialog.winfo_rootx() - dialog.winfo_x()
+        moldura_y = dialog.winfo_rooty() - dialog.winfo_y()
+        pos_x = janela_principal.winfo_rootx() + (janela_principal.winfo_width() - largura) // 2 - moldura_x
+        pos_y = janela_principal.winfo_rooty() + (janela_principal.winfo_height() - altura) // 2 - moldura_y
+        dialog.geometry(f"{largura}x{altura}+{pos_x}+{pos_y}")
+        senha_entry.focus_set()
 
     def _excluir_gerente_confirmado(self, gerente, dialog):
         resultado = GerenciamentoController.excluir_gerente(
