@@ -209,15 +209,17 @@ class Relatorios(BaseScreen):
 
         self.kpi_frame = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
         self.kpi_frame.pack(fill="x", padx=20, pady=(0, 12))
-        for idx in range(4):
+        for idx in range(5):
             self.kpi_frame.grid_columnconfigure(idx, weight=1, uniform="kpi_cards")
 
         self._kpi_card_labels = {}
+        self._kpi_cards = []
         kpi_cards = [
             ("\uE787", "Total de Consultas", "total_consultas", "No período selecionado"),
             ("\uE73E", "Taxa de Comparecimento", "taxa_comparecimento", "Consultas realizadas"),
             ("\uE711", "Taxa de Cancelamento", "taxa_cancelamento", "Consultas canceladas"),
-            ("\uE7C1", "Médico em Destaque", "medico_mais_produtivo", "Nenhuma consulta encontrada"),
+            ("\uE7C1", "Mais Atendimentos", "medico_mais_produtivo", "Nenhuma consulta encontrada"),
+            ("\uE735", "Mais Avaliado", "medico_mais_avaliado", "Nenhuma avaliação encontrada"),
         ]
 
         for index, (glyph, title, key, description) in enumerate(kpi_cards):
@@ -229,12 +231,13 @@ class Relatorios(BaseScreen):
                 border_color=INNER_CARD_BORDER
             )
             card.grid(row=0, column=index, sticky="nsew", padx=(0, 10) if index < len(kpi_cards) - 1 else 0)
+            self._kpi_cards.append(card)
 
             ctk.CTkLabel(card, text=glyph, font=ctk.CTkFont(size=24, weight="normal"), text_color=COLORS["primary"]).pack(anchor="w", padx=16, pady=(12, 3))
 
             ctk.CTkLabel(card, text=title, font=font("small", "bold"), text_color=COLORS["text_secondary"]).pack(anchor="w", padx=16, pady=(3, 0))
 
-            if key == "medico_mais_produtivo":
+            if key in {"medico_mais_produtivo", "medico_mais_avaliado"}:
                 value_label = ctk.CTkLabel(card, text="--", font=font("text", "bold"), text_color=COLORS["text"], wraplength=180, justify="left")
                 value_label.pack(anchor="w", padx=16, pady=(6, 3))
             else:
@@ -248,6 +251,10 @@ class Relatorios(BaseScreen):
                 "value": value_label,
                 "description": desc_label,
             }
+
+        self._kpi_layout_columns = None
+        self.winfo_toplevel().bind("<Configure>", self._reflow_kpi_cards, add="+")
+        self._reflow_kpi_cards()
 
         self.chart_card = ctk.CTkFrame(
             self.scroll_frame,
@@ -371,6 +378,32 @@ class Relatorios(BaseScreen):
 
         footer = ctk.CTkFrame(self.scroll_frame, fg_color="transparent")
         footer.pack(fill="x", padx=20, pady=(0, 20))
+
+    def _reflow_kpi_cards(self, event=None):
+        if not self._kpi_cards:
+            return
+
+        window_width = self.winfo_toplevel().winfo_width()
+        column_count = 5 if window_width >= 1000 else 3
+        if self._kpi_layout_columns == column_count:
+            return
+
+        self._kpi_layout_columns = column_count
+        for column in range(5):
+            self.kpi_frame.grid_columnconfigure(
+                column,
+                weight=1 if column < column_count else 0,
+                uniform="kpi_cards" if column < column_count else ""
+            )
+
+        for index, card in enumerate(self._kpi_cards):
+            row, column = divmod(index, column_count)
+            card.grid(
+                row=row,
+                column=column,
+                sticky="nsew",
+                padx=(0, 10) if column < column_count - 1 else 0
+            )
 
     def _handle_period_change(self, value):
         if value == "Personalizado":
@@ -1069,6 +1102,26 @@ class Relatorios(BaseScreen):
             """, tuple(filtro_params + [inicio, fim]))
             productivity_rows = cursor.fetchall() or []
 
+            cursor.execute("""
+                SELECT m.nome AS medico,
+                       AVG(a.nota) AS media_avaliacao,
+                       COUNT(a.id) AS quantidade_avaliacoes
+                FROM odontoPro_medico m
+                INNER JOIN odontoPro_avaliacao a ON a.medico_id = m.id
+                WHERE m.clinica_id = %s
+                GROUP BY m.id, m.nome
+                ORDER BY media_avaliacao DESC, quantidade_avaliacoes DESC, m.nome ASC
+                LIMIT 1
+            """, (self.clinica_id,))
+            best_rated_row = cursor.fetchone()
+            mais_avaliado = None
+            if best_rated_row:
+                mais_avaliado = {
+                    "nome": best_rated_row[0] or "Nenhum",
+                    "media": float(best_rated_row[1] or 0),
+                    "quantidade": int(best_rated_row[2] or 0),
+                }
+
             self._load_queue.put((
                 thread_id,
                 {
@@ -1082,6 +1135,7 @@ class Relatorios(BaseScreen):
                     "pacientes_unicos_atendidos": pacientes_unicos_atendidos,
                     "faltas": faltas,
                     "consultas_agendadas": consultas_agendadas,
+                    "mais_avaliado": mais_avaliado,
                 },
                 chart_period,
                 specialty_data,
@@ -1637,6 +1691,15 @@ class Relatorios(BaseScreen):
             else:
                 self._kpi_card_labels["medico_mais_produtivo"]["value"].configure(text="Nenhum")
                 self._kpi_card_labels["medico_mais_produtivo"]["description"].configure(text="Nenhuma consulta encontrada")
+
+        if self._kpi_card_labels.get("medico_mais_avaliado"):
+            mais_avaliado = summary.get("mais_avaliado")
+            if mais_avaliado:
+                self._kpi_card_labels["medico_mais_avaliado"]["value"].configure(text=mais_avaliado["nome"])
+                self._kpi_card_labels["medico_mais_avaliado"]["description"].configure(text=f"{mais_avaliado['media']:.1f} de 5")
+            else:
+                self._kpi_card_labels["medico_mais_avaliado"]["value"].configure(text="Nenhum")
+                self._kpi_card_labels["medico_mais_avaliado"]["description"].configure(text="Nenhuma avaliação encontrada")
 
     def _process_load_queue(self):
         processed_item = None
