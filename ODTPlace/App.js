@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import * as ExpoSplashScreen from 'expo-splash-screen';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -47,8 +46,6 @@ import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen
 import AppSplashScreen from './src/screens/SplashScreen';
 
 import CustomTabBar from './src/components/CustomTabBar';
-
-ExpoSplashScreen.preventAutoHideAsync().catch(() => {});
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
