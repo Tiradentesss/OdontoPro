@@ -216,9 +216,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             row.grid_propagate(False)
             
             row.grid_columnconfigure(0, weight=0, minsize=50)
-            row.grid_columnconfigure(1, weight=0, minsize=230)
-            row.grid_columnconfigure(2, weight=0, minsize=260)
-            row.grid_columnconfigure(3, weight=0, minsize=260)
+            row.grid_columnconfigure(1, weight=1, minsize=200)
+            row.grid_columnconfigure(2, weight=1, minsize=220)
+            row.grid_columnconfigure(3, weight=2, minsize=280)
             row.grid_rowconfigure(0, weight=1)
             
             avatar_img = self._create_avatar(medico["nome"], 32)
