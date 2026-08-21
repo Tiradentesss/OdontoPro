@@ -305,10 +305,10 @@ class Relatorios(BaseScreen):
 
         table_header = ctk.CTkFrame(self.productivity_card, fg_color=COLORS["card_soft"], corner_radius=12)
         table_header.pack(fill="x", padx=(20, 16), pady=(0, 8))
-        table_header.grid_columnconfigure(0, weight=1)
-        table_header.grid_columnconfigure(1, weight=4)
-        table_header.grid_columnconfigure(2, weight=3)
-        table_header.grid_columnconfigure(3, weight=1)
+        table_header.grid_columnconfigure(0, weight=1, uniform="ranking_cols")
+        table_header.grid_columnconfigure(1, weight=4, uniform="ranking_cols")
+        table_header.grid_columnconfigure(2, weight=3, uniform="ranking_cols")
+        table_header.grid_columnconfigure(3, weight=1, uniform="ranking_cols")
         table_header.grid_rowconfigure(0, weight=1)
 
         ctk.CTkLabel(table_header, text="Posição", font=font("small", "bold"), text_color=COLORS["text_secondary"], anchor="center").grid(row=0, column=0, sticky="nsew", padx=(12, 8), pady=(12, 10))
@@ -317,7 +317,7 @@ class Relatorios(BaseScreen):
         specialty_header_cell = ctk.CTkFrame(table_header, fg_color="transparent")
         specialty_header_cell.grid(row=0, column=2, sticky="nsew", padx=(0, 8), pady=(12, 10))
         specialty_header_cell.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(specialty_header_cell, text="Especialidade", font=font("small", "bold"), text_color=COLORS["text_secondary"], anchor="center", justify="center").grid(row=0, column=0, sticky="nsew")
+        ctk.CTkLabel(specialty_header_cell, text="Especialidade", font=font("small", "bold"), text_color=COLORS["text_secondary"], anchor="w", justify="left").grid(row=0, column=0, sticky="nsew", padx=(12, 0))
 
         consult_header_cell = ctk.CTkFrame(table_header, fg_color="transparent")
         consult_header_cell.grid(row=0, column=3, sticky="nsew", padx=(0, 12), pady=(12, 10))
@@ -1559,10 +1559,10 @@ class Relatorios(BaseScreen):
 
             row = ctk.CTkFrame(self._productivity_rows_frame, fg_color=row_bg, corner_radius=12)
             row.pack(fill="x", padx=0, pady=8)
-            row.grid_columnconfigure(0, weight=1)
-            row.grid_columnconfigure(1, weight=4)
-            row.grid_columnconfigure(2, weight=3)
-            row.grid_columnconfigure(3, weight=1)
+            row.grid_columnconfigure(0, weight=1, uniform="ranking_cols")
+            row.grid_columnconfigure(1, weight=4, uniform="ranking_cols")
+            row.grid_columnconfigure(2, weight=3, uniform="ranking_cols")
+            row.grid_columnconfigure(3, weight=1, uniform="ranking_cols")
             row.grid_rowconfigure(0, weight=1)
 
             medal = ["🥇", "🥈", "🥉"][index] if index < 3 else f"#{index + 1}"
@@ -1572,7 +1572,7 @@ class Relatorios(BaseScreen):
             specialty_cell = ctk.CTkFrame(row, fg_color="transparent")
             specialty_cell.grid(row=0, column=2, sticky="nsew", padx=(0, 8), pady=(10, 10))
             specialty_cell.grid_columnconfigure(0, weight=1)
-            ctk.CTkLabel(specialty_cell, text=especialidade or "-", font=font("text", "bold"), text_color=COLORS["text_secondary"], anchor="w", justify="left").grid(row=0, column=0, sticky="nsew")
+            ctk.CTkLabel(specialty_cell, text=especialidade or "-", font=font("text", "bold"), text_color=COLORS["text_secondary"], anchor="w", justify="left").grid(row=0, column=0, sticky="nsew", padx=(12, 0))
 
             consult_cell = ctk.CTkFrame(row, fg_color="transparent")
             consult_cell.grid(row=0, column=3, sticky="nsew", padx=(0, 12), pady=(10, 10))
