@@ -1551,7 +1551,7 @@ class Relatorios(BaseScreen):
             row.grid_columnconfigure(3, weight=1, uniform="ranking_cols")
             row.grid_rowconfigure(0, weight=1)
 
-            medal = ["🥇", "🥈", "🥉"][index] if index < 3 else f"#{index + 1}"
+            medal = f"#{index + 1}"
             ctk.CTkLabel(row, text=medal, font=font("text", "bold"), text_color=COLORS["text"], anchor="center").grid(row=0, column=0, sticky="nsew", padx=(12, 8), pady=(10, 10))
             ctk.CTkLabel(row, text=medico or "-", font=font("text", "bold"), text_color=COLORS["text"], anchor="w").grid(row=0, column=1, sticky="nsew", padx=(0, 8), pady=(10, 10))
 
