@@ -12,7 +12,6 @@ import {
     Alert,
     Image,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
 import * as Clipboard from 'expo-clipboard';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
@@ -80,7 +79,6 @@ export default function ClinicDetailScreen({ route, navigation }) {
     const [loadingSpecialties, setLoadingSpecialties] = useState(true);
     const [specialtiesError, setSpecialtiesError] = useState(null);
     const [bannerImages, setBannerImages] = useState(() => resolveBannerImages(clinic));
-    const [mapRegion, setMapRegion] = useState(null);
     const clinicAddress = resolveClinicAddress(clinic);
 
     useEffect(() => {
@@ -106,89 +104,6 @@ export default function ClinicDetailScreen({ route, navigation }) {
 
         loadSpecialties();
     }, [clinic.id]);
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const geocodeClinic = async () => {
-            const addressValue = clinic?.endereco || [clinic?.rua, clinic?.numero, clinic?.bairro, clinic?.cidade, clinic?.estado, clinic?.cep].filter(Boolean).join(', ');
-            const queryCep = clinic?.cep?.toString().replace(/[^0-9]/g, '');
-
-            if (!addressValue && !queryCep) {
-                setMapRegion(null);
-                return;
-            }
-
-            try {
-                const params = new URLSearchParams({
-                    format: 'jsonv2',
-                    limit: '1',
-                    addressdetails: '1',
-                });
-
-                if (queryCep && queryCep.length >= 8) {
-                    params.set('postalcode', queryCep);
-                    params.set('countrycodes', 'br');
-                } else {
-                    params.set('q', addressValue);
-                }
-
-                const requestUrl = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
-                const requestHeaders = {
-                    Accept: 'application/json',
-                    'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-                    'User-Agent': 'OdontoPlaceApp/1.0 (contato@odontoplacemed.com)',
-                    Referer: 'https://odonto-place.app/',
-                };
-
-                const response = await fetch(requestUrl, { method: 'GET', headers: requestHeaders });
-                const rawText = await response.text();
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${rawText.slice(0, 180)}`);
-                }
-
-                let results;
-                try {
-                    results = JSON.parse(rawText);
-                } catch (parseError) {
-                    console.log('Clinic map geocode returned non-JSON response:', rawText.slice(0, 220));
-                    return;
-                }
-
-                if (!isMounted || !Array.isArray(results) || results.length === 0) {
-                    return;
-                }
-
-                const firstMatch = results[0];
-                if (!firstMatch || typeof firstMatch !== 'object') {
-                    return;
-                }
-                const latitude = Number(firstMatch.lat);
-                const longitude = Number(firstMatch.lon);
-
-                if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
-                    setMapRegion({
-                        latitude,
-                        longitude,
-                        latitudeDelta: 0.02,
-                        longitudeDelta: 0.02,
-                    });
-                }
-            } catch (error) {
-                console.log('Clinic map geocode failed:', error);
-                if (isMounted) {
-                    setMapRegion(null);
-                }
-            }
-        };
-
-        geocodeClinic();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [clinic?.cep, clinic?.rua, clinic?.numero, clinic?.bairro, clinic?.cidade, clinic?.estado, clinic?.endereco]);
 
     const services = specialties.length > 0
         ? specialties.map((specialty, index) => ({
@@ -378,25 +293,6 @@ export default function ClinicDetailScreen({ route, navigation }) {
                         </View>
                     </View>
 
-                    {mapRegion ? (
-                        <MapView
-                            style={styles.map}
-                            initialRegion={mapRegion}
-                            region={mapRegion}
-                            showsUserLocation={false}
-                            showsMyLocationButton={false}
-                        >
-                            <Marker
-                                coordinate={{ latitude: mapRegion.latitude, longitude: mapRegion.longitude }}
-                                title={clinicName}
-                                description={clinicAddress}
-                            />
-                        </MapView>
-                    ) : (
-                        <View style={[styles.mapPlaceholder, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}> 
-                            <Text style={[styles.mapPlaceholderText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>Mapa da Clínica</Text>
-                        </View>
-                    )}
                 </ScrollView>
                 <BottomNavBar
                     activeTab="home"
@@ -447,7 +343,7 @@ const styles = StyleSheet.create({
     content: {
         paddingHorizontal: 20,
         paddingTop: 40,
-        paddingBottom: 80,
+        paddingBottom: 160,
     },
     clinicCard: {
         backgroundColor: '#ffffff',
@@ -694,10 +590,11 @@ const styles = StyleSheet.create({
         borderColor: '#dfeaf5',
     },
     bannerCarouselContent: {
+        flexGrow: 1,
         alignItems: 'center',
     },
     bannerImage: {
-        width: 330,
+        width: '100%',
         height: 180,
         borderRadius: 24,
         alignSelf: 'center',
@@ -711,20 +608,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         borderWidth: 1,
         borderColor: '#dfeaf5',
-    },
-    map: {
-        height: 180,
-        borderRadius: 24,
-        marginBottom: 40,
-        overflow: 'hidden',
-    },
-    mapPlaceholder: {
-        height: 180,
-        borderRadius: 24,
-        backgroundColor: '#e2f2ff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 40,
     },
     mapPlaceholderText: {
         color: '#475569',
