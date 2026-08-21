@@ -216,42 +216,45 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             row.grid_propagate(False)
             
             row.grid_columnconfigure(0, weight=0, minsize=50)
-            row.grid_columnconfigure(1, weight=1)
-            row.grid_columnconfigure(2, weight=1)
-            row.grid_columnconfigure(3, weight=1)
+            row.grid_columnconfigure(1, weight=0, minsize=230)
+            row.grid_columnconfigure(2, weight=0, minsize=260)
+            row.grid_columnconfigure(3, weight=0, minsize=260)
             row.grid_rowconfigure(0, weight=1)
             
             avatar_img = self._create_avatar(medico["nome"], 32)
             avatar = ctk.CTkLabel(row, image=avatar_img, text="")
             avatar.image = avatar_img
-            avatar.grid(row=0, column=0, padx=(12, 8), pady=14)
+            avatar.grid(row=0, column=0, sticky="w", padx=(12, 8), pady=14)
             
             nome = ctk.CTkLabel(
                 row,
                 text=medico["nome"],
                 font=ctk.CTkFont(size=14, weight="bold"),
                 text_color=self.colors["text"],
-                anchor="w"
+                anchor="w",
+                justify="left"
             )
-            nome.grid(row=0, column=1, sticky="w", padx=8)
+            nome.grid(row=0, column=1, sticky="ew", padx=(0, 12))
             
             email = ctk.CTkLabel(
                 row,
                 text=medico["email"],
                 font=ctk.CTkFont(size=13),
                 text_color=self.colors["muted"],
-                anchor="w"
+                anchor="w",
+                justify="left"
             )
-            email.grid(row=0, column=2, sticky="w", padx=8)
+            email.grid(row=0, column=2, sticky="ew", padx=(0, 12))
             
             especialidade = ctk.CTkLabel(
                 row,
                 text=medico["especialidade"],
                 font=ctk.CTkFont(size=13),
                 text_color=self.colors["muted"],
-                anchor="w"
+                anchor="w",
+                justify="left"
             )
-            especialidade.grid(row=0, column=3, sticky="w", padx=8)
+            especialidade.grid(row=0, column=3, sticky="ew", padx=(0, 12))
 
             excluir = ctk.CTkButton(
                 row,
