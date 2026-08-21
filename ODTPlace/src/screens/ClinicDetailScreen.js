@@ -92,7 +92,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
             }
             try {
                 const data = await getClinicSpecialties(clinic.id);
-                setSpecialties(data || []);
+                setSpecialties(Array.isArray(data) ? data : []);
                 setSpecialtiesError(null);
             } catch (error) {
                 setSpecialtiesError('Não foi possível carregar especialidades.');
@@ -185,22 +185,25 @@ export default function ClinicDetailScreen({ route, navigation }) {
     }, [clinic?.cep, clinic?.rua, clinic?.numero, clinic?.bairro, clinic?.cidade, clinic?.estado, clinic?.endereco]);
 
     const services = specialties.length > 0
-        ? specialties.map((specialty) => ({
-            name: specialty.nome,
-            description: specialty.descricao,
-            price: clinic.preco ?? 'R$ 250,00',
+        ? specialties.map((specialty, index) => ({
+            name: typeof specialty?.nome === 'string' && specialty.nome.trim() ? specialty.nome.trim() : `Especialidade ${index + 1}`,
+            description: specialty?.descricao,
+            price: specialty?.preco ?? clinic.preco ?? 'R$ 250,00',
             availability: clinic.horarios ?? ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
         }))
-        : clinic.services ?? [
+        : Array.isArray(clinic.services) ? clinic.services.filter(Boolean).map((service, index) => ({
+            ...service,
+            name: typeof service.name === 'string' && service.name.trim() ? service.name.trim() : `Especialidade ${index + 1}`,
+        })) : [
             {
-                name: clinic.especialidade ?? 'Especialidade',
+                name: typeof clinic.especialidade === 'string' && clinic.especialidade.trim() ? clinic.especialidade.trim() : 'Especialidade',
                 price: clinic.preco ?? 'R$ 250,00',
                 availability: ['Ter. 14 - Dez • 08:00', 'Qua. 15 - Dez • 09:00'],
             },
         ];
 
     const filteredServices = services.filter((item) =>
-        item.name.toLowerCase().startsWith(searchQuery.toLowerCase())
+        String(item?.name ?? '').toLowerCase().startsWith(searchQuery.toLowerCase())
     );
 
     const visibleServices = showAllSpecialties ? filteredServices : filteredServices.slice(0, 5);
@@ -277,7 +280,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
                         <View style={styles.serviceGrid}>
                             {visibleServices.map((service) => (
                                 <TouchableOpacity
-                                    key={service.name}
+                                    key={`${service.name}-${service.id ?? service.price}`}
                                     style={[styles.serviceCard, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
                                     activeOpacity={0.85}
                                     onPress={() => navigation.navigate('Professionals', { clinic, user, selectedSpecialty: service.name })}

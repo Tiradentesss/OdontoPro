@@ -37,7 +37,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
             }
             try {
                 const data = await getClinicDoctors(clinic.id);
-                setDoctorList(data.length ? data : sampleProfessionals);
+                setDoctorList(Array.isArray(data) && data.length ? data : sampleProfessionals);
                 setDoctorsError(null);
             } catch (error) {
                 setDoctorsError('Não foi possível carregar profissionais.');
@@ -51,7 +51,9 @@ export default function ProfessionalsScreen({ route, navigation }) {
 
     const specialtyOptions = useMemo(() => {
         // Usar as especialidades dos médicos retornados pela API
-        const allSpecialties = doctorList.flatMap(doc => doc.especialidades || []);
+        const allSpecialties = doctorList.flatMap((doc) => (
+            Array.isArray(doc?.especialidades) ? doc.especialidades : []
+        )).filter((specialty) => typeof specialty === 'string' && specialty.trim());
         const unique = Array.from(new Set(allSpecialties));
         return unique.length ? unique : ['Ortodontia', 'Odontopediatria', 'Endodontia'];
     }, [doctorList]);
@@ -198,8 +200,8 @@ export default function ProfessionalsScreen({ route, navigation }) {
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.listContent}
                         renderItem={({ item }) => {
-                            const name = item.nome ?? item.name ?? 'Profissional';
-                            const specialty = item.specialty ?? item.especialidades?.[0] ?? 'Especialista';
+                            const name = String(item?.nome ?? item?.name ?? 'Profissional');
+                            const specialty = String(item?.specialty ?? item?.especialidades?.[0] ?? 'Especialista');
                             return (
                                 <TouchableOpacity
                                     style={[styles.professionalCard, isDarkMode && { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
