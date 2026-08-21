@@ -21,7 +21,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.last_selected_date = None
         self.selected_slots = set()
         self.last_selected_slot = None
-        self.saved_slots_by_weekday = {}
+        self.saved_slots_by_date = {}
         self.current_month = self.selected_date.month
         self.current_year = self.selected_date.year
         self.date_buttons = {}
@@ -681,7 +681,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             is_today = current_date == datetime.now().date()
             is_past = current_date < datetime.now().date()
             is_selected = current_date in self.selected_dates
-            has_availability = current_date.weekday() in self.saved_slots_by_weekday
+            has_availability = current_date in self.saved_slots_by_date
             is_sunday = current_date.weekday() == 6
             
             btn = ctk.CTkButton(
@@ -782,7 +782,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
     def _on_date_clicked(self, event, selected_date):
         shift_pressed = (event.state & 0x1) != 0
-        has_availability = selected_date.weekday() in self.saved_slots_by_weekday
+        has_availability = selected_date in self.saved_slots_by_date
 
         if selected_date < datetime.now().date():
             self.selected_dates.clear()
@@ -792,7 +792,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 self.selected_dates = {selected_date}
                 self.last_selected_date = None
         elif any(
-            date.weekday() in self.saved_slots_by_weekday
+            date in self.saved_slots_by_date
             for date in self.selected_dates
         ):
             self.selected_dates.clear()
@@ -809,7 +809,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         
         self.last_selected_date = None if has_availability else selected_date
         self.selected_date = selected_date
-        self.selected_slots = set() if shift_pressed and has_availability else set(self.saved_slots_by_weekday.get(selected_date.weekday(), []))
+        self.selected_slots = set() if shift_pressed and has_availability else set(self.saved_slots_by_date.get(selected_date, []))
         self.last_selected_slot = None
         self._update_slots_display()
         self._update_calendar_display()
@@ -822,7 +822,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         interval_dates = set()
         current = start_date
         while current <= end_date:
-            if current.weekday() != 6 and current.weekday() not in self.saved_slots_by_weekday:
+            if current.weekday() != 6 and current not in self.saved_slots_by_date:
                 interval_dates.add(current)
             current += timedelta(days=1)
         
@@ -836,7 +836,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             is_selected = date in self.selected_dates
             is_today = date == datetime.now().date()
             is_past = date < datetime.now().date()
-            has_availability = date.weekday() in self.saved_slots_by_weekday
+            has_availability = date in self.saved_slots_by_date
             is_sunday = date.weekday() == 6
             
             btn.configure(
@@ -925,9 +925,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         self.selected_medico = medico
         self.selected_slots.clear()
         self.last_selected_slot = None
-        self.saved_slots_by_weekday = ConsultaController.carregar_disponibilidade_medico(
+        self.saved_slots_by_date = ConsultaController.carregar_disponibilidade_medico_por_data(
             medico["id"],
-            clinica_id=self.clinica_id
         )
         self.right_subtitle.configure(
             text=f"Configurando agenda de {medico['nome']}."
@@ -954,19 +953,18 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             messagebox.showwarning("Aviso", "Selecione pelo menos dois horários para definir o período de disponibilidade.")
             return
 
-        disponibilidade_por_dia = {}
+        disponibilidade_por_data = {}
         for data in datas_para_salvar:
-            weekday = data.weekday()
-            disponibilidade_por_dia.setdefault(weekday, set()).update(self.selected_slots)
+            disponibilidade_por_data[data] = set(self.selected_slots)
 
-        disponibilidade_por_dia = {
-            weekday: sorted(slots)
-            for weekday, slots in disponibilidade_por_dia.items()
+        disponibilidade_por_data = {
+            data: sorted(slots)
+            for data, slots in disponibilidade_por_data.items()
         }
 
         resultado = ConsultaController.salvar_disponibilidade_medico(
             self.selected_medico["id"],
-            disponibilidade_por_dia,
+            disponibilidade_por_data,
             clinica_id=self.clinica_id
         )
 

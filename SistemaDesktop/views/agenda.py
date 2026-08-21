@@ -238,7 +238,7 @@ class MonthlyDatePickerPopup(ctk.CTkToplevel):
                     border_width=1,
                     border_color=COLORS['border'],
                     state='normal' if is_enabled else 'disabled',
-                    command=lambda d=cell['date']: self._select_date(d) if is_enabled else None,
+                    command=lambda d=cell['date'], enabled=is_enabled: self._select_date(d) if enabled else None,
                 )
                 btn.grid(row=row, column=col, padx=2, pady=2)
             col += 1
@@ -2431,7 +2431,8 @@ class Agenda(BaseScreen):
                         medico_id,
                         self.clinica_id,
                         dias_ahead=60,
-                        conn=conn
+                        conn=conn,
+                        somente_disponibilidade_medico=True,
                     )
                 elapsed_ms = (time.perf_counter() - start_ms) * 1000
                 print(f"[agenda] Agenda do médico {medico_id} carregada em {elapsed_ms:.0f} ms")
@@ -2680,6 +2681,17 @@ class Agenda(BaseScreen):
             # Validação 6: Verificar disponibilidade de horário
             from datetime import datetime as dt
             data_hora = dt.combine(data_obj.date(), hora_obj)
+
+            agenda_atualizada = ConsultaController.carregar_agenda_disponivel(
+                medico_id_selecionado['id'],
+                self.clinica_id,
+                dias_ahead=60,
+                somente_disponibilidade_medico=True,
+            )
+            horarios_validos = agenda_atualizada.get('horarios_por_data', {}).get(data_var.get().strip(), [])
+            if hora_var.get().strip() not in horarios_validos:
+                messagebox.showerror("Horário Indisponível", "❌ A data e o horário não estão disponíveis para este médico")
+                return
             
             disponivel, msg_horario = ConsultaController.verificar_disponibilidade_horario(
                 medico_id_selecionado['id'],

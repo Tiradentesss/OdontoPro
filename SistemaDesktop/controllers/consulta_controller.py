@@ -818,13 +818,18 @@ class ConsultaController:
         return ConsultaService.carregar_disponibilidade_medico(medico_id, clinica_id, conn=conn)
 
     @staticmethod
-    def carregar_agenda_disponivel(medico_id, clinica_id=None, dias_ahead=60, conn=None, excluir_consulta_id=None):
+    def carregar_disponibilidade_medico_por_data(medico_id, conn=None):
+        return ConsultaService.carregar_disponibilidade_medico_por_data(medico_id, conn=conn)
+
+    @staticmethod
+    def carregar_agenda_disponivel(medico_id, clinica_id=None, dias_ahead=60, conn=None, excluir_consulta_id=None, somente_disponibilidade_medico=False):
         return ConsultaService.carregar_agenda_disponivel(
             medico_id,
             clinica_id=clinica_id,
             dias_ahead=dias_ahead,
             conn=conn,
             excluir_consulta_id=excluir_consulta_id,
+            somente_disponibilidade_medico=somente_disponibilidade_medico,
         )
 
     @staticmethod
