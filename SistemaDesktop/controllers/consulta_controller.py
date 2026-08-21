@@ -104,22 +104,32 @@ class ConsultaController:
                 conn.close()
 
     @staticmethod
-    def listar_proximas_por_clinica(clinica_id, limite=LIMITE_CONSULTAS, excluir_canceladas=True):
+    def listar_proximas_por_clinica(clinica_id, limite=LIMITE_CONSULTAS, excluir_canceladas=True, apenas_confirmadas_futuras=False):
         conn = None
         cursor = None
         try:
             conn = get_connection()
             cursor = conn.cursor()
 
-            where_clause = """
-                c.clinica_id = %s
-                AND DATE(c.data_hora) = CURDATE()
-                AND c.data_hora >= %s
-                AND LOWER(TRIM(c.status)) IN ('agendada', 'confirmada', 'reagendada')
-            """
-            params = [clinica_id, datetime.now()]
+            if apenas_confirmadas_futuras:
+                where_clause = """
+                    c.clinica_id = %s
+                    AND c.data_hora >= %s
+                    AND LOWER(TRIM(c.status)) = 'confirmada'
+                """
+                params = [clinica_id, datetime.now()]
+                limite_consultas = 3
+            else:
+                where_clause = """
+                    c.clinica_id = %s
+                    AND DATE(c.data_hora) = CURDATE()
+                    AND c.data_hora >= %s
+                    AND LOWER(TRIM(c.status)) IN ('agendada', 'confirmada', 'reagendada')
+                """
+                params = [clinica_id, datetime.now()]
+                limite_consultas = limite
 
-            if excluir_canceladas:
+            if excluir_canceladas and not apenas_confirmadas_futuras:
                 where_clause += " AND LOWER(TRIM(c.status)) IN ('agendada', 'confirmada', 'reagendada')"
 
             query = f"""
@@ -146,7 +156,7 @@ class ConsultaController:
                 LIMIT %s
             """
 
-            params.append(limite)
+            params.append(limite_consultas)
             cursor.execute(query, tuple(params))
             dados = cursor.fetchall()
             print(f"[ConsultaController] Total de próximas consultas encontradas: {len(dados) if dados else 0}")

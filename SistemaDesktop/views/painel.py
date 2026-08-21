@@ -149,12 +149,12 @@ class Painel(BaseScreen):
         return botao
 
     def _render_proximas_consultas(self, row, col):
-        card = self._criar_card("Próximas Consultas", "Compromissos agendados para hoje", row, col, padx=(0, 10))
+        card = self._criar_card("Próximas Consultas", "Próximas consultas confirmadas", row, col, padx=(0, 10))
         self._proximas_consultas_avatar_cache = {}
         self._proximas_consultas_image_refs = []
 
         if not self.dados_consultas_hoje:
-            self._render_vazio(card, "Nenhum compromisso agendado para hoje")
+            self._render_vazio(card, "Nenhuma consulta confirmada próxima")
             return
 
         for item in self.dados_consultas_hoje[:3]:
@@ -565,7 +565,8 @@ class Painel(BaseScreen):
 
             consultas = ConsultaController.listar_proximas_por_clinica(
                 self.clinica_id,
-                limite=3
+                limite=3,
+                apenas_confirmadas_futuras=True,
             )
             return consultas if consultas else []
         except Exception as e:
