@@ -1163,7 +1163,16 @@ def clinica_detalhes(request, clinica_id):
 
     logo_url = None
     if clinica.logo:
-        logo_url = clinica.logo.url if _url_responds(clinica.logo.url) else None
+        raw_logo = str(clinica.logo).strip()
+        if raw_logo.startswith(("http://", "https://")):
+            logo_url = raw_logo
+        elif getattr(clinica.logo, 'name', None):
+            try:
+                url = clinica.logo.url
+                if _url_responds(url):
+                    logo_url = url
+            except Exception:
+                pass
 
     dias_ordem = [
         "segunda",
