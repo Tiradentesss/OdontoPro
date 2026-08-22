@@ -955,10 +955,16 @@
             {% for consulta in notificacoes %}
                 <div class="item-notificacao">
                     <strong>{{ consulta.clinica.nome }}</strong><br>
-                    {{ consulta.data_hora|date:"d/m/Y H:i" }}
-                    {% if consulta.status == "cancelada" %}
-                        <span style="color: red;">(Cancelada)</span>
+                    {% if consulta.status == "confirmada" %}
+                        <span style="color: #16803c;">Consulta do dia confirmada</span><br>
+                    {% elif consulta.status == "perdida" %}
+                        <span style="color: #b45309;">Consulta perdida</span><br>
+                    {% elif consulta.status == "agendada" %}
+                        <span style="color: #0369a1;">Consulta agendada</span><br>
+                    {% elif consulta.status == "cancelada" %}
+                        <span style="color: #dc2626;">Consulta cancelada</span><br>
                     {% endif %}
+                    {{ consulta.data_hora|date:"d/m/Y H:i" }}
                 </div>
             {% empty %}
                 <div class="item-notificacao">

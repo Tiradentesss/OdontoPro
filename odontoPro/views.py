@@ -48,9 +48,13 @@ def api_notificacoes_paciente(request):
     notificacoes_qs = Consulta.objects.filter(
         (
             models.Q(
-                data_hora__gte=agora - timedelta(days=1),
-                data_hora__lte=agora + timedelta(days=1),
+                data_hora__gte=agora,
                 status__in=["agendada", "confirmada"]
+            ) |
+            models.Q(
+                data_hora__gte=agora - timedelta(days=1),
+                data_hora__lt=agora,
+                status="perdida"
             ) |
             models.Q(
                 status="cancelada",
@@ -66,6 +70,12 @@ def api_notificacoes_paciente(request):
             'id': n.id,
             'data_hora': n.data_hora.isoformat(),
             'status': n.status,
+            'mensagem': {
+                'agendada': 'Consulta agendada',
+                'confirmada': 'Consulta do dia confirmada',
+                'perdida': 'Consulta perdida',
+                'cancelada': 'Consulta cancelada',
+            }.get(n.status, 'Atualização da consulta'),
             'medico': n.medico.nome if n.medico else None,
             'especialidade': n.especialidade.nome if n.especialidade else None,
         })
@@ -575,13 +585,17 @@ def dashboard_paciente(request):
         status__in=["agendada", "confirmada"]
     ).order_by("data_hora")
 
-    # Notificações: consultas próximas (1 dia antes, mesmo dia, 1 hora antes) ou canceladas recentemente
+    # Notificações: consultas recentes/próximas ou canceladas recentemente.
     notificacoes = Consulta.objects.filter(
         (
             models.Q(
-                data_hora__gte=agora - timedelta(days=1),
-                data_hora__lte=agora + timedelta(days=1),
+                data_hora__gte=agora,
                 status__in=["agendada", "confirmada"]
+            ) |
+            models.Q(
+                data_hora__gte=agora - timedelta(days=1),
+                data_hora__lt=agora,
+                status="perdida"
             ) |
             models.Q(
                 status="cancelada",
