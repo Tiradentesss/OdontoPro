@@ -442,9 +442,18 @@ class CalendarTimeSelector {
   }
 
   goToToday() {
-    this.currentDate = new Date();
+    const today = new Date();
+    const todayString = this.formatDate(today);
+    this.currentDate = today;
     this.renderCalendar();
     this.attachEventListeners();
+
+    // O botão Hoje também seleciona a data e abre os horários disponíveis.
+    const todayCell = document.querySelector(`.calendar-matrix .day-cell[data-date="${todayString}"]`);
+    if (todayCell) {
+      this.selectDate(todayCell);
+      this.confirmarDataSelecionada();
+    }
   }
 
   isToday(date) {
