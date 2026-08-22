@@ -769,8 +769,8 @@ function abrirModalAgendamento(clinicaId) {
                     this.src = "/static/img/sem-foto-de-perfil.jpg";
                 };
 
-                if (data.banner_url) {
-                    logoImg.src = data.banner_url;
+                if (data.logo_url) {
+                    logoImg.src = data.logo_url;
                 } else {
                     logoImg.src = "/static/img/sem-foto-de-perfil.jpg";
                 }

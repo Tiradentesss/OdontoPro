@@ -370,6 +370,10 @@ body {
     .platform-card { padding: 20px; }
     .about-copy, .about-panel { padding: 18px; }
     .feature { padding: 18px; }
+
+    .floating-clinic-cards .clinic-card {
+        flex-basis: calc((100% - 20px) / 2);
+    }
 }
 
 @media (max-width: 600px) {
@@ -1214,7 +1218,7 @@ body {
     display: flex;
     min-width: 0;
     max-width: none;
-    flex: 1 1 0;
+    flex: 0 0 calc((100% - 40px) / 3);
     background: rgba(255, 255, 255, 0.88);
     border-radius: 14px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
@@ -1806,9 +1810,9 @@ body:not(.theme-dark) .footer-bottom {
     }
 
     .floating-clinic-cards .clinic-card {
-        min-width: 180px;
-        max-width: 180px;
-        flex-basis: 180px;
+        min-width: 0;
+        max-width: none;
+        flex-basis: 100%;
     }
 
     .clinic-cards-preview {
