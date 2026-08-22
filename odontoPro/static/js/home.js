@@ -2,11 +2,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const dl = document.getElementById('download-desktop');
     if (dl) dl.addEventListener('click', (e)=>{ e.preventDefault(); const href = dl.getAttribute('href'); if (href) window.location.href = href; });
 
-    const appstore = document.getElementById('link-appstore');
-    const playstore = document.getElementById('link-playstore');
-    if (appstore) appstore.addEventListener('click',(e)=>{ e.preventDefault(); const href = appstore.getAttribute('href'); if (href) window.location.href = href; });
-    if (playstore) playstore.addEventListener('click',(e)=>{ e.preventDefault(); const href = playstore.getAttribute('href'); if (href) window.location.href = href; });
-
     // Theme toggle: persist choice to localStorage
     const themeToggle = document.getElementById('theme-toggle');
     const applyTheme = (theme) => {

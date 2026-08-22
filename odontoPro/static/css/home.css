@@ -1438,6 +1438,11 @@ body {
     object-fit: contain;
 }
 
+.store-badge.android-download i {
+    font-size: 24px;
+    color: #3ddc84;
+}
+
 .store-badge span {
     white-space: nowrap;
 }
