@@ -32,6 +32,12 @@ linkForgot.onclick = (e) => {
 
 closeForgot.onclick = () => modalForgot.style.display = "none";
 
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && modalForgot.style.display === "block") {
+    modalForgot.style.display = "none";
+  }
+});
+
 // Função para mudar de etapa
 function goToStep(stepNumber) {
     // Esconde todas

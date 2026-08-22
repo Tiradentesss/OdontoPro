@@ -370,13 +370,27 @@ body.theme-dark .btn-agendar-green {
     }
 
     .area-conteudo {
-        padding: 15px;
+        padding: 20px;
         padding-bottom: 85px; /* Espaço para não cobrir o menu inferior */
     }
 
     .grid-clinicas {
         grid-template-columns: 1fr;
         gap: 12px;
+    }
+
+    .banner-card {
+        aspect-ratio: 16 / 9;
+        min-height: 0;
+    }
+
+    .card-clinica .info-card {
+        min-height: 178px;
+        padding: 42px 16px 16px;
+    }
+
+    .card-clinica .info-text {
+        min-height: 64px;
     }
 
     .dropdown-filtro,
@@ -535,7 +549,7 @@ body.theme-dark .btn-agendar-green {
     }
 
     .area-conteudo {
-        padding: 10px;
+        padding: 16px;
         padding-bottom: 90px; /* espaço para o menu inferior */
     }
 
