@@ -1237,8 +1237,9 @@ body {
     width: 100%;
     aspect-ratio: 16 / 9;
     height: auto;
-    object-fit: contain;
-    background: #eef5f8;
+    object-fit: cover;
+    object-position: center;
+    display: block;
     border-bottom: 1px solid var(--cor-borda);
 }
 
