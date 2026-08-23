@@ -241,7 +241,7 @@ app.get('/api/clinics/:clinicId/doctors/:doctorId/availability', (req, res) => {
 
   const scheduleQuery = `
     SELECT DATE_FORMAT(h.data, '%Y-%m-%d') AS data, h.hora_inicio, h.hora_fim
-    FROM odontoPro_medico_horario_data h
+    FROM odontoPro_medicohorario_data h
     INNER JOIN odontoPro_medico m ON m.id = h.medico_id AND m.clinica_id = ?
     WHERE h.medico_id = ? AND h.data BETWEEN ? AND ?
     ORDER BY h.data, h.hora_inicio`;
