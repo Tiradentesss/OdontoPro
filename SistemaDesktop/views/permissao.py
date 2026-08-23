@@ -139,7 +139,7 @@ class AdminListFrame(ctk.CTkFrame):
         title_frame.pack(side="left")
         ctk.CTkLabel(title_frame, text="👥", font=font(ICON_SIZE)).pack(side="left", padx=(0, 10))
         self.lbl_title = ctk.CTkLabel(
-            title_frame, text="Administradores",
+            title_frame, text="Funcionários",
             font=font("subtitle", "bold"), text_color=COLORS["text"]
         )
         self.lbl_title.pack(side="left")

@@ -84,7 +84,7 @@ class ConsultaService:
                 WHERE 
                     medico_id = %s
                     AND DATE(data_hora) = %s
-                    AND TIME(data_hora) = %s
+                    AND TIME_FORMAT(data_hora, '%H:%i') = %s
                     AND status != 'cancelada'
                     AND clinica_id = (
                         SELECT clinica_id FROM odontoPro_medico WHERE id = %s
@@ -92,7 +92,8 @@ class ConsultaService:
             """
 
             def _exec():
-                cursor.execute(query, (medico_id, data_consulta, hora_consulta, medico_id))
+                hora_str = hora_consulta.strftime('%H:%M') if hasattr(hora_consulta, 'strftime') else str(hora_consulta)[:5]
+                cursor.execute(query, (medico_id, data_consulta, hora_str, medico_id))
                 return cursor.fetchone()
 
             resultado = timed_sql("verificar_horario_disponivel", _exec, sql=query)
@@ -674,7 +675,7 @@ class ConsultaService:
                 if hasattr(hora, 'strftime'):
                     hora_str = hora.strftime('%H:%M')
                 else:
-                    hora_str = str(hora)
+                    hora_str = str(hora)[:5]
                 ocupados_por_data.setdefault(data_str, set()).add(hora_str)
 
             hoje = date.today()
