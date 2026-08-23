@@ -116,7 +116,7 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
           <TouchableOpacity
             style={[styles.bookButton, isDarkMode && { backgroundColor: '#38BDF8' }]}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('AppointmentBooking', { professional, clinic, user, selectedSpecialty: route?.params?.selectedSpecialty })}
+            onPress={() => navigation.navigate('AppointmentBooking', { professional, clinic, user, selectedSpecialty: route?.params?.selectedSpecialty, selectedSpecialtyId: route?.params?.selectedSpecialtyId, selectedSpecialtyPrice: route?.params?.selectedSpecialtyPrice })}
           >
             <Text style={[styles.bookButtonText, { color: isDarkMode ? '#0F172A' : '#ffffff' }]}>Agendar</Text>
           </TouchableOpacity>

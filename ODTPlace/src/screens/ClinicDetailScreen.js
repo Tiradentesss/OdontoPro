@@ -107,6 +107,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
 
     const services = specialties.length > 0
         ? specialties.map((specialty, index) => ({
+            id: specialty?.id,
             name: typeof specialty?.nome === 'string' && specialty.nome.trim() ? specialty.nome.trim() : `Especialidade ${index + 1}`,
             description: specialty?.descricao,
             price: specialty?.preco ?? clinic.preco ?? 'R$ 250,00',
@@ -204,7 +205,7 @@ export default function ClinicDetailScreen({ route, navigation }) {
                                     key={`${service.name}-${service.id ?? service.price}`}
                                     style={[styles.serviceCard, isDarkMode && { backgroundColor: '#0F172A', borderColor: '#334155' }]}
                                     activeOpacity={0.85}
-                                    onPress={() => navigation.navigate('Professionals', { clinic, user, selectedSpecialty: service.name })}
+                                    onPress={() => navigation.navigate('Professionals', { clinic, user, selectedSpecialty: service.name, selectedSpecialtyId: service.id, selectedSpecialtyPrice: service.price })}
                                 >
                                     <Text style={[styles.serviceName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{service.name}</Text>
                                     <Text style={[styles.servicePrice, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{typeof service.price === 'string' && service.price.trim().startsWith('R') ? service.price : `R$ ${service.price}`}</Text>

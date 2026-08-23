@@ -213,7 +213,7 @@ app.get('/api/clinics/:clinicId/doctors', (req, res) => {
     return res.json(mockDoctors);
   }
   const clinicId = req.params.clinicId;
-  const query = `SELECT m.id, m.nome, m.crm_cro, m.telefone, m.email, m.ativo, m.avaliacao, m.num_avaliacoes, m.foto, GROUP_CONCAT(e.nome) as especialidades FROM odontoPro_medico m LEFT JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id WHERE m.clinica_id = ? AND m.ativo = 1 GROUP BY m.id`;
+  const query = `SELECT m.id, m.nome, m.crm_cro, m.telefone, m.email, m.ativo, m.avaliacao, m.num_avaliacoes, m.foto, GROUP_CONCAT(CONCAT_WS('::', e.id, e.nome, COALESCE(e.preco, '')) SEPARATOR '||') as especialidades FROM odontoPro_medico m LEFT JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id WHERE m.clinica_id = ? AND m.ativo = 1 GROUP BY m.id`;
   db.query(query, [clinicId], (err, results) => {
     if (err) {
       console.error('Database error:', err);
@@ -222,7 +222,10 @@ app.get('/api/clinics/:clinicId/doctors', (req, res) => {
       const mapped = results.map((row) => ({
         ...row,
         foto: resolveImageField(row.foto),
-        especialidades: row.especialidades ? row.especialidades.split(',') : [],
+        especialidades: row.especialidades ? row.especialidades.split('||').map((specialty) => {
+          const [id, nome, preco] = specialty.split('::');
+          return { id, nome, preco: preco || null };
+        }) : [],
       }));
       res.json(mapped);
   });
