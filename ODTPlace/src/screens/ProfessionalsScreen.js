@@ -16,6 +16,12 @@ const sampleProfessionals = [
 
 const ratingFilters = [5, 4, 3, 2, 1];
 
+const formatProfessionalName = (value) => {
+    const name = String(value || 'Profissional').trim();
+    const withoutTitle = name.replace(/^(dr\.?|dra\.?|dr\(a\)\.?|doutor(a)?\.?)[\s-]*/i, '');
+    return `Dr(a). ${withoutTitle}`;
+};
+
 export default function ProfessionalsScreen({ route, navigation }) {
     const { user } = useAuth();
     const { isDarkMode, colors } = useTheme();
@@ -202,6 +208,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                         contentContainerStyle={styles.listContent}
                         renderItem={({ item }) => {
                             const name = String(item?.nome ?? item?.name ?? 'Profissional');
+                            const displayName = formatProfessionalName(name);
                             const specialty = String(item?.specialty ?? item?.especialidades?.[0] ?? 'Especialista');
                             const avatarSource = getProfessionalAvatarSource(item);
                             return (
@@ -218,7 +225,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                         )}
                                     </View>
                                     <View style={styles.professionalInfo}>
-                                        <Text style={[styles.professionalName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{name}</Text>
+                                        <Text style={[styles.professionalName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{displayName}</Text>
                                         <Text style={[styles.professionalSpecialty, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{specialty}</Text>
                                         <Text style={[styles.reviewText, { color: isDarkMode ? '#CBD5E1' : '#64748b' }]}>{(item.avaliacao ?? item.rating ?? '—')} ★ • {(item.num_avaliacoes ?? item.reviews ?? item.avaliacoes ?? 0)} avaliações</Text>
                                     </View>

@@ -8,6 +8,12 @@ import { getProfessionalAvatarSource } from '../utils/professionalAvatar';
 
 const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 24 : 44;
 
+const formatProfessionalName = (value) => {
+  const name = String(value || 'Profissional').trim();
+  const withoutTitle = name.replace(/^(dr\.?|dra\.?|dr\(a\)\.?|doutor(a)?\.?)[\s-]*/i, '');
+  return `Dr(a). ${withoutTitle}`;
+};
+
 export default function ProfessionalInfoScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
   const clinic = route?.params?.clinic ?? {};
@@ -17,6 +23,7 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
   const [completedConsultations, setCompletedConsultations] = useState(null);
   const [doctorProfile, setDoctorProfile] = useState(null);
   const avatarSource = getProfessionalAvatarSource({ ...professional, ...doctorProfile });
+  const professionalName = formatProfessionalName(professional.nome ?? professional.name ?? 'Nome do Profissional');
 
   useEffect(() => {
     const loadStats = async () => {
@@ -83,7 +90,7 @@ export default function ProfessionalInfoScreen({ route, navigation }) {
                 <Text style={[styles.profileInitial, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{(professional.nome ?? professional.name ?? 'P').charAt(0)}</Text>
               )}
             </View>
-            <Text style={[styles.professionalName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{professional.nome ?? professional.name ?? 'Nome do Profissional'}</Text>
+            <Text style={[styles.professionalName, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>{professionalName}</Text>
             <Text style={[styles.professionalSpecialty, { color: isDarkMode ? '#38BDF8' : '#0ea5e9' }]}>{professional.specialty ?? professional.especialidades?.[0] ?? 'Especialidade'}</Text>
           </View>
 
