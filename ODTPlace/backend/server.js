@@ -240,13 +240,13 @@ app.get('/api/clinics/:clinicId/doctors/:doctorId/availability', (req, res) => {
   }
 
   const scheduleQuery = `
-    SELECT h.dia, h.hora_inicio, h.hora_fim
-    FROM odontoPro_medicohorario h
+    SELECT DATE_FORMAT(h.data, '%Y-%m-%d') AS data, h.hora_inicio, h.hora_fim
+    FROM odontoPro_medico_horario_data h
     INNER JOIN odontoPro_medico m ON m.id = h.medico_id AND m.clinica_id = ?
-    WHERE h.medico_id = ?
-    ORDER BY h.dia, h.hora_inicio`;
+    WHERE h.medico_id = ? AND h.data BETWEEN ? AND ?
+    ORDER BY h.data, h.hora_inicio`;
 
-  db.query(scheduleQuery, [clinicId, doctorId], (err, schedules) => {
+  db.query(scheduleQuery, [clinicId, doctorId, rangeStart, rangeEnd], (err, schedules) => {
     if (err) {
       console.error('Availability query failed:', err);
       return res.status(500).json({ error: err.message });
@@ -269,7 +269,6 @@ app.get('/api/clinics/:clinicId/doctors/:doctorId/availability', (req, res) => {
         return res.status(500).json({ error: occupiedError.message });
       }
 
-      const weekdayNames = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
       const occupiedByDate = occupiedRows.reduce((result, row) => {
         const dateKey = String(row.data).slice(0, 10);
         if (!result[dateKey]) result[dateKey] = new Set();
@@ -277,32 +276,26 @@ app.get('/api/clinics/:clinicId/doctors/:doctorId/availability', (req, res) => {
         return result;
       }, {});
       const dates = new Set();
-    const slotsByDate = {};
-    const toMinutes = (value) => {
-      const [hours, minutes] = String(value).split(':').map(Number);
-      return hours * 60 + minutes;
-    };
-    const toTime = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+      const slotsByDate = {};
+      const toMinutes = (value) => {
+        const [hours, minutes] = String(value).split(':').map(Number);
+        return hours * 60 + minutes;
+      };
+      const toTime = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 
-      const currentDate = new Date(`${rangeStart}T00:00:00Z`);
-      const lastDate = new Date(`${rangeEnd}T00:00:00Z`);
-      while (currentDate <= lastDate) {
-        const dateKey = currentDate.toISOString().slice(0, 10);
-        const weekday = weekdayNames[currentDate.getUTCDay()];
+      schedules.forEach((schedule) => {
+        const dateKey = String(schedule.data).slice(0, 10);
         const occupied = occupiedByDate[dateKey] || new Set();
-        const slots = [];
-        schedules.filter((schedule) => String(schedule.dia).toLowerCase() === weekday).forEach((schedule) => {
-          for (let minute = toMinutes(schedule.hora_inicio); minute < toMinutes(schedule.hora_fim); minute += 30) {
-            const slot = toTime(minute);
-            if (!occupied.has(slot) && !slots.includes(slot)) slots.push(slot);
-          }
-        });
+        const slots = slotsByDate[dateKey] || [];
+        for (let minute = toMinutes(schedule.hora_inicio); minute < toMinutes(schedule.hora_fim); minute += 30) {
+          const slot = toTime(minute);
+          if (!occupied.has(slot) && !slots.includes(slot)) slots.push(slot);
+        }
         if (slots.length) {
           dates.add(dateKey);
           slotsByDate[dateKey] = slots.sort();
         }
-        currentDate.setUTCDate(currentDate.getUTCDate() + 1);
-      }
+      });
 
       return res.json({ dates: Array.from(dates).sort(), slots: slotsByDate });
     });
