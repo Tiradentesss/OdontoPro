@@ -465,18 +465,35 @@ class App(ctk.CTkToplevel):
 
         self.current_frame = self.frames[name]
         self.current_frame_name = name
-        if hasattr(self.current_frame, "refresh"):
-            try:
-                self.current_frame.refresh()
-            except Exception as e:
-                print(f"Erro ao atualizar frame {name}: {e}")
-        elif hasattr(self.current_frame, "render"):
-            try:
-                self.current_frame.render()
-            except Exception as e:
-                print(f"Erro ao renderizar frame {name}: {e}")
         self.current_frame.pack(expand=True, fill="both")
         self.update_active_button(name)
+
+        pending_refresh = getattr(self, "_pending_frame_refresh_id", None)
+        if pending_refresh is not None:
+            try:
+                self.after_cancel(pending_refresh)
+            except Exception:
+                pass
+
+        frame = self.current_frame
+
+        def refresh_frame():
+            self._pending_frame_refresh_id = None
+            if self.current_frame is not frame or self.current_frame_name != name:
+                return
+
+            if hasattr(frame, "refresh"):
+                try:
+                    frame.refresh()
+                except Exception as e:
+                    print(f"Erro ao atualizar frame {name}: {e}")
+            elif hasattr(frame, "render"):
+                try:
+                    frame.render()
+                except Exception as e:
+                    print(f"Erro ao renderizar frame {name}: {e}")
+
+        self._pending_frame_refresh_id = self.after_idle(refresh_frame)
 
     def update_active_button(self, active):
         for name, btn in self.buttons.items():
