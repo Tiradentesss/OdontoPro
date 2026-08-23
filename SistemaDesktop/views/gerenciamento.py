@@ -788,9 +788,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             self.selected_dates.clear()
             self.last_selected_date = None
         elif has_availability:
-            if not shift_pressed:
-                self.selected_dates = {selected_date}
-                self.last_selected_date = None
+            self.selected_dates = {selected_date}
+            self.last_selected_date = None
         elif any(
             date in self.saved_slots_by_date
             for date in self.selected_dates
@@ -809,7 +808,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         
         self.last_selected_date = None if has_availability else selected_date
         self.selected_date = selected_date
-        self.selected_slots = set() if shift_pressed and has_availability else set(self.saved_slots_by_date.get(selected_date, []))
+        self.selected_slots = set(self.saved_slots_by_date.get(selected_date, [])) if has_availability else set()
         self.last_selected_slot = None
         self._update_slots_display()
         self._update_calendar_display()
@@ -923,6 +922,8 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
 
     def _select_medico(self, medico):
         self.selected_medico = medico
+        self.selected_dates.clear()
+        self.last_selected_date = None
         self.selected_slots.clear()
         self.last_selected_slot = None
         self.saved_slots_by_date = ConsultaController.carregar_disponibilidade_medico_por_data(
@@ -969,6 +970,9 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         )
 
         if resultado.get('sucesso'):
+            for data in datas_para_salvar:
+                self.saved_slots_by_date[data] = sorted(self.selected_slots)
+
             horarios = ", ".join(sorted(self.selected_slots))
             datas_sorted = sorted(list(datas_para_salvar))
             if len(datas_sorted) == 1:
