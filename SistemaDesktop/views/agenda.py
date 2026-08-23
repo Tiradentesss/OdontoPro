@@ -1818,6 +1818,7 @@ class Agenda(BaseScreen):
             self.clinica_id,
             dias_ahead=60,
             excluir_consulta_id=consulta_id,
+            somente_disponibilidade_medico=True,
         )
         datas_disponiveis = agenda_disponivel.get('datas', [])
         horarios_por_data = agenda_disponivel.get('horarios_por_data', {})

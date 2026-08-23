@@ -395,12 +395,17 @@ class ConsultaController:
                 return False
 
             medico_id = consulta[0]
-            horarios = ConsultaService.carregar_horarios_disponiveis(
+            agenda_disponivel = ConsultaService.carregar_agenda_disponivel(
                 medico_id,
-                data_hora.date(),
                 clinica_id,
+                dias_ahead=60,
                 conn=conn,
                 excluir_consulta_id=consulta_id,
+                somente_disponibilidade_medico=True,
+            )
+            horarios = agenda_disponivel.get('horarios_por_data', {}).get(
+                data_hora.date().strftime('%d/%m/%Y'),
+                [],
             )
             if data_hora.strftime('%H:%M') not in horarios:
                 return False
