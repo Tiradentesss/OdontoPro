@@ -38,11 +38,12 @@ class ConsultaController:
         return " AND ".join(where), params
 
     @staticmethod
-    def listar_por_clinica(clinica_id, pagina=0, limite=LIMITE_CONSULTAS, data=None, status=None, medico=None, especialidade=None, medico_id=None, especialidade_id=None):
-        conn = None
+    def listar_por_clinica(clinica_id, pagina=0, limite=LIMITE_CONSULTAS, data=None, status=None, medico=None, especialidade=None, medico_id=None, especialidade_id=None, conn=None):
+        internal_conn = conn is None
         cursor = None
         try:
-            conn = get_connection()
+            if internal_conn:
+                conn = get_connection()
             cursor = conn.cursor()
 
             where_clause, params = ConsultaController._build_filters(
@@ -100,7 +101,7 @@ class ConsultaController:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if internal_conn and conn:
                 conn.close()
 
     @staticmethod
@@ -173,11 +174,12 @@ class ConsultaController:
                 conn.close()
 
     @staticmethod
-    def contar_por_clinica(clinica_id, data=None, status=None, medico=None, especialidade=None, medico_id=None, especialidade_id=None):
-        conn = None
+    def contar_por_clinica(clinica_id, data=None, status=None, medico=None, especialidade=None, medico_id=None, especialidade_id=None, conn=None):
+        internal_conn = conn is None
         cursor = None
         try:
-            conn = get_connection()
+            if internal_conn:
+                conn = get_connection()
             cursor = conn.cursor()
 
             where_clause, params = ConsultaController._build_filters(
@@ -208,15 +210,16 @@ class ConsultaController:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if internal_conn and conn:
                 conn.close()
 
     @staticmethod
-    def listar_opcoes_filtro(clinica_id):
-        conn = None
+    def listar_opcoes_filtro(clinica_id, conn=None):
+        internal_conn = conn is None
         cursor = None
         try:
-            conn = get_connection()
+            if internal_conn:
+                conn = get_connection()
             cursor = conn.cursor()
 
             cursor.execute("""
@@ -228,7 +231,7 @@ class ConsultaController:
 
             datas = [row[0] for row in cursor.fetchall() or []]
 
-            medicos = ConsultaController.listar_medicos(clinica_id)
+            medicos = ConsultaController.listar_medicos(clinica_id, conn=conn)
             # Use the shared prepared list for combos to avoid duplicates and ensure ordering
             especialidades = ConsultaController.listar_especialidades_para_combo(conn=conn)
 
@@ -241,7 +244,7 @@ class ConsultaController:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if internal_conn and conn:
                 conn.close()
 
     @staticmethod
@@ -432,11 +435,12 @@ class ConsultaController:
                 conn.close()
 
     @staticmethod
-    def snapshot_por_clinica(clinica_id, data=None, status=None, medico=None, especialidade=None, medico_id=None, especialidade_id=None):
-        conn = None
+    def snapshot_por_clinica(clinica_id, data=None, status=None, medico=None, especialidade=None, medico_id=None, especialidade_id=None, conn=None):
+        internal_conn = conn is None
         cursor = None
         try:
-            conn = get_connection()
+            if internal_conn:
+                conn = get_connection()
             cursor = conn.cursor()
 
             where_clause, params = ConsultaController._build_filters(
@@ -467,7 +471,7 @@ class ConsultaController:
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if internal_conn and conn:
                 conn.close()
 
     @staticmethod
@@ -490,9 +494,11 @@ class ConsultaController:
         return pacientes
 
     @staticmethod
-    def listar_medicos(clinica_id):
+    def listar_medicos(clinica_id, conn=None):
         """Lista todos os médicos da clínica"""
-        conn = get_connection()
+        internal_conn = conn is None
+        if internal_conn:
+            conn = get_connection()
         cursor = conn.cursor()
         
         cursor.execute("""
@@ -503,7 +509,9 @@ class ConsultaController:
         """, (clinica_id,))
         
         medicos = cursor.fetchall()
-        conn.close()
+        cursor.close()
+        if internal_conn:
+            conn.close()
         return medicos
 
     @staticmethod

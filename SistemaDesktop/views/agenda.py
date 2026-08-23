@@ -719,8 +719,10 @@ class Agenda(BaseScreen):
         especialidades = []
         snapshot = "0-0-0-0"
         error_msg = None
+        conn = None
         
         try:
+            conn = get_connection()
             print(f"[AGENDA] _load_data_thread: analisando filtros")
             print(f"[AGENDA]   - data={self.filtro_data}")
             print(f"[AGENDA]   - medico={self.filtro_medico}")
@@ -749,6 +751,7 @@ class Agenda(BaseScreen):
                     especialidade=self.filtro_especialidade,
                     medico_id=self.filtro_medico_id,
                     especialidade_id=self.filtro_especialidade_id,
+                    conn=conn,
                 )
                 
                 elapsed_call = time.time() - start_call
@@ -775,6 +778,7 @@ class Agenda(BaseScreen):
                     especialidade=self.filtro_especialidade,
                     medico_id=self.filtro_medico_id,
                     especialidade_id=self.filtro_especialidade_id,
+                    conn=conn,
                 )
                 
                 elapsed_call = time.time() - start_call
@@ -793,10 +797,10 @@ class Agenda(BaseScreen):
             start_call = time.time()
             
             try:
-                datas, medicos, _ = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+                datas, medicos, _ = ConsultaController.listar_opcoes_filtro(self.clinica_id, conn=conn)
                 especialidades = ConsultaController.listar_especialidades_para_combo(
                     clinica_id=self.clinica_id,
-                    conn=None,
+                    conn=conn,
                 )
                 
                 elapsed_call = time.time() - start_call
@@ -823,6 +827,7 @@ class Agenda(BaseScreen):
                     especialidade=self.filtro_especialidade,
                     medico_id=self.filtro_medico_id,
                     especialidade_id=self.filtro_especialidade_id,
+                    conn=conn,
                 )
                 
                 elapsed_call = time.time() - start_call
@@ -857,6 +862,8 @@ class Agenda(BaseScreen):
             # ============================================
             # FINALIZAR thread de dados sem tocar na UI diretamente
             # ============================================
+            if conn:
+                conn.close()
             print(f"[AGENDA] _load_data_thread: FINALIZANDO (finally block)")
             print(f"[AGENDA] _loading antes: {self._loading}")
             print(f"[AGENDA] _load_data_thread: FINALIZADA\n")
