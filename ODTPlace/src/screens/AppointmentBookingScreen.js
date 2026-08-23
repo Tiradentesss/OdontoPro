@@ -52,15 +52,15 @@ export default function AppointmentBookingScreen({ route, navigation }) {
       // Se as especialidades já tiverem ID e nome
       return professional.especialidades.map((spec, index) => {
         if (typeof spec === 'object' && spec.id && spec.nome) {
-          return { id: spec.id, nome: spec.nome, preco: spec.preco };
+          return { id: spec.id, nome: spec.nome };
         }
         // Se for apenas string, criar objeto com ID sequencial
-        return { id: String(index + 1), nome: spec, preco: null };
+        return { id: String(index + 1), nome: spec };
       });
     }
     // Fallback para specialty ou valor padrão
     const specialty = professional.specialty || 'Consulta';
-    return [{ id: professional.especialidade_id || '1', nome: specialty, preco: professional.preco }];
+    return [{ id: professional.especialidade_id || '1', nome: specialty }];
   };
   
   const doctorSpecialties = getDoctorSpecialties();
@@ -85,7 +85,6 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   
   const selectedRouteSpecialty = route?.params?.selectedSpecialty ?? null;
   const selectedRouteSpecialtyId = route?.params?.selectedSpecialtyId ?? null;
-  const selectedRouteSpecialtyPrice = route?.params?.selectedSpecialtyPrice ?? null;
   
   useEffect(() => {
     if (selectedRouteSpecialtyId) {
@@ -107,9 +106,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   }, [doctorSpecialties, selectedRouteSpecialty, selectedRouteSpecialtyId]);
   
   // Preço da consulta (pode ser mock ou vir da API)
-  const selectedSpecialty = doctorSpecialties.find((specialty) => String(specialty.id) === String(selectedSpecialtyId));
-  const rawConsultationPrice = selectedSpecialty?.preco ?? selectedRouteSpecialtyPrice ?? professional.preco;
-  const consultationPrice = Number(String(rawConsultationPrice ?? '').replace('R$', '').replace(/\./g, '').replace(',', '.')) || 150.00;
+  const consultationPrice = professional.preco || 150.00;
 
   const monthDays = getMonthDays(currentMonth.year, currentMonth.month);
   const monthLabel = `${monthNames[currentMonth.month - 1]} ${currentMonth.year}`;

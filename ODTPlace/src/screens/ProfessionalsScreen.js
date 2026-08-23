@@ -21,8 +21,6 @@ export default function ProfessionalsScreen({ route, navigation }) {
     const { isDarkMode, colors } = useTheme();
     const clinic = route?.params?.clinic ?? {};
     const selectedSpecialty = route?.params?.selectedSpecialty ?? null;
-    const selectedSpecialtyId = route?.params?.selectedSpecialtyId ?? null;
-    const selectedSpecialtyPrice = route?.params?.selectedSpecialtyPrice ?? null;
     const [search, setSearch] = useState('');
     const [activeSpecialty, setActiveSpecialty] = useState(selectedSpecialty);
     const [activeRating, setActiveRating] = useState(null);
@@ -210,7 +208,7 @@ export default function ProfessionalsScreen({ route, navigation }) {
                                 <TouchableOpacity
                                     style={[styles.professionalCard, isDarkMode && { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
                                     activeOpacity={0.86}
-                                    onPress={() => navigation.navigate('ProfessionalInfo', { professional: item, clinic, user, selectedSpecialty: activeSpecialty, selectedSpecialtyId, selectedSpecialtyPrice })}
+                                    onPress={() => navigation.navigate('ProfessionalInfo', { professional: item, clinic, user, selectedSpecialty: activeSpecialty })}
                                 >
                                     <View style={styles.avatarPlaceholder}>
                                         {avatarSource ? (
