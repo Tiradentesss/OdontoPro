@@ -24,10 +24,9 @@ from decimal import Decimal
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from django.utils.dateparse import parse_datetime as django_parse_datetime
-from .models import MedicoHorario
 from PIL import Image
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import connection, models, transaction
 
 import logging
 logger = logging.getLogger(__name__)
@@ -118,34 +117,30 @@ def horarios_clinica(request, clinica_id):
     if medico.clinica_id != clinica_id:
         return JsonResponse({"error": "Médico não pertence à clínica"}, status=400)
 
-    dia_semana_map = {
-        0: "Segunda",
-        1: "Terça",
-        2: "Quarta",
-        3: "Quinta",
-        4: "Sexta",
-        5: "Sábado",
-        6: "Domingo",
-    }
-    dia_str = dia_semana_map[data_dt.weekday()]
-
-    intervalos = MedicoHorario.objects.filter(
-        medico=medico,
-        dia__iexact=dia_str,
-    ).order_by("hora_inicio")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT hora_inicio, hora_fim
+            FROM odontoPro_medicohorario_data
+            WHERE medico_id = %s AND data = %s
+            ORDER BY hora_inicio
+            """,
+            [medico_id, data_dt.date()],
+        )
+        intervalos = cursor.fetchall()
 
     horarios = []
-    for intervalo in intervalos:
-        hora = intervalo.hora_inicio
-        while hora < intervalo.hora_fim:
+    for hora_inicio, hora_fim in intervalos:
+        hora = hora_inicio
+        while hora < hora_fim:
             horarios.append(hora.strftime("%H:%M"))
             hora = (datetime.combine(data_dt.date(), hora) + timedelta(minutes=30)).time()
 
     consultas = Consulta.objects.filter(
+        ~models.Q(status="cancelada"),
         clinica_id=clinica_id,
         medico_id=medico_id,
         data_hora__date=data_dt.date(),
-        status__in=["agendada", "confirmada", "realizada"],
     )
     horarios_ocupados = {
         consulta.data_hora.strftime("%H:%M")
@@ -231,40 +226,44 @@ def reagendar_consulta(request, consulta_id):
                     messages.error(request, "Não é possível reagendar para data/hora passada.")
                     return redirect('dashboard_paciente')
 
-                # Verificar conflito de horário (ocupado por outra consulta não-cancelada)
-                conflito = Consulta.objects.filter(medico=consulta.medico, data_hora=dt).exclude(id=consulta.id).exclude(status='cancelada').exists()
-                if conflito:
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        return JsonResponse({"success": False, "error": "Horário já ocupado"}, status=400)
-                    messages.error(request, "Horário já ocupado")
-                    return redirect('dashboard_paciente')
-
-                if consulta.status == "perdida":
-                    nova_consulta = Consulta.objects.create(
-                        paciente=consulta.paciente,
-                        nome=consulta.nome,
-                        email=consulta.email,
-                        telefone=consulta.telefone,
-                        clinica=consulta.clinica,
-                        medico=consulta.medico,
-                        especialidade=consulta.especialidade,
-                        observacoes=consulta.observacoes,
+                with transaction.atomic():
+                    Medico.objects.select_for_update().get(pk=consulta.medico_id)
+                    conflito = Consulta.objects.filter(
+                        medico_id=consulta.medico_id,
                         data_hora=dt,
-                        status="agendada",
-                    )
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        return JsonResponse({
-                            "success": True,
-                            "message": "Consulta reagendada com sucesso!",
-                            "data_hora": nova_consulta.data_hora.isoformat(),
-                            "status": nova_consulta.status,
-                            "new_consulta_id": nova_consulta.id,
-                        })
-                    messages.success(request, "Consulta reagendada com sucesso!")
-                    return redirect("dashboard_paciente")
-                consulta.data_hora = dt
-                consulta.status = "agendada"
-                consulta.save()
+                    ).exclude(id=consulta.id).exclude(status="cancelada").exists()
+                    if conflito:
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                            return JsonResponse({"success": False, "error": "Horário já ocupado"}, status=400)
+                        messages.error(request, "Horário já ocupado")
+                        return redirect('dashboard_paciente')
+
+                    if consulta.status == "perdida":
+                        nova_consulta = Consulta.objects.create(
+                            paciente=consulta.paciente,
+                            nome=consulta.nome,
+                            email=consulta.email,
+                            telefone=consulta.telefone,
+                            clinica=consulta.clinica,
+                            medico=consulta.medico,
+                            especialidade=consulta.especialidade,
+                            observacoes=consulta.observacoes,
+                            data_hora=dt,
+                            status="agendada",
+                        )
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                            return JsonResponse({
+                                "success": True,
+                                "message": "Consulta reagendada com sucesso!",
+                                "data_hora": nova_consulta.data_hora.isoformat(),
+                                "status": nova_consulta.status,
+                                "new_consulta_id": nova_consulta.id,
+                            })
+                        messages.success(request, "Consulta reagendada com sucesso!")
+                        return redirect("dashboard_paciente")
+                    consulta.data_hora = dt
+                    consulta.status = "agendada"
+                    consulta.save()
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
                         "success": True,
@@ -292,28 +291,33 @@ def reagendar_consulta(request, consulta_id):
                 messages.error(request, "Não é possível reagendar para data/hora passada.")
                 return redirect('dashboard_paciente')
 
-            conflito = Consulta.objects.filter(medico=consulta.medico, data_hora=dt).exclude(id=consulta.id).exclude(status='cancelada').exists()
-            if conflito:
-                messages.error(request, "Horário já ocupado")
-                return redirect('dashboard_paciente')
-
-            if consulta.status == "perdida":
-                Consulta.objects.create(
-                    paciente=consulta.paciente,
-                    nome=consulta.nome,
-                    email=consulta.email,
-                    telefone=consulta.telefone,
-                    clinica=consulta.clinica,
-                    medico=consulta.medico,
-                    especialidade=consulta.especialidade,
-                    observacoes=consulta.observacoes,
+            with transaction.atomic():
+                Medico.objects.select_for_update().get(pk=consulta.medico_id)
+                conflito = Consulta.objects.filter(
+                    medico_id=consulta.medico_id,
                     data_hora=dt,
-                    status="agendada",
-                )
-            else:
-                consulta.data_hora = dt
-                consulta.status = "agendada"
-                consulta.save()
+                ).exclude(id=consulta.id).exclude(status="cancelada").exists()
+                if conflito:
+                    messages.error(request, "Horário já ocupado")
+                    return redirect('dashboard_paciente')
+
+                if consulta.status == "perdida":
+                    Consulta.objects.create(
+                        paciente=consulta.paciente,
+                        nome=consulta.nome,
+                        email=consulta.email,
+                        telefone=consulta.telefone,
+                        clinica=consulta.clinica,
+                        medico=consulta.medico,
+                        especialidade=consulta.especialidade,
+                        observacoes=consulta.observacoes,
+                        data_hora=dt,
+                        status="agendada",
+                    )
+                else:
+                    consulta.data_hora = dt
+                    consulta.status = "agendada"
+                    consulta.save()
 
             messages.success(request, "Consulta reagendada com sucesso!")
             return redirect("dashboard_paciente")
@@ -1125,7 +1129,7 @@ def clinica_detalhes(request, clinica_id):
             "foto_url": m.foto.url if m.foto else None,
             "especialidades": [esp.id for esp in m.especialidades.filter(clinica=clinica)]
         }
-        for m in clinica.medico_set.all()
+        for m in clinica.medico_set.filter(ativo=True)
     ]
 
 
@@ -1331,10 +1335,6 @@ def agendar_consulta(request):
     if not medico.especialidades.filter(id=especialidade.id).exists():
         return JsonResponse({"success": False, "error": "Médico não atende à especialidade selecionada"}, status=400)
 
-    # 🔒 evita conflito de horário
-    if Consulta.objects.filter(medico=medico, data_hora=data_hora).exists():
-        return JsonResponse({"success": False, "error": "Horário indisponível"})
-
     paciente = None
     nome = request.POST.get("nome", "")
     email = request.POST.get("email", "")
@@ -1357,17 +1357,25 @@ def agendar_consulta(request):
         if not all([nome, email, telefone]):
             return JsonResponse({"success": False, "error": "Dados do paciente ausentes"})
 
-    Consulta.objects.create(
-        paciente=paciente,
-        nome=nome,
-        email=email,
-        telefone=telefone,
-        clinica=clinica,
-        medico=medico,
-        especialidade=especialidade,
-        data_hora=data_hora,
-        observacoes=observacoes
-    )
+    with transaction.atomic():
+        Medico.objects.select_for_update().get(pk=medico.pk)
+        if Consulta.objects.filter(
+            medico_id=medico.pk,
+            data_hora=data_hora,
+        ).exclude(status="cancelada").exists():
+            return JsonResponse({"success": False, "error": "Horário indisponível"})
+
+        Consulta.objects.create(
+            paciente=paciente,
+            nome=nome,
+            email=email,
+            telefone=telefone,
+            clinica=clinica,
+            medico=medico,
+            especialidade=especialidade,
+            data_hora=data_hora,
+            observacoes=observacoes
+        )
 
     return JsonResponse({"success": True})
 
