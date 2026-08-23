@@ -1129,7 +1129,7 @@ def clinica_detalhes(request, clinica_id):
             "foto_url": m.foto.url if m.foto else None,
             "especialidades": [esp.id for esp in m.especialidades.filter(clinica=clinica)]
         }
-        for m in clinica.medico_set.all()
+        for m in clinica.medico_set.filter(ativo=True)
     ]
 
 
