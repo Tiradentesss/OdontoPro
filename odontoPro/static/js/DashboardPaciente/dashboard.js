@@ -909,11 +909,16 @@ function abrirModalAgendamento(clinicaId) {
                         const especialidadesHtml = especialidadesNomes.length > 0 
                             ? `<p style="font-size: 12px; color: #666; margin-top: 5px;">${especialidadesNomes.join(", ")}</p>`
                             : '';
+                        const nomeMedico = String(med.nome || '')
+                            .trim()
+                            .replace(/\s+/g, ' ')
+                            .replace(/^(?:dentista|dr\(a\)|dra?|dr)\.?(?=\s|$)\s*/i, '')
+                            .trim();
 
                         card.innerHTML = `
                             <img src="${foto}" 
                                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px;display:block;" onerror="this.onerror=null;this.src='/static/img/sem-foto-de-perfil.jpg';">
-                            <h4 style="margin-bottom: 5px;">Dr(a). ${med.nome}</h4>
+                            <h4 style="margin-bottom: 5px;">Dr(a). ${nomeMedico}</h4>
                             ${especialidadesHtml}
                         `;
 
