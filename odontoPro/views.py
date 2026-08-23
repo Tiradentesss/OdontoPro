@@ -24,10 +24,9 @@ from decimal import Decimal
 from django.utils import timezone
 from django.utils.timezone import make_aware
 from django.utils.dateparse import parse_datetime as django_parse_datetime
-from .models import MedicoHorario
 from PIL import Image
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import connection, models
 
 import logging
 logger = logging.getLogger(__name__)
@@ -118,26 +117,22 @@ def horarios_clinica(request, clinica_id):
     if medico.clinica_id != clinica_id:
         return JsonResponse({"error": "Médico não pertence à clínica"}, status=400)
 
-    dia_semana_map = {
-        0: "Segunda",
-        1: "Terça",
-        2: "Quarta",
-        3: "Quinta",
-        4: "Sexta",
-        5: "Sábado",
-        6: "Domingo",
-    }
-    dia_str = dia_semana_map[data_dt.weekday()]
-
-    intervalos = MedicoHorario.objects.filter(
-        medico=medico,
-        dia__iexact=dia_str,
-    ).order_by("hora_inicio")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT hora_inicio, hora_fim
+            FROM odontoPro_medicohorario_data
+            WHERE medico_id = %s AND data = %s
+            ORDER BY hora_inicio
+            """,
+            [medico_id, data_dt.date()],
+        )
+        intervalos = cursor.fetchall()
 
     horarios = []
-    for intervalo in intervalos:
-        hora = intervalo.hora_inicio
-        while hora < intervalo.hora_fim:
+    for hora_inicio, hora_fim in intervalos:
+        hora = hora_inicio
+        while hora < hora_fim:
             horarios.append(hora.strftime("%H:%M"))
             hora = (datetime.combine(data_dt.date(), hora) + timedelta(minutes=30)).time()
 
