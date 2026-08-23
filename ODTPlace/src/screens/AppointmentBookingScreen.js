@@ -399,7 +399,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
                 </View>
 
                 <Text style={[styles.timeSectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Horário</Text>
-                <View style={styles.timeRow}>
+                <ScrollView style={styles.timeRowScroll} contentContainerStyle={styles.timeRow} nestedScrollEnabled showsVerticalScrollIndicator>
                   {(availableSlots[selectedDate] || []).map((time) => {
                     const isActive = selectedTime === time;
                     return (
@@ -413,7 +413,10 @@ export default function AppointmentBookingScreen({ route, navigation }) {
                       </TouchableOpacity>
                     );
                   })}
-                </View>
+                </ScrollView>
+                {(availableSlots[selectedDate] || []).length > 6 && (
+                  <Text style={styles.moreSlotsText}>Role para ver mais horários</Text>
+                )}
                 {!availabilityLoading && !(availableSlots[selectedDate] || []).length && (
                   <Text style={styles.noAvailabilityText}>Nenhum horário disponível para esta data.</Text>
                 )}
@@ -815,11 +818,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 20,
+  },
+  timeRowScroll: {
+    maxHeight: 200,
+    marginBottom: 8,
   },
   noAvailabilityText: {
     fontSize: 13,
     marginBottom: 16,
+  },
+  moreSlotsText: {
+    fontSize: 12,
+    color: '#0ea5e9',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   timeChip: {
     width: '48%',

@@ -297,7 +297,7 @@ export default function RescheduleScreen({ route, navigation }) {
         />
 
         <Text style={[styles.sectionTitle, { color: colors.mutedText, marginTop: 20 }]}>Sugestões de Horário</Text>
-        <View style={styles.timeGrid}>
+        <ScrollView style={styles.timeGridScroll} contentContainerStyle={styles.timeGrid} nestedScrollEnabled showsVerticalScrollIndicator>
           {(availableSlots[selectedDate] || []).map((time) => {
             const isSelected = time === selectedTime;
             return (
@@ -321,7 +321,10 @@ export default function RescheduleScreen({ route, navigation }) {
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
+        {(availableSlots[selectedDate] || []).length > 6 && (
+          <Text style={[styles.moreSlotsText, { color: colors.brandBlue }]}>Role para ver mais horários</Text>
+        )}
         {!availabilityLoading && !(availableSlots[selectedDate] || []).length && (
           <Text style={[styles.noAvailabilityText, { color: colors.mutedText }]}>Nenhum horário disponível para esta data.</Text>
         )}
@@ -553,9 +556,18 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap', 
     justifyContent: 'space-between' 
   },
+  timeGridScroll: {
+    maxHeight: 188,
+    marginBottom: 8,
+  },
   noAvailabilityText: {
     fontSize: 13,
     marginBottom: 16,
+  },
+  moreSlotsText: {
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 12,
   },
   timeSlot: {
     width: '48%',
