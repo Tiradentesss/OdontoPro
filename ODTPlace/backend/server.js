@@ -239,30 +239,44 @@ app.get('/api/clinics/:clinicId/doctors/:doctorId/availability', (req, res) => {
     return res.status(400).json({ error: 'Informe date ou start_date/end_date no formato YYYY-MM-DD' });
   }
 
-  const query = `
-    SELECT DATE_FORMAT(h.data, '%Y-%m-%d') AS data, h.hora_inicio, h.hora_fim,
-      GROUP_CONCAT(DISTINCT TIME_FORMAT(c.data_hora, '%H:%i')) AS horarios_ocupados
-    FROM odontoPro_medicohorario_data h
+  const scheduleQuery = `
+    SELECT h.dia, h.hora_inicio, h.hora_fim
+    FROM odontoPro_medicohorario h
     INNER JOIN odontoPro_medico m ON m.id = h.medico_id AND m.clinica_id = ?
-    LEFT JOIN odontoPro_consulta c
-      ON c.medico_id = h.medico_id
-      AND DATE(c.data_hora) = h.data
-      AND c.status <> 'cancelada'
-      ${appointment_id ? 'AND c.id <> ?' : ''}
-    WHERE h.medico_id = ? AND h.data BETWEEN ? AND ?
-    GROUP BY h.data, h.hora_inicio, h.hora_fim
-    ORDER BY h.data, h.hora_inicio`;
-  const params = appointment_id
-    ? [clinicId, appointment_id, doctorId, rangeStart, rangeEnd]
-    : [clinicId, doctorId, rangeStart, rangeEnd];
+    WHERE h.medico_id = ?
+    ORDER BY h.dia, h.hora_inicio`;
 
-  db.query(query, params, (err, rows) => {
+  db.query(scheduleQuery, [clinicId, doctorId], (err, schedules) => {
     if (err) {
       console.error('Availability query failed:', err);
       return res.status(500).json({ error: err.message });
     }
 
-    const dates = new Set();
+    const occupiedQuery = `
+      SELECT DATE_FORMAT(data_hora, '%Y-%m-%d') AS data,
+        TIME_FORMAT(data_hora, '%H:%i') AS horario
+      FROM odontoPro_consulta
+      WHERE medico_id = ? AND data_hora >= ? AND data_hora < DATE_ADD(?, INTERVAL 1 DAY)
+        AND status <> 'cancelada'
+        ${appointment_id ? 'AND id <> ?' : ''}`;
+    const occupiedParams = appointment_id
+      ? [doctorId, rangeStart, rangeEnd, appointment_id]
+      : [doctorId, rangeStart, rangeEnd];
+
+    db.query(occupiedQuery, occupiedParams, (occupiedError, occupiedRows) => {
+      if (occupiedError) {
+        console.error('Occupied appointments query failed:', occupiedError);
+        return res.status(500).json({ error: occupiedError.message });
+      }
+
+      const weekdayNames = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+      const occupiedByDate = occupiedRows.reduce((result, row) => {
+        const dateKey = String(row.data).slice(0, 10);
+        if (!result[dateKey]) result[dateKey] = new Set();
+        result[dateKey].add(String(row.horario).slice(0, 5));
+        return result;
+      }, {});
+      const dates = new Set();
     const slotsByDate = {};
     const toMinutes = (value) => {
       const [hours, minutes] = String(value).split(':').map(Number);
@@ -270,21 +284,28 @@ app.get('/api/clinics/:clinicId/doctors/:doctorId/availability', (req, res) => {
     };
     const toTime = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 
-    rows.forEach((row) => {
-      const dateKey = String(row.data).slice(0, 10);
-      const occupied = new Set((row.horarios_ocupados || '').split(',').filter(Boolean).map((time) => time.slice(0, 5)));
-      const slots = slotsByDate[dateKey] || [];
-      for (let minute = toMinutes(row.hora_inicio); minute < toMinutes(row.hora_fim); minute += 30) {
-        const slot = toTime(minute);
-        if (!occupied.has(slot) && !slots.includes(slot)) slots.push(slot);
+      const currentDate = new Date(`${rangeStart}T00:00:00Z`);
+      const lastDate = new Date(`${rangeEnd}T00:00:00Z`);
+      while (currentDate <= lastDate) {
+        const dateKey = currentDate.toISOString().slice(0, 10);
+        const weekday = weekdayNames[currentDate.getUTCDay()];
+        const occupied = occupiedByDate[dateKey] || new Set();
+        const slots = [];
+        schedules.filter((schedule) => String(schedule.dia).toLowerCase() === weekday).forEach((schedule) => {
+          for (let minute = toMinutes(schedule.hora_inicio); minute < toMinutes(schedule.hora_fim); minute += 30) {
+            const slot = toTime(minute);
+            if (!occupied.has(slot) && !slots.includes(slot)) slots.push(slot);
+          }
+        });
+        if (slots.length) {
+          dates.add(dateKey);
+          slotsByDate[dateKey] = slots.sort();
+        }
+        currentDate.setUTCDate(currentDate.getUTCDate() + 1);
       }
-      if (slots.length) {
-        dates.add(dateKey);
-        slotsByDate[dateKey] = slots.sort();
-      }
-    });
 
-    return res.json({ dates: Array.from(dates).sort(), slots: slotsByDate });
+      return res.json({ dates: Array.from(dates).sort(), slots: slotsByDate });
+    });
   });
 });
 
