@@ -477,6 +477,7 @@ class Agenda(BaseScreen):
         ]
 
         self.col_widths = {conf['key']: conf['minsize'] for conf in self.col_config}
+        self._trace_enabled = True
 
     @staticmethod
     def _truncate_text(value, max_chars):
@@ -488,7 +489,6 @@ class Agenda(BaseScreen):
         return text[:max_chars - 3].rstrip() + '...'
 
         print(f"[Agenda] __init__ concluído.")
-        self._trace_enabled = True
         # Desabilitar auto-refresh por enquanto - causa loops infinitos
         # self.after(self._auto_refresh_ms, self._auto_check)
 
@@ -793,7 +793,11 @@ class Agenda(BaseScreen):
             start_call = time.time()
             
             try:
-                datas, medicos, especialidades = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+                datas, medicos, _ = ConsultaController.listar_opcoes_filtro(self.clinica_id)
+                especialidades = ConsultaController.listar_especialidades_para_combo(
+                    clinica_id=self.clinica_id,
+                    conn=None,
+                )
                 
                 elapsed_call = time.time() - start_call
                 print(f"[AGENDA] ✓ listar_opcoes_filtro OK ({elapsed_call:.3f}s)")
