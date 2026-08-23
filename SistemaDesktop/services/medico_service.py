@@ -12,7 +12,16 @@ from services.query_logger import timed_sql, inc_query_count
 class MedicoService:
     """Serviço centralizado para operações com médicos"""
 
-    _PREFIXO_NOME_RE = re.compile(r"^(?:Dentista|Dr\(a\)\.|Dra?\.)(?:\s+|$)", re.IGNORECASE)
+    _PREFIXO_NOME_RE = re.compile(
+        r"^(?:Dentista|Dr|Dr\.|Dra|Dra\.|Dr\(a\)|Dr\(a\)\.)(?=\s|$)",
+        re.IGNORECASE,
+    )
+
+    @staticmethod
+    def nome_com_prefixo_proibido(nome):
+        """Informa se o nome começa com um título profissional proibido."""
+        nome_limpo = str(nome or "").strip()
+        return bool(MedicoService._PREFIXO_NOME_RE.match(nome_limpo))
 
     @staticmethod
     def normalizar_nome(nome):

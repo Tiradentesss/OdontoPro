@@ -18,13 +18,19 @@ class MedicoController:
         senha: senha fornecida pelo usuário (se None, usa "123456" como padrão)
         especialidades: lista de IDs de especialidades
         """
-        nome = MedicoService.normalizar_nome(nome)
+        nome = nome.strip() if isinstance(nome, str) else str(nome or "")
 
         # ✓ VALIDAÇÃO: Verificar campos obrigatórios
         if not nome:
             return {
                 "sucesso": False,
                 "mensagem": "Nome do médico é obrigatório e não pode ser vazio."
+            }
+
+        if MedicoService.nome_com_prefixo_proibido(nome):
+            return {
+                "sucesso": False,
+                "mensagem": 'Digite somente o nome do médico, sem "Dentista", "Dr.", "Dra." ou "Dr(a).". Exemplo: João Lima'
             }
         
         if not email or (isinstance(email, str) and not email.strip()):
