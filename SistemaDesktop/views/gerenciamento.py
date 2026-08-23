@@ -8,6 +8,7 @@ from config.database import get_connection
 from controllers.consulta_controller import ConsultaController
 from controllers.medico_controller import MedicoController
 from models.auth import verificar_senha
+from services.medico_service import MedicoService
 
 
 class MedicosDisponibilidadeScreen(ctk.CTkFrame):
@@ -228,7 +229,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             
             nome = ctk.CTkLabel(
                 row,
-                text=medico["nome"],
+                text=MedicoService.formatar_nome_visual(medico["nome"]),
                 font=ctk.CTkFont(size=14, weight="bold"),
                 text_color=self.colors["text"],
                 anchor="w",

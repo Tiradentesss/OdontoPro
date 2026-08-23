@@ -3,12 +3,28 @@ Service para operações com Médicos.
 Busca por clínica, especialidades e validações.
 """
 
+import re
+
 from config.database import get_connection
 from services.query_logger import timed_sql, inc_query_count
 
 
 class MedicoService:
     """Serviço centralizado para operações com médicos"""
+
+    _PREFIXO_NOME_RE = re.compile(r"^(?:Dentista|Dr\(a\)\.|Dra?\.)(?:\s+|$)", re.IGNORECASE)
+
+    @staticmethod
+    def normalizar_nome(nome):
+        """Remove um prefixo profissional inicial do nome do médico."""
+        nome_limpo = str(nome or "").strip()
+        return MedicoService._PREFIXO_NOME_RE.sub("", nome_limpo, count=1).strip()
+
+    @staticmethod
+    def formatar_nome_visual(nome):
+        """Apresenta o nome do médico com o prefixo visual padronizado."""
+        nome_limpo = MedicoService.normalizar_nome(nome)
+        return f"Dr(a). {nome_limpo}" if nome_limpo else "Dr(a)."
 
     @staticmethod
     def listar_por_clinica(clinica_id):

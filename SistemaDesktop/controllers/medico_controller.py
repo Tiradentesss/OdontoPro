@@ -5,6 +5,7 @@ from models.auth import hash_senha
 import re
 from services.query_logger import timed_sql, reset_query_count, get_query_count, inc_query_count
 from services.email_uniqueness_service import EmailUniquenessService
+from services.medico_service import MedicoService
 
 
 class MedicoController:
@@ -17,8 +18,10 @@ class MedicoController:
         senha: senha fornecida pelo usuário (se None, usa "123456" como padrão)
         especialidades: lista de IDs de especialidades
         """
+        nome = MedicoService.normalizar_nome(nome)
+
         # ✓ VALIDAÇÃO: Verificar campos obrigatórios
-        if not nome or (isinstance(nome, str) and not nome.strip()):
+        if not nome:
             return {
                 "sucesso": False,
                 "mensagem": "Nome do médico é obrigatório e não pode ser vazio."
@@ -57,7 +60,6 @@ class MedicoController:
             }
         
         # Limpar espaços em branco
-        nome = nome.strip() if isinstance(nome, str) else str(nome)
         email = email.strip() if isinstance(email, str) else email
         cro = cro.strip() if isinstance(cro, str) else cro
         telefone = telefone.strip() if isinstance(telefone, str) else telefone
