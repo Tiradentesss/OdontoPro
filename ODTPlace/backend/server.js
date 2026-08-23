@@ -240,7 +240,7 @@ app.get('/api/clinics/:clinicId/doctors/:doctorId/availability', (req, res) => {
   }
 
   const query = `
-    SELECT h.data, h.hora_inicio, h.hora_fim,
+    SELECT DATE_FORMAT(h.data, '%Y-%m-%d') AS data, h.hora_inicio, h.hora_fim,
       GROUP_CONCAT(DISTINCT TIME_FORMAT(c.data_hora, '%H:%i')) AS horarios_ocupados
     FROM odontoPro_medicohorario_data h
     INNER JOIN odontoPro_medico m ON m.id = h.medico_id AND m.clinica_id = ?
@@ -272,7 +272,7 @@ app.get('/api/clinics/:clinicId/doctors/:doctorId/availability', (req, res) => {
 
     rows.forEach((row) => {
       const dateKey = String(row.data).slice(0, 10);
-      const occupied = new Set((row.horarios_ocupados || '').split(',').filter(Boolean));
+      const occupied = new Set((row.horarios_ocupados || '').split(',').filter(Boolean).map((time) => time.slice(0, 5)));
       const slots = slotsByDate[dateKey] || [];
       for (let minute = toMinutes(row.hora_inicio); minute < toMinutes(row.hora_fim); minute += 30) {
         const slot = toTime(minute);

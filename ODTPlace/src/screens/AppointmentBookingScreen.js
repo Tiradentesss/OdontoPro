@@ -74,7 +74,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [specialtyPickerVisible, setSpecialtyPickerVisible] = useState(false);
   const [currentMonth, setCurrentMonth] = useState({ year: today.getFullYear(), month: today.getMonth() + 1 });
-  const [selectedDate, setSelectedDate] = useState(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState('');
   const [availableDates, setAvailableDates] = useState([]);
   const [availableSlots, setAvailableSlots] = useState({});
@@ -130,9 +130,6 @@ export default function AppointmentBookingScreen({ route, navigation }) {
         const slots = availability?.slots && typeof availability.slots === 'object' ? availability.slots : {};
         setAvailableDates(dates);
         setAvailableSlots(slots);
-        if (dates.includes(selectedDate) && slots[selectedDate]?.length) {
-          setSelectedTime(slots[selectedDate][0]);
-        }
       })
       .catch(() => {
         if (active) {
@@ -168,7 +165,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   };
 
   const confirmDateTime = () => {
-    if (!selectedTime || !availableSlots[selectedDate]?.includes(selectedTime)) {
+    if (!selectedDate || !selectedTime || !availableSlots[selectedDate]?.includes(selectedTime)) {
       Alert.alert('Horário indisponível', 'Selecione um horário disponível para esta data.');
       return;
     }
@@ -178,6 +175,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   };
 
   const handleDateSelect = (dateId) => {
+    if (!availableDates.includes(dateId)) return;
     setSelectedDate(dateId);
     setSelectedTime(availableSlots[dateId]?.[0] || '');
   };
@@ -803,6 +801,9 @@ const styles = StyleSheet.create({
   dayNumberSelected: {
     color: '#ffffff',
     fontWeight: '800',
+  },
+  dayNumberDisabled: {
+    color: '#94a3b8',
   },
   timeSectionTitle: {
     fontSize: 14,
