@@ -40,6 +40,7 @@ const getMonthDays = (year, month) => {
 export default function AppointmentBookingScreen({ route, navigation }) {
   const professional = route?.params?.professional ?? {};
   const clinic = route?.params?.clinic ?? {};
+  const specialtyCatalog = Array.isArray(route?.params?.specialtyCatalog) ? route.params.specialtyCatalog : [];
   const { user } = useAuth();
   const { isDarkMode, colors } = useTheme();
   
@@ -52,15 +53,16 @@ export default function AppointmentBookingScreen({ route, navigation }) {
       // Se as especialidades já tiverem ID e nome
       return professional.especialidades.map((spec, index) => {
         if (typeof spec === 'object' && spec.id && spec.nome) {
-          return { id: spec.id, nome: spec.nome };
+          return { id: spec.id, nome: spec.nome, preco: spec.preco ?? spec.price };
         }
         // Se for apenas string, criar objeto com ID sequencial
-        return { id: String(index + 1), nome: spec };
+        const catalogMatch = specialtyCatalog.find((item) => String(item?.nome).toLowerCase() === String(spec).toLowerCase());
+        return { id: catalogMatch?.id ?? String(index + 1), nome: spec, preco: catalogMatch?.preco ?? null };
       });
     }
     // Fallback para specialty ou valor padrão
     const specialty = professional.specialty || 'Consulta';
-    return [{ id: professional.especialidade_id || '1', nome: specialty }];
+    return [{ id: professional.especialidade_id || '1', nome: specialty, preco: professional.preco }];
   };
   
   const doctorSpecialties = getDoctorSpecialties();
@@ -85,6 +87,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   
   const selectedRouteSpecialty = route?.params?.selectedSpecialty ?? null;
   const selectedRouteSpecialtyId = route?.params?.selectedSpecialtyId ?? null;
+  const selectedRouteSpecialtyPrice = route?.params?.selectedSpecialtyPrice ?? null;
   
   useEffect(() => {
     if (selectedRouteSpecialtyId) {
@@ -105,8 +108,17 @@ export default function AppointmentBookingScreen({ route, navigation }) {
     }
   }, [doctorSpecialties, selectedRouteSpecialty, selectedRouteSpecialtyId]);
   
-  // Preço da consulta (pode ser mock ou vir da API)
-  const consultationPrice = professional.preco || 150.00;
+  const selectedSpecialty = doctorSpecialties.find((specialty) => String(specialty.id) === String(selectedSpecialtyId));
+  const consultationPriceValue = selectedSpecialty?.preco ?? selectedRouteSpecialtyPrice ?? professional.preco ?? 150.00;
+  const consultationPrice = typeof consultationPriceValue === 'number'
+    ? consultationPriceValue
+    : (() => {
+      const normalizedPrice = String(consultationPriceValue).replace(/[^0-9,.-]/g, '');
+      const numericPrice = normalizedPrice.includes(',')
+        ? Number(normalizedPrice.replace(/\./g, '').replace(',', '.'))
+        : Number(normalizedPrice);
+      return Number.isFinite(numericPrice) && numericPrice > 0 ? numericPrice : 150.00;
+    })();
 
   const monthDays = getMonthDays(currentMonth.year, currentMonth.month);
   const monthLabel = `${monthNames[currentMonth.month - 1]} ${currentMonth.year}`;
