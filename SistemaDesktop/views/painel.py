@@ -413,7 +413,7 @@ class Painel(BaseScreen):
         detalhe = ctk.CTkFrame(card, fg_color="transparent")
         detalhe.pack(fill="x", padx=20, pady=10)
         
-        itens = [("Consultas Realizadas", 'consultas_realizadas', 'info'), ("Médicos", 'medicos', 'success'), ("Gestão", 'gerentes', 'warning')]
+        itens = [("Consultas Realizadas", 'consultas_realizadas', 'info'), ("Médicos", 'medicos', 'success'), ("Funcionário", 'gerentes', 'warning')]
         for label, key, color_key in itens:
             f = ctk.CTkFrame(detalhe, fg_color=self.colors['bg_app'], corner_radius=10)
             f.pack(fill="x", pady=3)

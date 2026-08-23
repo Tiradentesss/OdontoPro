@@ -604,7 +604,7 @@ class Cadastro(BaseScreen):
         
         self.tipo_profissional = ctk.CTkOptionMenu(
             tipo_container,
-            values=["Médico", "Gestor"],
+            values=["Médico", "Funcionário"],
             height=44,
             fg_color=COLORS["input_bg"], 
             button_color=COLORS["border"], 
