@@ -84,6 +84,16 @@ export const getClinicDoctors = async (clinicId) => {
   }
 };
 
+export const getDoctorAvailability = async (clinicId, doctorId, params = {}) => {
+  try {
+    const response = await api.get(`/clinics/${clinicId}/doctors/${doctorId}/availability`, { params });
+    return response.data;
+  } catch (error) {
+    console.error('API Error (doctor availability):', error);
+    throw error;
+  }
+};
+
 export const getDoctorStats = async (doctorId) => {
   try {
     const response = await api.get(`/doctors/${doctorId}/stats`);

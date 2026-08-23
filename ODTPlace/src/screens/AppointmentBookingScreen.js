@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import ScheduleHeader from '../components/ScheduleHeader';
 import BottomNavBar from '../components/BottomNavBar';
-import { createAppointment } from '../services/api';
+import { createAppointment, getDoctorAvailability } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../components/ThemeContext';
 
@@ -75,7 +75,10 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   const [specialtyPickerVisible, setSpecialtyPickerVisible] = useState(false);
   const [currentMonth, setCurrentMonth] = useState({ year: today.getFullYear(), month: today.getMonth() + 1 });
   const [selectedDate, setSelectedDate] = useState(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
-  const [selectedTime, setSelectedTime] = useState('09:00');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [availableDates, setAvailableDates] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState({});
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(doctorSpecialties[0]?.id || '1');
   const [selectedSpecialtyName, setSelectedSpecialtyName] = useState(doctorSpecialties[0]?.nome || 'Consulta');
   const [isReasonFocused, setIsReasonFocused] = useState(false);
@@ -108,6 +111,42 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   const monthDays = getMonthDays(currentMonth.year, currentMonth.month);
   const monthLabel = `${monthNames[currentMonth.month - 1]} ${currentMonth.year}`;
 
+  useEffect(() => {
+    if (!clinic.id || !professional.id) return;
+
+    const monthStart = `${currentMonth.year}-${String(currentMonth.month).padStart(2, '0')}-01`;
+    const monthEndDate = new Date(currentMonth.year, currentMonth.month, 0);
+    const monthEnd = `${currentMonth.year}-${String(currentMonth.month).padStart(2, '0')}-${String(monthEndDate.getDate()).padStart(2, '0')}`;
+    let active = true;
+
+    setAvailabilityLoading(true);
+    setAvailableDates([]);
+    setAvailableSlots({});
+    setSelectedTime('');
+    getDoctorAvailability(clinic.id, professional.id, { start_date: monthStart, end_date: monthEnd })
+      .then((availability) => {
+        if (!active) return;
+        const dates = Array.isArray(availability?.dates) ? availability.dates : [];
+        const slots = availability?.slots && typeof availability.slots === 'object' ? availability.slots : {};
+        setAvailableDates(dates);
+        setAvailableSlots(slots);
+        if (dates.includes(selectedDate) && slots[selectedDate]?.length) {
+          setSelectedTime(slots[selectedDate][0]);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setAvailableDates([]);
+          setAvailableSlots({});
+        }
+      })
+      .finally(() => {
+        if (active) setAvailabilityLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [clinic.id, professional.id, currentMonth.year, currentMonth.month]);
+
   const goPreviousMonth = () => {
     if (currentMonth.month === 1) {
       setCurrentMonth({ year: currentMonth.year - 1, month: 12 });
@@ -129,9 +168,18 @@ export default function AppointmentBookingScreen({ route, navigation }) {
   };
 
   const confirmDateTime = () => {
+    if (!selectedTime || !availableSlots[selectedDate]?.includes(selectedTime)) {
+      Alert.alert('Horário indisponível', 'Selecione um horário disponível para esta data.');
+      return;
+    }
     const [year, month, day] = selectedDate.split('-');
     setSelectedSlot(`${monthNames[Number(month) - 1]} - ${String(day).padStart(2, '0')} - ${currentMonth.year} ${selectedTime}`);
     setPickerVisible(false);
+  };
+
+  const handleDateSelect = (dateId) => {
+    setSelectedDate(dateId);
+    setSelectedTime(availableSlots[dateId]?.[0] || '');
   };
 
   const formatDateTime = (date, time) => {
@@ -337,14 +385,16 @@ export default function AppointmentBookingScreen({ route, navigation }) {
                   ))}
                   {monthDays.map((day) => {
                     const isSelected = selectedDate === day.id;
+                    const isAvailable = availableDates.includes(day.id);
                     return (
                       <TouchableOpacity
                         key={day.id}
-                        style={[styles.dayCell, isSelected && styles.dayCellSelected, isDarkMode && !isSelected && { backgroundColor: '#1E293B' }, isDarkMode && isSelected && { backgroundColor: '#38BDF8' }]}
+                        style={[styles.dayCell, isSelected && styles.dayCellSelected, !isAvailable && styles.dayCellDisabled, isDarkMode && !isSelected && { backgroundColor: '#1E293B' }, isDarkMode && isSelected && { backgroundColor: '#38BDF8' }]}
                         activeOpacity={0.85}
-                        onPress={() => setSelectedDate(day.id)}
+                        disabled={!isAvailable}
+                        onPress={() => handleDateSelect(day.id)}
                       >
-                        <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected, isDarkMode && !isSelected && { color: '#F8FAFC' }, isDarkMode && isSelected && { color: '#0F172A' }]}>{day.day}</Text>
+                        <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected, !isAvailable && styles.dayNumberDisabled, isDarkMode && !isSelected && { color: '#F8FAFC' }, isDarkMode && isSelected && { color: '#0F172A' }]}>{day.day}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -352,7 +402,7 @@ export default function AppointmentBookingScreen({ route, navigation }) {
 
                 <Text style={[styles.timeSectionTitle, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>Horário</Text>
                 <View style={styles.timeRow}>
-                  {['09:00', '09:30', '12:00', '12:30', '15:00', '16:30'].map((time) => {
+                  {(availableSlots[selectedDate] || []).map((time) => {
                     const isActive = selectedTime === time;
                     return (
                       <TouchableOpacity
@@ -366,6 +416,10 @@ export default function AppointmentBookingScreen({ route, navigation }) {
                     );
                   })}
                 </View>
+                {!availabilityLoading && !(availableSlots[selectedDate] || []).length && (
+                  <Text style={styles.noAvailabilityText}>Nenhum horário disponível para esta data.</Text>
+                )}
+                {availabilityLoading && <Text style={styles.noAvailabilityText}>Carregando horários...</Text>}
 
                 <View style={styles.pickerActionsRow}>
                   <TouchableOpacity style={styles.pickerCancelButton} onPress={() => setPickerVisible(false)} activeOpacity={0.85}>
@@ -739,6 +793,9 @@ const styles = StyleSheet.create({
   dayCellSelected: {
     backgroundColor: '#0ea5e9',
   },
+  dayCellDisabled: {
+    opacity: 0.3,
+  },
   dayNumber: {
     fontSize: 14,
     color: '#0f172a',
@@ -758,6 +815,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 20,
+  },
+  noAvailabilityText: {
+    fontSize: 13,
+    marginBottom: 16,
   },
   timeChip: {
     width: '48%',

@@ -228,6 +228,66 @@ app.get('/api/clinics/:clinicId/doctors', (req, res) => {
   });
 });
 
+app.get('/api/clinics/:clinicId/doctors/:doctorId/availability', (req, res) => {
+  const { clinicId, doctorId } = req.params;
+  const { date, start_date, end_date, appointment_id } = req.query;
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const rangeStart = date || start_date;
+  const rangeEnd = date || end_date;
+
+  if (!rangeStart || !rangeEnd || !datePattern.test(rangeStart) || !datePattern.test(rangeEnd)) {
+    return res.status(400).json({ error: 'Informe date ou start_date/end_date no formato YYYY-MM-DD' });
+  }
+
+  const query = `
+    SELECT h.data, h.hora_inicio, h.hora_fim,
+      GROUP_CONCAT(DISTINCT TIME_FORMAT(c.data_hora, '%H:%i')) AS horarios_ocupados
+    FROM odontoPro_medicohorario_data h
+    INNER JOIN odontoPro_medico m ON m.id = h.medico_id AND m.clinica_id = ?
+    LEFT JOIN odontoPro_consulta c
+      ON c.medico_id = h.medico_id
+      AND DATE(c.data_hora) = h.data
+      AND c.status <> 'cancelada'
+      ${appointment_id ? 'AND c.id <> ?' : ''}
+    WHERE h.medico_id = ? AND h.data BETWEEN ? AND ?
+    GROUP BY h.data, h.hora_inicio, h.hora_fim
+    ORDER BY h.data, h.hora_inicio`;
+  const params = appointment_id
+    ? [clinicId, appointment_id, doctorId, rangeStart, rangeEnd]
+    : [clinicId, doctorId, rangeStart, rangeEnd];
+
+  db.query(query, params, (err, rows) => {
+    if (err) {
+      console.error('Availability query failed:', err);
+      return res.status(500).json({ error: err.message });
+    }
+
+    const dates = new Set();
+    const slotsByDate = {};
+    const toMinutes = (value) => {
+      const [hours, minutes] = String(value).split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+    const toTime = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+
+    rows.forEach((row) => {
+      const dateKey = String(row.data).slice(0, 10);
+      const occupied = new Set((row.horarios_ocupados || '').split(',').filter(Boolean));
+      const slots = slotsByDate[dateKey] || [];
+      for (let minute = toMinutes(row.hora_inicio); minute < toMinutes(row.hora_fim); minute += 30) {
+        const slot = toTime(minute);
+        if (!occupied.has(slot) && !slots.includes(slot)) slots.push(slot);
+      }
+      if (slots.length) {
+        dates.add(dateKey);
+        slotsByDate[dateKey] = slots.sort();
+      }
+    });
+
+    return res.json({ dates: Array.from(dates).sort(), slots: slotsByDate });
+  });
+});
+
 app.get('/api/doctors/:id', (req, res) => {
   const doctorId = req.params.id;
   if (useMockData()) {
@@ -391,7 +451,7 @@ app.get(['/api/appointments', '/appointments'], (req, res) => {
   const { medico_id, clinica_id } = req.query;
 
   // Select includes rating fields and specialty description (if present in DB schema)
-  const select = 'c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, a.nota as avaliacao, a.comentario as avaliacao_comentario, e.descricao as especialidade_descricao';
+  const select = 'c.id, c.nome, c.email, c.telefone, c.clinica_id, c.medico_id, c.especialidade_id, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, a.nota as avaliacao, a.comentario as avaliacao_comentario, e.descricao as especialidade_descricao';
 
   let query = `SELECT ${select} FROM odontoPro_consulta c LEFT JOIN odontoPro_avaliacao a ON a.consulta_id = c.id LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE 1=1`;
   const params = [];
@@ -412,7 +472,7 @@ app.get(['/api/appointments', '/appointments'], (req, res) => {
     if (err && err.message && err.message.includes('Unknown column')) {
       // Retry without rating fields / specialty description if schema doesn't have them
       console.warn('Primary appointments query failed with unknown column, retrying without rating/description columns');
-      const fallbackSelect = 'c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, a.nota as avaliacao, a.comentario as avaliacao_comentario';
+      const fallbackSelect = 'c.id, c.nome, c.email, c.telefone, c.clinica_id, c.medico_id, c.especialidade_id, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, a.nota as avaliacao, a.comentario as avaliacao_comentario';
       const fallbackQuery = `SELECT ${fallbackSelect} FROM odontoPro_consulta c LEFT JOIN odontoPro_avaliacao a ON a.consulta_id = c.id LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id WHERE 1=1` + (medico_id ? ' AND c.medico_id = ?' : '') + (clinica_id ? ' AND c.clinica_id = ?' : '') + ' ORDER BY c.data_hora ASC';
       db.query(fallbackQuery, params, (err2, results2) => {
         if (err2) {
@@ -449,7 +509,7 @@ app.get(['/api/appointments/:patientEmail', '/appointments/:patientEmail'], (req
   // Tentar buscar por paciente_id primeiro (número), depois por email
   const isNumericId = /^\d+$/.test(patientEmail);
 
-  const select = 'c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, a.nota as avaliacao, a.comentario as avaliacao_comentario, e.descricao as especialidade_descricao';
+  const select = 'c.id, c.nome, c.email, c.telefone, c.clinica_id, c.medico_id, c.especialidade_id, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, a.nota as avaliacao, a.comentario as avaliacao_comentario, e.descricao as especialidade_descricao';
 
   let query, params;
 
@@ -464,7 +524,7 @@ app.get(['/api/appointments/:patientEmail', '/appointments/:patientEmail'], (req
   db.query(query, params, (err, results) => {
     if (err && err.message && err.message.includes('Unknown column')) {
       console.warn('Primary appointment-by-patient query failed with unknown column, retrying without rating/description columns');
-      const fallbackSelect = 'c.id, c.nome, c.email, c.telefone, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, a.nota as avaliacao, a.comentario as avaliacao_comentario';
+      const fallbackSelect = 'c.id, c.nome, c.email, c.telefone, c.clinica_id, c.medico_id, c.especialidade_id, c.data_hora, c.observacoes, c.status, c.criado_em, c.paciente_id, p.foto as paciente_foto, cl.nome as clinica_nome, m.nome as medico_nome, e.nome as especialidade_nome, a.nota as avaliacao, a.comentario as avaliacao_comentario';
       const fallbackQuery = `SELECT ${fallbackSelect} FROM odontoPro_consulta c LEFT JOIN odontoPro_avaliacao a ON a.consulta_id = c.id LEFT JOIN odontoPro_clinica cl ON c.clinica_id = cl.id LEFT JOIN odontoPro_medico m ON c.medico_id = m.id LEFT JOIN odontoPro_especialidade e ON c.especialidade_id = e.id LEFT JOIN odontoPro_paciente p ON c.paciente_id = p.id` + (isNumericId ? ' WHERE c.paciente_id = ? ORDER BY c.data_hora DESC' : ' WHERE c.email = ? ORDER BY c.data_hora DESC');
       db.query(fallbackQuery, params, (err2, results2) => {
         if (err2) {
@@ -526,27 +586,54 @@ app.put(['/api/appointments/:id', '/appointments/:id'], (req, res) => {
     return res.status(400).json({ error: 'No valid fields to update' });
   }
 
-  params.push(appointmentId);
-  const query = `UPDATE odontoPro_consulta SET ${updates.join(', ')} WHERE id = ?`;
+  const executeUpdate = () => {
+    params.push(appointmentId);
+    const query = `UPDATE odontoPro_consulta SET ${updates.join(', ')} WHERE id = ?`;
 
-  db.query(query, params, (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ message: 'Appointment updated successfully', affectedRows: result.affectedRows });
-  });
+    db.query(query, params, (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ message: 'Appointment updated successfully', affectedRows: result.affectedRows });
+    });
+  };
+
+  if (data_hora !== undefined) {
+    const normalizedDataHora = normalizeAppointmentDateValue(data_hora);
+    db.query(
+      "SELECT id FROM odontoPro_consulta WHERE medico_id = (SELECT medico_id FROM odontoPro_consulta WHERE id = ?) AND data_hora = ? AND status <> 'cancelada' AND id <> ? LIMIT 1",
+      [appointmentId, normalizedDataHora, appointmentId],
+      (err, conflicts) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (conflicts.length) return res.status(409).json({ error: 'Horário já ocupado' });
+        executeUpdate();
+      },
+    );
+    return;
+  }
+
+  executeUpdate();
 });
 
 app.post(['/api/appointments', '/appointments'], (req, res) => {
   const { nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, paciente_id } = req.body;
   const normalizedDataHora = normalizeAppointmentDateValue(data_hora);
   const query = `INSERT INTO odontoPro_consulta (nome, email, telefone, clinica_id, medico_id, especialidade_id, data_hora, observacoes, status, paciente_id, criado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'agendada', ?, NOW())`;
-  db.query(query, [nome, email, telefone, clinica_id, medico_id, especialidade_id, normalizedDataHora, observacoes, paciente_id], (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ id: result.insertId, message: 'Appointment created successfully' });
-  });
+  db.query(
+    "SELECT id FROM odontoPro_consulta WHERE medico_id = ? AND data_hora = ? AND status <> 'cancelada' LIMIT 1",
+    [medico_id, normalizedDataHora],
+    (conflictError, conflicts) => {
+      if (conflictError) return res.status(500).json({ error: conflictError.message });
+      if (conflicts.length) return res.status(409).json({ error: 'Horário já ocupado' });
+
+      db.query(query, [nome, email, telefone, clinica_id, medico_id, especialidade_id, normalizedDataHora, observacoes, paciente_id], (err, result) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ id: result.insertId, message: 'Appointment created successfully' });
+      });
+    },
+  );
 });
 
 // POST /api/appointments/:id/rate and /api/appointments/:id/rating

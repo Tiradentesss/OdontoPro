@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../components/ThemeContext'; // Importação do tema global
-import { updateAppointment } from '../services/api';
+import { getDoctorAvailability, updateAppointment } from '../services/api';
 import { formatAppointmentDateTime, formatAppointmentTime, parseAppointmentDate } from '../utils/appointmentTime';
 
 const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -52,6 +52,9 @@ export default function RescheduleScreen({ route, navigation }) {
   const [currentMonth, setCurrentMonth] = useState({ year: today.getFullYear(), month: today.getMonth() + 1 });
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [availableDates, setAvailableDates] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState({});
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   // Consome as propriedades globais do tema
   const { isDarkMode, colors } = useTheme();
@@ -67,8 +70,48 @@ export default function RescheduleScreen({ route, navigation }) {
     }
   }, [appointment]);
 
+  useEffect(() => {
+    const clinicId = appointment?.clinica_id;
+    const doctorId = appointment?.medico_id;
+    if (!clinicId || !doctorId) return;
+
+    const monthStart = `${currentMonth.year}-${String(currentMonth.month).padStart(2, '0')}-01`;
+    const monthEndDate = new Date(currentMonth.year, currentMonth.month, 0);
+    const monthEnd = `${currentMonth.year}-${String(currentMonth.month).padStart(2, '0')}-${String(monthEndDate.getDate()).padStart(2, '0')}`;
+    let active = true;
+
+    setAvailabilityLoading(true);
+    setAvailableDates([]);
+    setAvailableSlots({});
+    setSelectedTime('');
+    getDoctorAvailability(clinicId, doctorId, { start_date: monthStart, end_date: monthEnd, appointment_id: appointment?.id })
+      .then((availability) => {
+        if (!active) return;
+        const dates = Array.isArray(availability?.dates) ? availability.dates : [];
+        const slots = availability?.slots && typeof availability.slots === 'object' ? availability.slots : {};
+        setAvailableDates(dates);
+        setAvailableSlots(slots);
+        if (slots[selectedDate]?.length) setSelectedTime(slots[selectedDate][0]);
+      })
+      .catch(() => {
+        if (active) {
+          setAvailableDates([]);
+          setAvailableSlots({});
+        }
+      })
+      .finally(() => {
+        if (active) setAvailabilityLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [appointment, currentMonth.year, currentMonth.month]);
+
   // Abre o modal de revisão
   const handleOpenConfirmation = () => {
+    if (!availableSlots[selectedDate]?.includes(selectedTime)) {
+      Alert.alert('Horário indisponível', 'Selecione um horário disponível para esta data.');
+      return;
+    }
     const [year, month, day] = selectedDate.split('-').map(Number);
     const selectedDay = new Date(year, month - 1, day);
     selectedDay.setHours(0, 0, 0, 0);
@@ -101,8 +144,10 @@ export default function RescheduleScreen({ route, navigation }) {
   };
 
   const handleSelectDate = (dateId) => {
+    if (!availableDates.includes(dateId)) return;
     setSelectedDate(dateId);
     setSelectedDateLabel(formatDateLabel(dateId));
+    setSelectedTime(availableSlots[dateId]?.[0] || '');
     setCalendarVisible(false);
   };
 
@@ -213,15 +258,18 @@ export default function RescheduleScreen({ route, navigation }) {
                 ))}
                 {getMonthDays(currentMonth.year, currentMonth.month).map((date) => {
                   const isSelectedDate = date.id === selectedDate;
+                  const isAvailable = availableDates.includes(date.id);
                   return (
                     <TouchableOpacity
                       key={date.id}
                       style={[
                         styles.dateCell,
                         { backgroundColor: isSelectedDate ? colors.brandBlue : 'transparent', borderColor: colors.border },
+                        !isAvailable && styles.dateCellDisabled,
                         isSelectedDate && { borderWidth: 0 }
                       ]}
                       onPress={() => handleSelectDate(date.id)}
+                      disabled={!isAvailable}
                       activeOpacity={0.7}
                     >
                       <Text style={[styles.dateCellText, { color: isSelectedDate ? '#FFFFFF' : colors.text }]}>{date.day}</Text>
@@ -250,7 +298,7 @@ export default function RescheduleScreen({ route, navigation }) {
 
         <Text style={[styles.sectionTitle, { color: colors.mutedText, marginTop: 20 }]}>Sugestões de Horário</Text>
         <View style={styles.timeGrid}>
-          {['08:00', '09:00', '10:30', '11:30', '14:00', '15:30'].map((time) => {
+          {(availableSlots[selectedDate] || []).map((time) => {
             const isSelected = time === selectedTime;
             return (
               <TouchableOpacity
@@ -274,6 +322,10 @@ export default function RescheduleScreen({ route, navigation }) {
             );
           })}
         </View>
+        {!availabilityLoading && !(availableSlots[selectedDate] || []).length && (
+          <Text style={[styles.noAvailabilityText, { color: colors.mutedText }]}>Nenhum horário disponível para esta data.</Text>
+        )}
+        {availabilityLoading && <Text style={[styles.noAvailabilityText, { color: colors.mutedText }]}>Carregando horários...</Text>}
 
         <View style={styles.spacer} />
 
@@ -484,6 +536,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 8,
   },
+  dateCellDisabled: {
+    opacity: 0.3,
+  },
   dateCellText: {
     fontSize: 12,
     fontWeight: '700',
@@ -497,6 +552,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     flexWrap: 'wrap', 
     justifyContent: 'space-between' 
+  },
+  noAvailabilityText: {
+    fontSize: 13,
+    marginBottom: 16,
   },
   timeSlot: {
     width: '48%',
