@@ -447,7 +447,7 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                     <Text style={[styles.scheduleTitleHeader, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Consultas do Dia</Text>
                 </View>
 
-                <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+                <ScrollView style={styles.listScroll} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
                     {filteredAppointments.map((item) => {
                         const statusInfo = getStatusInfo(item.status);
                         return (
@@ -856,6 +856,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 140,
     },
+    listScroll: {
+        flex: 1,
+    },
     appointmentRow: {
         flexDirection: 'row',
         marginBottom: 16,
@@ -955,7 +958,7 @@ const styles = StyleSheet.create({
         marginTop: 12,
     },
     emptyState: {
-        paddingVertical: 40,
+        paddingVertical: 16,
         alignItems: 'center',
     },
     emptyText: {

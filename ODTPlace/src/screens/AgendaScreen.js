@@ -380,6 +380,7 @@ export default function AgendaScreen({ navigation, route }) {
           key="agenda-flatlist"
           data={displayedAppointments}
           keyExtractor={(item) => item.id}
+          style={styles.list}
           contentContainerStyle={styles.listContent}
           renderItem={renderAppointmentItem}
           showsVerticalScrollIndicator={false}
@@ -490,6 +491,9 @@ const styles = StyleSheet.create({
   listContent: { 
     paddingHorizontal: 24, 
     paddingBottom: 110,
+  },
+  list: {
+    flex: 1,
   },
   timelineRow: { 
     flexDirection: "row", 
