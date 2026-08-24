@@ -1317,7 +1317,7 @@ class Relatorios(BaseScreen):
             tooltip_text = COLORS.get("text", "#1F2937")
             tooltip_edge = COLORS.get("border", "#E5E7EB")
             x_rotation = 35
-            x_ha = "right"
+            x_ha = "center"
             grid_alpha = 0.12
             bar_alpha = 0.95
             text_size = 9
@@ -1328,7 +1328,12 @@ class Relatorios(BaseScreen):
         ax = fig.add_subplot(111)
         ax.set_facecolor(ax_bg)
 
-        positions = list(range(len(labels)))
+        hourly_positions = [
+            int(label[:-1])
+            for label in labels
+            if isinstance(label, str) and label.endswith("h") and label[:-1].isdigit()
+        ]
+        positions = hourly_positions if len(hourly_positions) == len(labels) else list(range(len(labels)))
         bar_width = 0.45
         positive_values = [value for value in values if value > 0]
         y_max = max(positive_values) if positive_values else 1
@@ -1354,25 +1359,23 @@ class Relatorios(BaseScreen):
         elif periodo_atual == "Anual":
             periodo_atual = "Ano"
 
-        tick_positions = list(positions)
+        tick_indices = list(range(len(labels)))
         tick_labels = list(labels)
 
         if periodo_atual == "Hoje":
-            tick_positions = list(range(0, len(labels), 2))
-            tick_labels = [labels[i] for i in tick_positions]
-            if len(labels) > 1 and tick_positions[-1] != len(labels) - 1:
-                tick_positions.append(len(labels) - 1)
+            tick_indices = list(range(0, len(labels), 2))
+            tick_labels = [labels[i] for i in tick_indices]
+            if len(labels) > 1 and tick_indices[-1] != len(labels) - 1:
+                tick_indices.append(len(labels) - 1)
                 tick_labels.append(labels[-1])
         elif periodo_atual == "Semana":
-            tick_positions = list(positions)
+            tick_indices = list(range(len(labels)))
             tick_labels = list(labels)
         elif periodo_atual == "Mês":
-            tick_positions = list(range(12))
+            tick_indices = list(range(12))
             tick_labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
         elif periodo_atual == "Ano":
-            tick_positions = list(positions)
-            tick_labels = list(labels)
-            tick_positions = list(range(len(labels)))
+            tick_indices = list(range(len(labels)))
             tick_labels = list(labels)
         else:
             max_visible_ticks = 10
@@ -1380,13 +1383,14 @@ class Relatorios(BaseScreen):
                 step = 1
             else:
                 step = max(1, math.ceil(len(labels) / max_visible_ticks))
-            tick_positions = list(range(0, len(labels), step))
-            tick_labels = [labels[i] for i in tick_positions]
-            if len(labels) > 0 and tick_positions[-1] != len(labels) - 1:
-                tick_positions.append(len(labels) - 1)
+            tick_indices = list(range(0, len(labels), step))
+            tick_labels = [labels[i] for i in tick_indices]
+            if len(labels) > 0 and tick_indices[-1] != len(labels) - 1:
+                tick_indices.append(len(labels) - 1)
                 tick_labels.append(labels[-1])
 
-        ax.set_xlim(-0.5, len(labels) - 0.5)
+        tick_positions = [positions[index] for index in tick_indices]
+        ax.set_xlim(min(positions, default=0) - 0.5, max(positions, default=0) + 0.5)
         ax.set_ylim(0, y_limit)
         ax.set_xticks(tick_positions)
         ax.set_xticklabels(tick_labels, fontsize=10, color=tick_color, rotation=x_rotation, ha=x_ha)
