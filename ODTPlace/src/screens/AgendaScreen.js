@@ -72,6 +72,7 @@ const getDisplayStatus = (status) => {
 const buildDayStrip = (centerDate) => {
   const start = new Date(centerDate.getFullYear(), centerDate.getMonth(), 1);
   const end = new Date(centerDate.getFullYear(), centerDate.getMonth() + 1, 0);
+  const todayKey = formatDateKey(new Date());
 
   return Array.from({ length: end.getDate() }, (_, index) => {
     const date = new Date(start);
@@ -81,6 +82,7 @@ const buildDayStrip = (centerDate) => {
       dayName: weekdays[date.getDay()],
       dayNum: String(date.getDate()),
       fullDate: date,
+      isPast: formatDateKey(date) < todayKey,
     };
   });
 };
@@ -316,6 +318,8 @@ export default function AgendaScreen({ navigation, route }) {
               style={[
                 styles.dayCard,
                 { backgroundColor: colors.card, borderWidth: hasAppointment ? 1 : 0, borderColor: colors.brandBlue },
+                item.isPast && styles.dayCardPast,
+                isDarkMode && item.isPast && { backgroundColor: '#334155' },
                 isActive && { backgroundColor: colors.brandBlue, borderColor: colors.brandBlue }
               ]}
               onPress={() => setSelectedDate(item.id)}
@@ -323,6 +327,7 @@ export default function AgendaScreen({ navigation, route }) {
               <Text style={[
                 styles.dayNameLabel,
                 { color: colors.mutedText },
+                item.isPast && styles.dayLabelPast,
                 isActive && { color: '#FFFFFF' }
               ]}>
                 {item.dayName}
@@ -330,12 +335,13 @@ export default function AgendaScreen({ navigation, route }) {
               <Text style={[
                 styles.dayNumLabel,
                 { color: colors.text },
+                item.isPast && styles.dayLabelPast,
                 isActive && { color: '#FFFFFF' }
               ]}>
                 {item.dayNum}
               </Text>
               {hasAppointment ? (
-                <View style={[styles.dayDot, { backgroundColor: isActive ? '#FFFFFF' : colors.brandBlue }]} />
+                <View style={[styles.dayDot, { backgroundColor: isActive ? '#FFFFFF' : colors.brandBlue }, item.isPast && styles.dayDotPast, isDarkMode && item.isPast && { backgroundColor: '#94A3B8' }]} />
               ) : null}
             </TouchableOpacity>
           );
@@ -450,6 +456,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     paddingVertical: 6,
   },
+  dayCardPast: {
+    backgroundColor: '#F1F5F9',
+  },
   dayNameLabel: { 
     fontSize: 12, 
   },
@@ -457,11 +466,17 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     fontWeight: "700",
   },
+  dayLabelPast: {
+    opacity: 0.5,
+  },
   dayDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     marginTop: 6,
+  },
+  dayDotPast: {
+    backgroundColor: '#0B4A88',
   },
   listHeaderSection: {
     flexDirection: "row",
