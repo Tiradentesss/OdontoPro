@@ -15,7 +15,7 @@ from views.relatorios import Relatorios
 from views.cadastro import Cadastro
 from views.configuracoes import Configuracoes
 from views.gerenciamento import Gerenciamento
-from views.permissao import Permissoes
+from views.permissao import MAPA_PERMISSOES, Permissoes
 from controllers.gerenciamento_controller import GerenciamentoController
 from controllers.consulta_controller import ConsultaController
 from views.theme import COLORS, toggle_dark_mode, load_theme_preference, get_dark_mode, font, ASSETS_DIR, get_brand_logo_path
@@ -115,13 +115,6 @@ class App(ctk.CTkToplevel):
         try:
             perms_bd = GerenciamentoController.obter_permissoes_gerente(self.usuario_id)
             perms = {p['codigo']: True for p in perms_bd}
-            
-            # Se gerente não tem permissões no BD, dar todas as permissões padrão
-            if not perms:
-                print(f"[PERMISSÕES] Gerente {self.usuario_id} sem permissões no BD. Concedendo todas...")
-                permissoes_padrao = ["Painel", "Agenda", "Financeiro", "Configurações", "Cadastro", "Gerenciamento", "Permissões"]
-                return {p: True for p in permissoes_padrao}
-            
             return perms
         except Exception as e:
             print(f"Erro ao carregar permissões: {e}")
@@ -133,20 +126,18 @@ class App(ctk.CTkToplevel):
             # Usuários de clínica têm acesso a tudo
             return True
         
-        # Para gerentes, verificar a permissão
-        # Mapear nome da tela para nome da permissão no BD
-        mapa_permissoes = {
+        mapa_abas = {
             "painel": "Painel",
             "agenda": "Agenda",
             "relatorios": "Financeiro",
             "config": "Configurações",
             "cadastro": "Cadastro",
-            "permissao": "Permissões",
             "gerenciamento": "Gerenciamento"
         }
-        
-        perm_necessaria = mapa_permissoes.get(tela)
-        return perm_necessaria in self.permissoes_usuario if perm_necessaria else False
+
+        nome_permissao = mapa_abas.get(tela)
+        codigo_real = MAPA_PERMISSOES.get(nome_permissao)
+        return codigo_real in self.permissoes_usuario if codigo_real else False
 
     def __init__(
         self,

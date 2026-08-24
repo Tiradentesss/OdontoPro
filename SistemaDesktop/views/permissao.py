@@ -10,6 +10,16 @@ from controllers.gerenciamento_controller import GerenciamentoController
 from models.auth import verificar_senha
 
 
+MAPA_PERMISSOES = {
+    "Painel": "dashboard",
+    "Agenda": "consultas",
+    "Financeiro": "financeiro",
+    "Cadastro": "pacientes",
+    "Gerenciamento": "medicos",
+    "Configurações": "configuracoes",
+}
+
+
 class ImagePreview:
     """Classe utilitária para gerenciar previews de imagens"""
 
@@ -549,7 +559,7 @@ class Permissoes(BaseScreen):
                 return {}
 
             permissoes_bd = GerenciamentoController.listar_permissoes_disponiveis()
-            permissao_map = {p['codigo']: p['id'] for p in permissoes_bd}
+            codigos_permissoes = {p['codigo'] for p in permissoes_bd}
 
             admins = {}
             for gerente in gerentes_bd:
@@ -557,7 +567,10 @@ class Permissoes(BaseScreen):
                 gerentes_perms_bd = GerenciamentoController.obter_permissoes_gerente(gerente_id)
                 perms_dict = {}
                 for perm in self.permissions_list:
-                    tem_permissao = any(p['codigo'] == perm for p in gerentes_perms_bd)
+                    codigo = MAPA_PERMISSOES.get(perm)
+                    tem_permissao = codigo in codigos_permissoes and any(
+                        p['codigo'] == codigo for p in gerentes_perms_bd
+                    )
                     perms_dict[perm] = tem_permissao
                 status = "Ativo" if gerente['ativo'] == 1 else "Inativo"
                 admins[gerente['nome']] = {
@@ -959,6 +972,27 @@ class Permissoes(BaseScreen):
 
         try:
             gerente_id = self.selected_admin_id
+            todas_permissoes = GerenciamentoController.listar_permissoes_disponiveis()
+            permissao_map = {p['codigo']: p['id'] for p in todas_permissoes}
+            permissoes_selecionadas = []
+            for perm_nome in self.permissions_list:
+                if self.switch_widgets[perm_nome].get():
+                    codigo_real = MAPA_PERMISSOES.get(perm_nome)
+                    if not codigo_real:
+                        messagebox.showerror(
+                            "Erro",
+                            f"A permissão marcada '{perm_nome}' não possui código configurado."
+                        )
+                        return
+                    permissao_id = permissao_map.get(codigo_real)
+                    if permissao_id is None:
+                        messagebox.showerror(
+                            "Erro",
+                            f"A permissão '{perm_nome}' ({codigo_real}) não existe no banco de dados."
+                        )
+                        return
+                    permissoes_selecionadas.append((perm_nome, permissao_id))
+
             resultado_permissoes = GerenciamentoController.remover_todas_permissoes_gerente(
                 gerente_id,
                 clinica_id=self.clinica_id,
@@ -967,21 +1001,16 @@ class Permissoes(BaseScreen):
             if not resultado_permissoes.get("sucesso"):
                 messagebox.showerror("Erro", resultado_permissoes.get("mensagem", "Erro ao salvar permissões"))
                 return
-            todas_permissoes = GerenciamentoController.listar_permissoes_disponiveis()
-            permissao_map = {p['codigo']: p['id'] for p in todas_permissoes}
-            for perm_nome in self.permissions_list:
-                if self.switch_widgets[perm_nome].get():
-                    permissao_id = permissao_map.get(perm_nome)
-                    if permissao_id:
-                        resultado_permissao = GerenciamentoController.adicionar_permissao_gerente(
-                            gerente_id,
-                            permissao_id,
-                            clinica_id=self.clinica_id,
-                            current_user_type=self.tipo_usuario
-                        )
-                        if not resultado_permissao.get("sucesso"):
-                            messagebox.showerror("Erro", resultado_permissao.get("mensagem", "Erro ao salvar permissões"))
-                            return
+            for perm_nome, permissao_id in permissoes_selecionadas:
+                resultado_permissao = GerenciamentoController.adicionar_permissao_gerente(
+                    gerente_id,
+                    permissao_id,
+                    clinica_id=self.clinica_id,
+                    current_user_type=self.tipo_usuario
+                )
+                if not resultado_permissao.get("sucesso"):
+                    messagebox.showerror("Erro", resultado_permissao.get("mensagem", "Erro ao salvar permissões"))
+                    return
             if self.account_status_switch.get():
                 resultado_status = GerenciamentoController.ativar_gerente(
                     gerente_id,
