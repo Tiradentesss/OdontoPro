@@ -1363,11 +1363,8 @@ class Relatorios(BaseScreen):
         tick_labels = list(labels)
 
         if periodo_atual == "Hoje":
-            tick_indices = list(range(0, len(labels), 2))
-            tick_labels = [labels[i] for i in tick_indices]
-            if len(labels) > 1 and tick_indices[-1] != len(labels) - 1:
-                tick_indices.append(len(labels) - 1)
-                tick_labels.append(labels[-1])
+            tick_indices = list(range(len(labels)))
+            tick_labels = list(labels)
         elif periodo_atual == "Semana":
             tick_indices = list(range(len(labels)))
             tick_labels = list(labels)
