@@ -90,6 +90,15 @@ function gerarResumoHorarios(horarios) {
             return `${nomeInicio}: ${horarioTexto}`;
         }
 
+        // Exatamente 2 dias consecutivos: usar "e"
+        if (grupo.length === 2) {
+            if (primeiro.fechado) {
+                return `${nomeInicio} e ${nomeFim}: Fechado`;
+            }
+            return `${nomeInicio} e ${nomeFim}: ${horarioTexto}`;
+        }
+
+        // 3 ou mais dias consecutivos: usar "a"
         if (primeiro.fechado) {
             return `${nomeInicio} a ${nomeFim}: Fechado`;
         }
