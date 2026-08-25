@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 2,
-    marginBottom: 0,
+    marginBottom: 4,
   },
   dayCard: {
     width: 44,

@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
     dateCarousel: {
         paddingHorizontal: 18,
         paddingTop: 2,
-        paddingBottom: 0,
+        paddingBottom: 4,
     },
     dateItem: {
         width: 58,
