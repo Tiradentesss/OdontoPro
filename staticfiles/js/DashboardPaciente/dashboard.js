@@ -1324,7 +1324,12 @@ function atualizarMedicosPorEspecialidade() {
         filtrados.forEach(medico => {
             const option = document.createElement('option');
             option.value = medico.id;
-            option.textContent = medico.nome;
+            const nomeMedico = String(medico.nome || '')
+                .trim()
+                .replace(/\s+/g, ' ')
+                .replace(/^(?:dentista|dr\(a\)|dra?|dr)\.?(?=\s|$)\s*/i, '')
+                .trim();
+            option.textContent = `Dr(a). ${nomeMedico}`;
             selectProfissional.appendChild(option);
         });
     } else {
