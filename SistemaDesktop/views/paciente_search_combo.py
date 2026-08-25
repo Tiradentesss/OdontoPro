@@ -30,6 +30,7 @@ class PacienteSearchComboBox(ctk.CTkFrame):
             self.search_var.trace('w', self._ao_alterar_search)
         
         # Entry principal
+        kwargs['textvariable'] = self.search_var
         self.entry = ctk.CTkEntry(self, **kwargs)
         self.entry.pack(fill="x")
         self.entry.bind("<Button-1>", lambda event: self.abrir_lista())
@@ -78,25 +79,6 @@ class PacienteSearchComboBox(ctk.CTkFrame):
             self.after_cancel(self._close_after_id)
             self._close_after_id = None
 
-        # Entry de pesquisa
-        self.search_entry = ctk.CTkEntry(
-            self.dropdown,
-            height=34,
-            fg_color=COLORS["input_bg"],
-            border_color=COLORS["border"],
-            border_width=1,
-            corner_radius=8,
-            text_color=COLORS["text"],
-            placeholder_text_color=COLORS["text_muted"],
-            placeholder_text="Pesquisar paciente por nome ou CPF",
-            textvariable=self.search_var
-        )
-        self.search_entry.pack(fill="x", padx=6, pady=(6, 4))
-        self.search_entry.bind("<Down>", self._mover_selecao_baixo)
-        self.search_entry.bind("<Up>", self._mover_selecao_cima)
-        self.search_entry.bind("<Return>", self._selecionar_atual)
-        self.search_entry.bind("<Escape>", lambda event: self.fechar_lista())
-
         # Frame com scroll para lista
         print("[DEBUG PACIENTE] criando CTkScrollableFrame")
         self.lista_frame = ctk.CTkScrollableFrame(
@@ -111,8 +93,8 @@ class PacienteSearchComboBox(ctk.CTkFrame):
 
         self.selected_index = 0
         self._atualizar_lista([])
-        self.search_entry.focus_set()
-        print("[DEBUG PACIENTE] dropdown aberto, focus no search_entry")
+        self.entry.focus_set()
+        print("[DEBUG PACIENTE] dropdown aberto, focus no entry principal")
 
     def fechar_lista(self):
         """Fecha dropdown."""
@@ -123,14 +105,7 @@ class PacienteSearchComboBox(ctk.CTkFrame):
         if self.dropdown and self.dropdown.winfo_exists():
             self.dropdown.destroy()
         self.dropdown = None
-        # Remover foco do Entry ao fechar o dropdown
-        try:
-            self.winfo_toplevel().focus_set()
-        except Exception:
-            pass
-        # Limpar search_var para próxima abertura
-        self.search_var.set("")
-        print("[DEBUG PACIENTE] fechar_lista: dropdown fechado e search_var limpo")
+        print("[DEBUG PACIENTE] fechar_lista: dropdown fechado")
 
     def _ao_alterar_search(self, *args):
         """Callback disparado quando search_var muda (StringVar trace)."""
@@ -285,4 +260,12 @@ class PacienteSearchComboBox(ctk.CTkFrame):
         """Fecha dropdown se foco sair."""
         if self._close_after_id:
             self.after_cancel(self._close_after_id)
-        self._close_after_id = self.after(100, lambda: self.fechar_lista() if not self.dropdown or not self.dropdown.focus_get() else None)
+        def fechar_se_foco_externo():
+            if not self.dropdown:
+                self.fechar_lista()
+                return
+            foco = self.winfo_toplevel().focus_get()
+            if foco is not self.entry and not str(foco).startswith(str(self.dropdown)):
+                self.fechar_lista()
+
+        self._close_after_id = self.after(100, fechar_se_foco_externo)
