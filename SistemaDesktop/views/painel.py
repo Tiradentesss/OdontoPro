@@ -168,6 +168,7 @@ class Painel(BaseScreen):
                 horario = item[2] if len(item) > 2 else None
 
             horario_txt = horario.strftime('%H:%M') if hasattr(horario, 'strftime') else '00:00'
+            data_txt = horario.strftime('%d/%m/%Y') if hasattr(horario, 'strftime') else 'Data indisponível'
             avatar_size = 38
             avatar_img, has_photo = self._create_patient_avatar(nome, foto, avatar_size)
 
@@ -218,6 +219,7 @@ class Painel(BaseScreen):
             info.pack(side="left", fill="both", expand=True)
 
             ctk.CTkLabel(info, text=nome, font=ctk.CTkFont(size=18, weight="bold"), text_color=self.colors['text']).pack(anchor="w")
+            ctk.CTkLabel(info, text=f"Data: {data_txt}", font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor="w")
             ctk.CTkLabel(info, text=f"Horário: {horario_txt}h", font=ctk.CTkFont(size=14), text_color=self.colors['text_secondary']).pack(anchor="w")
 
             badge = ctk.CTkFrame(row_item, fg_color=self.colors['info_soft'], corner_radius=8)
@@ -465,7 +467,8 @@ class Painel(BaseScreen):
                     when = f"Hoje às {dt.strftime('%H:%M')}" if getattr(dt, 'date', lambda: None)() == hoje else dt.strftime('%d/%m %H:%M')
                 else:
                     when = ''
-                notificacoes.append(("Próxima consulta", f"{nome} • {when}", self.colors['info']))
+                    dt = datetime.min
+                notificacoes.append(("Próxima consulta", f"{nome} • {when}", self.colors['info'], dt if hasattr(dt, 'strftime') else datetime.min))
 
             # 2) Consulta aguardando confirmação para hoje
             aguardando = ConsultaController.listar_por_clinica(self.clinica_id, data=hoje, status='agendada', limite=5)
@@ -481,7 +484,7 @@ class Painel(BaseScreen):
                     nome = item[1] if not isinstance(item, dict) else item.get('nome')
                     dt = item[2] if not isinstance(item, dict) else item.get('data_hora')
                     when = f"Hoje às {dt.strftime('%H:%M')}" if hasattr(dt, 'strftime') and getattr(dt, 'date', lambda: None)() == hoje else (dt.strftime('%d/%m %H:%M') if hasattr(dt, 'strftime') else '')
-                    notificacoes.append(("Aguardando confirmação", f"{nome} • {when}", self.colors['warning']))
+                    notificacoes.append(("Aguardando confirmação", f"{nome} • {when}", self.colors['warning'], dt if hasattr(dt, 'strftime') else datetime.min))
 
             # 3) Consulta cancelada recentemente (ordenar por data_hora desc)
             canceladas = ConsultaController.listar_por_clinica(self.clinica_id, status='cancelada', limite=10)
@@ -491,29 +494,32 @@ class Painel(BaseScreen):
                 nome = recent[1] if not isinstance(recent, dict) else recent.get('nome')
                 dt = recent[2] if not isinstance(recent, dict) else recent.get('data_hora')
                 when = f"Hoje às {dt.strftime('%H:%M')}" if hasattr(dt, 'strftime') and getattr(dt, 'date', lambda: None)() == hoje else (dt.strftime('%d/%m %H:%M') if hasattr(dt, 'strftime') else '')
-                notificacoes.append(("Consulta cancelada", f"{nome} • {when}", self.colors['danger']))
+                notificacoes.append(("Consulta cancelada", f"{nome} • {when}", self.colors['danger'], dt if hasattr(dt, 'strftime') else datetime.min))
 
             # 4) Novo paciente cadastrado (mais recente)
             pacientes = PacienteController.listar_pacientes(self.clinica_id)
             if pacientes:
                 recent_p = sorted(pacientes, key=lambda p: p.get('id', 0) if isinstance(p, dict) else (p[0] if len(p) > 0 else 0), reverse=True)[0]
                 nome_p = recent_p.get('nome') if isinstance(recent_p, dict) else recent_p[1] if len(recent_p) > 1 else ''
-                notificacoes.append(("Novo paciente cadastrado", f"{nome_p}", self.colors['primary']))
+                notificacoes.append(("Novo paciente cadastrado", f"{nome_p}", self.colors['primary'], datetime.min))
 
             # 5) Novo médico cadastrado (mais recente)
             medicos = MedicoController.listar_medicos(self.clinica_id)
             if medicos:
                 recent_m = sorted(medicos, key=lambda m: m.get('id', 0) if isinstance(m, dict) else (m[0] if len(m) > 0 else 0), reverse=True)[0]
                 nome_m = recent_m.get('nome') if isinstance(recent_m, dict) else recent_m[1] if len(recent_m) > 1 else ''
-                notificacoes.append(("Novo médico cadastrado", f"{nome_m}", self.colors['success']))
+                notificacoes.append(("Novo médico cadastrado", f"{nome_m}", self.colors['success'], datetime.min))
 
         except Exception as e:
             print(f"Erro ao gerar notificações: {e}")
 
+        # Ordenar notificações da mais recente para a mais antiga
+        notificacoes = sorted(notificacoes, key=lambda x: x[3] if len(x) > 3 else datetime.min, reverse=True)
+
         # Remover duplicatas simples (mesmo título e texto)
         vistos = set()
         finais = []
-        for t, m, col in notificacoes:
+        for t, m, col, ts in notificacoes:
             key = (t, m)
             if key in vistos:
                 continue
