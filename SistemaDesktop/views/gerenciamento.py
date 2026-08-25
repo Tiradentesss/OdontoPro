@@ -1,7 +1,9 @@
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 from datetime import datetime, timedelta
-from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+import requests
 from .base import BaseScreen
 from .theme import COLORS, INNER_CARD_BORDER, INNER_CARD_RADIUS
 from config.database import get_connection
@@ -9,6 +11,7 @@ from controllers.consulta_controller import ConsultaController
 from controllers.medico_controller import MedicoController
 from models.auth import verificar_senha
 from services.medico_service import MedicoService
+from services.cloudinary_service import upload_image_to_cloudinary
 
 
 class MedicosDisponibilidadeScreen(ctk.CTkFrame):
@@ -77,6 +80,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
                 "nome": medico[1] or "",
                 "email": medico[2] or "",
                 "especialidade": medico[3] or "Geral",
+                "foto": medico[5] if len(medico) > 5 else None,
                 "status": "Ativo"
             }
             for medico in medicos_bd
@@ -222,10 +226,12 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             row.grid_columnconfigure(3, weight=2, minsize=280)
             row.grid_rowconfigure(0, weight=1)
             
-            avatar_img = self._create_avatar(medico["nome"], 32)
+            avatar_img = self._create_avatar(medico["nome"], 32, medico.get("foto"))
             avatar = ctk.CTkLabel(row, image=avatar_img, text="")
             avatar.image = avatar_img
             avatar.grid(row=0, column=0, sticky="w", padx=(12, 8), pady=14)
+            avatar.bind("<Button-1>", lambda e, medico_id=medico["id"]: self._selecionar_foto_medico(medico_id))
+            avatar.configure(cursor="hand2")
             
             nome = ctk.CTkLabel(
                 row,
@@ -272,7 +278,7 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
             )
             excluir.place(relx=1.0, rely=0.0, anchor="ne", x=2, y=-5)
             
-            for widget in [row, avatar, nome, email, especialidade]:
+            for widget in [row, nome, email, especialidade]:
                 widget.bind("<Button-1>", lambda e, m=medico: self._select_medico(m))
                 widget.bind("<Enter>", lambda e, r=row, s=is_selected: self._hover_row(r, s, True))
                 widget.bind("<Leave>", lambda e, r=row, s=is_selected: self._hover_row(r, s, False))
@@ -1022,7 +1028,51 @@ class MedicosDisponibilidadeScreen(ctk.CTkFrame):
         else:
             row.configure(fg_color=self.colors["selected_row"] if is_selected else self.colors["card"])
 
-    def _create_avatar(self, nome, size):
+    def _selecionar_foto_medico(self, medico_id):
+        foto_path = filedialog.askopenfilename(
+            parent=self,
+            filetypes=[("Imagens", "*.jpg *.jpeg *.png *.webp")],
+        )
+        if not foto_path:
+            return
+
+        try:
+            foto_url = upload_image_to_cloudinary(
+                foto_path,
+                public_id=f"medico_{medico_id}",
+                folder=f"odontopro/medicos/{medico_id}",
+            )
+            resultado = MedicoController.atualizar_foto_medico(medico_id, self.clinica_id, foto_url)
+            if not resultado.get("sucesso"):
+                messagebox.showerror("Erro", resultado.get("mensagem", "Não foi possível atualizar a foto."))
+                return
+
+            for medico in self.medicos:
+                if medico["id"] == medico_id:
+                    medico["foto"] = foto_url
+                    break
+            self._render_medicos()
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível enviar a foto: {e}")
+
+    def _create_avatar(self, nome, size, foto=None):
+        if foto:
+            try:
+                if isinstance(foto, str) and foto.lower().startswith(("http://", "https://")):
+                    response = requests.get(foto, timeout=20)
+                    response.raise_for_status()
+                    imagem = Image.open(BytesIO(response.content)).convert("RGB")
+                else:
+                    imagem = Image.open(foto).convert("RGB")
+                imagem = ImageOps.fit(imagem, (size, size), method=Image.Resampling.LANCZOS)
+                mascara = Image.new("L", (size, size), 0)
+                ImageDraw.Draw(mascara).ellipse((0, 0, size, size), fill=255)
+                imagem_rgba = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+                imagem_rgba.paste(imagem, (0, 0), mascara)
+                return ctk.CTkImage(light_image=imagem_rgba, dark_image=imagem_rgba, size=(size, size))
+            except Exception:
+                pass
+
         inicial = nome[0].upper() if nome else "?"
         bg_color = COLORS["primary"]
         

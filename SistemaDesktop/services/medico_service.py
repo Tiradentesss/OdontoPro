@@ -60,12 +60,13 @@ class MedicoService:
                         m.nome,
                         m.email,
                         GROUP_CONCAT(e.nome SEPARATOR ', ') AS especialidades,
-                        GROUP_CONCAT(e.id SEPARATOR ',') AS especialidade_ids
+                        GROUP_CONCAT(e.id SEPARATOR ',') AS especialidade_ids,
+                        m.foto
                     FROM odontoPro_medico m
                     LEFT JOIN odontoPro_medico_especialidades me ON m.id = me.medico_id
                     LEFT JOIN odontoPro_especialidade e ON me.especialidade_id = e.id
                     WHERE m.clinica_id = %s AND m.ativo = 1
-                    GROUP BY m.id, m.nome, m.email
+                    GROUP BY m.id, m.nome, m.email, m.foto
                     ORDER BY m.nome ASC
                 """
 

@@ -281,6 +281,29 @@ class MedicoController:
                 conn.close()
 
     @staticmethod
+    def atualizar_foto_medico(medico_id, clinica_id, foto):
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE odontoPro_medico SET foto = %s WHERE id = %s AND clinica_id = %s",
+                (foto, medico_id, clinica_id),
+            )
+            conn.commit()
+            return {"sucesso": True, "mensagem": "Foto do médico atualizada com sucesso"}
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            return {"sucesso": False, "mensagem": f"Erro ao atualizar foto do médico: {str(e)}"}
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    @staticmethod
     def deletar_medico(medico_id, clinica_id=None):
         """
         Deleta um médico do banco
