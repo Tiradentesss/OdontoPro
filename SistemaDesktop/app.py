@@ -343,6 +343,7 @@ class App(ctk.CTkToplevel):
 
         self.current_frame = None
         self.current_frame_name = None
+        self._painel_primeira_exibicao = True
         self.show_frame("painel")
 
         config_error = getattr(self.frames["config"], "initialization_error", None)
@@ -458,6 +459,10 @@ class App(ctk.CTkToplevel):
         self.current_frame_name = name
         self.current_frame.pack(expand=True, fill="both")
         self.update_active_button(name)
+
+        if name == "painel" and self._painel_primeira_exibicao:
+            self._painel_primeira_exibicao = False
+            return
 
         pending_refresh = getattr(self, "_pending_frame_refresh_id", None)
         if pending_refresh is not None:
