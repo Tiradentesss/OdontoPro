@@ -1126,7 +1126,11 @@ def clinica_detalhes(request, clinica_id):
         {
             "id": m.id,
             "nome": m.nome,
-            "foto_url": m.foto.url if m.foto else None,
+            "foto_url": (
+                str(m.foto).strip()
+                if str(m.foto).strip().startswith(("http://", "https://"))
+                else m.foto.url
+            ) if m.foto else None,
             "especialidades": [esp.id for esp in m.especialidades.filter(clinica=clinica)]
         }
         for m in clinica.medico_set.filter(ativo=True)
