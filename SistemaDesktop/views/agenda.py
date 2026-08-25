@@ -2299,11 +2299,13 @@ class Agenda(BaseScreen):
                 especialidade_var.set("")
                 especialidade_id_selecionado['id'] = None
                 especialidade_status_var.set("")
+                especialidade_status_label.pack_forget()
             else:
                 especialidade_combo.configure(values=[], state='disabled')
                 especialidade_var.set("")
                 especialidade_id_selecionado['id'] = None
                 especialidade_status_var.set("Nenhuma especialidade cadastrada.")
+                especialidade_status_label.pack(anchor='w', padx=15, pady=(0, 0))
 
         def _carregar_especialidades():
             nonlocal especialidades_carregadas
@@ -2343,7 +2345,6 @@ class Agenda(BaseScreen):
             font=font("text"),
             text_color=COLORS['warning'] if 'warning' in COLORS else '#FFA500'
         )
-        especialidade_status_label.pack(anchor='w', padx=15, pady=(0, 10))
         
         # ===================== CAMPO MÉDICO (VINCULADO À CLÍNICA) =====================
         medico_header = ctk.CTkFrame(canvas_frame, fg_color="transparent")
