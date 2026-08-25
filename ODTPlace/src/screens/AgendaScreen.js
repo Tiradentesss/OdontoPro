@@ -282,12 +282,13 @@ export default function AgendaScreen({ navigation, route }) {
         <View style={styles.headerSpacer} />
       </View>
 
-      <TouchableOpacity style={styles.monthSelector} onPress={() => setShowCalendar(true)}>
-        <Text style={[styles.monthText, { color: colors.brandBlue }]}>{new Date(date).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</Text>
-        <Feather name="calendar" size={20} color={colors.brandBlue} style={{ marginLeft: 8 }} />
-      </TouchableOpacity>
+      <View style={styles.topContent}>
+        <TouchableOpacity style={styles.monthSelector} onPress={() => setShowCalendar(true)}>
+          <Text style={[styles.monthText, { color: colors.brandBlue }]}>{new Date(date).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</Text>
+          <Feather name="calendar" size={20} color={colors.brandBlue} style={{ marginLeft: 8 }} />
+        </TouchableOpacity>
 
-      {showCalendar && (
+        {showCalendar && (
         <DateTimePicker
           value={date}
           mode="date"
@@ -300,9 +301,10 @@ export default function AgendaScreen({ navigation, route }) {
             }
           }}
         />
-      )}
+        )}
 
-      <ScrollView
+        <ScrollView
+        style={styles.dateScroll}
         ref={scrollViewRef}
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -346,9 +348,9 @@ export default function AgendaScreen({ navigation, route }) {
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+        </ScrollView>
 
-      <View style={styles.listHeaderSection}>
+        <View style={styles.listHeaderSection}>
         <Text style={[styles.sectionTextHora, { color: colors.mutedText }]}>Filtrar:</Text>
         <View style={styles.sectionRightGroup}>
           {FILTER_OPTIONS.map((f) => {
@@ -373,6 +375,7 @@ export default function AgendaScreen({ navigation, route }) {
               </TouchableOpacity>
             );
           })}
+        </View>
         </View>
       </View>
 
@@ -410,6 +413,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
+  topContent: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  dateScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
   },
   header: {
     flexDirection: "row",
@@ -483,7 +494,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     marginTop: 0,
-    marginBottom: 14,
+    marginBottom: 4,
   },
   sectionTextHora: { 
     fontSize: 14, 

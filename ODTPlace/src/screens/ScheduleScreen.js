@@ -348,11 +348,12 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
             <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? colors.container : '#f8fafc' }]}> 
                 <ScheduleHeaderNoBack title="Agendamentos" iconName="calendar" />
 
-                <View
-                    style={styles.monthRow}
-                    onTouchStart={(e) => setSwipeStartX(e.nativeEvent.pageX)}
-                    onTouchEnd={(e) => handleSwipeEnd(e.nativeEvent.pageX)}
-                >
+                <View style={styles.topContent}>
+                    <View
+                        style={styles.monthRow}
+                        onTouchStart={(e) => setSwipeStartX(e.nativeEvent.pageX)}
+                        onTouchEnd={(e) => handleSwipeEnd(e.nativeEvent.pageX)}
+                    >
                     <TouchableOpacity style={[styles.monthArrow, isDarkMode && { backgroundColor: '#1E293B' }]} onPress={goPreviousMonth} activeOpacity={0.8}>
                         <Text style={[styles.monthArrowText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>‹</Text>
                     </TouchableOpacity>
@@ -365,18 +366,19 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                     <TouchableOpacity style={[styles.monthArrow, isDarkMode && { backgroundColor: '#1E293B' }]} onPress={goNextMonth} activeOpacity={0.8}>
                         <Text style={[styles.monthArrowText, { color: isDarkMode ? '#F8FAFC' : '#0f172a' }]}>›</Text>
                     </TouchableOpacity>
-                </View>
+                    </View>
 
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.dateCarousel}
-                    ref={scrollViewRef}
-                    nestedScrollEnabled={true}
-                    scrollEnabled={true}
-                    onScrollBeginDrag={() => setShouldResetPosition(false)}
-                    onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
-                >
+                    <ScrollView
+                        style={styles.dateScroll}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.dateCarousel}
+                        ref={scrollViewRef}
+                        nestedScrollEnabled={true}
+                        scrollEnabled={true}
+                        onScrollBeginDrag={() => setShouldResetPosition(false)}
+                        onLayout={(event) => setCarouselWidth(event.nativeEvent.layout.width)}
+                    >
                     {monthDays.map((date) => {
                         const isSelected = date.id === selectedDate;
                         return (
@@ -415,9 +417,9 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                             </TouchableOpacity>
                         );
                     })}
-                </ScrollView>
+                    </ScrollView>
 
-                <View style={styles.filterRow}>
+                    <View style={styles.filterRow}>
                     {FILTER_OPTIONS.map((option) => {
                         const isActive = statusFilter === option;
                         return (
@@ -440,11 +442,12 @@ export default function ScheduleScreen({ navigation, activeTab, showBottomNav = 
                             </TouchableOpacity>
                         );
                     })}
-                </View>
+                    </View>
 
-                <View style={styles.scheduleHeader}>
+                    <View style={styles.scheduleHeader}>
                     <Text style={[styles.scheduleColumn, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Hora</Text>
                     <Text style={[styles.scheduleTitleHeader, { color: isDarkMode ? '#94A3B8' : '#64748b' }]}>Consultas do Dia</Text>
+                    </View>
                 </View>
 
                 <ScrollView style={styles.listScroll} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
@@ -613,6 +616,14 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'transparent',
         paddingTop: 104,
+    },
+    topContent: {
+        flexGrow: 0,
+        flexShrink: 0,
+    },
+    dateScroll: {
+        flexGrow: 0,
+        flexShrink: 0,
     },
     headerRow: {
         marginTop: 24,
@@ -808,7 +819,7 @@ const styles = StyleSheet.create({
     filterRow: {
         marginTop: 0,
         marginHorizontal: 20,
-        marginBottom: 16,
+        marginBottom: 4,
         flexDirection: 'row',
         flexWrap: 'wrap',
     },
@@ -835,12 +846,12 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     scheduleHeader: {
-        marginTop: 8,
+        marginTop: 0,
         marginHorizontal: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 4,
     },
     scheduleColumn: {
         fontSize: 12,
