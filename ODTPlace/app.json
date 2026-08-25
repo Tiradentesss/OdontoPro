@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Odonto Hub",
-    "slug": "ODTPlace",
+    "slug": "odontohub",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/LogoOdontoHubApp.png",
@@ -40,8 +40,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "09a4e734-0478-4c81-bfc6-677501f73c55"
+        "projectId": "9228f76b-4ae3-419e-b648-dc4260c00732"
       }
-    }
+    },
+    "owner": "odontohubapp"
   }
 }
