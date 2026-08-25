@@ -55,18 +55,24 @@ class PacienteSearchComboBox(ctk.CTkFrame):
 
     def abrir_lista(self):
         """Abre dropdown com lista de pacientes."""
-        if self.dropdown and self.dropdown.winfo_exists():
-            print("[DEBUG PACIENTE] dropdown já está aberto")
-            return
+        if self.dropdown is not None:
+            try:
+                dropdown_existe = bool(self.dropdown.winfo_exists())
+                dropdown_visivel = bool(self.dropdown.winfo_viewable())
+            except Exception:
+                dropdown_existe = False
+                dropdown_visivel = False
+            if dropdown_existe and dropdown_visivel:
+                return
+            if dropdown_existe:
+                self.dropdown.destroy()
+            self.dropdown = None
+            self.lista_frame = None
 
-        print("[DEBUG PACIENTE] abrir_lista: inicializando dropdown")
-        
         largura = max(self.winfo_width(), 300)
         altura = 500  # Aumentado para 500
         x = self.winfo_rootx()
         y = self.winfo_rooty() + self.winfo_height() + 2
-
-        print(f"[DEBUG PACIENTE] dropdown geometry: {largura}x{altura}+{x}+{y}")
 
         # Criar janela flutuante
         self.dropdown = ctk.CTkToplevel(self)
@@ -80,7 +86,6 @@ class PacienteSearchComboBox(ctk.CTkFrame):
             self._close_after_id = None
 
         # Frame com scroll para lista
-        print("[DEBUG PACIENTE] criando CTkScrollableFrame")
         self.lista_frame = ctk.CTkScrollableFrame(
             self.dropdown,
             height=420,  # Aumentado para 420
@@ -89,23 +94,20 @@ class PacienteSearchComboBox(ctk.CTkFrame):
         )
         self.lista_frame.pack(fill="both", expand=True, padx=6, pady=(0, 6))
         
-        print(f"[DEBUG PACIENTE] CTkScrollableFrame criado e packeado")
-
         self.selected_index = 0
         self._atualizar_lista([])
+        self._buscar_pacientes(self.search_var.get())
         self.entry.focus_set()
-        print("[DEBUG PACIENTE] dropdown aberto, focus no entry principal")
 
     def fechar_lista(self):
         """Fecha dropdown."""
-        print("[DEBUG PACIENTE] fechar_lista: fechando dropdown")
         if self._close_after_id:
             self.after_cancel(self._close_after_id)
             self._close_after_id = None
         if self.dropdown and self.dropdown.winfo_exists():
             self.dropdown.destroy()
         self.dropdown = None
-        print("[DEBUG PACIENTE] fechar_lista: dropdown fechado")
+        self.lista_frame = None
 
     def _ao_alterar_search(self, *args):
         """Callback disparado quando search_var muda (StringVar trace)."""
@@ -115,7 +117,9 @@ class PacienteSearchComboBox(ctk.CTkFrame):
             return
         
         termo = self.search_var.get()
-        print(f"[DEBUG PACIENTE] _ao_alterar_search: termo='{termo}'")
+        if not self.dropdown or not self.dropdown.winfo_exists():
+            self.abrir_lista()
+            return
         self._buscar_pacientes(termo)
 
     def _buscar_pacientes(self, termo):
@@ -144,7 +148,6 @@ class PacienteSearchComboBox(ctk.CTkFrame):
         """Atualiza a listagem de pacientes no dropdown."""
         # Proteção: verificar se o widget ainda existe
         if not self.lista_frame.winfo_exists():
-            print("[DEBUG PACIENTE] _atualizar_lista: lista_frame foi destruída, abortando")
             return
         
         print(f"[DEBUG PACIENTE] _atualizar_lista: destruindo {len(self.lista_frame.winfo_children())} widgets antigos")
