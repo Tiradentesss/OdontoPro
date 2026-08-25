@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 2,
-    marginBottom: 2,
+    marginBottom: 0,
   },
   dayCard: {
     width: 44,
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 24,
-    marginTop: 4,
+    marginTop: 0,
     marginBottom: 14,
   },
   sectionTextHora: { 

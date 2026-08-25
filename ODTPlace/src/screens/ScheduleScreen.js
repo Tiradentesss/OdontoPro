@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     dateCarousel: {
         paddingHorizontal: 18,
         paddingTop: 2,
-        paddingBottom: 4,
+        paddingBottom: 0,
     },
     dateItem: {
         width: 58,
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#0b4a88',
     },
     filterRow: {
-        marginTop: 4,
+        marginTop: 0,
         marginHorizontal: 20,
         marginBottom: 16,
         flexDirection: 'row',
