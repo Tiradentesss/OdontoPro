@@ -349,6 +349,7 @@ class HourSelectionPopup(ctk.CTkToplevel):
         self._master_click_bind_id = None
         self._target_configure_bind_id = None
         super().destroy()
+        self.master_window.focus_force()
 
     def _position_popup(self):
         if not self.winfo_exists():
