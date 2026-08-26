@@ -2287,8 +2287,10 @@ class Agenda(BaseScreen):
 
             medico_display.clear()
             valores_medicos = []
+            from services.medico_service import MedicoService
             for id_med, nome_med in medicos:
-                display_text = f"{nome_med} - {especialidade_nome}" if especialidade_nome else nome_med
+                nome_visual = MedicoService.formatar_nome_visual(nome_med)
+                display_text = f"{nome_visual} - {especialidade_nome}" if especialidade_nome else nome_visual
                 medico_display[display_text] = id_med
                 valores_medicos.append(display_text)
 
