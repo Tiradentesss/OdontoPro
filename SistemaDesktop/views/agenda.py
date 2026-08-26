@@ -70,6 +70,9 @@ class MonthlyDatePickerPopup(ctk.CTkToplevel):
         self.selected_date = parse_br_date(self.data_var.get()) if self.data_var.get() else None
         self.parent_window = master
         self.target_widget = target_widget
+        self._parent_configure_bind_id = None
+        self._target_configure_bind_id = None
+        self._parent_click_bind_id = None
 
         self._build_ui()
         self._position_popup()
@@ -78,9 +81,9 @@ class MonthlyDatePickerPopup(ctk.CTkToplevel):
         self.focus_set()
 
         self.bind("<Escape>", lambda _event: self.destroy())
-        self.parent_window.bind("<Configure>", self._handle_parent_configure, add='+')
-        self.target_widget.bind("<Configure>", self._handle_target_configure, add='+')
-        self.parent_window.bind("<Button-1>", self._handle_global_click, add='+')
+        self._parent_configure_bind_id = self.parent_window.bind("<Configure>", self._handle_parent_configure, add='+')
+        self._target_configure_bind_id = self.target_widget.bind("<Configure>", self._handle_target_configure, add='+')
+        self._parent_click_bind_id = self.parent_window.bind("<Button-1>", self._handle_global_click, add='+')
 
     def _handle_parent_configure(self, _event=None):
         self.after(10, self._position_popup)
@@ -89,9 +92,9 @@ class MonthlyDatePickerPopup(ctk.CTkToplevel):
         self.after(10, self._position_popup)
 
     def _handle_global_click(self, event):
-        if not self.winfo_exists():
-            return
         try:
+            if not self.winfo_exists():
+                return
             widget = event.widget
             if widget is self:
                 return
@@ -102,6 +105,22 @@ class MonthlyDatePickerPopup(ctk.CTkToplevel):
             self.destroy()
         except Exception:
             pass
+
+    def destroy(self):
+        for widget, sequence, bind_id in (
+            (self.parent_window, "<Configure>", self._parent_configure_bind_id),
+            (self.target_widget, "<Configure>", self._target_configure_bind_id),
+            (self.parent_window, "<Button-1>", self._parent_click_bind_id),
+        ):
+            if bind_id:
+                try:
+                    widget.unbind(sequence, bind_id)
+                except Exception:
+                    pass
+        self._parent_configure_bind_id = None
+        self._target_configure_bind_id = None
+        self._parent_click_bind_id = None
+        super().destroy()
 
     def _position_popup(self):
         if not self.winfo_exists():
@@ -285,6 +304,8 @@ class HourSelectionPopup(ctk.CTkToplevel):
 
         self.master_window = master
         self.target_widget = target_widget
+        self._master_click_bind_id = None
+        self._target_configure_bind_id = None
         self.hora_var = hora_var
         self.horarios = horarios or []
         self.on_select = on_select
@@ -296,16 +317,16 @@ class HourSelectionPopup(ctk.CTkToplevel):
         self.focus_set()
 
         self.bind("<Escape>", lambda _event: self.destroy())
-        self.master_window.bind("<Button-1>", self._handle_global_click, add='+')
-        self.target_widget.bind("<Configure>", self._handle_target_configure, add='+')
+        self._master_click_bind_id = self.master_window.bind("<Button-1>", self._handle_global_click, add='+')
+        self._target_configure_bind_id = self.target_widget.bind("<Configure>", self._handle_target_configure, add='+')
 
     def _handle_target_configure(self, _event=None):
         self.after(10, self._position_popup)
 
     def _handle_global_click(self, event):
-        if not self.winfo_exists():
-            return
         try:
+            if not self.winfo_exists():
+                return
             widget = event.widget
             if widget is self.target_widget or self.target_widget.winfo_containing(event.x_root, event.y_root) is self.target_widget:
                 return
@@ -314,6 +335,20 @@ class HourSelectionPopup(ctk.CTkToplevel):
             self.destroy()
         except Exception:
             pass
+
+    def destroy(self):
+        for widget, sequence, bind_id in (
+            (self.master_window, "<Button-1>", self._master_click_bind_id),
+            (self.target_widget, "<Configure>", self._target_configure_bind_id),
+        ):
+            if bind_id:
+                try:
+                    widget.unbind(sequence, bind_id)
+                except Exception:
+                    pass
+        self._master_click_bind_id = None
+        self._target_configure_bind_id = None
+        super().destroy()
 
     def _position_popup(self):
         if not self.winfo_exists():
@@ -2120,6 +2155,7 @@ class Agenda(BaseScreen):
         cache_especialidades = []
         cache_medicos_por_especialidade = {}
         cache_agenda = {}
+        dialogo_fechado = {'value': False}
 
         def get_db_connection():
             nonlocal db_conn
@@ -2136,11 +2172,30 @@ class Agenda(BaseScreen):
                     pass
                 db_conn = None
 
-        def on_dialog_close():
-            close_db_connection()
-            dialogo.destroy()
+        def agendar_no_dialogo(callback, *args):
+            if dialogo_fechado['value']:
+                return
+            try:
+                dialogo.after(0, callback, *args)
+            except Exception:
+                pass
 
-        dialogo.protocol("WM_DELETE_WINDOW", on_dialog_close)
+        def fechar_dialogo():
+            if dialogo_fechado['value']:
+                return
+            dialogo_fechado['value'] = True
+            try:
+                dialogo.grab_release()
+            except Exception:
+                pass
+            close_db_connection()
+            try:
+                if dialogo.winfo_exists():
+                    dialogo.destroy()
+            except Exception:
+                pass
+
+        dialogo.protocol("WM_DELETE_WINDOW", fechar_dialogo)
         
         # Frame principal
         main_frame = ctk.CTkFrame(dialogo, fg_color=COLORS['bg'])
@@ -2266,7 +2321,7 @@ class Agenda(BaseScreen):
                 elapsed_ms = (time.perf_counter() - start_ms) * 1000
                 print(f"[agenda] Médicos para especialidade {especialidade_id} carregados em {elapsed_ms:.0f} ms")
                 cache_medicos_por_especialidade[especialidade_id] = medicos_por_especialidade
-                dialogo.after(0, _preencher_medicos, medicos_por_especialidade, especialidade_nome, especialidade_id)
+                agendar_no_dialogo(_preencher_medicos, medicos_por_especialidade, especialidade_nome, especialidade_id)
 
             threading.Thread(target=_task, daemon=True).start()
 
@@ -2317,7 +2372,7 @@ class Agenda(BaseScreen):
             print(f"[agenda] Especialidades carregadas em {elapsed_ms:.0f} ms")
             especialidades_carregadas = especialidades
             valores = [nome for _, nome in especialidades]
-            dialogo.after(0, _set_especialidades, valores)
+            agendar_no_dialogo(_set_especialidades, valores)
 
         def carregar_especialidades_combo():
             especialidade_combo.configure(values=[], state='disabled')
@@ -2429,7 +2484,7 @@ class Agenda(BaseScreen):
                 return
 
             if medico_id in cache_agenda:
-                dialogo.after(0, atualizar_datas_disponiveis)
+                agendar_no_dialogo(atualizar_datas_disponiveis)
                 return
 
             limpar_data_e_hora()
@@ -2450,7 +2505,7 @@ class Agenda(BaseScreen):
                 elapsed_ms = (time.perf_counter() - start_ms) * 1000
                 print(f"[agenda] Agenda do médico {medico_id} carregada em {elapsed_ms:.0f} ms")
                 cache_agenda[medico_id] = agenda
-                dialogo.after(0, atualizar_datas_disponiveis)
+                agendar_no_dialogo(atualizar_datas_disponiveis)
 
             threading.Thread(target=_task, daemon=True).start()
 
@@ -2648,8 +2703,10 @@ class Agenda(BaseScreen):
             fg_color=COLORS['input_bg'],
             border_color=COLORS['border'],
             border_width=1,
-            corner_radius=8
+            corner_radius=8,
+            state='normal'
         )
+        obs_text._textbox.bind('<Button-1>', lambda _event: obs_text._textbox.focus_set(), add='+')
         obs_text.pack(fill='x', padx=15, pady=(0, 15))
         
         # ===================== VALIDAÇÃO E SALVAMENTO =====================
@@ -2740,7 +2797,7 @@ class Agenda(BaseScreen):
                         app.frames['painel'].refresh()
                 except Exception as e:
                     print(f"Erro ao atualizar Painel após salvar consulta: {e}")
-                dialogo.destroy()
+                fechar_dialogo()
             else:
                 messagebox.showerror(
                     "Erro ao Salvar",
@@ -2770,7 +2827,7 @@ class Agenda(BaseScreen):
             hover_color="#C82333",
             text_color="#FFFFFF",
             font=font("button", "bold"),
-            command=dialogo.destroy
+            command=fechar_dialogo
         )
         btn_cancelar.pack(side='left', fill='x', expand=True, padx=(5, 0))
 
